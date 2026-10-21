@@ -1,0 +1,1417 @@
+<!DOCTYPE html>
+<html class="light" lang="pt-BR">
+<head>
+  <script>
+    try {
+      sessionStorage.setItem('nnos_auth', 'true');
+      localStorage.setItem('nnos_theme', 'light');
+      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.add('light');
+    } catch(e) {}
+  </script>
+
+<base href="https://nnos-group.github.io/relatorio-financeiro-nnos-2026/">
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>NNÓS — Dashboard Executivo & DRE Gerencial 2026 | SET-26</title>
+<link rel="icon" type="image/png" href="assets/logo-nnos.png"/>
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png"/>
+<link rel="icon" type="image/png" sizes="64x64" href="favicon.png"/>
+<link rel="shortcut icon" href="favicon.ico" type="image/x-icon"/>
+<link rel="apple-touch-icon" href="assets/logo-nnos.png"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+          "surface-container-high": "#232a3a",
+          "on-surface": "#dce2f7",
+          "background": "#0c1322",
+          "text-primary": "#FFFFFF",
+          "surface": "#0c1322",
+          "text-muted": "#9CA3AF",
+          "accent-amber": "#FBBF24",
+          "brand-blue": "#0083ca",
+          "surface-container": "#191f2f",
+          "surface-variant": "#2e3545",
+          "surface-container-lowest": "#070e1d"
+        },
+        "fontFamily": {
+          "sans": ["Inter", "sans-serif"],
+          "display": ["Manrope", "sans-serif"],
+        }
+      },
+    },
+  }
+</script>
+<style>
+  body {
+    background: linear-gradient(135deg, #0f172a 0%, #1e40af 50%, #3b82f6 100%);
+    color: #dce2f7;
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+  }
+  h1, h2, h3, h4, h5, h6, .font-display {
+    font-family: 'Manrope', sans-serif;
+  }
+  .glass-card {
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+  .glass-panel {
+    background: rgba(15, 23, 42, 0.75);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+  }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.5); }
+  ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.3); }
+</style>
+<script>
+  (function() {
+    const saved = 'light';
+    if (saved === 'light') {
+      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.add('light');
+    } else {
+      document.documentElement.classList.remove('light');
+      document.documentElement.classList.add('dark');
+    }
+  })();
+</script>
+<style id="light-theme-styles">
+  html.light body {
+    background: #f1f5f9 !important;
+    color: #0f172a !important;
+  }
+  html.light header {
+    background: #ffffff !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+  }
+  html.light header h1 {
+    color: #1b365d !important;
+  }
+  html.light header p {
+    color: #475569 !important;
+  }
+  html.light header span[class*="rounded-full"] {
+    background-color: #e0f2fe !important;
+    border-color: #7dd3fc !important;
+    color: #0369a1 !important;
+  }
+  html.light header .bg-slate-900\/80 {
+    background-color: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
+  }
+  html.light header .bg-slate-900\/80 span:not(.material-symbols-outlined) {
+    color: #0f172a !important;
+  }
+  html.light nav {
+    background-color: rgba(255, 255, 255, 0.95) !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+  }
+  html.light nav > div:first-child {
+    background-color: #f8fafc !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+  }
+  html.light .bg-slate-950,
+  html.light .bg-slate-900 {
+    background-color: #ffffff !important;
+    border-color: #e2e8f0 !important;
+  }
+  html.light .glass-card,
+  html.light .glass-panel {
+    background-color: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    color: #0f172a !important;
+    box-shadow: 0 4px 14px -2px rgba(0, 0, 0, 0.05) !important;
+  }
+  html.light .glass-card h2,
+  html.light .glass-card h3,
+  html.light .glass-panel h2,
+  html.light .glass-panel h3 {
+    color: #0f172a !important;
+  }
+  html.light .glass-card .text-white,
+  html.light .glass-panel .text-white {
+    color: #0f172a !important;
+  }
+  html.light .text-gray-400,
+  html.light .text-gray-300 {
+    color: #64748b !important;
+  }
+  html.light table thead tr {
+    background-color: #f1f5f9 !important;
+    color: #475569 !important;
+    border-color: #e2e8f0 !important;
+  }
+  html.light table tbody tr {
+    border-color: #e2e8f0 !important;
+  }
+  html.light table td {
+    color: #0f172a !important;
+  }
+  html.light table tr:hover td {
+    background-color: #f8fafc !important;
+  }
+</style>
+<style id="light-theme-nnos">
+  /* ===== NNÓS · Identidade clara (Matriz) =====
+     Regra: fundo escuro => texto claro | fundo claro => texto escuro */
+  .logo-light { display: none; }
+  html.light .logo-light { display: block; }
+  html.light .logo-dark { display: none; }
+
+  html.light body {
+    background: linear-gradient(180deg, #eef4fa 0%, #f6f9fc 40%, #f4f7fb 100%) !important;
+    color: #0f172a !important;
+  }
+  html.light body.bg-slate-950, html.light .bg-slate-950 { background-color: transparent !important; }
+
+  /* Cabeçalho */
+  html.light header {
+    background: linear-gradient(135deg, #ffffff 0%, #eaf3fb 100%) !important;
+    border-bottom: 3px solid #0083ca !important;
+  }
+  html.light header h1 { color: #1b365d !important; }
+  html.light header p { color: #475569 !important; }
+  html.light header [class*="bg-white/20"] { background-color: #cbd5e1 !important; }
+  html.light header [class*="bg-brand-blue/10"] {
+    background-color: #e0f2fe !important; color: #075985 !important; border-color: #7dd3fc !important;
+  }
+  html.light header [class*="bg-slate-900"] {
+    background-color: #ffffff !important; border-color: #bcd3e6 !important; color: #1b365d !important;
+    box-shadow: 0 1px 3px rgba(27,54,93,.08) !important;
+  }
+  html.light header [class*="bg-slate-900"] .text-brand-blue { color: #0083ca !important; }
+  html.light header [class*="bg-slate-900"] .text-emerald-400 { color: #059669 !important; }
+  html.light header [class*="bg-slate-900"] .text-amber-400 { color: #b45309 !important; }
+
+  /* Navbar */
+  html.light nav {
+    background-color: #ffffff !important;
+    border-bottom: 1px solid #dbe5ef !important;
+    box-shadow: 0 2px 8px rgba(27,54,93,.06) !important;
+  }
+  html.light nav > div:first-child {
+    background-color: #f1f6fb !important;
+    border-bottom: 1px solid #dbe5ef !important;
+  }
+  html.light nav a[href^="#"] { color: #1b365d !important; }
+  html.light nav a[href^="#"]:hover { background-color: #e0f2fe !important; color: #075985 !important; }
+
+  /* Títulos de seção e textos */
+  html.light h2.text-white, html.light h2 { color: #1b365d !important; }
+  html.light .text-white { color: #0f172a !important; }
+  html.light .text-gray-300, html.light .text-gray-400, html.light .text-text-muted { color: #475569 !important; }
+  html.light .text-gray-500 { color: #64748b !important; }
+  html.light .text-brand-blue { color: #0369a1 !important; }
+  html.light .text-emerald-400, html.light .text-emerald-300 { color: #047857 !important; }
+  html.light .text-rose-400, html.light .text-rose-300 { color: #be123c !important; }
+  html.light .text-amber-400, html.light .text-amber-300 { color: #b45309 !important; }
+  html.light .text-purple-400 { color: #6d28d9 !important; }
+  html.light .text-teal-300 { color: #0f766e !important; }
+
+  /* Cartões */
+  html.light .glass-card, html.light .glass-panel {
+    background: #ffffff !important;
+    border: 1px solid #dbe5ef !important;
+    box-shadow: 0 6px 18px -8px rgba(27,54,93,.18) !important;
+    backdrop-filter: none !important;
+  }
+  html.light [class*="bg-slate-900/80"], html.light [class*="bg-slate-900/60"],
+  html.light [class*="bg-surface-container-high"], html.light [class*="bg-surface-container-lowest"] {
+    background-color: #f1f6fb !important;
+    border-color: #dbe5ef !important;
+  }
+  html.light [class*="bg-surface-container/80"] { background-color: #e8f2fa !important; }
+  html.light [class*="hover:bg-surface-container-high"]:hover { background-color: #e0f2fe !important; }
+  html.light [class*="border-surface-variant"], html.light [class*="border-white/"] { border-color: #dbe5ef !important; }
+
+
+  /* Badges / ícones dos KPIs (fundo claro => texto escuro) */
+  html.light [class*="bg-brand-blue/20"] { background-color: #e0f2fe !important; color: #075985 !important; border-color: #7dd3fc !important; }
+  html.light [class*="bg-emerald-500/20"] { background-color: #d1fae5 !important; color: #047857 !important; border-color: #6ee7b7 !important; }
+  html.light [class*="bg-purple-500/20"] { background-color: #ede9fe !important; color: #6d28d9 !important; border-color: #c4b5fd !important; }
+  html.light [class*="bg-rose-500/20"] { background-color: #ffe4e6 !important; color: #be123c !important; border-color: #fda4af !important; }
+  html.light [class*="bg-teal-500/20"] { background-color: #ccfbf1 !important; color: #0f766e !important; border-color: #5eead4 !important; }
+  html.light [class*="bg-amber-500/15"], html.light [class*="bg-amber-500/20"] { background-color: #fef3c7 !important; color: #92400e !important; border-color: #fcd34d !important; }
+
+  /* ===== DRE: barra escura => fonte clara ===== */
+  html.light .glass-panel > div:first-child {
+    background: linear-gradient(90deg, #1b365d 0%, #00223a 100%) !important;
+    border-bottom: 1px solid #1b365d !important;
+  }
+  html.light .glass-panel > div:first-child h3,
+  html.light .glass-panel > div:first-child .text-white { color: #ffffff !important; }
+  html.light .glass-panel > div:first-child .text-brand-blue { color: #7dd3fc !important; }
+  html.light .glass-panel > div:first-child span[class*="bg-brand-blue"] {
+    background-color: rgba(125,211,252,.18) !important; color: #e0f2fe !important; border-color: rgba(125,211,252,.5) !important;
+  }
+  html.light table thead tr { background-color: #eaf3fb !important; color: #1b365d !important; border-bottom: 2px solid #0083ca !important; }
+  html.light table thead th { color: #1b365d !important; }
+  html.light table thead th.text-brand-blue { color: #0369a1 !important; }
+
+  /* Linhas de grupo (RECEITAS, CUSTOS...) = barra escura => texto claro */
+  html.light table tbody tr[class*="bg-surface-container-high/90"] {
+    background-color: #1b365d !important; border-color: #1b365d !important;
+  }
+  html.light table tbody tr[class*="bg-surface-container-high/90"] td { color: #ffffff !important; }
+  html.light table tbody tr[class*="bg-surface-container-high/90"] td.text-amber-300,
+  html.light table tbody tr[class*="bg-surface-container-high/90"] td[class*="text-amber"] { color: #fcd34d !important; }
+
+  /* Subtotais (fundo claro => texto escuro) */
+  html.light table tbody tr[class*="bg-surface-container/80"] { background-color: #e8f2fa !important; border-color: #7dd3fc !important; }
+  html.light table tbody tr[class*="bg-surface-container/80"] td.text-brand-blue { color: #0369a1 !important; }
+  html.light table tbody tr[class*="bg-surface-container/80"] td.text-emerald-400 { color: #047857 !important; }
+  html.light table tbody tr[class*="bg-surface-container/80"] td.text-rose-400 { color: #be123c !important; }
+  html.light table tbody tr[class*="bg-surface-container-lowest/30"] { background-color: #f8fafc !important; }
+  html.light table tbody tr[class*="bg-surface-container-lowest/30"] td { color: #64748b !important; }
+
+  /* Resultado do período */
+  html.light table tbody tr[class*="from-emerald-900"] { background: #d1fae5 !important; border-color: #10b981 !important; }
+  html.light table tbody tr[class*="from-emerald-900"] td { color: #065f46 !important; }
+  html.light table tbody tr[class*="from-rose-950"] { background: #ffe4e6 !important; border-color: #f43f5e !important; }
+  html.light table tbody tr[class*="from-rose-950"] td { color: #9f1239 !important; }
+  html.light table tbody tr[class*="from-emerald-900"] td span, html.light table tbody tr[class*="from-rose-950"] td span { color: inherit !important; }
+  html.light table td .text-emerald-400 { color: #047857 !important; }
+  html.light table td .text-rose-400 { color: #be123c !important; }
+  html.light table td > span.text-text-muted { color: #94a3b8 !important; }
+
+  /* NET Operacional */
+  html.light [class*="bg-emerald-950/40"] { background-color: #ecfdf5 !important; border-color: #10b981 !important; }
+  html.light [class*="bg-rose-950/40"] { background-color: #fff1f2 !important; border-color: #f43f5e !important; }
+
+  /* ===== Barras de progresso: fundo escuro => texto claro ===== */
+  html.light .h-full[class*="bg-"] { color: #ffffff !important; }
+  html.light .h-full.bg-rose-500, html.light .h-full.bg-rose-400 { background-color: #e11d48 !important; }
+  html.light .h-full.bg-amber-500, html.light .h-full.bg-amber-400 { background-color: #b45309 !important; }
+  html.light .h-full.bg-emerald-500 { background-color: #059669 !important; }
+  html.light .h-full.bg-teal-500 { background-color: #0d9488 !important; }
+  html.light .h-full.bg-purple-500 { background-color: #7c3aed !important; }
+  html.light .h-full.bg-slate-400 { background-color: #475569 !important; }
+  html.light .h-full.bg-brand-blue { background-color: #0083ca !important; }
+  html.light .h-full.rounded-lg.text-white { color: #ffffff !important; }
+  html.light .bg-surface-container-high.rounded-full, html.light .bg-surface-container-high.rounded-lg,
+  html.light .bg-surface-container-lowest.rounded-full { background-color: #e2e8f0 !important; }
+
+  /* Badges de ranking Top 10 */
+  html.light .bg-amber-500.text-black { background-color: #f59e0b !important; color: #1f2937 !important; }
+  html.light .bg-slate-400.text-black { background-color: #94a3b8 !important; color: #0f172a !important; }
+  html.light .bg-amber-700.text-white { background-color: #b45309 !important; color: #ffffff !important; }
+
+  /* Rodapé: barra escura => fonte clara */
+  html.light footer, html.light footer.bg-slate-950 { background-color: #1b365d !important; border-top: 3px solid #0083ca !important; }
+  html.light footer, html.light footer .text-white, html.light footer span, html.light footer div { color: #e2e8f0 !important; }
+  html.light footer .font-bold { color: #ffffff !important; }
+
+  html.light ::-webkit-scrollbar-track { background: #e2e8f0; }
+  html.light ::-webkit-scrollbar-thumb { background: #94a3b8; }
+</style>
+</head>
+<body class="antialiased selection:bg-brand-blue selection:text-white bg-slate-950">
+
+<!-- LOGIN GATE OVERLAY -->
+<div id="login-overlay" class="hidden" style="display:none !important;" class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/95 backdrop-blur-2xl transition-all duration-500">
+  <div class="w-full max-w-md bg-slate-900/90 border border-white/10 rounded-2xl p-8 shadow-2xl backdrop-blur-2xl relative overflow-hidden">
+    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-brand-blue via-blue-500 to-emerald-400"></div>
+    <div class="flex flex-col items-center text-center mb-8">
+      <img alt="NNÓS Logo" class="h-16 w-auto object-contain mb-4" src="data:image/png;base64,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"/>
+      <h2 class="text-xl font-bold font-display text-white tracking-tight">Acesso ao Relatório Executivo</h2>
+      <p class="text-xs text-gray-400 mt-1">Área restrita • Digite suas credenciais para visualizar</p>
+    </div>
+    
+    <form id="login-form" class="space-y-4" onsubmit="handleLogin(event)">
+      <div>
+        <label class="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-1.5">Usuário</label>
+        <div class="relative">
+          <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm">person</span>
+          <input id="login-user" type="text" required placeholder="Digite seu usuário" class="w-full bg-slate-800/80 border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all"/>
+        </div>
+      </div>
+      
+      <div>
+        <label class="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-1.5">Senha</label>
+        <div class="relative">
+          <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm">lock</span>
+          <input id="login-pass" type="password" required placeholder="••••••••" class="w-full bg-slate-800/80 border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all"/>
+        </div>
+      </div>
+
+      <div id="login-error" class="hidden text-xs font-medium text-rose-400 bg-rose-500/10 border border-rose-500/20 p-3 rounded-xl flex items-center gap-2">
+        <span class="material-symbols-outlined text-sm">error</span> Usuário ou senha incorretos. Tente novamente.
+      </div>
+
+      <button type="submit" class="w-full py-3 px-4 rounded-xl bg-brand-blue hover:bg-blue-600 text-white font-bold text-sm transition-all shadow-lg shadow-brand-blue/20 flex items-center justify-center gap-2 group">
+        <span>Acessar Relatório</span>
+        <span class="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">arrow_forward</span>
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- REPORT CONTENT -->
+<div id="report-wrapper" class="">
+
+<!-- HEADER -->
+<header class="relative overflow-hidden bg-transparent border-b border-surface-variant">
+  <div class="max-w-[1720px] mx-auto px-6 py-6 relative z-10 flex items-center justify-between gap-6">
+    <div class="flex items-center gap-5 min-w-0">
+      <img alt="NNÓS Logo" class="logo-dark h-16 w-auto object-contain flex-shrink-0 opacity-95" src="assets/logo-nnos-white.png"/>
+      <img alt="NNÓS Logo" class="logo-light h-16 w-auto object-contain flex-shrink-0 opacity-95" src="assets/logo-nnos.png"/>
+      <div class="h-12 w-[1px] bg-white/20 hidden sm:block flex-shrink-0"></div>
+      <div class="min-w-0">
+        <div class="flex items-center gap-3.5 flex-nowrap">
+          <h1 class="text-2xl lg:text-3xl font-bold font-display text-text-primary tracking-tight leading-tight whitespace-nowrap">Demonstrativo de Resultados &amp; Dashboard Executivo</h1>
+          <span class="text-[10px] font-bold text-sky-400 uppercase tracking-wider bg-sky-500/10 px-2.5 py-0.5 rounded-full border border-sky-400/30 whitespace-nowrap flex-shrink-0">Relatório Gerencial</span>
+        </div>
+        <p class="text-text-muted text-sm md:text-base text-gray-200 mt-0.5 whitespace-nowrap">Análise financeira gerencial — Visão acumulada de 9 meses (Janeiro a Setembro de 2026) - Fonte Conta Azul</p>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- NAV BAR -->
+<nav class="sticky top-0 z-50 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-b border-slate-200 dark:border-white/10 shadow-md transition-colors duration-200">
+  <!-- Linha 1: Outros Relatórios e Ações Globais -->
+  <div class="bg-slate-100/90 dark:bg-slate-900/90 px-6 py-1.5 border-b border-slate-200 dark:border-white/10">
+    <div class="max-w-[1720px] mx-auto flex items-center justify-between gap-3 flex-wrap">
+      <div class="flex items-center gap-2">
+        <span class="text-[11px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-1.5 mr-1">
+          <span class="material-symbols-outlined text-sm text-sky-500">alt_route</span> Outros Relatórios:
+        </span>
+        <a href="uva.html" class="px-3 py-1.5 rounded-lg text-xs font-bold text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-500/20 hover:bg-amber-200 dark:hover:bg-amber-500/30 border border-amber-300 dark:border-amber-400/40 transition-all flex items-center gap-1.5 shadow-sm hover:scale-[1.02] cursor-pointer">
+          <span class="material-symbols-outlined text-sm">account_balance</span> Campus BH UVA
+        </a>
+        <a href="booking.html" class="px-3 py-1.5 rounded-lg text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-500/20 hover:bg-emerald-200 dark:hover:bg-emerald-500/30 border border-emerald-300 dark:border-emerald-400/40 transition-all flex items-center gap-1.5 shadow-sm hover:scale-[1.02] cursor-pointer">
+          <span class="material-symbols-outlined text-sm">trending_up</span> Performance Projetos
+        </a>
+        <a href="prospeccao.html" class="px-3 py-1.5 rounded-lg text-xs font-bold text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-500/20 hover:bg-purple-200 dark:hover:bg-purple-500/30 border border-purple-300 dark:border-purple-400/40 transition-all flex items-center gap-1.5 shadow-sm hover:scale-[1.02] cursor-pointer">
+          <span class="material-symbols-outlined text-sm">explore</span> Prospecção
+        </a>
+        <a href="lider.html" class="px-3 py-1.5 rounded-lg text-xs font-bold text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-500/20 hover:bg-blue-200 dark:hover:bg-blue-500/30 border border-blue-300 dark:border-blue-400/40 transition-all flex items-center gap-1.5 shadow-sm hover:scale-[1.02] cursor-pointer">
+          <span class="material-symbols-outlined text-sm">badge</span> Painel por Líder
+        </a>
+      </div>
+      <div class="flex items-center gap-2 ml-auto">
+        <button id="themeToggleBtn" onclick="toggleTheme()" class="theme-toggle-btn p-1.5 rounded-lg text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10 border border-slate-300 dark:border-white/10 transition-colors flex items-center justify-center cursor-pointer shadow-sm" title="Alternar Modo Escuro / Claro">
+          <span class="material-symbols-outlined text-base theme-icon">light_mode</span>
+        </button>
+        <a href="index.html" class="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-700 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10 border border-slate-300 dark:border-white/10 transition-colors flex items-center gap-1.5 cursor-pointer">
+          <span class="material-symbols-outlined text-sm">grid_view</span> Menu
+        </a>
+        <button onclick="logout()" class="px-3 py-1.5 rounded-lg text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-500/20 border border-rose-300 dark:border-rose-500/30 transition-colors flex items-center gap-1 cursor-pointer" title="Encerrar Sessão">
+          <span class="material-symbols-outlined text-sm">logout</span> Sair
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Linha 2: Seções do Relatório -->
+  <div class="max-w-[1720px] mx-auto px-6 overflow-x-auto">
+    <div class="flex items-center gap-1.5 py-2 min-w-max">
+      <a class="px-3.5 py-1.5 rounded-lg text-xs font-bold text-slate-700 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-colors flex items-center gap-2" href="#kpis"><span class="material-symbols-outlined text-base text-brand-blue">monitoring</span> KPIs Estratégicos</a>
+      <a class="px-3.5 py-1.5 rounded-lg text-xs font-bold text-slate-700 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-colors flex items-center gap-2" href="#dre"><span class="material-symbols-outlined text-base text-brand-blue">table_chart</span> DRE Gerencial</a>
+      <a class="px-3.5 py-1.5 rounded-lg text-xs font-bold text-slate-700 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-colors flex items-center gap-2" href="#faturamento"><span class="material-symbols-outlined text-base text-brand-blue">show_chart</span> Faturamento Mensal</a>
+      <a class="px-3.5 py-1.5 rounded-lg text-xs font-bold text-slate-700 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-colors flex items-center gap-2" href="#projetos-un"><span class="material-symbols-outlined text-base text-brand-blue">domain</span> Projetos &amp; UNs</a>
+      <a class="px-3.5 py-1.5 rounded-lg text-xs font-bold text-slate-700 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-colors flex items-center gap-2" href="#centros-custo"><span class="material-symbols-outlined text-base text-brand-blue">account_balance</span> Centros de Custo</a>
+      <a class="px-3.5 py-1.5 rounded-lg text-xs font-bold text-slate-700 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-colors flex items-center gap-2" href="#viagens"><span class="material-symbols-outlined text-base text-brand-blue">flight_takeoff</span> Viagens &amp; Reembolsos</a>
+      <a class="px-3.5 py-1.5 rounded-lg text-xs font-bold text-slate-700 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-colors flex items-center gap-2" href="#sintese"><span class="material-symbols-outlined text-base text-brand-blue">lightbulb</span> Síntese Executiva</a>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main class="max-w-[1720px] mx-auto px-6 py-10 space-y-12">
+
+  <!-- ──────── SECTION 1: KPIS ──────── -->
+  <section class="scroll-mt-24" id="kpis">
+    <div class="mb-6 flex items-center justify-between">
+      <div>
+        <h2 class="text-xl font-display font-bold text-white flex items-center gap-3">
+          <div class="w-1.5 h-6 bg-brand-blue rounded-full"></div>
+          Indicadores Estratégicos YTD (9 Meses)
+        </h2>
+        <p class="text-xs text-gray-400 mt-1 ml-4.5">Visão sintética do desempenho financeiro acumulado de Janeiro a Setembro de 2026</p>
+      </div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
+      <!-- KPI 1 -->
+      <div class="glass-card rounded-xl p-5 relative overflow-hidden group">
+        <div class="flex items-center justify-between mb-3">
+          <div class="w-10 h-10 rounded-lg bg-brand-blue/20 flex items-center justify-center text-brand-blue border border-brand-blue/30">
+            <span class="material-symbols-outlined">payments</span>
+          </div>
+          <span class="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full bg-brand-blue/20 text-brand-blue border border-brand-blue/30">9 Meses</span>
+        </div>
+        <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Receita Bruta YTD</div>
+        <div class="text-2xl font-extrabold font-display text-white mb-1">R$ 7.88M</div>
+        <div class="text-xs text-emerald-400 font-medium flex items-center gap-1">
+          <span class="material-symbols-outlined text-sm">trending_up</span> Média: R$ 875.389/mês
+        </div>
+        <div class="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-brand-blue to-blue-600"></div>
+      </div>
+      <!-- KPI 2 -->
+      <div class="glass-card rounded-xl p-5 relative overflow-hidden group">
+        <div class="flex items-center justify-between mb-3">
+          <div class="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400 border border-emerald-500/30">
+            <span class="material-symbols-outlined">add_chart</span>
+          </div>
+          <span class="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Set: 50,7%</span>
+        </div>
+        <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Margem Bruta Acumulada</div>
+        <div class="text-2xl font-extrabold font-display text-white mb-1">46,5%</div>
+        <div class="text-xs text-emerald-400 font-medium flex items-center gap-1">
+          <span class="material-symbols-outlined text-sm">arrow_upward</span> R$ 3,67M em Margem Bruta
+        </div>
+        <div class="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-emerald-500 to-teal-400"></div>
+      </div>
+      <!-- KPI 3 -->
+      <div class="glass-card rounded-xl p-5 relative overflow-hidden group">
+        <div class="flex items-center justify-between mb-3">
+          <div class="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center text-purple-400 border border-purple-500/30">
+            <span class="material-symbols-outlined">trending_down</span>
+          </div>
+          <span class="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/30">Set: 12,6%</span>
+        </div>
+        <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">EBITDA Gerencial YTD</div>
+        <div class="text-2xl font-extrabold font-display text-white mb-1">-R$ 538.245</div>
+        <div class="text-xs text-gray-400 font-medium flex items-center gap-1">
+          <span class="material-symbols-outlined text-sm">monitoring</span> Margem EBITDA: -6,8%
+        </div>
+        <div class="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-purple-500 to-indigo-500"></div>
+      </div>
+      <!-- KPI 4 -->
+      <div class="glass-card rounded-xl p-5 relative overflow-hidden group">
+        <div class="flex items-center justify-between mb-3">
+          <div class="w-10 h-10 rounded-lg bg-rose-500/20 flex items-center justify-center text-rose-400 border border-rose-500/30">
+            <span class="material-symbols-outlined">account_balance_wallet</span>
+          </div>
+          <span class="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/30">Set: 34,4%</span>
+        </div>
+        <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Resultado Líquido do Período</div>
+        <div class="text-2xl font-extrabold font-display text-white mb-1">-R$ 374.045</div>
+        <div class="text-xs text-gray-400 font-medium flex items-center gap-1">
+          <span class="material-symbols-outlined text-sm">equalizer</span> Margem Líquida: -4,7%
+        </div>
+        <div class="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-rose-500 to-pink-500"></div>
+      </div>
+      <!-- KPI 5 -->
+      <div class="glass-card rounded-xl p-5 relative overflow-hidden group border-2 border-teal-500/30">
+        <div class="flex items-center justify-between mb-3">
+          <div class="w-10 h-10 rounded-lg bg-teal-500/20 text-teal-300 border-teal-500/30 flex items-center justify-center border">
+            <span class="material-symbols-outlined">construction</span>
+          </div>
+          <span class="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full bg-teal-500/20 text-teal-300 border-teal-500/30 border">Ex-Imob.</span>
+        </div>
+        <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Resultado s/ Imob. &amp; Reforma</div>
+        <div class="text-2xl font-extrabold font-display text-rose-400 mb-1">-R$ 36.290</div>
+        <div class="text-xs text-rose-400 font-medium flex items-center gap-1">
+          <span class="material-symbols-outlined text-sm">trending_down</span> -0.5% rec. bruta | Imob.: R$ 338k
+        </div>
+        <div class="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-teal-600 to-cyan-500"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ──────── SECTION 2: DRE TABLE ──────── -->
+  <section class="scroll-mt-24" id="dre">
+    <div class="mb-6">
+      <h2 class="text-xl font-display font-bold text-white flex items-center gap-3">
+        <div class="w-1.5 h-6 bg-brand-blue rounded-full"></div>
+        Demonstração do Resultado do Exercício (DRE Gerencial)
+      </h2>
+      <p class="text-xs text-gray-400 mt-1 ml-4.5">Apuração mensal detalhada (Jan a Set/26) — Impostos (ISS Efetivo + 6,15% PIS/COFINS) e Resultado Financeiro</p>
+    </div>
+    <div class="glass-panel rounded-2xl overflow-hidden border border-white/15 shadow-2xl">
+      <div class="p-4 bg-slate-900/90 border-b border-white/10 flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-brand-blue">table_view</span>
+          <h3 class="text-sm font-bold text-white uppercase tracking-wider">DRE Mensal e Acumulado YTD — 2026</h3>
+        </div>
+        <span class="text-xs font-bold bg-brand-blue/20 text-brand-blue border border-brand-blue/40 px-3 py-1 rounded-full">Valores Expressos em R$</span>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse min-w-[950px]">
+          <thead>
+            <tr class="bg-slate-950 text-gray-300 text-xs font-extrabold uppercase tracking-wider border-b border-white/15">
+              <th class="py-3.5 px-4">Descrição</th>
+              <th class="py-3.5 px-3 text-right">JAN-26</th><th class="py-3.5 px-3 text-right">FEV-26</th><th class="py-3.5 px-3 text-right">MAR-26</th><th class="py-3.5 px-3 text-right">ABR-26</th><th class="py-3.5 px-3 text-right">MAI-26</th><th class="py-3.5 px-3 text-right">JUN-26</th><th class="py-3.5 px-3 text-right">JUL-26</th><th class="py-3.5 px-3 text-right">AGO-26</th><th class="py-3.5 px-3 text-right">SET-26</th>
+              <th class="py-3.5 px-3 text-right text-brand-blue font-black">YTD (9 MESES)</th>
+            </tr>
+          </thead>
+          <tbody>
+<tr class="bg-surface-container-high/90 border-y border-surface-variant/80">
+          <td colspan="11" class="py-2.5 px-4 text-xs font-bold text-brand-blue uppercase tracking-widest">RECEITAS</td>
+        </tr>
+<tr class="hover:bg-surface-container-high/40 transition-colors border-b border-surface-variant/30">
+          <td class="py-3 px-4 text-xs font-medium text-white">(=) Receita Bruta</td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-emerald-400 font-bold">618.822</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-emerald-400 font-bold">785.304</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-emerald-400 font-bold">750.587</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-emerald-400 font-bold">820.033</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-emerald-400 font-bold">971.444</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-emerald-400 font-bold">881.334</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-emerald-400 font-bold">1.008.002</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-emerald-400 font-bold">962.779</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-emerald-400 font-bold">1.080.195</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold"><span class="text-emerald-400 font-bold">7.878.500</span></td>
+        </tr>
+<tr class="hover:bg-surface-container-high/40 transition-colors border-b border-surface-variant/30">
+          <td class="py-3 px-4 text-xs font-medium text-gray-300">(-) Impostos</td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">59.571</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">89.961</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">70.068</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">73.615</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">84.590</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">83.118</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">91.341</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">89.458</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">102.730</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold"><span class="text-rose-400 font-bold">744.451</span></td>
+        </tr>
+<tr class="bg-surface-container/80 border-y border-brand-blue/40 hover:bg-surface-container-high/60 transition-colors">
+          <td class="py-3 px-4 text-xs font-bold text-brand-blue uppercase tracking-wider">(=) RECEITA LÍQUIDA</td><td class="py-3 px-3 text-right text-sm font-sans font-bold text-brand-blue"><span class="text-white font-bold">559.251</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold text-brand-blue"><span class="text-white font-bold">695.344</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold text-brand-blue"><span class="text-white font-bold">680.519</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold text-brand-blue"><span class="text-white font-bold">746.418</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold text-brand-blue"><span class="text-white font-bold">886.853</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold text-brand-blue"><span class="text-white font-bold">798.216</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold text-brand-blue"><span class="text-white font-bold">916.662</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold text-brand-blue"><span class="text-white font-bold">873.321</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold text-brand-blue"><span class="text-white font-bold">977.465</span></td><td class="py-3 px-3 text-right text-sm font-sans font-extrabold text-brand-blue"><span class="text-white font-bold">7.134.049</span></td>
+        </tr>
+<tr class="h-2">
+          <td colspan="11"></td>
+        </tr>
+<tr class="bg-surface-container-high/90 border-y border-surface-variant/80">
+          <td colspan="11" class="py-2.5 px-4 text-xs font-bold text-brand-blue uppercase tracking-widest">CUSTOS VARIÁVEIS</td>
+        </tr>
+<tr class="hover:bg-surface-container-high/40 transition-colors border-b border-surface-variant/30">
+          <td class="py-3 px-4 text-xs font-medium text-gray-300">(-) Custo Serviço (Consultores)</td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">370.160</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">315.950</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">280.298</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">292.262</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">378.867</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">419.289</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">408.895</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">374.831</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">401.222</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold"><span class="text-rose-400 font-bold">3.241.773</span></td>
+        </tr>
+<tr class="hover:bg-surface-container-high/40 transition-colors border-b border-surface-variant/30">
+          <td class="py-3 px-4 text-xs font-medium text-gray-300">(-) Comissões</td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">4.001</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">1.478</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">10.034</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">12.334</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">12.566</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-text-muted">—</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">2.858</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">1.449</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-text-muted">—</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold"><span class="text-rose-400 font-bold">44.721</span></td>
+        </tr>
+<tr class="hover:bg-surface-container-high/40 transition-colors border-b border-surface-variant/30">
+          <td class="py-3 px-4 text-xs font-medium text-gray-300">(-) Viagens</td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">124.635</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">126.354</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">148.267</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">115.450</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">104.621</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">140.557</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">76.761</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">110.454</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">85.967</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold"><span class="text-rose-400 font-bold">1.033.066</span></td>
+        </tr>
+<tr class="hover:bg-surface-container-high/40 transition-colors border-b border-surface-variant/30">
+          <td class="py-3 px-4 text-xs font-medium text-white">(+) Reembolso de Viagens</td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-emerald-400 font-bold">149.823</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-emerald-400 font-bold">87.090</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-emerald-400 font-bold">109.724</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-emerald-400 font-bold">77.770</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-emerald-400 font-bold">107.614</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-emerald-400 font-bold">90.879</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-emerald-400 font-bold">81.508</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-emerald-400 font-bold">89.410</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-emerald-400 font-bold">57.913</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold"><span class="text-emerald-400 font-bold">851.731</span></td>
+        </tr>
+<tr class="bg-surface-container/80 border-y border-brand-blue/40 hover:bg-surface-container-high/60 transition-colors">
+          <td class="py-3 px-4 text-xs font-bold text-brand-blue uppercase tracking-wider">(=) MARGEM BRUTA</td><td class="py-3 px-3 text-right text-sm font-sans font-bold text-brand-blue"><span class="text-white font-bold">210.278</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold text-brand-blue"><span class="text-white font-bold">338.652</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold text-brand-blue"><span class="text-white font-bold">351.643</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold text-brand-blue"><span class="text-white font-bold">404.143</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold text-brand-blue"><span class="text-white font-bold">498.414</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold text-brand-blue"><span class="text-white font-bold">329.248</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold text-brand-blue"><span class="text-white font-bold">509.655</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold text-brand-blue"><span class="text-white font-bold">475.998</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold text-brand-blue"><span class="text-white font-bold">548.189</span></td><td class="py-3 px-3 text-right text-sm font-sans font-extrabold text-brand-blue"><span class="text-white font-bold">3.666.220</span></td>
+        </tr>
+<tr class="bg-surface-container-lowest/30 border-b border-surface-variant/20">
+          <td class="py-1.5 px-4 text-xs font-medium text-text-muted italic">% Margem Bruta / Receita Bruta</td><td class="py-1.5 px-3 text-right text-xs font-sans text-text-muted italic">33,98%</td><td class="py-1.5 px-3 text-right text-xs font-sans text-text-muted italic">43,12%</td><td class="py-1.5 px-3 text-right text-xs font-sans text-text-muted italic">46,85%</td><td class="py-1.5 px-3 text-right text-xs font-sans text-text-muted italic">49,28%</td><td class="py-1.5 px-3 text-right text-xs font-sans text-text-muted italic">51,31%</td><td class="py-1.5 px-3 text-right text-xs font-sans text-text-muted italic">37,36%</td><td class="py-1.5 px-3 text-right text-xs font-sans text-text-muted italic">50,56%</td><td class="py-1.5 px-3 text-right text-xs font-sans text-text-muted italic">49,44%</td><td class="py-1.5 px-3 text-right text-xs font-sans text-text-muted italic">50,75%</td><td class="py-1.5 px-3 text-right text-xs font-sans font-semibold text-text-muted italic">46,53%</td>
+        </tr>
+<tr class="h-2">
+          <td colspan="11"></td>
+        </tr>
+<tr class="bg-surface-container-high/90 border-y border-surface-variant/80">
+          <td colspan="11" class="py-2.5 px-4 text-xs font-bold text-brand-blue uppercase tracking-widest">CUSTO FIXO</td>
+        </tr>
+<tr class="hover:bg-surface-container-high/40 transition-colors border-b border-surface-variant/30">
+          <td class="py-3 px-4 text-xs font-medium text-gray-300">(-) Funcionários (Sal+Enc+Benef)</td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">309.100</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">293.094</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">295.561</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">314.835</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">306.368</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">309.328</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">337.917</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">337.852</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">300.753</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold"><span class="text-rose-400 font-bold">2.804.806</span></td>
+        </tr>
+<tr class="hover:bg-surface-container-high/40 transition-colors border-b border-surface-variant/30">
+          <td class="py-3 px-4 text-xs font-medium text-gray-300">(-) Despesa Administrativa</td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">241.980</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">117.344</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">146.316</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">115.466</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">106.320</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">103.131</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">105.080</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">93.099</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">85.464</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold"><span class="text-rose-400 font-bold">1.114.199</span></td>
+        </tr>
+<tr class="hover:bg-surface-container-high/40 transition-colors border-b border-surface-variant/30">
+          <td class="py-3 px-4 text-xs font-medium text-gray-300">(-) Aluguel + Cond + Seguro</td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">19.201</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">22.038</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">21.161</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">17.844</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">18.059</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">17.889</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">17.930</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">17.889</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">18.160</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold"><span class="text-rose-400 font-bold">170.170</span></td>
+        </tr>
+<tr class="hover:bg-surface-container-high/40 transition-colors border-b border-surface-variant/30">
+          <td class="py-3 px-4 text-xs font-medium text-gray-300">(-) Contabilidade</td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">6.120</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">3.404</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">3.404</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">3.404</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">3.404</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">6.846</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">4.255</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">3.404</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">3.418</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold"><span class="text-rose-400 font-bold">37.660</span></td>
+        </tr>
+<tr class="bg-surface-container/80 border-y border-emerald-500/40 hover:bg-surface-container-high/60 transition-colors">
+          <td class="py-3 px-4 text-xs font-bold text-emerald-400 uppercase tracking-wider">(=) Custo Fixo Total</td><td class="py-3 px-3 text-right text-sm font-sans font-bold text-emerald-400"><span class="text-white font-bold">576.401</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold text-emerald-400"><span class="text-white font-bold">435.880</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold text-emerald-400"><span class="text-white font-bold">466.443</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold text-emerald-400"><span class="text-white font-bold">451.549</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold text-emerald-400"><span class="text-white font-bold">434.151</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold text-emerald-400"><span class="text-white font-bold">437.193</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold text-emerald-400"><span class="text-white font-bold">465.182</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold text-emerald-400"><span class="text-white font-bold">452.243</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold text-emerald-400"><span class="text-white font-bold">407.795</span></td><td class="py-3 px-3 text-right text-sm font-sans font-extrabold text-emerald-400"><span class="text-white font-bold">4.126.836</span></td>
+        </tr>
+<tr class="hover:bg-surface-container-high/40 transition-colors border-b border-surface-variant/30">
+          <td class="py-3 px-4 text-xs font-medium text-gray-300">(-) Despesas Operacionais</td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-text-muted">—</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">9.639</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">23.964</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">21.000</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">11.987</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">1.271</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">2.524</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">3.464</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">3.780</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold"><span class="text-rose-400 font-bold">77.629</span></td>
+        </tr>
+<tr class="h-2">
+          <td colspan="11"></td>
+        </tr>
+<tr class="bg-surface-container/80 border-y border-rose-500/40 hover:bg-surface-container-high/60 transition-colors">
+          <td class="py-3 px-4 text-xs font-bold text-rose-400 uppercase tracking-wider">(=) EBITDA</td><td class="py-3 px-3 text-right text-sm font-sans font-bold text-rose-400"><span class="text-rose-400 font-bold">(366.123)</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold text-rose-400"><span class="text-rose-400 font-bold">(106.867)</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold text-rose-400"><span class="text-rose-400 font-bold">(138.764)</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold text-rose-400"><span class="text-rose-400 font-bold">(68.406)</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold text-rose-400"><span class="text-white font-bold">52.276</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold text-rose-400"><span class="text-rose-400 font-bold">(109.215)</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold text-rose-400"><span class="text-white font-bold">41.949</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold text-rose-400"><span class="text-white font-bold">20.291</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold text-rose-400"><span class="text-white font-bold">136.614</span></td><td class="py-3 px-3 text-right text-sm font-sans font-extrabold text-rose-400"><span class="text-rose-400 font-bold">(538.245)</span></td>
+        </tr>
+<tr class="bg-surface-container-lowest/30 border-b border-surface-variant/20">
+          <td class="py-1.5 px-4 text-xs font-medium text-text-muted italic">% EBITDA / Receita Bruta</td><td class="py-1.5 px-3 text-right text-xs font-sans text-text-muted italic">-59,16%</td><td class="py-1.5 px-3 text-right text-xs font-sans text-text-muted italic">-13,61%</td><td class="py-1.5 px-3 text-right text-xs font-sans text-text-muted italic">-18,49%</td><td class="py-1.5 px-3 text-right text-xs font-sans text-text-muted italic">-8,34%</td><td class="py-1.5 px-3 text-right text-xs font-sans text-text-muted italic">5,38%</td><td class="py-1.5 px-3 text-right text-xs font-sans text-text-muted italic">-12,39%</td><td class="py-1.5 px-3 text-right text-xs font-sans text-text-muted italic">4,16%</td><td class="py-1.5 px-3 text-right text-xs font-sans text-text-muted italic">2,11%</td><td class="py-1.5 px-3 text-right text-xs font-sans text-text-muted italic">12,65%</td><td class="py-1.5 px-3 text-right text-xs font-sans font-semibold text-text-muted italic">-6,83%</td>
+        </tr>
+<tr class="h-2">
+          <td colspan="11"></td>
+        </tr>
+<tr class="bg-surface-container-high/90 border-y border-surface-variant/80">
+          <td colspan="11" class="py-2.5 px-4 text-xs font-bold text-brand-blue uppercase tracking-widest">RESULTADO FINANCEIRO</td>
+        </tr>
+<tr class="hover:bg-surface-container-high/40 transition-colors border-b border-surface-variant/30">
+          <td class="py-3 px-4 text-xs font-medium text-white">(+) Receita Financeira (Rend. Aplic.)</td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-emerald-400 font-bold">7</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-emerald-400 font-bold">1</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-emerald-400 font-bold">3</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-emerald-400 font-bold">1</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-emerald-400 font-bold">3</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-emerald-400 font-bold">4</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-emerald-400 font-bold">3</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-emerald-400 font-bold">6</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-emerald-400 font-bold">241.411</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold"><span class="text-emerald-400 font-bold">241.438</span></td>
+        </tr>
+<tr class="hover:bg-surface-container-high/40 transition-colors border-b border-surface-variant/30">
+          <td class="py-3 px-4 text-xs font-medium text-gray-300">(-) Despesa Financeira (juros+tarifas)</td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">6.660</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">6.943</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">13.106</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">8.359</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">12.342</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">8.383</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">8.354</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">6.536</span></td><td class="py-3 px-3 text-right text-sm font-sans"><span class="text-rose-400 font-bold">6.556</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold"><span class="text-rose-400 font-bold">77.239</span></td>
+        </tr>
+<tr class="bg-surface-container/80 border-y border-brand-blue/40 hover:bg-surface-container-high/60 transition-colors">
+          <td class="py-3 px-4 text-xs font-bold text-brand-blue uppercase tracking-wider">(=) Resultado Financeiro</td><td class="py-3 px-3 text-right text-sm font-sans font-bold text-brand-blue"><span class="text-rose-400 font-bold">(6.653)</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold text-brand-blue"><span class="text-rose-400 font-bold">(6.941)</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold text-brand-blue"><span class="text-rose-400 font-bold">(13.103)</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold text-brand-blue"><span class="text-rose-400 font-bold">(8.359)</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold text-brand-blue"><span class="text-rose-400 font-bold">(12.340)</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold text-brand-blue"><span class="text-rose-400 font-bold">(8.379)</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold text-brand-blue"><span class="text-rose-400 font-bold">(8.351)</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold text-brand-blue"><span class="text-rose-400 font-bold">(6.531)</span></td><td class="py-3 px-3 text-right text-sm font-sans font-bold text-brand-blue"><span class="text-white font-bold">234.855</span></td><td class="py-3 px-3 text-right text-sm font-sans font-extrabold text-brand-blue"><span class="text-white font-bold">164.200</span></td>
+        </tr>
+<tr class="h-2">
+          <td colspan="11"></td>
+        </tr>
+<tr class="bg-gradient-to-r from-rose-950/80 to-rose-900/50 border-rose-500/60 border-y-2 hover:brightness-110 transition-all">
+          <td class="py-3.5 px-4 text-xs font-extrabold text-rose-300 uppercase tracking-wider">(=) RESULTADO DO PERÍODO</td><td class="py-3.5 px-3 text-right text-sm font-sans font-bold text-rose-300"><span class="text-rose-400 font-bold">(372.776)</span></td><td class="py-3.5 px-3 text-right text-sm font-sans font-bold text-rose-300"><span class="text-rose-400 font-bold">(113.808)</span></td><td class="py-3.5 px-3 text-right text-sm font-sans font-bold text-rose-300"><span class="text-rose-400 font-bold">(151.867)</span></td><td class="py-3.5 px-3 text-right text-sm font-sans font-bold text-rose-300"><span class="text-rose-400 font-bold">(76.764)</span></td><td class="py-3.5 px-3 text-right text-sm font-sans font-bold text-rose-300"><span class="text-white font-bold">39.936</span></td><td class="py-3.5 px-3 text-right text-sm font-sans font-bold text-rose-300"><span class="text-rose-400 font-bold">(117.594)</span></td><td class="py-3.5 px-3 text-right text-sm font-sans font-bold text-rose-300"><span class="text-white font-bold">33.598</span></td><td class="py-3.5 px-3 text-right text-sm font-sans font-bold text-rose-300"><span class="text-white font-bold">13.760</span></td><td class="py-3.5 px-3 text-right text-sm font-sans font-bold text-rose-300"><span class="text-white font-bold">371.470</span></td><td class="py-3.5 px-3 text-right text-sm font-sans font-black text-base text-rose-300"><span class="text-rose-400 font-bold">(374.045)</span></td>
+        </tr>
+<tr class="bg-surface-container-lowest/30 border-b border-surface-variant/20">
+          <td class="py-1.5 px-4 text-xs font-medium text-text-muted italic">% Resultado / Receita Bruta</td><td class="py-1.5 px-3 text-right text-xs font-sans text-text-muted italic">-60,24%</td><td class="py-1.5 px-3 text-right text-xs font-sans text-text-muted italic">-14,49%</td><td class="py-1.5 px-3 text-right text-xs font-sans text-text-muted italic">-20,23%</td><td class="py-1.5 px-3 text-right text-xs font-sans text-text-muted italic">-9,36%</td><td class="py-1.5 px-3 text-right text-xs font-sans text-text-muted italic">4,11%</td><td class="py-1.5 px-3 text-right text-xs font-sans text-text-muted italic">-13,34%</td><td class="py-1.5 px-3 text-right text-xs font-sans text-text-muted italic">3,33%</td><td class="py-1.5 px-3 text-right text-xs font-sans text-text-muted italic">1,43%</td><td class="py-1.5 px-3 text-right text-xs font-sans text-text-muted italic">34,39%</td><td class="py-1.5 px-3 text-right text-xs font-sans font-semibold text-text-muted italic">-4,75%</td>
+        </tr>
+<tr class="h-6">
+  <td colspan="11"></td>
+</tr>
+<tr class="bg-surface-container-high/90 border-y border-surface-variant/80">
+  <td class="py-3 px-4 text-xs font-bold text-brand-blue uppercase tracking-widest">Imobilizado &amp; Reforma</td>
+  <td colspan="9" class="py-3 px-3"></td>
+  <td class="py-3 px-3 text-right text-sm font-sans font-bold text-amber-300">R$ 337.754,41</td>
+</tr>
+<tr class="bg-gradient-to-r from-rose-950/80 to-rose-900/50 border-rose-500/60 border-y-2 hover:brightness-110 transition-all">
+  <td class="py-3.5 px-4 text-xs font-extrabold text-rose-300 uppercase tracking-wider">(=) RESULTADO DO PERÍODO SEM IMOBILIZADO &amp; REFORMA</td>
+  <td class="py-3.5 px-3 text-right text-sm font-sans font-bold text-rose-300"><span class="text-rose-400 font-bold">(372.776)</span></td><td class="py-3.5 px-3 text-right text-sm font-sans font-bold text-rose-300"><span class="text-rose-400 font-bold">(113.808)</span></td><td class="py-3.5 px-3 text-right text-sm font-sans font-bold text-rose-300"><span class="text-rose-400 font-bold">(151.867)</span></td><td class="py-3.5 px-3 text-right text-sm font-sans font-bold text-rose-300"><span class="text-rose-400 font-bold">(76.764)</span></td><td class="py-3.5 px-3 text-right text-sm font-sans font-bold text-rose-300"><span class="text-white font-bold">39.936</span></td><td class="py-3.5 px-3 text-right text-sm font-sans font-bold text-rose-300"><span class="text-rose-400 font-bold">(117.594)</span></td><td class="py-3.5 px-3 text-right text-sm font-sans font-bold text-rose-300"><span class="text-white font-bold">33.598</span></td><td class="py-3.5 px-3 text-right text-sm font-sans font-bold text-rose-300"><span class="text-white font-bold">13.760</span></td><td class="py-3.5 px-3 text-right text-sm font-sans font-bold text-rose-300"><span class="text-white font-bold">371.470</span></td>
+  <td class="py-3.5 px-3 text-right text-sm font-sans font-black text-base text-rose-300"><span class="text-rose-300 font-bold">(36.290,44)</span></td>
+</tr>
+<tr class="bg-surface-container-lowest/30 border-b border-surface-variant/20">
+  <td class="py-1.5 px-4 text-xs font-medium text-text-muted italic">% Resultado / Receita Bruta</td>
+  <td class="py-1.5 px-3 text-right text-xs font-sans text-text-muted italic">-60,24%</td><td class="py-1.5 px-3 text-right text-xs font-sans text-text-muted italic">-14,49%</td><td class="py-1.5 px-3 text-right text-xs font-sans text-text-muted italic">-20,23%</td><td class="py-1.5 px-3 text-right text-xs font-sans text-text-muted italic">-9,36%</td><td class="py-1.5 px-3 text-right text-xs font-sans text-text-muted italic">4,11%</td><td class="py-1.5 px-3 text-right text-xs font-sans text-text-muted italic">-13,34%</td><td class="py-1.5 px-3 text-right text-xs font-sans text-text-muted italic">3,33%</td><td class="py-1.5 px-3 text-right text-xs font-sans text-text-muted italic">1,43%</td><td class="py-1.5 px-3 text-right text-xs font-sans text-text-muted italic">34,39%</td><td class="py-1.5 px-3 text-right text-xs font-sans font-semibold text-text-muted italic">-0,46%</td>
+</tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ──────── SECTION 3: FATURAMENTO & CHART ──────── -->
+  <section class="scroll-mt-24" id="faturamento">
+    <div class="mb-6">
+      <h2 class="text-xl font-display font-bold text-white flex items-center gap-3">
+        <div class="w-1.5 h-6 bg-brand-blue rounded-full"></div>
+        Evolução do Faturamento Mensal
+      </h2>
+      <p class="text-xs text-gray-400 mt-1 ml-4.5">Tendência de crescimento da Receita Bruta acumulada no período de Janeiro a Setembro de 2026</p>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="glass-card rounded-2xl p-6 border border-white/10 lg:col-span-2">
+        <h3 class="text-base font-bold text-white mb-1">Gráfico de Evolução de Receita Bruta (R$)</h3>
+        <p class="text-xs text-gray-400 mb-6">Comparativo mês a mês</p>
+        <div class="h-72 w-full relative">
+          <canvas id="chartFaturamento"></canvas>
+        </div>
+      </div>
+      <div class="glass-card rounded-2xl p-6 border border-white/10 flex flex-col justify-between">
+        <div>
+          <h3 class="text-base font-bold text-white mb-1">Média &amp; Performance</h3>
+          <p class="text-xs text-gray-400 mb-6">Resumo executivo de vendas</p>
+          <div class="space-y-4">
+            <div class="p-4 rounded-xl bg-slate-900/80 border border-white/10">
+              <div class="text-xs text-gray-400">Média Mensal de Faturamento</div>
+              <div class="text-2xl font-extrabold text-brand-blue font-display mt-1">R$ 875.389</div>
+            </div>
+            <div class="p-4 rounded-xl bg-slate-900/80 border border-white/10">
+              <div class="text-xs text-gray-400">Mês de Maior Faturamento</div>
+              <div class="text-xl font-extrabold text-emerald-400 font-display mt-1">Setembro/26 (R$ 1,080M)</div>
+            </div>
+            <div class="p-4 rounded-xl bg-slate-900/80 border border-white/10">
+              <div class="text-xs text-gray-400">Total Faturado no Ano</div>
+              <div class="text-xl font-extrabold text-emerald-400 font-display mt-1">R$ 7.88M</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ──────── SECTION 4: PROJETOS & UN ──────── -->
+  <section class="scroll-mt-24" id="projetos-un">
+    <div class="mb-6">
+      <h2 class="text-xl font-display font-bold text-white flex items-center gap-3">
+        <div class="w-1.5 h-6 bg-brand-blue rounded-full"></div>
+        Projetos &amp; Unidades de Negócio
+      </h2>
+      <p class="text-xs text-gray-400 mt-1 ml-4.5">Concentração de receita por contrato e distribuição de faturamento por UN</p>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- TOP 10 PROJETOS -->
+      <div class="glass-card rounded-2xl p-6 border border-white/10">
+        <h3 class="text-base font-bold text-white mb-1 flex items-center gap-2">
+          <span class="material-symbols-outlined text-amber-400">local_fire_department</span> Top 10 Projetos por Faturamento
+        </h3>
+        <p class="text-xs text-gray-400 mb-6">Ranking acumulado YTD (9 Meses)</p>
+        <div class="space-y-2.5">
+<div class="flex items-center justify-between p-3.5 rounded-lg bg-surface-container-high/40 hover:bg-surface-container-high border border-surface-variant/40 transition-colors">
+  <div class="flex items-center gap-3">
+    <div class="w-7 h-7 rounded-full bg-amber-500 text-black font-bold flex items-center justify-center text-xs flex-shrink-0">1</div>
+    <div class="text-xs font-bold text-white tracking-wide uppercase">INSTRUTORES CNH</div>
+  </div>
+  <div class="text-sm font-extrabold text-emerald-400 font-sans">R$ 1.916.158</div>
+</div>
+<div class="flex items-center justify-between p-3.5 rounded-lg bg-surface-container-high/40 hover:bg-surface-container-high border border-surface-variant/40 transition-colors">
+  <div class="flex items-center gap-3">
+    <div class="w-7 h-7 rounded-full bg-slate-400 text-black font-bold flex items-center justify-center text-xs flex-shrink-0">2</div>
+    <div class="text-xs font-bold text-white tracking-wide uppercase">BACKOFFICE CNHI</div>
+  </div>
+  <div class="text-sm font-extrabold text-emerald-400 font-sans">R$ 1.806.322</div>
+</div>
+<div class="flex items-center justify-between p-3.5 rounded-lg bg-surface-container-high/40 hover:bg-surface-container-high border border-surface-variant/40 transition-colors">
+  <div class="flex items-center gap-3">
+    <div class="w-7 h-7 rounded-full bg-amber-700 text-white font-bold flex items-center justify-center text-xs flex-shrink-0">3</div>
+    <div class="text-xs font-bold text-white tracking-wide uppercase">PARTS ACADEMY</div>
+  </div>
+  <div class="text-sm font-extrabold text-emerald-400 font-sans">R$ 690.590</div>
+</div>
+<div class="flex items-center justify-between p-3.5 rounded-lg bg-surface-container-high/40 hover:bg-surface-container-high border border-surface-variant/40 transition-colors">
+  <div class="flex items-center gap-3">
+    <div class="w-7 h-7 rounded-full bg-surface-container-high text-text-muted border border-surface-variant flex items-center justify-center text-xs flex-shrink-0">4</div>
+    <div class="text-xs font-bold text-white tracking-wide uppercase">TAPE RUVICHA</div>
+  </div>
+  <div class="text-sm font-extrabold text-emerald-400 font-sans">R$ 259.644</div>
+</div>
+<div class="flex items-center justify-between p-3.5 rounded-lg bg-surface-container-high/40 hover:bg-surface-container-high border border-surface-variant/40 transition-colors">
+  <div class="flex items-center gap-3">
+    <div class="w-7 h-7 rounded-full bg-surface-container-high text-text-muted border border-surface-variant flex items-center justify-center text-xs flex-shrink-0">5</div>
+    <div class="text-xs font-bold text-white tracking-wide uppercase">DM - BACK OFFICE</div>
+  </div>
+  <div class="text-sm font-extrabold text-emerald-400 font-sans">R$ 258.044</div>
+</div>
+<div class="flex items-center justify-between p-3.5 rounded-lg bg-surface-container-high/40 hover:bg-surface-container-high border border-surface-variant/40 transition-colors">
+  <div class="flex items-center gap-3">
+    <div class="w-7 h-7 rounded-full bg-surface-container-high text-text-muted border border-surface-variant flex items-center justify-center text-xs flex-shrink-0">6</div>
+    <div class="text-xs font-bold text-white tracking-wide uppercase">BACKOFFICE CRM CASE</div>
+  </div>
+  <div class="text-sm font-extrabold text-emerald-400 font-sans">R$ 251.324</div>
+</div>
+<div class="flex items-center justify-between p-3.5 rounded-lg bg-surface-container-high/40 hover:bg-surface-container-high border border-surface-variant/40 transition-colors">
+  <div class="flex items-center gap-3">
+    <div class="w-7 h-7 rounded-full bg-surface-container-high text-text-muted border border-surface-variant flex items-center justify-center text-xs flex-shrink-0">7</div>
+    <div class="text-xs font-bold text-white tracking-wide uppercase">CONSULTORIA PÓS-VENDAS (POE) PORSCHE</div>
+  </div>
+  <div class="text-sm font-extrabold text-emerald-400 font-sans">R$ 243.600</div>
+</div>
+<div class="flex items-center justify-between p-3.5 rounded-lg bg-surface-container-high/40 hover:bg-surface-container-high border border-surface-variant/40 transition-colors">
+  <div class="flex items-center gap-3">
+    <div class="w-7 h-7 rounded-full bg-surface-container-high text-text-muted border border-surface-variant flex items-center justify-center text-xs flex-shrink-0">8</div>
+    <div class="text-xs font-bold text-white tracking-wide uppercase">INSTRUTORES PORSCHE</div>
+  </div>
+  <div class="text-sm font-extrabold text-emerald-400 font-sans">R$ 227.800</div>
+</div>
+<div class="flex items-center justify-between p-3.5 rounded-lg bg-surface-container-high/40 hover:bg-surface-container-high border border-surface-variant/40 transition-colors">
+  <div class="flex items-center gap-3">
+    <div class="w-7 h-7 rounded-full bg-surface-container-high text-text-muted border border-surface-variant flex items-center justify-center text-xs flex-shrink-0">9</div>
+    <div class="text-xs font-bold text-white tracking-wide uppercase">SERVIÇOS CNH</div>
+  </div>
+  <div class="text-sm font-extrabold text-emerald-400 font-sans">R$ 213.198</div>
+</div>
+<div class="flex items-center justify-between p-3.5 rounded-lg bg-surface-container-high/40 hover:bg-surface-container-high border border-surface-variant/40 transition-colors">
+  <div class="flex items-center gap-3">
+    <div class="w-7 h-7 rounded-full bg-surface-container-high text-text-muted border border-surface-variant flex items-center justify-center text-xs flex-shrink-0">10</div>
+    <div class="text-xs font-bold text-white tracking-wide uppercase">DEALER STANDARD CONSTRUCION</div>
+  </div>
+  <div class="text-sm font-extrabold text-emerald-400 font-sans">R$ 204.904</div>
+</div>
+        </div>
+      </div>
+
+      <!-- UNIDADES DE NEGÓCIO -->
+      <div class="glass-card rounded-2xl p-6 border border-white/10 flex flex-col justify-between">
+        <div>
+          <h3 class="text-base font-bold text-white mb-1 flex items-center gap-2">
+            <span class="material-symbols-outlined text-brand-blue">pie_chart</span> Faturamento por Unidade de Negócio
+          </h3>
+          <p class="text-xs text-gray-400 mb-6">Participação relativa na Receita Bruta YTD</p>
+          
+          <div class="grid grid-cols-2 gap-3 mb-6">
+<div class="glass-card p-4 rounded-xl border border-surface-variant/60 flex items-center justify-between">
+  <div>
+    <div class="text-xs font-bold text-brand-blue uppercase tracking-wider">OUTSOURCING</div>
+    <div class="text-[11px] text-text-muted mt-0.5">55.1% do faturamento total</div>
+  </div>
+  <div class="text-lg font-extrabold text-white font-display">R$ 4.341K</div>
+</div>
+<div class="glass-card p-4 rounded-xl border border-surface-variant/60 flex items-center justify-between">
+  <div>
+    <div class="text-xs font-bold text-brand-blue uppercase tracking-wider">HRD</div>
+    <div class="text-[11px] text-text-muted mt-0.5">24.2% do faturamento total</div>
+  </div>
+  <div class="text-lg font-extrabold text-white font-display">R$ 1.907K</div>
+</div>
+<div class="glass-card p-4 rounded-xl border border-surface-variant/60 flex items-center justify-between">
+  <div>
+    <div class="text-xs font-bold text-brand-blue uppercase tracking-wider">BUSINESS SOLUTIONS</div>
+    <div class="text-[11px] text-text-muted mt-0.5">11.7% do faturamento total</div>
+  </div>
+  <div class="text-lg font-extrabold text-white font-display">R$ 923K</div>
+</div>
+<div class="glass-card p-4 rounded-xl border border-surface-variant/60 flex items-center justify-between">
+  <div>
+    <div class="text-xs font-bold text-brand-blue uppercase tracking-wider">DEALER DEVELOPMENT</div>
+    <div class="text-[11px] text-text-muted mt-0.5">8.5% do faturamento total</div>
+  </div>
+  <div class="text-lg font-extrabold text-white font-display">R$ 671K</div>
+</div>
+<div class="glass-card p-4 rounded-xl border border-surface-variant/60 flex items-center justify-between class="col-span-full"">
+  <div>
+    <div class="text-xs font-bold text-brand-blue uppercase tracking-wider">INNOVATION</div>
+    <div class="text-[11px] text-text-muted mt-0.5">0.4% do faturamento total</div>
+  </div>
+  <div class="text-lg font-extrabold text-white font-display">R$ 30K</div>
+</div>
+<div class="glass-card p-4 rounded-xl border border-surface-variant/60 flex items-center justify-between">
+  <div>
+    <div class="text-xs font-bold text-brand-blue uppercase tracking-wider">EDUCAÇÃO</div>
+    <div class="text-[11px] text-text-muted mt-0.5">0.0% do faturamento total</div>
+  </div>
+  <div class="text-lg font-extrabold text-white font-display">R$ 4K</div>
+</div>
+          </div>
+          
+          <div class="space-y-4">
+<div class="space-y-1.5">
+  <div class="flex justify-between text-xs font-medium">
+    <span class="text-text-muted">OUTSOURCING</span>
+    <span class="text-white font-semibold">55.1%</span>
+  </div>
+  <div class="h-3 w-full bg-surface-container-high rounded-full overflow-hidden border border-surface-variant/40">
+    <div class="h-full bg-brand-blue rounded-full transition-all duration-500" style="width: 55.1%"></div>
+  </div>
+</div>
+<div class="space-y-1.5">
+  <div class="flex justify-between text-xs font-medium">
+    <span class="text-text-muted">HRD</span>
+    <span class="text-white font-semibold">24.2%</span>
+  </div>
+  <div class="h-3 w-full bg-surface-container-high rounded-full overflow-hidden border border-surface-variant/40">
+    <div class="h-full bg-emerald-500 rounded-full transition-all duration-500" style="width: 24.2%"></div>
+  </div>
+</div>
+<div class="space-y-1.5">
+  <div class="flex justify-between text-xs font-medium">
+    <span class="text-text-muted">BUSINESS SOLUTIONS</span>
+    <span class="text-white font-semibold">11.7%</span>
+  </div>
+  <div class="h-3 w-full bg-surface-container-high rounded-full overflow-hidden border border-surface-variant/40">
+    <div class="h-full bg-purple-500 rounded-full transition-all duration-500" style="width: 11.7%"></div>
+  </div>
+</div>
+<div class="space-y-1.5">
+  <div class="flex justify-between text-xs font-medium">
+    <span class="text-text-muted">DEALER DEVELOPMENT</span>
+    <span class="text-white font-semibold">8.5%</span>
+  </div>
+  <div class="h-3 w-full bg-surface-container-high rounded-full overflow-hidden border border-surface-variant/40">
+    <div class="h-full bg-amber-500 rounded-full transition-all duration-500" style="width: 8.5%"></div>
+  </div>
+</div>
+<div class="space-y-1.5">
+  <div class="flex justify-between text-xs font-medium">
+    <span class="text-text-muted">INNOVATION</span>
+    <span class="text-white font-semibold">0.4%</span>
+  </div>
+  <div class="h-3 w-full bg-surface-container-high rounded-full overflow-hidden border border-surface-variant/40">
+    <div class="h-full bg-teal-500 rounded-full transition-all duration-500" style="width: 0.4%"></div>
+  </div>
+</div>
+<div class="space-y-1.5">
+  <div class="flex justify-between text-xs font-medium">
+    <span class="text-text-muted">EDUCAÇÃO</span>
+    <span class="text-white font-semibold">0.0%</span>
+  </div>
+  <div class="h-3 w-full bg-surface-container-high rounded-full overflow-hidden border border-surface-variant/40">
+    <div class="h-full bg-rose-400 rounded-full transition-all duration-500" style="width: 0.0%"></div>
+  </div>
+</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ──────── SECTION 5: CENTROS DE CUSTO ──────── -->
+  <section class="scroll-mt-24" id="centros-custo">
+    <div class="mb-6">
+      <h2 class="text-xl font-display font-bold text-white flex items-center gap-3">
+        <div class="w-1.5 h-6 bg-brand-blue rounded-full"></div>
+        Ranking por Centro de Custo
+      </h2>
+      <p class="text-xs text-gray-400 mt-1 ml-4.5">Principais centros acumuladores de custos e despesas operacionais no ano</p>
+    </div>
+    <div class="glass-card rounded-2xl p-6 border border-white/10">
+      <div class="space-y-3">
+<div class="flex items-center gap-4 py-2.5 border-b border-surface-variant/30 last:border-none">
+  <div class="text-xs font-bold text-gray-300 uppercase tracking-wider w-44 flex-shrink-0 truncate">ADM E CONTROLE</div>
+  <div class="flex-1 h-7 bg-surface-container-high rounded-lg overflow-hidden border border-surface-variant/40">
+    <div class="h-full bg-rose-500 rounded-lg flex items-center px-3 text-xs font-bold text-white min-w-[75px]" style="width: 100.0%">R$ 2.200K</div>
+  </div>
+  <div class="text-sm font-extrabold text-emerald-400 font-sans w-28 flex-shrink-0 text-right">R$ 2.200.208</div>
+</div>
+<div class="flex items-center gap-4 py-2.5 border-b border-surface-variant/30 last:border-none">
+  <div class="text-xs font-bold text-gray-300 uppercase tracking-wider w-44 flex-shrink-0 truncate">INSTRUTORES CNH</div>
+  <div class="flex-1 h-7 bg-surface-container-high rounded-lg overflow-hidden border border-surface-variant/40">
+    <div class="h-full bg-amber-500 rounded-lg flex items-center px-3 text-xs font-bold text-white min-w-[75px]" style="width: 77.9%">R$ 1.713K</div>
+  </div>
+  <div class="text-sm font-extrabold text-emerald-400 font-sans w-28 flex-shrink-0 text-right">R$ 1.713.329</div>
+</div>
+<div class="flex items-center gap-4 py-2.5 border-b border-surface-variant/30 last:border-none">
+  <div class="text-xs font-bold text-gray-300 uppercase tracking-wider w-44 flex-shrink-0 truncate">BACKOFFICE CNHI</div>
+  <div class="flex-1 h-7 bg-surface-container-high rounded-lg overflow-hidden border border-surface-variant/40">
+    <div class="h-full bg-brand-blue rounded-lg flex items-center px-3 text-xs font-bold text-white min-w-[75px]" style="width: 64.3%">R$ 1.415K</div>
+  </div>
+  <div class="text-sm font-extrabold text-emerald-400 font-sans w-28 flex-shrink-0 text-right">R$ 1.414.507</div>
+</div>
+<div class="flex items-center gap-4 py-2.5 border-b border-surface-variant/30 last:border-none">
+  <div class="text-xs font-bold text-gray-300 uppercase tracking-wider w-44 flex-shrink-0 truncate">PARTS ACADEMY</div>
+  <div class="flex-1 h-7 bg-surface-container-high rounded-lg overflow-hidden border border-surface-variant/40">
+    <div class="h-full bg-purple-500 rounded-lg flex items-center px-3 text-xs font-bold text-white min-w-[75px]" style="width: 24.8%">R$ 546K</div>
+  </div>
+  <div class="text-sm font-extrabold text-emerald-400 font-sans w-28 flex-shrink-0 text-right">R$ 546.105</div>
+</div>
+<div class="flex items-center gap-4 py-2.5 border-b border-surface-variant/30 last:border-none">
+  <div class="text-xs font-bold text-gray-300 uppercase tracking-wider w-44 flex-shrink-0 truncate">CAMPUS BH</div>
+  <div class="flex-1 h-7 bg-surface-container-high rounded-lg overflow-hidden border border-surface-variant/40">
+    <div class="h-full bg-slate-400 rounded-lg flex items-center px-3 text-xs font-bold text-white min-w-[75px]" style="width: 20.9%">R$ 461K</div>
+  </div>
+  <div class="text-sm font-extrabold text-emerald-400 font-sans w-28 flex-shrink-0 text-right">R$ 460.528</div>
+</div>
+<div class="flex items-center gap-4 py-2.5 border-b border-surface-variant/30 last:border-none">
+  <div class="text-xs font-bold text-gray-300 uppercase tracking-wider w-44 flex-shrink-0 truncate">NNOS ACADEMY</div>
+  <div class="flex-1 h-7 bg-surface-container-high rounded-lg overflow-hidden border border-surface-variant/40">
+    <div class="h-full bg-rose-400 rounded-lg flex items-center px-3 text-xs font-bold text-white min-w-[75px]" style="width: 14.8%">R$ 325K</div>
+  </div>
+  <div class="text-sm font-extrabold text-emerald-400 font-sans w-28 flex-shrink-0 text-right">R$ 325.450</div>
+</div>
+<div class="flex items-center gap-4 py-2.5 border-b border-surface-variant/30 last:border-none">
+  <div class="text-xs font-bold text-gray-300 uppercase tracking-wider w-44 flex-shrink-0 truncate">DIRETORIA</div>
+  <div class="flex-1 h-7 bg-surface-container-high rounded-lg overflow-hidden border border-surface-variant/40">
+    <div class="h-full bg-amber-400 rounded-lg flex items-center px-3 text-xs font-bold text-white min-w-[75px]" style="width: 11.1%">R$ 245K</div>
+  </div>
+  <div class="text-sm font-extrabold text-emerald-400 font-sans w-28 flex-shrink-0 text-right">R$ 244.965</div>
+</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ──────── SECTION 6: VIAGENS ──────── -->
+  <section class="scroll-mt-24" id="viagens">
+    <div class="mb-6">
+      <h2 class="text-xl font-display font-bold text-white flex items-center gap-3">
+        <div class="w-1.5 h-6 bg-brand-blue rounded-full"></div>
+        Análise de Viagens &amp; Reembolsos
+      </h2>
+      <p class="text-xs text-gray-400 mt-1 ml-4.5">Comparativo entre gastos com viagens e a taxa de recuperação via reembolso de clientes</p>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="glass-card rounded-2xl p-6 border border-white/10">
+        <h3 class="text-base font-bold text-white mb-1">Comparativo Mensal (Despesa vs. Reembolso)</h3>
+        <p class="text-xs text-gray-400 mb-6">Taxa de cobertura acumulada: <strong class="text-emerald-400">82.4%</strong></p>
+        <div class="space-y-4">
+<div class="space-y-2">
+  <div class="text-sm font-bold text-brand-blue">JAN-26</div>
+  <div class="grid grid-cols-1 gap-1.5">
+    <div class="flex items-center gap-3">
+      <span class="text-sm text-text-muted w-20 font-medium">Despesa</span>
+      <div class="flex-1 h-7 bg-surface-container-high rounded-lg overflow-hidden">
+        <div class="h-full bg-rose-500 rounded-lg flex items-center px-3 text-xs font-bold text-white" style="width: 83.2%">R$ 124.635</div>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="text-sm text-text-muted w-20 font-medium">Reembolso</span>
+      <div class="flex-1 h-7 bg-surface-container-high rounded-lg overflow-hidden">
+        <div class="h-full bg-emerald-500 rounded-lg flex items-center px-3 text-xs font-bold text-white" style="width: 100.0%">R$ 149.823</div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="space-y-2">
+  <div class="text-sm font-bold text-brand-blue">FEV-26</div>
+  <div class="grid grid-cols-1 gap-1.5">
+    <div class="flex items-center gap-3">
+      <span class="text-sm text-text-muted w-20 font-medium">Despesa</span>
+      <div class="flex-1 h-7 bg-surface-container-high rounded-lg overflow-hidden">
+        <div class="h-full bg-rose-500 rounded-lg flex items-center px-3 text-xs font-bold text-white" style="width: 84.3%">R$ 126.354</div>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="text-sm text-text-muted w-20 font-medium">Reembolso</span>
+      <div class="flex-1 h-7 bg-surface-container-high rounded-lg overflow-hidden">
+        <div class="h-full bg-emerald-500 rounded-lg flex items-center px-3 text-xs font-bold text-white" style="width: 58.1%">R$ 87.090</div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="space-y-2">
+  <div class="text-sm font-bold text-brand-blue">MAR-26</div>
+  <div class="grid grid-cols-1 gap-1.5">
+    <div class="flex items-center gap-3">
+      <span class="text-sm text-text-muted w-20 font-medium">Despesa</span>
+      <div class="flex-1 h-7 bg-surface-container-high rounded-lg overflow-hidden">
+        <div class="h-full bg-rose-500 rounded-lg flex items-center px-3 text-xs font-bold text-white" style="width: 99.0%">R$ 148.267</div>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="text-sm text-text-muted w-20 font-medium">Reembolso</span>
+      <div class="flex-1 h-7 bg-surface-container-high rounded-lg overflow-hidden">
+        <div class="h-full bg-emerald-500 rounded-lg flex items-center px-3 text-xs font-bold text-white" style="width: 73.2%">R$ 109.724</div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="space-y-2">
+  <div class="text-sm font-bold text-brand-blue">ABR-26</div>
+  <div class="grid grid-cols-1 gap-1.5">
+    <div class="flex items-center gap-3">
+      <span class="text-sm text-text-muted w-20 font-medium">Despesa</span>
+      <div class="flex-1 h-7 bg-surface-container-high rounded-lg overflow-hidden">
+        <div class="h-full bg-rose-500 rounded-lg flex items-center px-3 text-xs font-bold text-white" style="width: 77.1%">R$ 115.450</div>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="text-sm text-text-muted w-20 font-medium">Reembolso</span>
+      <div class="flex-1 h-7 bg-surface-container-high rounded-lg overflow-hidden">
+        <div class="h-full bg-emerald-500 rounded-lg flex items-center px-3 text-xs font-bold text-white" style="width: 51.9%">R$ 77.770</div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="space-y-2">
+  <div class="text-sm font-bold text-brand-blue">MAI-26</div>
+  <div class="grid grid-cols-1 gap-1.5">
+    <div class="flex items-center gap-3">
+      <span class="text-sm text-text-muted w-20 font-medium">Despesa</span>
+      <div class="flex-1 h-7 bg-surface-container-high rounded-lg overflow-hidden">
+        <div class="h-full bg-rose-500 rounded-lg flex items-center px-3 text-xs font-bold text-white" style="width: 69.8%">R$ 104.621</div>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="text-sm text-text-muted w-20 font-medium">Reembolso</span>
+      <div class="flex-1 h-7 bg-surface-container-high rounded-lg overflow-hidden">
+        <div class="h-full bg-emerald-500 rounded-lg flex items-center px-3 text-xs font-bold text-white" style="width: 71.8%">R$ 107.614</div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="space-y-2">
+  <div class="text-sm font-bold text-brand-blue">JUN-26</div>
+  <div class="grid grid-cols-1 gap-1.5">
+    <div class="flex items-center gap-3">
+      <span class="text-sm text-text-muted w-20 font-medium">Despesa</span>
+      <div class="flex-1 h-7 bg-surface-container-high rounded-lg overflow-hidden">
+        <div class="h-full bg-rose-500 rounded-lg flex items-center px-3 text-xs font-bold text-white" style="width: 93.8%">R$ 140.557</div>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="text-sm text-text-muted w-20 font-medium">Reembolso</span>
+      <div class="flex-1 h-7 bg-surface-container-high rounded-lg overflow-hidden">
+        <div class="h-full bg-emerald-500 rounded-lg flex items-center px-3 text-xs font-bold text-white" style="width: 60.7%">R$ 90.879</div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="space-y-2">
+  <div class="text-sm font-bold text-brand-blue">JUL-26</div>
+  <div class="grid grid-cols-1 gap-1.5">
+    <div class="flex items-center gap-3">
+      <span class="text-sm text-text-muted w-20 font-medium">Despesa</span>
+      <div class="flex-1 h-7 bg-surface-container-high rounded-lg overflow-hidden">
+        <div class="h-full bg-rose-500 rounded-lg flex items-center px-3 text-xs font-bold text-white" style="width: 51.2%">R$ 76.761</div>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="text-sm text-text-muted w-20 font-medium">Reembolso</span>
+      <div class="flex-1 h-7 bg-surface-container-high rounded-lg overflow-hidden">
+        <div class="h-full bg-emerald-500 rounded-lg flex items-center px-3 text-xs font-bold text-white" style="width: 54.4%">R$ 81.508</div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="space-y-2">
+  <div class="text-sm font-bold text-brand-blue">AGO-26</div>
+  <div class="grid grid-cols-1 gap-1.5">
+    <div class="flex items-center gap-3">
+      <span class="text-sm text-text-muted w-20 font-medium">Despesa</span>
+      <div class="flex-1 h-7 bg-surface-container-high rounded-lg overflow-hidden">
+        <div class="h-full bg-rose-500 rounded-lg flex items-center px-3 text-xs font-bold text-white" style="width: 73.7%">R$ 110.454</div>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="text-sm text-text-muted w-20 font-medium">Reembolso</span>
+      <div class="flex-1 h-7 bg-surface-container-high rounded-lg overflow-hidden">
+        <div class="h-full bg-emerald-500 rounded-lg flex items-center px-3 text-xs font-bold text-white" style="width: 59.7%">R$ 89.410</div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="space-y-2">
+  <div class="text-sm font-bold text-brand-blue">SET-26</div>
+  <div class="grid grid-cols-1 gap-1.5">
+    <div class="flex items-center gap-3">
+      <span class="text-sm text-text-muted w-20 font-medium">Despesa</span>
+      <div class="flex-1 h-7 bg-surface-container-high rounded-lg overflow-hidden">
+        <div class="h-full bg-rose-500 rounded-lg flex items-center px-3 text-xs font-bold text-white" style="width: 57.4%">R$ 85.967</div>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="text-sm text-text-muted w-20 font-medium">Reembolso</span>
+      <div class="flex-1 h-7 bg-surface-container-high rounded-lg overflow-hidden">
+        <div class="h-full bg-emerald-500 rounded-lg flex items-center px-3 text-xs font-bold text-white" style="width: 38.7%">R$ 57.913</div>
+      </div>
+    </div>
+  </div>
+</div>
+        </div>
+      </div>
+
+      <div class="glass-card rounded-2xl p-6 border border-white/10 flex flex-col justify-between">
+        <div>
+          <h3 class="text-lg font-bold text-white mb-1">Saldo Líquido — Operacional vs. Reembolso</h3>
+          <p class="text-sm text-gray-400 mb-6">Indicador principal: NET entre despesas operacionais e reembolsos recebidos</p>
+
+          <!-- NET Principal -->
+          <div class="mb-6 p-5 rounded-xl border-2 border-emerald-500/60 bg-emerald-950/40 text-center">
+            <div class="text-xs font-bold uppercase text-gray-400 tracking-wider mb-1">NET Operacional (Reembolsos − Desp. Operacionais)</div>
+            <div class="text-3xl font-black text-emerald-400 font-display mt-1">+ R$ 18.621</div>
+            <div class="text-sm text-gray-300 mt-2 font-medium">Reembolsos superaram as despesas operacionais</div>
+          </div>
+
+          <div class="space-y-3">
+            <div class="flex justify-between items-center p-3.5 rounded-lg bg-slate-900/80 border border-white/10">
+              <span class="text-sm text-gray-300 font-medium">(-) Despesas Operacionais com Viagens</span>
+              <span class="text-base font-bold text-rose-400 font-sans">R$ 833.110</span>
+            </div>
+            <div class="flex justify-between items-center p-3.5 rounded-lg bg-slate-900/80 border border-white/10">
+              <span class="text-sm text-gray-300 font-medium">(+) Reembolso Recebido de Clientes</span>
+              <span class="text-base font-bold text-emerald-400 font-sans">R$ 851.731</span>
+            </div>
+          </div>
+
+          <div class="mt-5 pt-4 border-t border-white/10 space-y-3">
+            <div class="text-xs font-bold text-gray-400 uppercase tracking-wider">Detalhamento Adicional</div>
+            <div class="flex justify-between items-center p-3 rounded-lg bg-slate-900/60 border border-white/5">
+              <span class="text-sm text-gray-400">Despesa Total com Viagens (Op. + Prosp.)</span>
+              <span class="text-sm font-bold text-rose-400 font-sans">R$ 1.033.066</span>
+            </div>
+            <div class="flex justify-between items-center p-3 rounded-lg bg-slate-900/60 border border-white/5 pl-6">
+              <span class="text-sm text-gray-400">↳ Viagens Prospecção (Comercial)</span>
+              <span class="text-sm font-bold text-amber-400 font-sans">R$ 199.956</span>
+            </div>
+            <p class="text-xs text-gray-500 leading-relaxed mt-2">A despesa com prospecção é investimento comercial não reembolsável e não impacta o NET operacional.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ──────── SECTION 7: SÍNTESE EXECUTIVA ──────── -->
+  <section class="scroll-mt-24" id="sintese">
+    <div class="mb-6">
+      <h2 class="text-xl font-display font-bold text-white flex items-center gap-3">
+        <div class="w-1.5 h-6 bg-brand-blue rounded-full"></div>
+        Síntese Executiva &amp; Parecer do Controller
+      </h2>
+      <p class="text-xs text-gray-400 mt-1 ml-4.5">Avaliação estratégica dos pontos fortes, pontos de atenção e mitigação de riscos (Janeiro a Setembro de 2026)</p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <!-- POSITIVOS -->
+      <div class="glass-card rounded-2xl overflow-hidden border border-emerald-500/30">
+        <div class="bg-emerald-500/20 px-5 py-3 border-b border-emerald-500/30 text-emerald-400 font-bold text-xs uppercase tracking-wider flex items-center gap-2">
+          <span class="material-symbols-outlined text-sm">check_circle</span> Pontos Positivos
+        </div>
+        <div class="p-5 space-y-3 text-xs text-gray-300 leading-relaxed">
+          <p><strong class="text-white">● Faturamento Sustentado no 2º Semestre:</strong> O faturamento acumulou R$ 7.88M em 9 meses, mantendo média de R$ 875.389/mês e demonstrando tração contínua na prestação de serviços.</p>
+          <p><strong class="text-white">● Margem Bruta Estável:</strong> A margem bruta média de 46.5% assegura cobertura contínua dos custos diretos com consultores e equipes de projetos.</p>
+          <p><strong class="text-white">● Reembolso Eficiente de Viagens:</strong> Taxa de recuperação de 82.4% das viagens faturadas a clientes (R$ 851.731 recuperados), protegendo o caixa operacional.</p>
+        </div>
+      </div>
+
+      <!-- ATENÇÃO -->
+      <div class="glass-card rounded-2xl overflow-hidden border border-amber-500/30">
+        <div class="bg-amber-500/20 px-5 py-3 border-b border-amber-500/30 text-amber-400 font-bold text-xs uppercase tracking-wider flex items-center gap-2">
+          <span class="material-symbols-outlined text-sm">warning</span> Pontos de Atenção
+        </div>
+        <div class="p-5 space-y-3 text-xs text-gray-300 leading-relaxed">
+          <p><strong class="text-white">● Estrutura de Custos Fixos:</strong> Custo fixo total acumulado de R$ 4.126.836 demanda atenção para ganhos de escala e diluição frente à receita líquida.</p>
+          <p><strong class="text-white">● Investimentos Imobilizados:</strong> O projeto Campus BH UVA acumula R$ 337.754,41 em melhorias de infraestrutura, com 97.4% já liquidado.</p>
+        </div>
+      </div>
+
+      <!-- RISCOS -->
+      <div class="glass-card rounded-2xl overflow-hidden border border-rose-500/30">
+        <div class="bg-rose-500/20 px-5 py-3 border-b border-rose-500/30 text-rose-400 font-bold text-xs uppercase tracking-wider flex items-center gap-2">
+          <span class="material-symbols-outlined text-sm">error</span> Riscos &amp; Recomendações
+        </div>
+        <div class="p-5 space-y-3 text-xs text-gray-300 leading-relaxed">
+          <p><strong class="text-white">● Disciplina de Caixa:</strong> Manter acompanhamento rigoroso dos vencimentos do 4º trimestre e continuidade da cobrança ativa de faturas e reembolsos.</p>
+          <p><strong class="text-white">● Otimização Tributária:</strong> Monitorar o impacto dos encargos de PIS/COFINS e retenções na fonte sobre os novos contratos.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- FOOTER -->
+<footer class="bg-slate-950 border-t border-white/10 py-6 px-6 text-center text-xs text-gray-400">
+  <div class="max-w-[1720px] mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <img alt="NNÓS" class="h-11 md:h-12 w-auto object-contain" src="assets/logo-nnos-horizontal.png"/>
+    </div>
+    <div>Relatório Financeiro Gerencial • Período: Janeiro a Setembro de 2026</div>
+  </div>
+</footer>
+
+</div><!-- END #report-wrapper -->
+
+<script>
+// CHART.JS FATURAMENTO MENSAL
+let chartFaturamentoInstance = null;
+
+function initFaturamentoChart() {
+  const ctxFaturamento = document.getElementById('chartFaturamento');
+  if (ctxFaturamento) {
+    if (chartFaturamentoInstance) {
+      chartFaturamentoInstance.destroy();
+    }
+    chartFaturamentoInstance = new Chart(ctxFaturamento, {
+      type: 'bar',
+      data: {
+        labels: ["Jan/26", "Fev/26", "Mar/26", "Abr/26", "Mai/26", "Jun/26", "Jul/26", "Ago/26", "Set/26"],
+        datasets: [{
+          label: 'Receita Bruta (R$)',
+          data: [618822.31, 785304.16, 750586.97, 820033.27, 971443.58, 881333.71, 1008002.15, 962778.62, 1080195.44],
+          backgroundColor: 'rgba(0, 131, 202, 0.85)',
+          borderColor: '#0083ca',
+          borderWidth: 1.5,
+          borderRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return 'Receita: R$ ' + context.raw.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            grid: { color: document.documentElement.classList.contains('light') ? 'rgba(15, 23, 42, 0.08)' : 'rgba(255, 255, 255, 0.1)' },
+            ticks: { color: document.documentElement.classList.contains('light') ? '#475569' : '#9CA3AF', font: { family: 'Inter', size: 11 } }
+          },
+          x: {
+            grid: { display: false },
+            ticks: { color: document.documentElement.classList.contains('light') ? '#475569' : '#9CA3AF', font: { family: 'Inter', size: 11 } }
+          }
+        }
+      }
+    });
+  }
+}
+
+// AUTHENTICATION SECURITY GATE (SHA-256)
+const AUTH_USER_HASH = "b902e7f3badabb511f1449224d9738ea94f1f73bf272adc8f823aa3c2b19e959";
+const AUTH_PASS_HASH = "a4177e355fbec6fdca3918f02b0a903b5e63a268fee6691c3f1fb96583d72115";
+
+async function sha256(str) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function handleLogin(e) {
+  e.preventDefault();
+  const u = document.getElementById('login-user').value.trim();
+  const p = document.getElementById('login-pass').value;
+  const uHash = await sha256(u);
+  const pHash = await sha256(p);
+
+  if (uHash === AUTH_USER_HASH && pHash === AUTH_PASS_HASH) {
+    sessionStorage.setItem('nnos_auth', 'true');
+    unlockDashboard();
+  } else {
+    document.getElementById('login-error').classList.remove('hidden');
+  }
+}
+
+function unlockDashboard() {
+  const overlay = document.getElementById('login-overlay');
+  const wrapper = document.getElementById('report-wrapper');
+  if (overlay) overlay.classList.add('hidden');
+  if (wrapper) wrapper.classList.remove('hidden');
+  setTimeout(initFaturamentoChart, 50);
+}
+
+function applyTheme(theme) {
+  const html = document.documentElement;
+  const icons = document.querySelectorAll('.theme-icon');
+  const buttons = document.querySelectorAll('.theme-toggle-btn');
+  if (theme === 'light') {
+    html.classList.remove('dark');
+    html.classList.add('light');
+    icons.forEach(ic => ic.textContent = 'dark_mode');
+    buttons.forEach(btn => btn.setAttribute('title', 'Alternar para Modo Escuro'));
+    localStorage.setItem('nnos_theme', 'light');
+  } else {
+    html.classList.remove('light');
+    html.classList.add('dark');
+    icons.forEach(ic => ic.textContent = 'light_mode');
+    buttons.forEach(btn => btn.setAttribute('title', 'Alternar para Modo Claro'));
+    localStorage.setItem('nnos_theme', 'dark');
+  }
+  if (typeof chartFaturamentoInstance !== 'undefined' && chartFaturamentoInstance) {
+    initFaturamentoChart();
+  }
+}
+
+function toggleTheme() {
+  const isLight = document.documentElement.classList.contains('light');
+  applyTheme(isLight ? 'dark' : 'light');
+}
+
+function logout() {
+  sessionStorage.removeItem('nnos_auth');
+  location.reload();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const saved = 'light';
+  applyTheme('light');
+
+  if (true) {
+    unlockDashboard();
+  }
+
+  const canvas = document.getElementById('chartFaturamento');
+  if (canvas && 'IntersectionObserver' in window) {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          initFaturamentoChart();
+        }
+      });
+    }, { threshold: 0.1 });
+    observer.observe(canvas);
+  }
+});
+
+document.addEventListener('contextmenu', function(e) {
+  e.preventDefault();
+}, false);
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'F12' || e.keyCode === 123) {
+    e.preventDefault();
+    e.stopPropagation();
+    return false;
+  }
+  if ((e.ctrlKey || e.metaKey) && e.shiftKey && (
+      e.key === 'I' || e.key === 'i' || e.keyCode === 73 ||
+      e.key === 'J' || e.key === 'j' || e.keyCode === 74 ||
+      e.key === 'C' || e.key === 'c' || e.keyCode === 67
+  )) {
+    e.preventDefault();
+    e.stopPropagation();
+    return false;
+  }
+  if ((e.ctrlKey || e.metaKey) && (e.key === 'U' || e.key === 'u' || e.keyCode === 85)) {
+    e.preventDefault();
+    e.stopPropagation();
+    return false;
+  }
+  if ((e.ctrlKey || e.metaKey) && (e.key === 'S' || e.key === 's' || e.keyCode === 83)) {
+    e.preventDefault();
+    e.stopPropagation();
+    return false;
+  }
+}, false);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,781 @@
+<!doctype html>
+<html lang="pt-BR" class="light">
+<head>
+  <script>
+    try {
+      sessionStorage.setItem('nnos_auth', 'true');
+      localStorage.setItem('nnos_theme', 'light');
+      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.add('light');
+    } catch(e) {}
+  </script>
+
+<base href="https://nnos-group.github.io/relatorio-financeiro-nnos-2026/">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dashboard Executivo | Performance de Projetos NNÓS 2026</title>
+<link rel="icon" type="image/png" href="assets/logo-nnos.png"/>
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png"/>
+<link rel="icon" type="image/png" sizes="64x64" href="favicon.png"/>
+<link rel="shortcut icon" href="favicon.ico" type="image/x-icon"/>
+<link rel="apple-touch-icon" href="assets/logo-nnos.png"/>
+<meta name="description" content="Dashboard executivo de performance financeira do portfólio de projetos NNÓS 2026.">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#07101e;--bg2:#0d1d33;--panel:rgba(12,27,48,.72);--line:rgba(148,163,184,.16);--line2:rgba(96,165,250,.22);--text:#f8fbff;--muted:#9fb0c7;--blue:#60a5fa;--blue2:#0083ca;--cyan:#22d3ee;--green:#34d399;--amber:#fbbf24;--red:#fb7185;--violet:#a78bfa;--shadow:0 22px 60px rgba(0,0,0,.26)}
+*{box-sizing:border-box} html{scroll-behavior:smooth}
+body{margin:0;background:radial-gradient(circle at 9% 2%,rgba(0,131,202,.26),transparent 28%),radial-gradient(circle at 88% 9%,rgba(79,70,229,.18),transparent 26%),linear-gradient(145deg,var(--bg) 0%,#0a172a 46%,#0b1c33 100%);color:var(--text);font-family:Inter,Arial,sans-serif;min-height:100vh}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.18;background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:36px 36px;mask-image:linear-gradient(to bottom,#000,transparent 78%)}
+h1,h2,h3,.display{font-family:Manrope,Inter,sans-serif} a{color:inherit;text-decoration:none}
+.wrap{width:min(1720px,calc(100% - 40px));margin:auto;position:relative;z-index:1}
+.hero{padding:54px 0 46px;border-bottom:1px solid var(--line);position:relative;overflow:hidden}
+.hero:after{content:"";position:absolute;width:520px;height:520px;border-radius:50%;right:-140px;top:-300px;background:radial-gradient(circle,rgba(96,165,250,.22),rgba(96,165,250,0) 67%);filter:blur(10px)}
+.brand{display:flex;align-items:center;gap:14px;margin-bottom:28px}
+.brand-logo{width:62px;height:62px;object-fit:contain;filter:drop-shadow(0 8px 20px rgba(0,131,202,.22))}
+.brand-copy{display:flex;flex-direction:column;gap:2px}
+.brand-name{font-family:Manrope;font-weight:800;letter-spacing:.06em;font-size:19px}
+.brand-sub{font-size:10px;letter-spacing:.16em;color:#8fa6c1;font-weight:700}
+.hero-content{max-width:1100px}
+.kicker{font-size:12px;text-transform:uppercase;letter-spacing:.18em;color:#8ecaff;font-weight:700;margin-bottom:12px}
+h1{font-size:clamp(34px,4.6vw,62px);line-height:1.04;margin:0;letter-spacing:-.043em;max-width:1050px}
+.hero p{color:#bed0e6;max-width:900px;font-size:17px;line-height:1.7;margin:18px 0 0}
+.chips{display:flex;gap:10px;flex-wrap:wrap;margin-top:25px}
+.chip{padding:9px 13px;border-radius:999px;border:1px solid var(--line);background:rgba(15,31,53,.65);font-size:12px;color:#dce8f6}
+.nav{position:sticky;top:0;z-index:50;background:rgba(7,16,30,.84);backdrop-filter:blur(18px);border-bottom:1px solid var(--line)}
+.nav-in{display:flex;gap:8px;overflow:visible;padding:10px 0;align-items:center} .nav a{white-space:nowrap;padding:9px 12px;border-radius:10px;color:#aebdd1;font-size:13px;font-weight:600} .nav a:hover{background:rgba(96,165,250,.11);color:white}
+.nav-dropdown{position:relative;display:inline-block;margin-right:8px;z-index:60}
+.nav-dropdown-btn{background:linear-gradient(135deg,rgba(0,131,202,.35),rgba(34,211,238,.2));border:1px solid rgba(34,211,238,.4);color:#ffffff;font-size:12px;font-weight:700;padding:8px 14px;border-radius:10px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .2s ease}
+.nav-dropdown-btn:hover{background:linear-gradient(135deg,rgba(0,131,202,.55),rgba(34,211,238,.35));border-color:rgba(34,211,238,.7);box-shadow:0 0 15px rgba(34,211,238,.25)}
+.nav-dropdown-content{display:none;position:absolute;top:100%;left:0;margin-top:6px;background:#0d1d33;border:1px solid rgba(96,165,250,.3);border-radius:12px;box-shadow:0 12px 30px rgba(0,0,0,.6);min-width:260px;z-index:100;overflow:hidden;padding:6px 0}
+.nav-dropdown:hover .nav-dropdown-content{display:block}
+.nav-dropdown-content a{display:block;padding:10px 16px;color:#c7d6ea;font-size:12px;font-weight:600;border-radius:0;transition:background .15s ease}
+.nav-dropdown-content a:hover{background:rgba(96,165,250,.18);color:#ffffff}
+.nav-dropdown-content a.active{color:#38bdf8;font-weight:700;background:rgba(56,189,248,.1)}
+main{padding:22px 0 50px} .section{margin-top:36px;scroll-margin-top:72px}
+.section-head{display:flex;justify-content:space-between;gap:20px;align-items:end;margin-bottom:20px} .section-head h2{font-size:26px;margin:0;letter-spacing:-.025em} .section-head p{margin:7px 0 0;color:var(--muted);max-width:840px;line-height:1.55}
+.line-title{display:flex;gap:12px;align-items:center} .line-title:before{content:"";width:5px;height:28px;border-radius:99px;background:linear-gradient(var(--cyan),var(--blue2));box-shadow:0 0 20px rgba(34,211,238,.4)}
+.card{background:linear-gradient(145deg,rgba(16,34,59,.78),rgba(10,24,43,.68));border:1px solid var(--line);border-radius:20px;box-shadow:0 16px 45px rgba(0,0,0,.17);position:relative;overflow:hidden}
+.grid-kpi{display:grid;grid-template-columns:repeat(6,1fr);gap:14px} .kpi{padding:18px;min-height:154px} .kpi:after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:linear-gradient(90deg,var(--accent,var(--blue)),transparent 75%)}
+.kpi .label{color:#a6b7cd;font-size:11px;text-transform:uppercase;letter-spacing:.11em;font-weight:700} .kpi .value{font-family:Manrope;font-size:27px;font-weight:800;margin:18px 0 4px;letter-spacing:-.04em} .kpi .note{font-size:12px;color:var(--muted);line-height:1.45}
+.kpi.blue{--accent:var(--blue)} .kpi.green{--accent:var(--green)} .kpi.red{--accent:var(--red)} .kpi.amber{--accent:var(--amber)} .kpi.violet{--accent:var(--violet)}
+.immob-highlight{background:linear-gradient(145deg,rgba(94,67,8,.30),rgba(20,29,43,.76));border-color:rgba(251,191,36,.28)} .immob-top{display:grid;grid-template-columns:1.2fr .8fr;gap:16px} .immob-summary{padding:26px} .immob-number{font-family:Manrope;font-size:42px;font-weight:800;color:#ffd56a;margin:10px 0 6px;letter-spacing:-.04em} .immob-meta{color:#c8b978;font-size:13px}
+.immob-progress{padding:24px} .immob-progress-row{display:flex;justify-content:space-between;font-size:12px;color:#b7c4d5;margin-bottom:8px} .bar{height:10px;border-radius:999px;background:rgba(251,113,133,.14);overflow:hidden;border:1px solid rgba(255,255,255,.06)} .bar i{display:block;height:100%;background:linear-gradient(90deg,#34d399,#22d3ee);border-radius:999px}
+.immob-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:14px} .immob-item{padding:16px;border:1px solid rgba(251,191,36,.15);background:rgba(22,31,46,.62);border-radius:16px} .immob-name{font-weight:700;font-size:12px;line-height:1.35;margin:7px 0 12px} .immob-value{font-family:Manrope;font-size:18px;font-weight:800;color:#ffdb7f} .immob-pct{color:#9aaac0;font-size:10px;margin-top:4px}
+.chart-grid{display:grid;grid-template-columns:1.25fr .75fr;gap:16px} .chart-grid.equal{grid-template-columns:1fr 1fr} .panel{padding:22px} .panel h3{margin:0;font-size:17px} .panel .sub{margin:5px 0 18px;color:var(--muted);font-size:12px} .chart-box{height:340px;position:relative} .chart-box.tall{height:410px}
+.leaders{display:grid;grid-template-columns:repeat(3,1fr);gap:14px} .leader-card{padding:19px;border-radius:20px;border:1px solid var(--line);background:linear-gradient(145deg,rgba(15,33,57,.82),rgba(9,24,43,.72));box-shadow:0 14px 36px rgba(0,0,0,.14)} .leader-card.good{border-color:rgba(52,211,153,.22)} .leader-card.mid{border-color:rgba(96,165,250,.2)} .leader-card.warn{border-color:rgba(251,191,36,.22)} .leader-card.bad{border-color:rgba(251,113,133,.25)}
+.leader-head{display:flex;justify-content:space-between;gap:15px;align-items:start} .eyebrow{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#8196b1;font-weight:700} .leader-card h3{font-size:16px;margin:5px 0 0} .leader-share{font-family:Manrope;font-size:17px;font-weight:800;text-align:right;color:#9bcfff} .leader-share span{display:block;font:500 10px Inter;color:#8094ad;margin-top:2px} .leader-value{font-family:Manrope;font-weight:800;font-size:25px;margin:24px 0 16px}
+.leader-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px} .leader-grid div{background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.05);border-radius:12px;padding:10px} .leader-grid span{display:block;color:#869ab3;font-size:10px;margin-bottom:5px} .leader-grid strong{font-size:13px} .progress{height:4px;background:rgba(255,255,255,.07);border-radius:9px;margin-top:15px;overflow:hidden} .progress i{display:block;height:100%;background:linear-gradient(90deg,#0083ca,#60a5fa);border-radius:9px}
+.dre-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:16px} .dre-card{padding:16px;border-radius:16px;border:1px solid var(--line);background:rgba(14,31,53,.55)} .dre-card .v{font-family:Manrope;font-size:20px;font-weight:800;margin-top:8px} .dre-card .l{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#8fa3bd;font-weight:700} .dre-card.negative .v{color:#ff96a8} .dre-card.positive .v{color:#7de4bc} .dre-card.capex .v{color:#ffd56a}
+.adjust-note{padding:17px 18px;border:1px solid rgba(52,211,153,.2);background:rgba(8,70,55,.12);border-radius:16px;color:#b8d8cc;font-size:13px;line-height:1.55;margin-top:14px} .adjust-note strong{color:#8ef0cb}
+.toolbar{display:grid;grid-template-columns:1.3fr .9fr .9fr auto;gap:10px;margin-bottom:14px}
+.toolbar input, .toolbar select{width:100%!important;border:1px solid rgba(148,163,184,.22)!important;background:#0c1d33!important;background-color:#0c1d33!important;color:#f8fbff!important;border-radius:10px!important;padding:10px 14px!important;outline:none!important;font-size:13px!important;font-family:Inter,sans-serif!important;box-shadow:none!important;appearance:auto!important;-webkit-appearance:auto!important}
+.toolbar input::placeholder{color:#6f839e!important;opacity:1!important}
+.toolbar select option{background:#0c1d33!important;color:#f8fbff!important}
+.toolbar input:focus, .toolbar select:focus{border-color:#60a5fa!important;box-shadow:0 0 12px rgba(96,165,250,.25)!important}
+.toolbar button{border:1px solid rgba(96,165,250,.25)!important;background:rgba(96,165,250,.08)!important;color:#cfe8ff!important;border-radius:10px!important;padding:10px 16px!important;font-size:13px!important;font-weight:700!important;cursor:pointer!important;white-space:nowrap!important;transition:all .2s ease!important}
+.toolbar button:hover{background:rgba(96,165,250,.18)!important;border-color:rgba(96,165,250,.5)!important;color:#ffffff!important}
+.table-wrap{overflow:auto;border-radius:18px;border:1px solid var(--line)} table{width:100%;border-collapse:collapse;min-width:1040px;background:rgba(8,22,39,.48)} th{position:sticky;top:0;background:#10243e;color:#9fb2c9;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.08em;padding:12px 13px;border-bottom:1px solid var(--line)} td{padding:11px 13px;border-bottom:1px solid rgba(255,255,255,.045);font-size:12px;color:#c7d4e5} tr:hover td{background:rgba(96,165,250,.035)} td.num{text-align:right;font-variant-numeric:tabular-nums} .project-name{color:white;font-weight:600;max-width:360px}
+.status{display:inline-flex;padding:5px 8px;border-radius:999px;font-size:10px;font-weight:800} .status.excelente{background:rgba(52,211,153,.1);color:#7de4bc;border:1px solid rgba(52,211,153,.18)} .status.meta{background:rgba(96,165,250,.1);color:#9dcfff;border:1px solid rgba(96,165,250,.18)} .status.atencao{background:rgba(251,191,36,.1);color:#ffda72;border:1px solid rgba(251,191,36,.18)} .status.critico{background:rgba(251,113,133,.1);color:#ff9bae;border:1px solid rgba(251,113,133,.18)}
+.footer{border-top:1px solid var(--line);padding:28px 0 44px;color:#8296ae;font-size:12px} .footer-in{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+@media(max-width:1180px){.grid-kpi{grid-template-columns:repeat(3,1fr)}.leaders{grid-template-columns:repeat(2,1fr)}.dre-grid{grid-template-columns:repeat(3,1fr)}.immob-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:850px){.chart-grid,.chart-grid.equal,.immob-top{grid-template-columns:1fr}.leaders{grid-template-columns:1fr}.toolbar{grid-template-columns:1fr 1fr}.immob-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:620px){.wrap{width:min(100% - 24px,1720px)}.hero{padding:28px 0 20px}.grid-kpi{grid-template-columns:1fr 1fr}.dre-grid{grid-template-columns:1fr 1fr}.toolbar{grid-template-columns:1fr}.immob-grid{grid-template-columns:1fr}h1{font-size:32px}.brand-logo{width:54px;height:54px}}
+
+.hero-code1{position:relative;overflow:hidden;padding:28px 0 22px;border-bottom:1px solid rgba(255,255,255,.10);background:linear-gradient(90deg,rgba(1,49,84,.68) 0%,rgba(11,34,80,.84) 45%,rgba(18,28,91,.75) 100%)}
+.hero-code1:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 0% 0%,rgba(0,131,202,.20),transparent 30%),radial-gradient(circle at 100% 0%,rgba(59,130,246,.12),transparent 24%);pointer-events:none}
+.hero-code1-inner{position:relative;z-index:1}
+.hero-code1-copy{max-width:1120px}
+.logo-code1{height:42px;margin-bottom:14px;filter:brightness(0) invert(1);opacity:.92;display:block}
+.title-code1{font-size:clamp(28px,3.8vw,48px);font-weight:800;line-height:1.08;margin:0 0 8px;letter-spacing:-.035em;color:#fff;font-family:Manrope,Inter,sans-serif;max-width:1200px}
+.subtitle-code1{color:#d7e3f3;font-size:15px;line-height:1.5;max-width:980px;margin:0}
+@media(max-width:620px){.subtitle-code1{font-size:14px}.logo-code1{height:36px}.hero-code1{padding:22px 0 18px}}
+
+
+.travel-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.travel-card{padding:22px}
+.travel-card h3{margin:0;font-size:17px}
+.travel-card .sub{margin:5px 0 18px;color:var(--muted);font-size:12px;line-height:1.5}
+.travel-coverage{font-size:12px;color:#b9c9dc;margin:-8px 0 18px}.travel-coverage strong{color:#6ee7b7}
+.travel-month{margin:0 0 17px}.travel-month:last-child{margin-bottom:0}.travel-month-title{font-size:11px;color:#55c7ff;font-weight:800;letter-spacing:.04em;margin-bottom:7px}
+.travel-row{display:grid;grid-template-columns:66px 1fr;gap:8px;align-items:center;margin:6px 0}.travel-label{font-size:11px;color:#aabbd0}
+.travel-track{height:22px;background:rgba(255,255,255,.075);border-radius:7px;overflow:hidden;position:relative}.travel-fill{height:100%;border-radius:7px;display:flex;align-items:center;padding:0 10px;min-width:72px;font-size:10px;font-weight:800;color:white;white-space:nowrap}.travel-fill.expense{background:linear-gradient(90deg,#fb4566,#fb3d63)}.travel-fill.reimb{background:linear-gradient(90deg,#10b981,#18c58d)}
+.travel-hero{border:1px solid rgba(52,211,153,.45);background:rgba(5,94,78,.16);border-radius:14px;padding:18px;text-align:center;margin-bottom:18px}.travel-hero.negative{border-color:rgba(251,113,133,.45);background:rgba(127,29,29,.16)}
+.travel-hero .ey{font-size:10px;color:#a8b8cb;text-transform:uppercase;letter-spacing:.08em;font-weight:800}.travel-hero .big{font-family:Manrope;font-size:29px;font-weight:800;margin:8px 0}.travel-hero.negative .big{color:#ff8fa3}.travel-hero .desc{font-size:11px;color:#b9c7d9}
+.travel-summary{display:grid;gap:10px}.travel-summary-row{display:flex;justify-content:space-between;gap:16px;align-items:center;padding:13px 14px;border:1px solid rgba(255,255,255,.06);background:rgba(3,14,30,.55);border-radius:10px;font-size:12px;color:#cbd7e6}.travel-summary-row strong{font-size:13px}.travel-summary-row.exp strong{color:#ff7d92}.travel-summary-row.reimb strong{color:#43dbad}.travel-summary-row.prosp strong{color:#facc15}.travel-divider{height:1px;background:rgba(255,255,255,.08);margin:18px 0 12px}.travel-caption{font-size:10px;color:#6f839e;line-height:1.5;margin-top:12px}
+@media(max-width:900px){.travel-grid{grid-template-columns:1fr}.travel-row{grid-template-columns:60px 1fr}}
+
+.hero-code1{position:relative;overflow:hidden;padding:24px 0;border-bottom:1px solid rgba(255,255,255,.10);background:linear-gradient(90deg,rgba(1,49,84,.68) 0%,rgba(11,34,80,.84) 45%,rgba(18,28,91,.75) 100%)}
+.hero-code1:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 0% 0%,rgba(0,131,202,.20),transparent 30%),radial-gradient(circle at 100% 0%,rgba(59,130,246,.12),transparent 24%);pointer-events:none}
+.hero-code1-inner{position:relative;z-index:1}
+.hero-code1-copy{max-width:1720px;margin:0 auto;padding:0 24px;display:flex;align-items:center;gap:20px}
+.logo-code1{height:64px;width:auto;object-fit:contain;margin-bottom:0;opacity:.95;flex-shrink:0}
+.logo-dark{display:block;}
+.logo-light{display:none;}
+html.light .logo-dark{display:none!important;}
+html.light .logo-light{display:block!important;}
+html.light .hero-code1{background:#ffffff!important;border-bottom:1px solid #e2e8f0!important;}
+html.light .title-code1{color:#1b365d!important;}
+html.light .subtitle-code1{color:#475569!important;}
+html.light .header-divider-code1{background:rgba(0,0,0,0.15)!important;}
+.header-divider-code1{width:1px;height:48px;background:rgba(255,255,255,.2);flex-shrink:0}
+.title-code1{font-size:clamp(24px,2.8vw,30px);font-weight:700;line-height:1.25;margin:0;letter-spacing:-.02em;color:#fff;font-family:Manrope,Inter,sans-serif;white-space:nowrap}
+.subtitle-code1{color:#e2e8f0;font-size:15px;line-height:1.4;margin:2px 0 0;white-space:nowrap}
+@media(max-width:768px){.hero-code1-copy{flex-direction:column;align-items:flex-start;gap:12px}.header-divider-code1{display:none}.logo-code1{height:48px}}
+</style>
+
+<script>
+  (function() {
+    const saved = 'light';
+    if (saved === 'light') {
+      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.add('light');
+    } else {
+      document.documentElement.classList.remove('light');
+      document.documentElement.classList.add('dark');
+    }
+  })();
+  /* auth check disabled for internal portal */
+  function logout() {
+    window.location.href = '/relatorios';
+  }
+
+  // 🛡️ Camada de Segurança: Bloqueio de DevTools, Atalhos e Menu de Contexto
+  document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+  }, false);
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'F12' || e.keyCode === 123) {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    }
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && (
+        e.key === 'I' || e.key === 'i' || e.keyCode === 73 ||
+        e.key === 'J' || e.key === 'j' || e.keyCode === 74 ||
+        e.key === 'C' || e.key === 'c' || e.keyCode === 67
+    )) {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    }
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'U' || e.key === 'u' || e.keyCode === 85)) {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    }
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'S' || e.key === 's' || e.keyCode === 83)) {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    }
+  }, false);
+</script>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "brand-blue": "#0083ca",
+          "surface": "#0c1322",
+          "surface-container": "#191f2f",
+          "surface-container-high": "#232a3a"
+        },
+        fontFamily: {
+          sans: ["Inter", "sans-serif"],
+          display: ["Manrope", "sans-serif"]
+        }
+      }
+    }
+  }
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<style id="light-theme-styles">
+  /* ========================================================
+     NAVBAR & MENU: MODO ESCURO (CORREÇÃO CRÍTICA DO PRINT)
+     Garante que a barra de navegação seja 100% escura no modo escuro
+     ======================================================== */
+  html.dark nav {
+    background-color: rgba(7, 16, 30, 0.96) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.10) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35) !important;
+  }
+  html.dark nav > div:first-child {
+    background-color: rgba(13, 29, 51, 0.95) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  }
+  html.dark nav a[href^="#"],
+  html.dark nav a[href="index.html"] {
+    color: #cbd5e1 !important;
+  }
+  html.dark nav a[href^="#"]:hover,
+  html.dark nav a[href="index.html"]:hover {
+    background-color: rgba(255, 255, 255, 0.10) !important;
+    color: #ffffff !important;
+  }
+  html.dark .theme-toggle-btn {
+    color: #94a3b8 !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+    background-color: rgba(255, 255, 255, 0.05) !important;
+  }
+  html.dark .theme-toggle-btn:hover {
+    color: #ffffff !important;
+    background-color: rgba(255, 255, 255, 0.12) !important;
+  }
+
+  /* ========================================================
+     NAVBAR & MENU: MODO CLARO (PADRÃO MATRIZ)
+     ======================================================== */
+  html.light nav {
+    background-color: #ffffff !important;
+    border-bottom: 1px solid #dbe5ef !important;
+    box-shadow: 0 2px 8px rgba(27, 54, 93, 0.06) !important;
+  }
+  html.light nav > div:first-child {
+    background-color: #f1f6fb !important;
+    border-bottom: 1px solid #dbe5ef !important;
+  }
+  html.light nav a[href^="#"],
+  html.light nav a[href="index.html"] {
+    color: #1b365d !important;
+  }
+  html.light nav a[href^="#"]:hover,
+  html.light nav a[href="index.html"]:hover {
+    background-color: #e0f2fe !important;
+    color: #075985 !important;
+  }
+  html.light .theme-toggle-btn {
+    color: #475569 !important;
+    border-color: #cbd5e1 !important;
+    background-color: #f1f5f9 !important;
+  }
+  html.light .theme-toggle-btn:hover {
+    color: #0f172a !important;
+    background-color: #e2e8f0 !important;
+  }
+
+  /* ========================================================
+     IDENTIDADE VISUAL MODO CLARO (REPLICAÇÃO TOTAL MATRIZ)
+     ======================================================== */
+  html.light {
+    --bg: #f8fafc;
+    --bg2: #ffffff;
+    --panel: #ffffff;
+    --line: rgba(203, 213, 225, 0.8);
+    --line2: rgba(59, 130, 246, 0.3);
+    --text: #0f172a;
+    --muted: #475569;
+    --shadow: 0 10px 30px rgba(0,0,0,0.06);
+  }
+  html.light body {
+    background: linear-gradient(180deg, #eef4fa 0%, #f6f9fc 40%, #f4f7fb 100%) !important;
+    color: #0f172a !important;
+  }
+  html.light body:before { display: none !important; }
+
+  /* Cabeçalho Hero */
+  html.light .hero-code1, html.light .hero {
+    background: linear-gradient(135deg, #ffffff 0%, #eaf3fb 100%) !important;
+    border-bottom: 3px solid #0083ca !important;
+  }
+  html.light .hero-code1:before, html.light .hero:before, html.light .hero:after { display: none !important; }
+  html.light .title-code1, html.light .hero-code1 h1 { color: #1b365d !important; }
+  html.light .subtitle-code1, html.light .hero-code1 p { color: #475569 !important; }
+  html.light .logo-code1 { filter: none !important; opacity: 1 !important; }
+  html.light .header-divider-code1 { background-color: #cbd5e1 !important; }
+
+  /* Títulos e Tipografia Geral */
+  html.light h1, html.light h2, html.light h3 { color: #1b365d !important; }
+  html.light p, html.light .sub { color: #475569 !important; }
+  html.light .section-head p { color: #475569 !important; }
+  html.light .line-title:before {
+    background: linear-gradient(#0083ca, #38bdf8) !important;
+    box-shadow: 0 0 10px rgba(0, 131, 202, 0.25) !important;
+  }
+
+  /* Cards, Painéis e KPIs */
+  html.light .card,
+  html.light .panel,
+  html.light .kpi-card,
+  html.light .kpi {
+    background: #ffffff !important;
+    border: 1px solid #dbe5ef !important;
+    color: #0f172a !important;
+    box-shadow: 0 4px 14px -2px rgba(27, 54, 93, 0.06) !important;
+  }
+  html.light .card.kpi .label, html.light .kpi .label { color: #475569 !important; font-weight: 700 !important; }
+  html.light .card.kpi .value, html.light .kpi .value { color: #0f172a !important; font-weight: 800 !important; }
+  html.light .card.kpi.blue .value, html.light .kpi.blue .value { color: #0284c7 !important; }
+  html.light .card.kpi.green .value, html.light .kpi.green .value { color: #047857 !important; }
+  html.light .card.kpi.violet .value, html.light .kpi.violet .value { color: #6d28d9 !important; }
+  html.light .card.kpi.amber .value, html.light .kpi.amber .value { color: #b45309 !important; }
+  html.light .card.kpi.red .value, html.light .kpi.red .value { color: #be123c !important; }
+  html.light .card.kpi .note, html.light .kpi .note { color: #64748b !important; }
+  html.light .card.panel h3 { color: #1b365d !important; }
+  html.light .card.panel .sub { color: #475569 !important; }
+
+  /* Imobilizado & Reforma (Cards, Barra e Grid) */
+  html.light .immob-highlight {
+    background: linear-gradient(135deg, #ffffff 0%, #fefce8 100%) !important;
+    border: 1px solid #fde68a !important;
+    box-shadow: 0 4px 14px -2px rgba(180, 83, 9, 0.08) !important;
+  }
+  html.light .immob-highlight .kicker,
+  html.light .immob-top .kicker { color: #b45309 !important; font-weight: 800 !important; }
+  html.light .immob-number { color: #b45309 !important; font-weight: 800 !important; }
+  html.light .immob-meta { color: #78350f !important; }
+  html.light .immob-progress {
+    background: #ffffff !important;
+    border: 1px solid #dbe5ef !important;
+    box-shadow: 0 4px 14px -2px rgba(27, 54, 93, 0.06) !important;
+  }
+  html.light .immob-progress-row { color: #0f172a !important; }
+  html.light .immob-progress-row strong { color: #1b365d !important; }
+  html.light .immob-progress-row span { color: #475569 !important; }
+  html.light .immob-progress div { color: #64748b !important; }
+  html.light .bar { background: #f1f5f9 !important; border: 1px solid #cbd5e1 !important; }
+  html.light .bar i { background: linear-gradient(90deg, #059669, #0284c7) !important; }
+  html.light .immob-grid .immob-item {
+    background: #ffffff !important;
+    border: 1px solid #dbe5ef !important;
+    box-shadow: 0 4px 12px -2px rgba(27, 54, 93, 0.06) !important;
+  }
+  html.light .immob-item .eyebrow { color: #64748b !important; }
+  html.light .immob-name { color: #0f172a !important; }
+  html.light .immob-value { color: #b45309 !important; }
+  html.light .immob-pct { color: #64748b !important; }
+
+  /* Performance por Líder */
+  html.light .leader-card {
+    background: #ffffff !important;
+    border: 1px solid #dbe5ef !important;
+    box-shadow: 0 4px 14px -2px rgba(27, 54, 93, 0.06) !important;
+  }
+  html.light .leader-card.good { border-color: #a7f3d0 !important; }
+  html.light .leader-card.mid { border-color: #bae6fd !important; }
+  html.light .leader-card.warn { border-color: #fde68a !important; }
+  html.light .leader-card.bad { border-color: #fecdd3 !important; }
+  html.light .leader-head h3 { color: #1b365d !important; }
+  html.light .leader-head .eyebrow { color: #64748b !important; }
+  html.light .leader-share { color: #0284c7 !important; }
+  html.light .leader-share span { color: #64748b !important; }
+  html.light .leader-value { color: #0f172a !important; }
+  html.light .leader-grid div {
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+  }
+  html.light .leader-grid div span { color: #64748b !important; }
+  html.light .leader-grid div strong { color: #0f172a !important; }
+  html.light .progress { background: #e2e8f0 !important; }
+  html.light .progress i { background: linear-gradient(90deg, #0083ca, #38bdf8) !important; }
+
+  /* DRE Consolidado Ajustado */
+  html.light .dre-card {
+    background: #ffffff !important;
+    border: 1px solid #dbe5ef !important;
+    box-shadow: 0 4px 14px -2px rgba(27, 54, 93, 0.06) !important;
+  }
+  html.light .dre-card .l { color: #475569 !important; font-weight: 700 !important; }
+  html.light .dre-card .v { color: #0f172a !important; font-weight: 800 !important; }
+  html.light .dre-card.positive .v { color: #047857 !important; }
+  html.light .dre-card.capex .v { color: #b45309 !important; }
+  html.light .dre-card.negative .v { color: #be123c !important; }
+  html.light .adjust-note {
+    background: linear-gradient(135deg, #f0fdf4 0%, #e6f9ed 100%) !important;
+    border: 1px solid #bbf7d0 !important;
+    color: #166534 !important;
+  }
+  html.light .adjust-note strong { color: #14532d !important; }
+
+  /* Viagens & Reembolsos */
+  html.light .travel-card {
+    background: #ffffff !important;
+    border: 1px solid #dbe5ef !important;
+    box-shadow: 0 4px 14px -2px rgba(27, 54, 93, 0.06) !important;
+  }
+  html.light .travel-card h3 { color: #1b365d !important; }
+  html.light .travel-card .sub { color: #475569 !important; }
+  html.light .travel-coverage { color: #475569 !important; }
+  html.light .travel-coverage strong { color: #047857 !important; }
+  html.light .travel-month-title { color: #0284c7 !important; font-weight: 800 !important; }
+  html.light .travel-label { color: #475569 !important; font-weight: 600 !important; }
+  html.light .travel-track { background: #e2e8f0 !important; border: 1px solid #cbd5e1 !important; }
+  html.light .travel-hero { background: #f0fdf4 !important; border: 1px solid #bbf7d0 !important; }
+  html.light .travel-hero.negative { background: #fff1f2 !important; border: 1px solid #fecdd3 !important; }
+  html.light .travel-hero .ey { color: #475569 !important; font-weight: 700 !important; }
+  html.light .travel-hero .big { color: #047857 !important; }
+  html.light .travel-hero.negative .big { color: #be123c !important; }
+  html.light .travel-hero .desc { color: #64748b !important; }
+  html.light .travel-summary-row {
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    color: #1e293b !important;
+  }
+  html.light .travel-summary-row span { color: #475569 !important; font-weight: 600 !important; }
+  html.light .travel-summary-row.exp strong { color: #be123c !important; }
+  html.light .travel-summary-row.reimb strong { color: #047857 !important; }
+  html.light .travel-summary-row.prosp strong { color: #b45309 !important; }
+  html.light .travel-divider { background: #e2e8f0 !important; }
+  html.light .travel-caption { color: #64748b !important; }
+
+  /* Tabela e Toolbar de Filtros */
+  html.light .toolbar input,
+  html.light .toolbar select {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #0f172a !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+  }
+  html.light .toolbar input::placeholder { color: #94a3b8 !important; }
+  html.light .toolbar select option { background: #ffffff !important; color: #0f172a !important; }
+  html.light .toolbar button {
+    background: #f1f5f9 !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #1b365d !important;
+  }
+  html.light .toolbar button:hover {
+    background: #e0f2fe !important;
+    border-color: #7dd3fc !important;
+    color: #0369a1 !important;
+  }
+  html.light .table-wrap {
+    background: #ffffff !important;
+    border: 1px solid #dbe5ef !important;
+    box-shadow: 0 4px 14px -2px rgba(27, 54, 93, 0.06) !important;
+  }
+  html.light table { background: #ffffff !important; }
+  html.light table thead tr,
+  html.light table thead th,
+  html.light table th {
+    background-color: #1b365d !important;
+    color: #ffffff !important;
+    border-bottom: 2px solid #0083ca !important;
+  }
+  html.light table tbody td {
+    color: #0f172a !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+  }
+  html.light table tbody tr:nth-child(even) td { background-color: #f8fafc !important; }
+  html.light table tbody tr:hover td { background-color: #e0f2fe !important; }
+  html.light .project-name { color: #0f172a !important; font-weight: 700 !important; }
+
+  /* Badges de Status da Tabela */
+  html.light .status.excelente { background: #d1fae5 !important; color: #047857 !important; border: 1px solid #6ee7b7 !important; }
+  html.light .status.meta { background: #e0f2fe !important; color: #0284c7 !important; border: 1px solid #7dd3fc !important; }
+  html.light .status.atencao { background: #fef3c7 !important; color: #b45309 !important; border: 1px solid #fcd34d !important; }
+  html.light .status.critico { background: #ffe4e6 !important; color: #be123c !important; border: 1px solid #fda4af !important; }
+
+  /* Rodapé */
+  html.light footer, html.light footer[class] {
+    background-color: #1b365d !important;
+    border-top: 3px solid #0083ca !important;
+  }
+  html.light footer, html.light footer * { color: #e2e8f0 !important; }
+  html.light footer .font-bold { color: #ffffff !important; }
+  html.light ::-webkit-scrollbar-track { background: #e2e8f0; }
+  html.light ::-webkit-scrollbar-thumb { background: #94a3b8; }
+</style>
+
+</head>
+<body>
+
+<header class="hero-code1">
+  <div class="wrap hero-code1-inner">
+    <div class="hero-code1-copy">
+      <img alt="NNÓS Logo" class="logo-code1 logo-dark" src="assets/logo-nnos-white.png"/>
+      <img alt="NNÓS Logo" class="logo-code1 logo-light" src="assets/logo-nnos.png"/>
+      <div class="header-divider-code1"></div>
+      <div>
+        <h1 class="title-code1">Dashboard Executivo de Performance de Projetos</h1>
+        <p class="subtitle-code1">Análise consolidada de receita, margem, custos, rentabilidade e performance por líder — Fonte Gestão Financeira Projetos.</p>
+      </div>
+    </div>
+  </div>
+</header>
+
+
+<nav class="sticky top-0 z-50 bg-slate-950/95 dark:bg-slate-950/95 backdrop-blur-md border-b border-white/10 dark:border-white/10 shadow-md transition-colors duration-200">
+  <!-- Linha 1: Outros Relatórios e Ações Globais -->
+  <div class="bg-slate-900/90 dark:bg-slate-900/90 px-6 py-1.5 border-b border-white/10 dark:border-white/10">
+    <div class="max-w-[1720px] mx-auto flex items-center justify-between gap-3 flex-wrap">
+      <div class="flex items-center gap-2">
+        <span class="text-[11px] font-bold text-slate-400 dark:text-gray-400 uppercase tracking-wider flex items-center gap-1.5 mr-1">
+          <span class="material-symbols-outlined text-sm text-sky-500">alt_route</span> Outros Relatórios:
+        </span>
+        <a href="matriz.html" class="px-3 py-1.5 rounded-lg text-xs font-bold text-sky-700 dark:text-sky-300 bg-sky-100 dark:bg-sky-500/20 hover:bg-sky-200 dark:hover:bg-sky-500/30 border border-sky-300 dark:border-sky-400/40 transition-all flex items-center gap-1.5 shadow-sm hover:scale-[1.02] cursor-pointer">
+          <span class="material-symbols-outlined text-sm">monitoring</span> Matriz 2026
+        </a>
+        <a href="uva.html" class="px-3 py-1.5 rounded-lg text-xs font-bold text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-500/20 hover:bg-amber-200 dark:hover:bg-amber-500/30 border border-amber-300 dark:border-amber-400/40 transition-all flex items-center gap-1.5 shadow-sm hover:scale-[1.02] cursor-pointer">
+          <span class="material-symbols-outlined text-sm">account_balance</span> Campus BH UVA
+        </a>
+        <a href="prospeccao.html" class="px-3 py-1.5 rounded-lg text-xs font-bold text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-500/20 hover:bg-purple-200 dark:hover:bg-purple-500/30 border border-purple-300 dark:border-purple-400/40 transition-all flex items-center gap-1.5 shadow-sm hover:scale-[1.02] cursor-pointer">
+          <span class="material-symbols-outlined text-sm">explore</span> Prospecção
+        </a>
+        <a href="lider.html" class="px-3 py-1.5 rounded-lg text-xs font-bold text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-500/20 hover:bg-blue-200 dark:hover:bg-blue-500/30 border border-blue-300 dark:border-blue-400/40 transition-all flex items-center gap-1.5 shadow-sm hover:scale-[1.02] cursor-pointer">
+          <span class="material-symbols-outlined text-sm">badge</span> Painel por Líder
+        </a>
+      </div>
+      <div class="flex items-center gap-2 ml-auto">
+        <button id="themeToggleBtn" onclick="toggleTheme()" class="theme-toggle-btn p-1.5 rounded-lg text-gray-300 hover:text-white hover:bg-white/10 border border-white/10 transition-colors flex items-center justify-center cursor-pointer shadow-sm" title="Alternar Modo Escuro / Claro">
+          <span class="material-symbols-outlined text-base theme-icon">light_mode</span>
+        </button>
+        <a href="index.html" class="px-3 py-1.5 rounded-lg text-xs font-bold text-gray-300 hover:text-white hover:bg-white/10 border border-white/10 transition-colors flex items-center gap-1.5 cursor-pointer">
+          <span class="material-symbols-outlined text-sm">grid_view</span> Menu
+        </a>
+        <button onclick="logout()" class="px-3 py-1.5 rounded-lg text-xs font-bold text-rose-400 hover:bg-rose-500/20 border border-rose-500/30 transition-colors flex items-center gap-1 cursor-pointer" title="Encerrar Sessão">
+          <span class="material-symbols-outlined text-sm">logout</span> Sair
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Linha 2: Seções do Relatório -->
+  <div class="max-w-[1720px] mx-auto px-6 overflow-x-auto">
+    <div class="flex items-center gap-1.5 py-2 min-w-max">
+      <a class="px-3.5 py-1.5 rounded-lg text-xs font-bold text-gray-300 hover:text-white hover:bg-white/10 transition-colors flex items-center gap-1.5" href="#visao"><span class="material-symbols-outlined text-sm text-sky-500">monitoring</span> Visão executiva</a>
+      <a class="px-3.5 py-1.5 rounded-lg text-xs font-bold text-gray-300 hover:text-white hover:bg-white/10 transition-colors flex items-center gap-1.5" href="#imobilizado"><span class="material-symbols-outlined text-sm text-sky-500">inventory_2</span> Imobilizado &amp; Reforma</a>
+      <a class="px-3.5 py-1.5 rounded-lg text-xs font-bold text-gray-300 hover:text-white hover:bg-white/10 transition-colors flex items-center gap-1.5" href="#lideres"><span class="material-symbols-outlined text-sm text-sky-500">groups</span> Líderes</a>
+      <a class="px-3.5 py-1.5 rounded-lg text-xs font-bold text-gray-300 hover:text-white hover:bg-white/10 transition-colors flex items-center gap-1.5" href="#portfolio"><span class="material-symbols-outlined text-sm text-sky-500">analytics</span> Portfólio</a>
+      <a class="px-3.5 py-1.5 rounded-lg text-xs font-bold text-gray-300 hover:text-white hover:bg-white/10 transition-colors flex items-center gap-1.5" href="#logistica"><span class="material-symbols-outlined text-sm text-sky-500">flight_takeoff</span> Viagens &amp; Reembolsos</a>
+      <a class="px-3.5 py-1.5 rounded-lg text-xs font-bold text-gray-300 hover:text-white hover:bg-white/10 transition-colors flex items-center gap-1.5" href="#detalhe"><span class="material-symbols-outlined text-sm text-sky-500">table_chart</span> Detalhamento</a>
+    </div>
+  </div>
+</nav>
+
+<main class="wrap">
+
+<section class="section" id="visao">
+  <div class="section-head"><div><div class="line-title"><h2>Visão executiva</h2></div><p>Leitura do portfólio consolidado com segregação de <strong>Imobilizado & Reforma</strong> no resultado gerencial.</p></div></div>
+  <div class="grid-kpi">
+    <div class="card kpi blue"><div class="label">Receita do portfólio</div><div class="value">R$ 10.644.160</div><div class="note">Consolidado completo dos projetos</div></div>
+    <div class="card kpi green"><div class="label">Margem dos projetos</div><div class="value">R$ 1.600.058</div><div class="note">Margem agregada do painel por líder</div></div>
+    <div class="card kpi violet"><div class="label">Margem média</div><div class="value">15,0%</div><div class="note">Margem ponderada pela receita</div></div>
+    <div class="card kpi amber"><div class="label">Imobilizado & Reforma</div><div class="value">R$ 337.754</div><div class="note">Valor segregado do resultado gerencial</div></div>
+    <div class="card kpi red"><div class="label">Margem destruída</div><div class="value">R$ 713.459</div><div class="note">7 projetos com margem negativa</div></div>
+    <div class="card kpi red"><div class="label">Lucro líquido ajustado</div><div class="value">-R$ 183.991</div><div class="note">Resultado após retirar Imobilizado & Reforma</div></div>
+  </div>
+</section>
+
+
+
+<section class="section" id="imobilizado">
+  <div class="section-head"><div><div class="line-title"><h2>Imobilizado & Reforma</h2></div><p>Bloco patrimonial destacado do resultado gerencial, conforme a composição do Campus BH UVA.</p></div></div>
+  <div class="immob-top">
+    <div class="card immob-highlight immob-summary">
+      <div class="kicker" style="color:#ffd56a">SEGREGAÇÃO GERENCIAL</div>
+      <div class="immob-number">R$ 337.754,41</div>
+      <div class="immob-meta">Valor total reclassificado fora do resultado operacional.</div>
+    </div>
+    <div class="card immob-progress">
+      <div class="immob-progress-row"><strong>Quitado</strong><span>R$ 328.950,50 • 97,39%</span></div>
+      <div class="bar"><i style="width:97.39%"></i></div>
+      <div class="immob-progress-row" style="margin-top:18px"><strong>Saldo a vencer</strong><span>R$ 8.803,91 • 2,61%</span></div>
+      <div style="font-size:12px;color:#97a8be;line-height:1.5">Destaque patrimonial para leitura executiva do resultado.</div>
+    </div>
+  </div>
+  <div class="immob-grid">
+    <div class="immob-item"><div class="eyebrow">8 títulos</div><div class="immob-name">MR Engenharia (Obras)</div><div class="immob-value">R$ 189.589,65</div><div class="immob-pct">56,13% do imobilizado</div></div>
+    <div class="immob-item"><div class="eyebrow">57 títulos</div><div class="immob-name">Móveis & Equipamentos</div><div class="immob-value">R$ 59.479,85</div><div class="immob-pct">17,61% do imobilizado</div></div>
+    <div class="immob-item"><div class="eyebrow">12 títulos</div><div class="immob-name">Othon de Carvalho (Elétrica)</div><div class="immob-value">R$ 29.730,33</div><div class="immob-pct">8,80% do imobilizado</div></div>
+    <div class="immob-item"><div class="eyebrow">7 títulos</div><div class="immob-name">Comunicação Visual (Noronha)</div><div class="immob-value">R$ 26.090,00</div><div class="immob-pct">7,72% do imobilizado</div></div>
+    <div class="immob-item"><div class="eyebrow">20 título</div><div class="immob-name">Climatização (Thermobras)</div><div class="immob-value">R$ 21.300,00</div><div class="immob-pct">6,31% do imobilizado</div></div>
+  </div>
+</section>
+
+
+<section class="section" id="lideres">
+  <div class="section-head"><div><div class="line-title"><h2>Performance por líder</h2></div><p>Comparativo entre receita, margem e participação de cada liderança no portfólio.</p></div></div>
+  <div class="leaders">
+    <article class="leader-card warn">
+      <div class="leader-head">
+        <div><div class="eyebrow">3 projetos</div><h3>Vinicius Souza</h3></div>
+        <div class="leader-share">50,5%<span>da receita</span></div>
+      </div>
+      <div class="leader-value">R$ 5.095.398</div>
+      <div class="leader-grid">
+        <div><span>Margem</span><strong>R$ 790.031</strong></div>
+        <div><span>Margem %</span><strong>15,5%</strong></div>
+      </div>
+      <div class="progress"><i style="width:50.5%"></i></div>
+    </article>
+    <article class="leader-card warn">
+      <div class="leader-head">
+        <div><div class="eyebrow">16 projetos</div><h3>Beatriz Picorelli</h3></div>
+        <div class="leader-share">22,4%<span>da receita</span></div>
+      </div>
+      <div class="leader-value">R$ 2.265.835</div>
+      <div class="leader-grid">
+        <div><span>Margem</span><strong>R$ 474.600</strong></div>
+        <div><span>Margem %</span><strong>20,9%</strong></div>
+      </div>
+      <div class="progress"><i style="width:22.4%"></i></div>
+    </article>
+    <article class="leader-card mid">
+      <div class="leader-head">
+        <div><div class="eyebrow">14 projetos</div><h3>Caroline Amieva</h3></div>
+        <div class="leader-share">11,0%<span>da receita</span></div>
+      </div>
+      <div class="leader-value">R$ 1.115.688</div>
+      <div class="leader-grid">
+        <div><span>Margem</span><strong>R$ 325.833</strong></div>
+        <div><span>Margem %</span><strong>29,2%</strong></div>
+      </div>
+      <div class="progress"><i style="width:11.0%"></i></div>
+    </article>
+    <article class="leader-card warn">
+      <div class="leader-head">
+        <div><div class="eyebrow">3 projetos</div><h3>Fábio Canassa</h3></div>
+        <div class="leader-share">8,4%<span>da receita</span></div>
+      </div>
+      <div class="leader-value">R$ 852.434</div>
+      <div class="leader-grid">
+        <div><span>Margem</span><strong>R$ 165.203</strong></div>
+        <div><span>Margem %</span><strong>19,4%</strong></div>
+      </div>
+      <div class="progress"><i style="width:8.4%"></i></div>
+    </article>
+    <article class="leader-card good">
+      <div class="leader-head">
+        <div><div class="eyebrow">3 projetos</div><h3>Jefferson Souza</h3></div>
+        <div class="leader-share">7,4%<span>da receita</span></div>
+      </div>
+      <div class="leader-value">R$ 748.127</div>
+      <div class="leader-grid">
+        <div><span>Margem</span><strong>R$ 362.000</strong></div>
+        <div><span>Margem %</span><strong>48,4%</strong></div>
+      </div>
+      <div class="progress"><i style="width:7.4%"></i></div>
+    </article>
+    <article class="leader-card bad">
+      <div class="leader-head">
+        <div><div class="eyebrow">1 projetos</div><h3>Leonardo Campos</h3></div>
+        <div class="leader-share">0,2%<span>da receita</span></div>
+      </div>
+      <div class="leader-value">R$ 20.931</div>
+      <div class="leader-grid">
+        <div><span>Margem</span><strong>-R$ 407.979</strong></div>
+        <div><span>Margem %</span><strong>-1949,2%</strong></div>
+      </div>
+      <div class="progress"><i style="width:0.2%"></i></div>
+    </article></div>
+  <div class="chart-grid" style="margin-top:16px">
+    <div class="card panel"><h3>Receita × margem por líder</h3><div class="sub">Barras = receita | linha = margem percentual</div><div class="chart-box"><canvas id="leaderCombo"></canvas></div></div>
+    <div class="card panel"><h3>Participação na receita</h3><div class="sub">Concentração do portfólio por liderança</div><div class="chart-box"><canvas id="leaderShare"></canvas></div></div>
+  </div>
+</section>
+
+<section class="section" id="portfolio">
+  <div class="section-head"><div><div class="line-title"><h2>Mapa de rentabilidade do portfólio</h2></div><p>Rankings atualizados considerando somente projetos operacionais.</p></div></div>
+  <div class="chart-grid equal">
+    <div class="card panel"><h3>Top 10 — margem em R$</h3><div class="sub">Projetos que mais geram margem absoluta</div><div class="chart-box tall"><canvas id="topMargin"></canvas></div></div>
+    <div class="card panel"><h3>Top 10 — projetos menos rentáveis</h3><div class="sub">Projetos com menor margem ou impacto negativo em margem absoluta</div><div class="chart-box tall"><canvas id="bottomMargin"></canvas></div></div>
+  </div>
+</section>
+
+
+<section class="section" id="logistica"><div class="section-head"><div><div class="line-title"><h2>Análise de Viagens &amp; Reembolsos</h2></div></div></div><div class="travel-grid"><div class="card travel-card"><h3>Comparativo Mensal (Despesas vs. Reembolso)</h3><div class="sub">Consolidado de janeiro a agosto de 2026</div><div class="travel-coverage">Taxa de cobertura acumulada: <strong>74,5%</strong></div><div class="travel-month"><div class="travel-month-title">JAN-26</div><div class="travel-row"><div class="travel-label">Despesa</div><div class="travel-track"><div class="travel-fill expense" style="width:97.1%">R$ 132.571</div></div></div><div class="travel-row"><div class="travel-label">Reembolso</div><div class="travel-track"><div class="travel-fill reimb" style="width:71.6%">R$ 97.758</div></div></div></div><div class="travel-month"><div class="travel-month-title">FEV-26</div><div class="travel-row"><div class="travel-label">Despesa</div><div class="travel-track"><div class="travel-fill expense" style="width:67.0%">R$ 91.513</div></div></div><div class="travel-row"><div class="travel-label">Reembolso</div><div class="travel-track"><div class="travel-fill reimb" style="width:33.5%">R$ 45.735</div></div></div></div><div class="travel-month"><div class="travel-month-title">MAR-26</div><div class="travel-row"><div class="travel-label">Despesa</div><div class="travel-track"><div class="travel-fill expense" style="width:94.7%">R$ 129.297</div></div></div><div class="travel-row"><div class="travel-label">Reembolso</div><div class="travel-track"><div class="travel-fill reimb" style="width:62.4%">R$ 85.157</div></div></div></div><div class="travel-month"><div class="travel-month-title">ABR-26</div><div class="travel-row"><div class="travel-label">Despesa</div><div class="travel-track"><div class="travel-fill expense" style="width:74.8%">R$ 102.079</div></div></div><div class="travel-row"><div class="travel-label">Reembolso</div><div class="travel-track"><div class="travel-fill reimb" style="width:40.9%">R$ 55.875</div></div></div></div><div class="travel-month"><div class="travel-month-title">MAI-26</div><div class="travel-row"><div class="travel-label">Despesa</div><div class="travel-track"><div class="travel-fill expense" style="width:76.9%">R$ 105.054</div></div></div><div class="travel-row"><div class="travel-label">Reembolso</div><div class="travel-track"><div class="travel-fill reimb" style="width:62.8%">R$ 85.701</div></div></div></div><div class="travel-month"><div class="travel-month-title">JUN-26</div><div class="travel-row"><div class="travel-label">Despesa</div><div class="travel-track"><div class="travel-fill expense" style="width:82.7%">R$ 112.891</div></div></div><div class="travel-row"><div class="travel-label">Reembolso</div><div class="travel-track"><div class="travel-fill reimb" style="width:76.1%">R$ 103.920</div></div></div></div><div class="travel-month"><div class="travel-month-title">JUL-26</div><div class="travel-row"><div class="travel-label">Despesa</div><div class="travel-track"><div class="travel-fill expense" style="width:23.0%">R$ 31.453</div></div></div><div class="travel-row"><div class="travel-label">Reembolso</div><div class="travel-track"><div class="travel-fill reimb" style="width:20.9%">R$ 28.602</div></div></div></div><div class="travel-month"><div class="travel-month-title">AGO-26</div><div class="travel-row"><div class="travel-label">Despesa</div><div class="travel-track"><div class="travel-fill expense" style="width:100.0%">R$ 136.552</div></div></div><div class="travel-row"><div class="travel-label">Reembolso</div><div class="travel-track"><div class="travel-fill reimb" style="width:82.2%">R$ 112.273</div></div></div></div><div class="travel-month"><div class="travel-month-title">SET-26</div><div class="travel-row"><div class="travel-label">Despesa</div><div class="travel-track"><div class="travel-fill expense" style="width:54.6%">R$ 74.491</div></div></div><div class="travel-row"><div class="travel-label">Reembolso</div><div class="travel-track"><div class="travel-fill reimb" style="width:51.2%">R$ 69.850</div></div></div></div><div class="travel-month"><div class="travel-month-title">OUT-26</div><div class="travel-row"><div class="travel-label">Despesa</div><div class="travel-track"><div class="travel-fill expense" style="width:29.7%">R$ 40.549</div></div></div><div class="travel-row"><div class="travel-label">Reembolso</div><div class="travel-track"><div class="travel-fill reimb" style="width:20.8%">R$ 28.366</div></div></div></div><div class="travel-month"><div class="travel-month-title">NOV-26</div><div class="travel-row"><div class="travel-label">Despesa</div><div class="travel-track"><div class="travel-fill expense" style="width:14.0%">R$ 703</div></div></div><div class="travel-row"><div class="travel-label">Reembolso</div><div class="travel-track"><div class="travel-fill reimb" style="width:14.0%">R$ 0</div></div></div></div><div class="travel-month"><div class="travel-month-title">DEZ-26</div><div class="travel-row"><div class="travel-label">Despesa</div><div class="travel-track"><div class="travel-fill expense" style="width:14.0%">R$ 0</div></div></div><div class="travel-row"><div class="travel-label">Reembolso</div><div class="travel-track"><div class="travel-fill reimb" style="width:14.0%">R$ 0</div></div></div></div></div><div class="card travel-card"><h3>Saldo Líquido — Operacional vs. Reembolso</h3><div class="sub">NET entre despesas operacionais de viagens e reembolsos recebidos</div><div class="travel-hero negative"><div class="ey">NET OPERACIONAL (REEMBOLSOS − DESP. OPERACIONAIS)</div><div class="big">-R$ 84.556</div><div class="desc">Reembolsos ficaram abaixo das despesas operacionais acumuladas</div></div><div class="travel-summary"><div class="travel-summary-row exp"><span>(−) Despesas Operacionais com Viagens</span><strong>R$ 797.793</strong></div><div class="travel-summary-row reimb"><span>(+) Reembolso Recebido de Clientes</span><strong>R$ 713.237</strong></div></div><div class="travel-divider"></div><div class="eyebrow" style="margin-bottom:10px">DETALHAMENTO ADICIONAL</div><div class="travel-summary"><div class="travel-summary-row exp"><span>Despesa Total com Viagens (Op. + Prosp.)</span><strong>R$ 957.151</strong></div><div class="travel-summary-row prosp"><span>↳ Logística Prospecção (DIRETORIA)</span><strong>R$ 159.359</strong></div></div></div></div></section>
+
+<section class="section" id="detalhe">
+  <div class="section-head"><div><div class="line-title"><h2>Detalhamento dos projetos operacionais</h2></div><p>Tabela completa com filtros por projeto, líder e faixa de rentabilidade.</p></div></div>
+  <div class="toolbar">
+    <input id="q" placeholder="Buscar projeto...">
+    <select id="leaderFilter"><option value="">Todos os líderes</option></select>
+    <select id="statusFilter"><option value="">Todos os status</option><option value="excelente">≥ 30% — Excelente</option><option value="meta">22% a 30% — Faixa meta</option><option value="atencao">0% a 22% — Atenção</option><option value="critico">Negativo — Crítico</option></select>
+    <button onclick="resetFilters()">Limpar filtros</button>
+  </div>
+  <div class="table-wrap"><table><thead><tr><th>Projeto</th><th>Líder</th><th style="text-align:right">Receita</th><th style="text-align:right">Custos</th><th style="text-align:right">Logística</th><th style="text-align:right">Repasse</th><th style="text-align:right">Margem</th><th style="text-align:right">Margem %</th><th>Status</th></tr></thead><tbody id="projectRows"></tbody></table></div>
+</section>
+</main>
+
+<!-- FOOTER -->
+<!-- FOOTER -->
+<footer class="bg-slate-950 border-t border-white/10 py-6 px-6 text-center text-xs text-gray-400">
+  <div class="max-w-[1720px] mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <img alt="NNÓS" class="h-11 md:h-12 w-auto object-contain" src="assets/logo-nnos-horizontal.png"/>
+    </div>
+    <div>Relatório Financeiro Gerencial • Período: Janeiro a Dezembro de 2026</div>
+  </div>
+</footer>
+
+<script>
+const projects=[{"projeto":"CASE COMERCIAL CONSTRUCTION","lider":"BEATRIZ PICORELLI","receita":14789.707855657494,"impostos":1811.739212318043,"custos":9296.83,"logistica":686.3900000000001,"repasse":0,"margem":2994.7486433394515,"margem_pct":0.20248869501461267},{"projeto":"CNHI TÉCNICO CONSTRUCTION","lider":"BEATRIZ PICORELLI","receita":24489,"impostos":2999.9025,"custos":14808.510638297874,"logistica":0,"repasse":0,"margem":6680.586861702126,"margem_pct":0.27279949616979565},{"projeto":"CPSL IVECO LATAM","lider":"BEATRIZ PICORELLI","receita":33980,"impostos":4162.55,"custos":13699,"logistica":4703.95,"repasse":-4703.95,"margem":16118.45,"margem_pct":0.47435108887580935},{"projeto":"CRM IVECO","lider":"BEATRIZ PICORELLI","receita":0,"impostos":0,"custos":0,"logistica":11286.24,"repasse":0,"margem":-11286.24,"margem_pct":0},{"projeto":"EXCELÊNCIA EM PEÇAS IVECO","lider":"BEATRIZ PICORELLI","receita":55957.06202416918,"impostos":6854.740097960725,"custos":167532.1240425532,"logistica":4944.7,"repasse":-4944.7,"margem":-118429.80211634473,"margem_pct":-2.1164406749087736},{"projeto":"EXCELÊNCIA EM SERVIÇOS IVECO","lider":"BEATRIZ PICORELLI","receita":10442.574923547401,"impostos":1279.2154281345565,"custos":7980.456595744681,"logistica":0,"repasse":0,"margem":1182.9028996681645,"margem_pct":0.11327693680231941},{"projeto":"GARANTIA CNH","lider":"BEATRIZ PICORELLI","receita":43895.159999999996,"impostos":5377.157099999999,"custos":22405.957446808512,"logistica":0.0001,"repasse":0,"margem":16112.045353191483,"margem_pct":0.36705744672513974},{"projeto":"GESTÃO DO MOMENTO","lider":"BEATRIZ PICORELLI","receita":12450,"impostos":1525.125,"custos":1575,"logistica":0,"repasse":0,"margem":9349.875,"margem_pct":0.7509939759036145},{"projeto":"IVECO ACADEMY","lider":"BEATRIZ PICORELLI","receita":278570.7450866005,"impostos":34124.91627310856,"custos":178155.65,"logistica":15783.23,"repasse":-2509.91,"margem":53016.85881349191,"margem_pct":0.19031739602451914},{"projeto":"NH COMERCIAL CONSTRUCTION","lider":"BEATRIZ PICORELLI","receita":63306.08,"impostos":7754.9948,"custos":27264.390385793016,"logistica":469.47,"repasse":-469.47,"margem":28286.69481420699,"margem_pct":0.44682429893316705},{"projeto":"PARTS ACADEMY","lider":"BEATRIZ PICORELLI","receita":1079874.8797777789,"impostos":132284.6727727779,"custos":709575.8445780141,"logistica":97089.6202,"repasse":-99813.16000000002,"margem":240737.90222698695,"margem_pct":0.22293129207388082},{"projeto":"PROJETO ESPECIAL 01","lider":"BEATRIZ PICORELLI","receita":155461.6,"impostos":19044.046000000002,"custos":92773.25,"logistica":0,"repasse":0,"margem":43644.304000000004,"margem_pct":0.2807400927302948},{"projeto":"QUALITY SHYMPHONY IVECO","lider":"BEATRIZ PICORELLI","receita":63990,"impostos":7838.775,"custos":29599,"logistica":5109.849999999999,"repasse":-5109.85,"margem":26552.225,"margem_pct":0.41494335052351927},{"projeto":"SERVIÇOS CNH","lider":"BEATRIZ PICORELLI","receita":309551.48000000016,"impostos":37920.05630000002,"custos":153567.77765957447,"logistica":119431.67030200001,"repasse":-118079.91,"margem":116711.88573842568,"margem_pct":0.3770354634984321},{"projeto":"TREINAMENTO COMERCIAL","lider":"BEATRIZ PICORELLI","receita":282058.13,"impostos":34552.120925,"custos":191358.62978723407,"logistica":35545.8001,"repasse":-35572.8,"margem":56174.37918776594,"margem_pct":0.19915887263297796},{"projeto":"WORKSHOP CURITIBA","lider":"BEATRIZ PICORELLI","receita":10000,"impostos":1225,"custos":2340,"logistica":2984.83,"repasse":-2984.83,"margem":6435,"margem_pct":0.6435},{"projeto":"AGRO DIVEL | GESTÃO ORGANIZACIONAL","lider":"CAROLINE AMIEVA","receita":0,"impostos":0,"custos":350,"logistica":0,"repasse":0,"margem":-350,"margem_pct":0},{"projeto":"AUDITORIA ESTOQUE - DINAUTO","lider":"CAROLINE AMIEVA","receita":9000,"impostos":1102.5,"custos":600,"logistica":0,"repasse":0,"margem":7297.5,"margem_pct":0.8108333333333333},{"projeto":"CENTRAL IRRIGAÇÃO","lider":"CAROLINE AMIEVA","receita":112000,"impostos":13720,"custos":71540.4214893617,"logistica":17857.97,"repasse":-10181.57,"margem":19063.178510638303,"margem_pct":0.170206950987842},{"projeto":"DEALERNET FLOW","lider":"CAROLINE AMIEVA","receita":42500,"impostos":5206.25,"custos":27138.064255319146,"logistica":221.5,"repasse":-221.5,"margem":10155.685744680854,"margem_pct":0.2389573116395495},{"projeto":"DITRASA | GOVERNANÇA NHCE","lider":"CAROLINE AMIEVA","receita":62300,"impostos":7631.75,"custos":30408.725531914897,"logistica":20742.39,"repasse":-20742.39,"margem":24259.524468085103,"margem_pct":0.3893984665824254},{"projeto":"FORTRAC | GESTÃO ORGANIZACIONAL","lider":"CAROLINE AMIEVA","receita":117600,"impostos":14406,"custos":66035,"logistica":0,"repasse":0,"margem":37159,"margem_pct":0.3159778911564626},{"projeto":"GRUPO RIO | BUSINESS REVIEW","lider":"CAROLINE AMIEVA","receita":63600,"impostos":7791,"custos":41360,"logistica":30169.51,"repasse":-30021.049999999996,"margem":14300.54,"margem_pct":0.22485125786163523},{"projeto":"NOCARVEL | AUDITORIA CAIXA DAGUA","lider":"CAROLINE AMIEVA","receita":31000,"impostos":3797.5,"custos":57800,"logistica":2368.38,"repasse":-2368.38,"margem":-30597.5,"margem_pct":-0.9870161290322581},{"projeto":"PALESTRA PACCAR PARTS","lider":"CAROLINE AMIEVA","receita":39000,"impostos":4777.5,"custos":26500,"logistica":0,"repasse":0,"margem":7722.5,"margem_pct":0.19801282051282051},{"projeto":"PARECIS | GESTÃO ORGANIZACIONAL","lider":"CAROLINE AMIEVA","receita":112000,"impostos":13720,"custos":64981.80000000001,"logistica":0,"repasse":0,"margem":33298.19999999998,"margem_pct":0.297305357142857},{"projeto":"STELLANTIS | TRAINNING","lider":"CAROLINE AMIEVA","receita":79800,"impostos":9775.5,"custos":47488.55727272728,"logistica":2561.8399999999997,"repasse":-2561.8399999999997,"margem":22535.94272727272,"margem_pct":0.2824052973342446},{"projeto":"TAPE RUVICHA","lider":"CAROLINE AMIEVA","receita":413478.6099999999,"impostos":50651.12972499999,"custos":222814.5627659575,"logistica":12929.969999999998,"repasse":-12357.309999999998,"margem":139440.25750904245,"margem_pct":0.33723693109310415},{"projeto":"TRATORON | GESTÃO COMERCIAL","lider":"CAROLINE AMIEVA","receita":96425,"impostos":11812.0625,"custos":69057.93,"logistica":0,"repasse":0,"margem":15555.007500000007,"margem_pct":0.16131716359865186},{"projeto":"XINGU | GESTÃO ORGANIZACIONAL","lider":"CAROLINE AMIEVA","receita":0,"impostos":0,"custos":346.5,"logistica":0,"repasse":0,"margem":-346.5,"margem_pct":0},{"projeto":"BACKOFFICE PORSCHE","lider":"FÁBIO CANASSA","receita":165433.92,"impostos":20265.6552,"custos":119705.28000000001,"logistica":209.44,"repasse":-209.44,"margem":25462.984800000006,"margem_pct":0.15391634798957798},{"projeto":"CONSULTORIA PÓS-VENDAS (POE) PORSCHE","lider":"FÁBIO CANASSA","receita":365400,"impostos":44761.5,"custos":255100,"logistica":14110.79,"repasse":-4461.43,"margem":55889.140000000014,"margem_pct":0.15295331143951837},{"projeto":"INSTRUTORES PORSCHE","lider":"FÁBIO CANASSA","receita":321600,"impostos":39396,"custos":204000,"logistica":8216.8301,"repasse":-3094.12,"margem":73081.2899,"margem_pct":0.22724281685323383},{"projeto":"DEALER STANDARD CONSTRUCION","lider":"JEFFERSON SOUZA","receita":279904,"impostos":34288.24,"custos":40761.29538297872,"logistica":0,"repasse":0,"margem":204854.46461702127,"margem_pct":0.7318740161520424},{"projeto":"DM - BACK OFFICE","lider":"JEFFERSON SOUZA","receita":344053.8,"impostos":42146.5905,"custos":250466.04,"logistica":0,"repasse":0,"margem":51441.16949999996,"margem_pct":0.14951489999529133},{"projeto":"DM - NEGÓCIOS BR","lider":"JEFFERSON SOUZA","receita":142128,"impostos":17410.68,"custos":12211.05,"logistica":0,"repasse":0,"margem":112506.27,"margem_pct":0.7915841354272206},{"projeto":"CAMPUS BH (UNIV. VEIGA DE ALMEIDA)","lider":"JOICE LAGE","receita":4888.48,"impostos":598.8388,"custos":149709.10138248847,"logistica":11739.730001,"repasse":0,"margem":-157159.19018348845,"margem_pct":-32.148886808064766},{"projeto":"NNOS ACADEMY","lider":"LEONARDO CAMPOS","receita":37686.45,"impostos":4616.590125,"custos":428359.76999999996,"logistica":0,"repasse":0,"margem":-395289.91012499994,"margem_pct":-10.488913392611932},{"projeto":"BACKOFFICE CNHI","lider":"VINICIUS SOUZA","receita":2354385.762903226,"impostos":288412.2559556452,"custos":1770925.2637542896,"logistica":31767.329999999998,"repasse":-19905.65,"margem":283186.5631932912,"margem_pct":0.12028044327115275},{"projeto":"BACKOFFICE CRM CASE","lider":"VINICIUS SOUZA","receita":361293.7199999999,"impostos":44258.480699999986,"custos":270548.3,"logistica":23107.05,"repasse":-23107.05,"margem":46486.93929999991,"margem_pct":0.12866799705237036},{"projeto":"INSTRUTORES CNH","lider":"VINICIUS SOUZA","receita":2441866.89,"impostos":299128.69402500003,"custos":1700512.0899999999,"logistica":308334.61999999994,"repasse":-306436.7,"margem":440328.18597500003,"margem_pct":0.18032440170192898},{"projeto":"VIAMONDO | PRODUTIVIDADE OFICINA","lider":"CAROLINE AMIEVA","receita":19000,"impostos":2327.5,"custos":1840,"logistica":3379.5,"repasse":-3379.5,"margem":14832.5,"margem_pct":0.7806578947368421},{"projeto":"DDN - BUSINESS ASSESSMENT","lider":"JEFFERSON SOUZA","receita":187000,"impostos":22907.5,"custos":102850,"logistica":10699.59,"repasse":0,"margem":50542.91,"margem_pct":0.2702829411764706},{"projeto":"AUTOMAÇÃO ESSENCIALIDADE","lider":"CAROLINE AMIEVA","receita":1998.8,"impostos":244.85299999999998,"custos":1634.019,"logistica":0,"repasse":0,"margem":119.92799999999988,"margem_pct":0.05999999999999994}];
+const leaders=[{"lider":"VINICIUS SOUZA","receita":5157546.372903226,"margem":770001.6884682912,"custos":3741985.6537542893,"logistica":363208.99999999994,"repasse":-349449.4,"impostos":631799.4306806452,"projetos":3,"margem_pct":0.14929612509423756,"share":0.4845423635438409},{"lider":"BEATRIZ PICORELLI","receita":2438816.4196677534,"margem":494281.8164224339,"custos":1621932.42113402,"logistica":298035.75070200005,"repasse":-274188.58,"impostos":298755.0114092998,"projetos":16,"margem_pct":0.20267282622681834,"share":0.2291224909666002},{"lider":"CAROLINE AMIEVA","receita":1199702.41,"margem":314445.7644597194,"custos":729895.5803152804,"logistica":90231.06,"repasse":-81833.54,"impostos":146963.545225,"projetos":16,"margem_pct":0.2621031364434114,"share":0.11270992042741822},{"lider":"JEFFERSON SOUZA","receita":953085.8,"margem":419344.8141170213,"custos":406288.3853829787,"logistica":10699.59,"repasse":0,"impostos":116753.0105,"projetos":4,"margem_pct":0.4399864252693947,"share":0.0895407259192738},{"lider":"FÁBIO CANASSA","receita":852433.92,"margem":154433.41470000002,"custos":578805.28,"logistica":22537.060100000002,"repasse":-7764.99,"impostos":104423.15520000001,"projetos":3,"margem_pct":0.18116760851093305,"share":0.0800846597389366},{"lider":"LEONARDO CAMPOS","receita":37686.45,"margem":-395289.91012499994,"custos":428359.76999999996,"logistica":0,"repasse":0,"impostos":4616.590125,"projetos":1,"margem_pct":-10.488913392611932,"share":0.0035405753504253405},{"lider":"JOICE LAGE","receita":4888.48,"margem":-157159.19018348845,"custos":149709.10138248847,"logistica":11739.730001,"repasse":0,"impostos":598.8388,"projetos":1,"margem_pct":-32.148886808064766,"share":0.00045926405350058886}];
+const topMargin=[{"projeto":"INSTRUTORES CNH","lider":"VINICIUS SOUZA","receita":2441866.89,"impostos":299128.69402500003,"custos":1700512.0899999999,"logistica":308334.61999999994,"repasse":-306436.7,"margem":440328.18597500003,"margem_pct":0.18032440170192898},{"projeto":"BACKOFFICE CNHI","lider":"VINICIUS SOUZA","receita":2354385.762903226,"impostos":288412.2559556452,"custos":1770925.2637542896,"logistica":31767.329999999998,"repasse":-19905.65,"margem":283186.5631932912,"margem_pct":0.12028044327115275},{"projeto":"PARTS ACADEMY","lider":"BEATRIZ PICORELLI","receita":1079874.8797777789,"impostos":132284.6727727779,"custos":709575.8445780141,"logistica":97089.6202,"repasse":-99813.16000000002,"margem":240737.90222698695,"margem_pct":0.22293129207388082},{"projeto":"DEALER STANDARD CONSTRUCION","lider":"JEFFERSON SOUZA","receita":279904,"impostos":34288.24,"custos":40761.29538297872,"logistica":0,"repasse":0,"margem":204854.46461702127,"margem_pct":0.7318740161520424},{"projeto":"TAPE RUVICHA","lider":"CAROLINE AMIEVA","receita":413478.6099999999,"impostos":50651.12972499999,"custos":222814.5627659575,"logistica":12929.969999999998,"repasse":-12357.309999999998,"margem":139440.25750904245,"margem_pct":0.33723693109310415},{"projeto":"SERVIÇOS CNH","lider":"BEATRIZ PICORELLI","receita":309551.48000000016,"impostos":37920.05630000002,"custos":153567.77765957447,"logistica":119431.67030200001,"repasse":-118079.91,"margem":116711.88573842568,"margem_pct":0.3770354634984321},{"projeto":"DM - NEGÓCIOS BR","lider":"JEFFERSON SOUZA","receita":142128,"impostos":17410.68,"custos":12211.05,"logistica":0,"repasse":0,"margem":112506.27,"margem_pct":0.7915841354272206},{"projeto":"INSTRUTORES PORSCHE","lider":"FÁBIO CANASSA","receita":321600,"impostos":39396,"custos":204000,"logistica":8216.8301,"repasse":-3094.12,"margem":73081.2899,"margem_pct":0.22724281685323383},{"projeto":"TREINAMENTO COMERCIAL","lider":"BEATRIZ PICORELLI","receita":282058.13,"impostos":34552.120925,"custos":191358.62978723407,"logistica":35545.8001,"repasse":-35572.8,"margem":56174.37918776594,"margem_pct":0.19915887263297796},{"projeto":"CONSULTORIA PÓS-VENDAS (POE) PORSCHE","lider":"FÁBIO CANASSA","receita":365400,"impostos":44761.5,"custos":255100,"logistica":14110.79,"repasse":-4461.43,"margem":55889.140000000014,"margem_pct":0.15295331143951837}];
+const bottomMargin=[{"projeto":"NNOS ACADEMY","lider":"LEONARDO CAMPOS","receita":37686.45,"impostos":4616.590125,"custos":428359.76999999996,"logistica":0,"repasse":0,"margem":-395289.91012499994,"margem_pct":-10.488913392611932},{"projeto":"CAMPUS BH (UNIV. VEIGA DE ALMEIDA)","lider":"JOICE LAGE","receita":4888.48,"impostos":598.8388,"custos":149709.10138248847,"logistica":11739.730001,"repasse":0,"margem":-157159.19018348845,"margem_pct":-32.148886808064766},{"projeto":"EXCELÊNCIA EM PEÇAS IVECO","lider":"BEATRIZ PICORELLI","receita":55957.06202416918,"impostos":6854.740097960725,"custos":167532.1240425532,"logistica":4944.7,"repasse":-4944.7,"margem":-118429.80211634473,"margem_pct":-2.1164406749087736},{"projeto":"NOCARVEL | AUDITORIA CAIXA DAGUA","lider":"CAROLINE AMIEVA","receita":31000,"impostos":3797.5,"custos":57800,"logistica":2368.38,"repasse":-2368.38,"margem":-30597.5,"margem_pct":-0.9870161290322581},{"projeto":"AUTOMAÇÃO ESSENCIALIDADE","lider":"CAROLINE AMIEVA","receita":1998.8,"impostos":244.85299999999998,"custos":1634.019,"logistica":0,"repasse":0,"margem":119.92799999999988,"margem_pct":0.05999999999999994},{"projeto":"EXCELÊNCIA EM SERVIÇOS IVECO","lider":"BEATRIZ PICORELLI","receita":10442.574923547401,"impostos":1279.2154281345565,"custos":7980.456595744681,"logistica":0,"repasse":0,"margem":1182.9028996681645,"margem_pct":0.11327693680231941},{"projeto":"CASE COMERCIAL CONSTRUCTION","lider":"BEATRIZ PICORELLI","receita":14789.707855657494,"impostos":1811.739212318043,"custos":9296.83,"logistica":686.3900000000001,"repasse":0,"margem":2994.7486433394515,"margem_pct":0.20248869501461267},{"projeto":"WORKSHOP CURITIBA","lider":"BEATRIZ PICORELLI","receita":10000,"impostos":1225,"custos":2340,"logistica":2984.83,"repasse":-2984.83,"margem":6435,"margem_pct":0.6435},{"projeto":"CNHI TÉCNICO CONSTRUCTION","lider":"BEATRIZ PICORELLI","receita":24489,"impostos":2999.9025,"custos":14808.510638297874,"logistica":0,"repasse":0,"margem":6680.586861702126,"margem_pct":0.27279949616979565},{"projeto":"AUDITORIA ESTOQUE - DINAUTO","lider":"CAROLINE AMIEVA","receita":9000,"impostos":1102.5,"custos":600,"logistica":0,"repasse":0,"margem":7297.5,"margem_pct":0.8108333333333333}];
+const dre={"receita":8127218.473311214,"impostos":914312.0782475115,"receita_liquida":7212906.395063702,"margem_contribuicao":1579421.589716557,"gastos_fixos":2308988.750802,"lucro_operacional":-729567.1610854431,"lucro_liquido":-521745.7328341538};
+const dreAdj={"receita":8127218.473311214,"impostos":914312.0782475115,"receita_liquida":7212906.395063702,"margem_contribuicao":1579421.589716557,"gastos_fixos":1971234.3408020001,"lucro_operacional":-391812.75108544313,"lucro_liquido":-183991.32283415383};
+const travelAnalysis={"monthly":[{"mes":"JAN-26","despesa":132571.18,"reembolso":97757.93,"prospeccao":23452.040000000005},{"mes":"FEV-26","despesa":91513.27999999998,"reembolso":45734.61,"prospeccao":38414.47},{"mes":"MAR-26","despesa":129296.530001,"reembolso":85157.31999999999,"prospeccao":36500.66},{"mes":"ABR-26","despesa":102078.57000200002,"reembolso":55875.229999999996,"prospeccao":29448.24},{"mes":"MAI-26","despesa":105054.32,"reembolso":85700.85,"prospeccao":13116.86},{"mes":"JUN-26","despesa":112890.62040000004,"reembolso":103920.46000000002,"prospeccao":6336.38},{"mes":"JUL-26","despesa":31452.8401,"reembolso":28601.700000000004,"prospeccao":315.24},{"mes":"AGO-26","despesa":136551.74030000003,"reembolso":112272.51999999999,"prospeccao":5691.18},{"mes":"SET-26","despesa":74490.64,"reembolso":69850.21999999999,"prospeccao":4040.42},{"mes":"OUT-26","despesa":40548.64,"reembolso":28365.67,"prospeccao":1340.34},{"mes":"NOV-26","despesa":702.91,"reembolso":0,"prospeccao":702.91},{"mes":"DEZ-26","despesa":0,"reembolso":0,"prospeccao":0}],"despesa_total":957151.2708030002,"reembolso_total":713236.51,"prospeccao_total":159358.74000000002,"despesa_operacional":797792.5308030002,"net_operacional":-84556.0208030002,"cobertura":0.745165922834362};
+const logMensal={"Jan":23452.040000000005,"Fev":38414.47,"Mar":36500.66,"Abr":29448.24,"Mai":13116.86,"Jun":6336.38,"Jul":315.24,"Ago":5691.18,"Set":4040.42,"Out":1340.34,"Nov":702.91,"Dez":0};
+
+const money=v=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0}).format(v);
+const pctFmt=v=>new Intl.NumberFormat('pt-BR',{style:'percent',minimumFractionDigits:1,maximumFractionDigits:1}).format(v);
+const shortMoney=v=>{const a=Math.abs(v),s=v<0?'-':'';if(a>=1e6)return s+'R$ '+(a/1e6).toFixed(1).replace('.',',')+'M';if(a>=1e3)return s+'R$ '+(a/1e3).toFixed(0)+'K';return s+'R$ '+a.toFixed(0)};
+const isLight = document.documentElement.classList.contains('light');
+Chart.defaults.font.family="'Inter', sans-serif";
+Chart.defaults.color = isLight ? '#1b365d' : '#aebed2';
+const gridColor = isLight ? 'rgba(27, 54, 93, 0.08)' : 'rgba(148,163,184,.11)';
+const tooltip = isLight ? {backgroundColor:'#ffffff',titleColor:'#1b365d',bodyColor:'#0f172a',borderColor:'#cbd5e1',borderWidth:1,padding:12,displayColors:false} : {backgroundColor:'#10243e',titleColor:'#fff',bodyColor:'#d9e5f3',borderColor:'rgba(148,163,184,.22)',borderWidth:1,padding:12,displayColors:false};
+
+new Chart(document.getElementById('leaderCombo'),{data:{labels:leaders.map(x=>x.lider.split(' ')[0]),datasets:[
+{type:'bar',label:'Receita',data:leaders.map(x=>x.receita),backgroundColor:'rgba(96,165,250,.55)',borderColor:'#60a5fa',borderWidth:1,borderRadius:7,yAxisID:'y'},
+{type:'line',label:'Margem %',data:leaders.map(x=>x.margem_pct*100),borderColor:'#34d399',backgroundColor:'#34d399',pointBackgroundColor:'#34d399',pointRadius:4,tension:.35,yAxisID:'y1'}]},
+options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{usePointStyle:true,boxWidth:8}},tooltip},scales:{x:{grid:{display:false}},y:{beginAtZero:true,grid:{color:gridColor},ticks:{callback:v=>shortMoney(v)}},y1:{position:'right',grid:{display:false},ticks:{callback:v=>v.toFixed(0)+'%'}}}}});
+
+new Chart(document.getElementById('leaderShare'),{type:'doughnut',data:{labels:leaders.map(x=>x.lider),datasets:[{data:leaders.map(x=>x.receita),backgroundColor:['#60a5fa','#22d3ee','#34d399','#a78bfa','#fbbf24','#fb7185','#38bdf8'],borderWidth:0,hoverOffset:6}]},options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{position:'bottom',labels:{boxWidth:9,usePointStyle:true,padding:16,font:{size:10}}},tooltip:{...tooltip,callbacks:{label:c=>money(c.parsed)}}}}});
+
+new Chart(document.getElementById('topMargin'),{type:'bar',data:{labels:topMargin.map(x=>x.projeto),datasets:[{data:topMargin.map(x=>x.margem),backgroundColor:'rgba(52,211,153,.6)',borderColor:'#34d399',borderWidth:1,borderRadius:5}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{...tooltip,callbacks:{label:c=>money(c.parsed.x)}}},scales:{x:{grid:{color:gridColor},ticks:{callback:v=>shortMoney(v)}},y:{grid:{display:false},ticks:{font:{size:10}}}}}});
+
+new Chart(document.getElementById('bottomMargin'),{type:'bar',data:{labels:bottomMargin.map(x=>x.projeto),datasets:[{data:bottomMargin.map(x=>x.margem),backgroundColor:'rgba(251,113,133,.58)',borderColor:'#fb7185',borderWidth:1,borderRadius:5}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{...tooltip,callbacks:{label:c=>money(c.parsed.x)}}},scales:{x:{grid:{color:gridColor},ticks:{callback:v=>shortMoney(v)}},y:{grid:{display:false},ticks:{font:{size:10}}}}}});
+
+function statusOf(p){if(p.margem<0)return['critico','Crítico'];if(p.margem_pct>=.30)return['excelente','Excelente'];if(p.margem_pct>=.22)return['meta','Faixa meta'];return['atencao','Atenção']}
+const leaderFilter=document.getElementById('leaderFilter');
+[...new Set(projects.map(p=>p.lider))].sort().forEach(l=>{const o=document.createElement('option');o.value=l;o.textContent=l;leaderFilter.appendChild(o)});
+function renderTable(){const q=document.getElementById('q').value.trim().toLowerCase(),lf=leaderFilter.value,sf=document.getElementById('statusFilter').value;
+const rows=projects.filter(p=>{const st=statusOf(p)[0];return(!q||p.projeto.toLowerCase().includes(q)||p.lider.toLowerCase().includes(q))&&(!lf||p.lider===lf)&&(!sf||st===sf)}).sort((a,b)=>b.receita-a.receita);
+document.getElementById('projectRows').innerHTML=rows.map(p=>{const s=statusOf(p);return `<tr><td class="project-name">${p.projeto}</td><td>${p.lider}</td><td class="num">${money(p.receita)}</td><td class="num">${money(p.custos)}</td><td class="num">${money(p.logistica)}</td><td class="num">${money(p.repasse)}</td><td class="num" style="color:${p.margem<0?'#be123c':(isLight?'#047857':'#9bd7ff')}">${money(p.margem)}</td><td class="num">${pctFmt(p.margem_pct)}</td><td><span class="status ${s[0]}">${s[1]}</span></td></tr>`}).join('')}
+function resetFilters(){document.getElementById('q').value='';leaderFilter.value='';document.getElementById('statusFilter').value='';renderTable()}
+document.getElementById('q').addEventListener('input',renderTable);leaderFilter.addEventListener('change',renderTable);document.getElementById('statusFilter').addEventListener('change',renderTable);renderTable();
+</script>
+
+<script>
+  function applyTheme(theme) {
+    const html = document.documentElement;
+    const icons = document.querySelectorAll('.theme-icon');
+    const buttons = document.querySelectorAll('.theme-toggle-btn');
+    if (theme === 'light') {
+      html.classList.remove('dark');
+      html.classList.add('light');
+      icons.forEach(ic => ic.textContent = 'dark_mode');
+      buttons.forEach(btn => btn.setAttribute('title', 'Alternar para Modo Escuro'));
+      localStorage.setItem('nnos_theme', 'light');
+    } else {
+      html.classList.remove('light');
+      html.classList.add('dark');
+      icons.forEach(ic => ic.textContent = 'light_mode');
+      buttons.forEach(btn => btn.setAttribute('title', 'Alternar para Modo Claro'));
+      localStorage.setItem('nnos_theme', 'dark');
+    }
+  }
+
+  function toggleTheme() {
+    const isLight = document.documentElement.classList.contains('light');
+    applyTheme(isLight ? 'dark' : 'light');
+    location.reload();
+  }
+
+  (function() {
+    const saved = 'light';
+    applyTheme('light');
+  })();
+</script>
+
+</body>
+</html>

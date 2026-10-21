@@ -1,0 +1,375 @@
+{
+  "contratos": [
+    {
+      "id": "contrato-cnh",
+      "codigo": "CNH INDUSTRIAL",
+      "alias": [
+        "DM",
+        "COMERCIAL",
+        "CRM",
+        "CNH",
+        "CNH INDUSTRIAL"
+      ],
+      "nome": "CONTRATO - CNH INDUSTRIAL",
+      "descricao": "NNÓS - CNH Industrial (DM, Comercial, CRM)",
+      "cliente": "CNH INDUSTRIAL",
+      "ativo": true,
+      "centrosDeCusto": [
+        "01.04.001.001",
+        "01.04.001.002",
+        "01.04.001.003",
+        "01.04.001.004",
+        "01.04.001.005",
+        "01.04.001.006",
+        "01.04.001.007",
+        "01.04.003.008",
+        "01.04.003.010",
+        "01.04.005.011",
+        "01.06.003.012",
+        "01.06.003.014",
+        "01.04.001.017",
+        "01.04.001.018",
+        "01.04.001.020",
+        "01.06.001.023",
+        "01.04.001.025",
+        "01.06.011.026",
+        "01.06.011.027",
+        "01.06.005.028",
+        "01.06.011.029",
+        "01.06.005.030",
+        "01.06.005.031",
+        "01.04.005.034",
+        "01.06.001.048",
+        "01.06.005.051",
+        "01.06.005.054",
+        "01.06.003.059",
+        "01.04.011.063",
+        "01.06.001.071"
+      ],
+      "reajustes": [
+        {
+          "ano": 2026,
+          "indice": "CCT Maio",
+          "aliquota": 5.32,
+          "dataVigencia": "01/05/2026",
+          "observacoes": "IGP-M Acumulado 2025: -1,05% | IPCA Acumulado 2025: 4,41% | Aplicado: 5,32%"
+        },
+        {
+          "ano": 2025,
+          "indice": "CCT Maio",
+          "aliquota": 3.23,
+          "dataVigencia": "01/05/2025",
+          "observacoes": "Reajuste CCT Maio 2025 aplicado: 3,23%"
+        }
+      ],
+      "tabelaPrecoCliente": [
+        {
+          "atividade": "Docência/Projetação",
+          "perfil": "JÚNIOR",
+          "anos": {
+            "2024": {
+              "valorHora": 178.13,
+              "valorDia": 1425
+            },
+            "2025": {
+              "valorHora": 189.75,
+              "valorDia": 1518
+            },
+            "2026": {
+              "valorHora": 199.88,
+              "valorDia": 1599
+            }
+          }
+        },
+        {
+          "atividade": "Docência/Projetação",
+          "perfil": "PLENO",
+          "anos": {
+            "2024": {
+              "valorHora": 191,
+              "valorDia": 1528
+            },
+            "2025": {
+              "valorHora": 203.5,
+              "valorDia": 1628
+            },
+            "2026": {
+              "valorHora": 214.38,
+              "valorDia": 1715
+            }
+          }
+        },
+        {
+          "atividade": "Docência/Projetação",
+          "perfil": "SÊNIOR",
+          "anos": {
+            "2024": {
+              "valorHora": 203.75,
+              "valorDia": 1630
+            },
+            "2025": {
+              "valorHora": 217.13,
+              "valorDia": 1737
+            },
+            "2026": {
+              "valorHora": 228.62,
+              "valorDia": 1828.92
+            }
+          }
+        },
+        {
+          "atividade": "Treinamentos Gerenciais",
+          "perfil": "SÊNIOR",
+          "descricaoPerfil": "Consultor Sênior, exclusivamente com experiência e vivência comprovada no business",
+          "anos": {
+            "2024": {
+              "valorHora": 203.75,
+              "valorDia": 1630
+            },
+            "2025": {
+              "valorHora": 217.13,
+              "valorDia": 1737
+            },
+            "2026": {
+              "valorHora": 228.62,
+              "valorDia": 1828.92
+            }
+          }
+        },
+        {
+          "atividade": "Back Office",
+          "perfil": "BACK OFFICE",
+          "tipoCobranca": "mensal",
+          "anos": {
+            "2024": {
+              "valorMensal": 8970.5,
+              "valorHora": 50.97,
+              "valorDia": 407.75
+            },
+            "2025": {
+              "valorMensal": 9557.2,
+              "valorHora": 54.3,
+              "valorDia": 434.42
+            },
+            "2026": {
+              "valorMensal": 10066,
+              "valorHora": 57.19,
+              "valorDia": 457.55
+            }
+          }
+        }
+      ],
+      "tabelaConsultores": [
+        {
+          "perfil": "JÚNIOR",
+          "clienteBrasil": {
+            "valorHora": 199.88,
+            "valorDia": 1599
+          },
+          "clienteLatam": {
+            "valorHora": 199.88,
+            "valorDia": 1599
+          },
+          "socioBrasil": 105,
+          "socioLatam": 140,
+          "parceiroBrasil": 97,
+          "parceiroLatam": 110
+        },
+        {
+          "perfil": "PLENO",
+          "clienteBrasil": {
+            "valorHora": 214.38,
+            "valorDia": 1715
+          },
+          "clienteLatam": {
+            "valorHora": 214.38,
+            "valorDia": 1715
+          },
+          "socioBrasil": 110,
+          "socioLatam": 140,
+          "parceiroBrasil": 100,
+          "parceiroLatam": 110
+        },
+        {
+          "perfil": "SÊNIOR",
+          "clienteBrasil": {
+            "valorHora": 228.62,
+            "valorDia": 1828.96
+          },
+          "clienteLatam": {
+            "valorHora": 228.62,
+            "valorDia": 1828.96
+          },
+          "socioBrasil": 115,
+          "socioLatam": 140,
+          "parceiroBrasil": 105,
+          "parceiroLatam": 110
+        }
+      ],
+      "regraSocio": {
+        "percentualAcrescimoNF": 6,
+        "excecaoPalavra": "COMISSÃO",
+        "descricao": "O valor do sócio tem acréscimo de 6% na tarifa para compensar a emissão de nota fiscal, mas NÃO é atribuído quando há na descrição da atividade a palavra COMISSÃO."
+      }
+    },
+    {
+      "id": "contrato-stellantis",
+      "codigo": "STELLANTIS",
+      "alias": [
+        "STELLANTIS"
+      ],
+      "nome": "CONTRATO - STELLANTIS",
+      "descricao": "Contrato CONTRATO - STELLANTIS - STELLANTIS",
+      "cliente": "STELLANTIS",
+      "ativo": true,
+      "centrosDeCusto": [
+        "01.07.012.062"
+      ],
+      "reajustes": [],
+      "tabelaPrecoCliente": [
+        {
+          "atividade": "Docência/Projetação",
+          "perfil": "JÚNIOR",
+          "anos": {
+            "2026": {
+              "valorHora": 199.88,
+              "valorDia": 1599
+            }
+          }
+        },
+        {
+          "atividade": "Docência/Projetação",
+          "perfil": "PLENO",
+          "anos": {
+            "2026": {
+              "valorHora": 214.38,
+              "valorDia": 1715
+            }
+          }
+        },
+        {
+          "atividade": "Docência/Projetação",
+          "perfil": "SÊNIOR",
+          "anos": {
+            "2026": {
+              "valorHora": 228.62,
+              "valorDia": 1828.92
+            }
+          }
+        },
+        {
+          "atividade": "Treinamentos Gerenciais",
+          "perfil": "SÊNIOR",
+          "anos": {
+            "2026": {
+              "valorHora": 228.62,
+              "valorDia": 1828.92
+            }
+          }
+        }
+      ],
+      "tabelaConsultores": [
+        {
+          "perfil": "JÚNIOR",
+          "clienteBrasil": {
+            "valorHora": 199.88,
+            "valorDia": 1599
+          },
+          "clienteLatam": {
+            "valorHora": 199.88,
+            "valorDia": 1599
+          },
+          "socioBrasil": 105,
+          "socioLatam": 140,
+          "parceiroBrasil": 97,
+          "parceiroLatam": 110
+        },
+        {
+          "perfil": "PLENO",
+          "clienteBrasil": {
+            "valorHora": 214.38,
+            "valorDia": 1715
+          },
+          "clienteLatam": {
+            "valorHora": 214.38,
+            "valorDia": 1715
+          },
+          "socioBrasil": 110,
+          "socioLatam": 140,
+          "parceiroBrasil": 100,
+          "parceiroLatam": 110
+        },
+        {
+          "perfil": "SÊNIOR",
+          "clienteBrasil": {
+            "valorHora": 228.62,
+            "valorDia": 1828.96
+          },
+          "clienteLatam": {
+            "valorHora": 228.62,
+            "valorDia": 1828.96
+          },
+          "socioBrasil": 115,
+          "socioLatam": 140,
+          "parceiroBrasil": 105,
+          "parceiroLatam": 110
+        }
+      ],
+      "regraSocio": {
+        "percentualAcrescimoNF": 6,
+        "excecaoPalavra": "COMISSÃO",
+        "descricao": "Acréscimo de 6% para consultor sócio (exceto atividades com COMISSÃO)."
+      }
+    },
+    {
+      "id": "contrato-avulso",
+      "codigo": "AVULSO",
+      "nome": "CONTRATO - AVULSO",
+      "descricao": "Demais contratos e projetos lançados manualmente sem tabela pré-fixada",
+      "cliente": "DIVERSOS",
+      "ativo": true,
+      "centrosDeCusto": [],
+      "reajustes": [],
+      "tabelaPrecoCliente": [],
+      "tabelaConsultores": [],
+      "regraSocio": {
+        "percentualAcrescimoNF": 6,
+        "excecaoPalavra": "COMISSÃO",
+        "descricao": "Acréscimo de 6% para consultor sócio (exceto atividades com COMISSÃO)."
+      }
+    }
+  ],
+  "consultoresClassificacao": {
+    "socios": [
+      "KARLA GOMES",
+      "FELIPE CAMPOS",
+      "CLEIVSON VIEIRA",
+      "ANTONIO PEREZ",
+      "DOLORES LITZA",
+      "GABRIEL GOES",
+      "JAYZA RODRIGUES",
+      "JEFFERSON SOUZA"
+    ],
+    "excecoesSemAcrescimo": [
+      "MARCELO LARA",
+      "PEDRO LAGE",
+      "PEDRO COLARES"
+    ],
+    "parceiros": [
+      "LILIA OLIVEIRA",
+      "ALEJANDO LAPUENTE",
+      "ELIZA FORTUNA",
+      "ADILSON PASINI",
+      "ROBSON PASSINI",
+      "RICARDO YOGUI",
+      "GABRIEL GIUSSANI",
+      "CLORISVALDO DOURADO",
+      "ALVIMAR COSTA",
+      "GIBA - JOÃO GILBERTO",
+      "FORNECEDOR",
+      "RENATO GUIMARÃES",
+      "MARISTELA GARCIA",
+      "ILDEBRANDO DIAS"
+    ]
+  }
+}

@@ -1,0 +1,681 @@
+{
+  "empresas": [
+    {
+      "codigo": "01",
+      "nome": "NNÓS"
+    },
+    {
+      "codigo": "02",
+      "nome": "NOSOTROS"
+    }
+  ],
+  "unidadesNegocio": [
+    {
+      "codigo": "00",
+      "nome": "DIRETORIA"
+    },
+    {
+      "codigo": "01",
+      "nome": "ADM E CONTROLE"
+    },
+    {
+      "codigo": "02",
+      "nome": "TI"
+    },
+    {
+      "codigo": "03",
+      "nome": "INNOVATION"
+    },
+    {
+      "codigo": "04",
+      "nome": "DEALER DEVELOPMENT"
+    },
+    {
+      "codigo": "05",
+      "nome": "OUTSOURCING"
+    },
+    {
+      "codigo": "06",
+      "nome": "HRD - HUMAN RESOURCE DEVELOPMENT"
+    },
+    {
+      "codigo": "07",
+      "nome": "BUSINESS SOLUTIONS"
+    },
+    {
+      "codigo": "08",
+      "nome": "EDUCAÇÃO"
+    }
+  ],
+  "clientes": [
+    {
+      "codigo": "001",
+      "nome": "IVECO CNH FAB CURITIBA",
+      "cnpj": "01.844.555/0023-98"
+    },
+    {
+      "codigo": "002",
+      "nome": "IVECO CNH FAB SOROCABA",
+      "cnpj": "01.844.555/0026-30"
+    },
+    {
+      "codigo": "003",
+      "nome": "CNH INDUSTRIAL BRASIL LTDA",
+      "cnpj": "01.844.555/0027-11"
+    },
+    {
+      "codigo": "004",
+      "nome": "MODERNIZA",
+      "cnpj": "10.444.470/0001-06"
+    },
+    {
+      "codigo": "005",
+      "nome": "IVG BRASIL LTDA",
+      "cnpj": "36.519.422/0002-04"
+    },
+    {
+      "codigo": "006",
+      "nome": "MSXI RNS BRASIL TREINAMENTO",
+      "cnpj": "23.167.140/0001-54"
+    },
+    {
+      "codigo": "007",
+      "nome": "CPA MAQUINAS",
+      "cnpj": "89.286.116/0001-42"
+    },
+    {
+      "codigo": "008",
+      "nome": "LOCALIZA RENT A CAR",
+      "cnpj": "16.670.085/0001-55"
+    },
+    {
+      "codigo": "009",
+      "nome": "STELLANTIS",
+      "cnpj": ""
+    },
+    {
+      "codigo": "010",
+      "nome": "CLIENTES DIVERSOS [ON DEMAND]",
+      "cnpj": "NÃO SE APLICA"
+    },
+    {
+      "codigo": "011",
+      "nome": "FAB CONTAGEM",
+      "cnpj": "01.844.555/0020-45"
+    },
+    {
+      "codigo": "012",
+      "nome": "PORSCHE BRASIL",
+      "cnpj": "01.306.024/0001-36"
+    }
+  ],
+  "centrosDeCusto": [
+    {
+      "centroDeCusto": "01.00",
+      "projeto": "DIRETORIA",
+      "contrato": "AVULSO",
+      "area": "DIRETORIA",
+      "liderProjeto": "LEONARDO CAMPOS"
+    },
+    {
+      "centroDeCusto": "01.01",
+      "projeto": "ADM E CONTROLE",
+      "contrato": "AVULSO",
+      "area": "ADM E CONTROLE",
+      "liderProjeto": "LEONARDO CAMPOS"
+    },
+    {
+      "centroDeCusto": "01.02",
+      "projeto": "TI",
+      "contrato": "AVULSO",
+      "area": "TI",
+      "liderProjeto": "LEONARDO CAMPOS"
+    },
+    {
+      "centroDeCusto": "01.04.001.001",
+      "projeto": "DM - NEGÓCIOS BR",
+      "contrato": "CNH INDUSTRIAL",
+      "area": "DEALER DEVELOPMENT",
+      "liderProjeto": "JEFFERSON SOUZA"
+    },
+    {
+      "centroDeCusto": "01.04.001.002",
+      "projeto": "DM - PROCESSOS DE PÓS VENDA BR",
+      "contrato": "CNH INDUSTRIAL",
+      "area": "DEALER DEVELOPMENT",
+      "liderProjeto": "JEFFERSON SOUZA"
+    },
+    {
+      "centroDeCusto": "01.04.001.003",
+      "projeto": "DM - PROCESSOS DE VENDAS BR",
+      "contrato": "CNH INDUSTRIAL",
+      "area": "DEALER DEVELOPMENT",
+      "liderProjeto": "JEFFERSON SOUZA"
+    },
+    {
+      "centroDeCusto": "01.04.001.004",
+      "projeto": "DM - PROCESSOS DE VENDAS LAI",
+      "contrato": "CNH INDUSTRIAL",
+      "area": "DEALER DEVELOPMENT",
+      "liderProjeto": "JEFFERSON SOUZA"
+    },
+    {
+      "centroDeCusto": "01.04.001.005",
+      "projeto": "DEALER STANDARD NH AG",
+      "contrato": "CNH INDUSTRIAL",
+      "area": "DEALER DEVELOPMENT",
+      "liderProjeto": "JEFFERSON SOUZA"
+    },
+    {
+      "centroDeCusto": "01.04.001.006",
+      "projeto": "PAN NH AG",
+      "contrato": "CNH INDUSTRIAL",
+      "area": "DEALER DEVELOPMENT",
+      "liderProjeto": "JEFFERSON SOUZA"
+    },
+    {
+      "centroDeCusto": "01.04.001.007",
+      "projeto": "CRM NH AG VENDAS",
+      "contrato": "CNH INDUSTRIAL",
+      "area": "DEALER DEVELOPMENT",
+      "liderProjeto": "JEFFERSON SOUZA"
+    },
+    {
+      "centroDeCusto": "01.04.003.008",
+      "projeto": "CRM CASE IH VENDAS",
+      "contrato": "CNH INDUSTRIAL",
+      "area": "DEALER DEVELOPMENT",
+      "liderProjeto": "JEFFERSON SOUZA"
+    },
+    {
+      "centroDeCusto": "01.04.005.011",
+      "projeto": "DEMO DINÂMICA IVECO",
+      "contrato": "CNH INDUSTRIAL",
+      "area": "DEALER DEVELOPMENT",
+      "liderProjeto": "JEFFERSON SOUZA"
+    },
+    {
+      "centroDeCusto": "01.04.003.010",
+      "projeto": "CRM CNHi PÓS-VENDA",
+      "contrato": "CNH INDUSTRIAL",
+      "area": "DEALER DEVELOPMENT",
+      "liderProjeto": "JEFFERSON SOUZA"
+    },
+    {
+      "centroDeCusto": "01.07.010.011",
+      "projeto": "COMERCIAL [ON DEMAND]",
+      "contrato": "AVULSO",
+      "area": "BUSINESS SOLUTIONS",
+      "liderProjeto": "CAROLINE AMIEVA"
+    },
+    {
+      "centroDeCusto": "01.06.003.012",
+      "projeto": "PARTS ACADEMY",
+      "contrato": "CNH INDUSTRIAL",
+      "area": "HRD - HUMAN RESOURCE DEVELOPMENT",
+      "liderProjeto": "BEATRIZ PICORELLI"
+    },
+    {
+      "centroDeCusto": "01.00.10.013",
+      "projeto": "PROSPECÇÃO",
+      "contrato": "AVULSO",
+      "area": "DIRETORIA",
+      "liderProjeto": ""
+    },
+    {
+      "centroDeCusto": "01.06.003.014",
+      "projeto": "TREINAMENTO COMERCIAL",
+      "contrato": "CNH INDUSTRIAL",
+      "area": "HRD - HUMAN RESOURCE DEVELOPMENT",
+      "liderProjeto": "BEATRIZ PICORELLI"
+    },
+    {
+      "centroDeCusto": "01.07.004.015",
+      "projeto": "MODERNIZA",
+      "contrato": "AVULSO",
+      "area": "BUSINESS SOLUTIONS",
+      "liderProjeto": "CAROLINE AMIEVA"
+    },
+    {
+      "centroDeCusto": "01.06.006.016",
+      "projeto": "DESENVOLVIMENTO EM ESTRUTURA",
+      "contrato": "AVULSO",
+      "area": "HRD - HUMAN RESOURCE DEVELOPMENT",
+      "liderProjeto": "BEATRIZ PICORELLI"
+    },
+    {
+      "centroDeCusto": "01.04.001.017",
+      "projeto": "DM - LIGHT",
+      "contrato": "CNH INDUSTRIAL",
+      "area": "DEALER DEVELOPMENT",
+      "liderProjeto": "JEFFERSON SOUZA"
+    },
+    {
+      "centroDeCusto": "01.04.001.018",
+      "projeto": "DM - MIP",
+      "contrato": "CNH INDUSTRIAL",
+      "area": "DEALER DEVELOPMENT",
+      "liderProjeto": "JEFFERSON SOUZA"
+    },
+    {
+      "centroDeCusto": "01.04.007.019",
+      "projeto": "BUSINESS REVIEW",
+      "contrato": "AVULSO",
+      "area": "DEALER DEVELOPMENT",
+      "liderProjeto": "JEFFERSON SOUZA"
+    },
+    {
+      "centroDeCusto": "01.04.001.020",
+      "projeto": "DM - ASSESSORIA / COORD.",
+      "contrato": "CNH INDUSTRIAL",
+      "area": "DEALER DEVELOPMENT",
+      "liderProjeto": "JEFFERSON SOUZA"
+    },
+    {
+      "centroDeCusto": "01.04.001.021",
+      "projeto": "DM - BACK OFFICE",
+      "contrato": "AVULSO",
+      "area": "DEALER DEVELOPMENT",
+      "liderProjeto": "JEFFERSON SOUZA"
+    },
+    {
+      "centroDeCusto": "01.07.008.022",
+      "projeto": "LOCALIZA OFICINAS",
+      "contrato": "AVULSO",
+      "area": "BUSINESS SOLUTIONS",
+      "liderProjeto": "CAROLINE AMIEVA"
+    },
+    {
+      "centroDeCusto": "01.06.001.023",
+      "projeto": "GARANTIA CNH",
+      "contrato": "CNH INDUSTRIAL",
+      "area": "HRD - HUMAN RESOURCE DEVELOPMENT",
+      "liderProjeto": "BEATRIZ PICORELLI"
+    },
+    {
+      "centroDeCusto": "01.06.009.024",
+      "projeto": "PROCESSOS STELLANTIS",
+      "contrato": "STELLANTIS",
+      "area": "HRD - HUMAN RESOURCE DEVELOPMENT",
+      "liderProjeto": "BEATRIZ PICORELLI"
+    },
+    {
+      "centroDeCusto": "01.04.001.025",
+      "projeto": "DM - FUTURO EM FOCO",
+      "contrato": "CNH INDUSTRIAL",
+      "area": "DEALER DEVELOPMENT",
+      "liderProjeto": "BEATRIZ PICORELLI"
+    },
+    {
+      "centroDeCusto": "01.06.011.026",
+      "projeto": "CNHI TÉCNICO CONSTRUCTION",
+      "contrato": "CNH INDUSTRIAL",
+      "area": "HRD - HUMAN RESOURCE DEVELOPMENT",
+      "liderProjeto": "BEATRIZ PICORELLI"
+    },
+    {
+      "centroDeCusto": "01.06.011.027",
+      "projeto": "CASE COMERCIAL CONSTRUCTION",
+      "contrato": "CNH INDUSTRIAL",
+      "area": "HRD - HUMAN RESOURCE DEVELOPMENT",
+      "liderProjeto": "BEATRIZ PICORELLI"
+    },
+    {
+      "centroDeCusto": "01.06.005.028",
+      "projeto": "EXCELÊNCIA EM SERVIÇOS IVECO",
+      "contrato": "CNH INDUSTRIAL",
+      "area": "HRD - HUMAN RESOURCE DEVELOPMENT",
+      "liderProjeto": "BEATRIZ PICORELLI"
+    },
+    {
+      "centroDeCusto": "01.06.011.029",
+      "projeto": "NH COMERCIAL CONSTRUCTION",
+      "contrato": "CNH INDUSTRIAL",
+      "area": "HRD - HUMAN RESOURCE DEVELOPMENT",
+      "liderProjeto": "BEATRIZ PICORELLI"
+    },
+    {
+      "centroDeCusto": "01.06.005.030",
+      "projeto": "EXCELÊNCIA EM PEÇAS IVECO",
+      "contrato": "CNH INDUSTRIAL",
+      "area": "HRD - HUMAN RESOURCE DEVELOPMENT",
+      "liderProjeto": "BEATRIZ PICORELLI"
+    },
+    {
+      "centroDeCusto": "01.06.005.031",
+      "projeto": "IVECO ACADEMY",
+      "contrato": "CNH INDUSTRIAL",
+      "area": "HRD - HUMAN RESOURCE DEVELOPMENT",
+      "liderProjeto": "BEATRIZ PICORELLI"
+    },
+    {
+      "centroDeCusto": "01.03.010.032",
+      "projeto": "NNOS ACADEMY",
+      "contrato": "AVULSO",
+      "area": "INNOVATION",
+      "liderProjeto": "LEONARDO CAMPOS"
+    },
+    {
+      "centroDeCusto": "01.05.001.033",
+      "projeto": "BACKOFFICE CNHI",
+      "contrato": "AVULSO",
+      "area": "OUTSOURCING",
+      "liderProjeto": "VINICIUS SOUZA"
+    },
+    {
+      "centroDeCusto": "01.04.005.034",
+      "projeto": "CRM IVECO",
+      "contrato": "CNH INDUSTRIAL",
+      "area": "DEALER DEVELOPMENT",
+      "liderProjeto": "BEATRIZ PICORELLI"
+    },
+    {
+      "centroDeCusto": "01.07.010.035",
+      "projeto": "AGRO DIVEL | GESTÃO ORGANIZACIONAL",
+      "contrato": "AVULSO",
+      "area": "BUSINESS SOLUTIONS",
+      "liderProjeto": "CAROLINE AMIEVA"
+    },
+    {
+      "centroDeCusto": "01.07.010.036",
+      "projeto": "BOASAFRA | PROGR. DE CRESCIMENTO",
+      "contrato": "AVULSO",
+      "area": "BUSINESS SOLUTIONS",
+      "liderProjeto": "CAROLINE AMIEVA"
+    },
+    {
+      "centroDeCusto": "01.07.010.037",
+      "projeto": "TRATORON | GESTÃO COMERCIAL",
+      "contrato": "AVULSO",
+      "area": "BUSINESS SOLUTIONS",
+      "liderProjeto": "CAROLINE AMIEVA"
+    },
+    {
+      "centroDeCusto": "01.07.010.038",
+      "projeto": "XINGU | GESTÃO ORGANIZACIONAL",
+      "contrato": "AVULSO",
+      "area": "BUSINESS SOLUTIONS",
+      "liderProjeto": "CAROLINE AMIEVA"
+    },
+    {
+      "centroDeCusto": "01.07.010.039",
+      "projeto": "TAPE RUVICHA",
+      "contrato": "AVULSO",
+      "area": "BUSINESS SOLUTIONS",
+      "liderProjeto": "CAROLINE AMIEVA"
+    },
+    {
+      "centroDeCusto": "01.07.010.040",
+      "projeto": "CLARIOS | GESTÃO COMERCIAL",
+      "contrato": "AVULSO",
+      "area": "BUSINESS SOLUTIONS",
+      "liderProjeto": "CAROLINE AMIEVA"
+    },
+    {
+      "centroDeCusto": "01.05.012.041",
+      "projeto": "BACKOFFICE PORSCHE",
+      "contrato": "AVULSO",
+      "area": "OUTSOURCING",
+      "liderProjeto": "FÁBIO CANASSA"
+    },
+    {
+      "centroDeCusto": "01.05.001.042",
+      "projeto": "INSTRUTORES CNH",
+      "contrato": "AVULSO",
+      "area": "OUTSOURCING",
+      "liderProjeto": "VINICIUS SOUZA"
+    },
+    {
+      "centroDeCusto": "01.07.010.043",
+      "projeto": "CONSULTAR",
+      "contrato": "AVULSO",
+      "area": "BUSINESS SOLUTIONS",
+      "liderProjeto": "CAROLINE AMIEVA"
+    },
+    {
+      "centroDeCusto": "01.07.009.044",
+      "projeto": "STELLANTIS UPS",
+      "contrato": "AVULSO",
+      "area": "BUSINESS SOLUTIONS",
+      "liderProjeto": "CAROLINE AMIEVA"
+    },
+    {
+      "centroDeCusto": "01.07.001.045",
+      "projeto": "TREINAMENTO DRONES DA XAG",
+      "contrato": "AVULSO",
+      "area": "BUSINESS SOLUTIONS",
+      "liderProjeto": "CAROLINE AMIEVA"
+    },
+    {
+      "centroDeCusto": "01.07.010.046",
+      "projeto": "TREINAMENTO CONSÓRCIO NH",
+      "contrato": "AVULSO",
+      "area": "BUSINESS SOLUTIONS",
+      "liderProjeto": "CAROLINE AMIEVA"
+    },
+    {
+      "centroDeCusto": "01.07.010.047",
+      "projeto": "POSSOLI | WS DESENVOL. PÓS-VENDAS",
+      "contrato": "AVULSO",
+      "area": "BUSINESS SOLUTIONS",
+      "liderProjeto": "CAROLINE AMIEVA"
+    },
+    {
+      "centroDeCusto": "01.06.001.048",
+      "projeto": "SERVIÇOS CNH",
+      "contrato": "CNH INDUSTRIAL",
+      "area": "HRD - HUMAN RESOURCE DEVELOPMENT",
+      "liderProjeto": "BEATRIZ PICORELLI"
+    },
+    {
+      "centroDeCusto": "01.06.012.049",
+      "projeto": "INSTRUTORES PORSCHE",
+      "contrato": "AVULSO",
+      "area": "HRD - HUMAN RESOURCE DEVELOPMENT",
+      "liderProjeto": "FÁBIO CANASSA"
+    },
+    {
+      "centroDeCusto": "01.07.010.050",
+      "projeto": "AUDITORIA ESTOQUE - DINAUTO",
+      "contrato": "AVULSO",
+      "area": "BUSINESS SOLUTIONS",
+      "liderProjeto": "CAROLINE AMIEVA"
+    },
+    {
+      "centroDeCusto": "01.06.005.051",
+      "projeto": "CONSULTORIA IVECO",
+      "contrato": "CNH INDUSTRIAL",
+      "area": "HRD - HUMAN RESOURCE DEVELOPMENT",
+      "liderProjeto": "BEATRIZ PICORELLI"
+    },
+    {
+      "centroDeCusto": "01.07.010.052",
+      "projeto": "GRUPO RIO | BUSINESS REVIEW",
+      "contrato": "AVULSO",
+      "area": "BUSINESS SOLUTIONS",
+      "liderProjeto": "CAROLINE AMIEVA"
+    },
+    {
+      "centroDeCusto": "01.07.010.053",
+      "projeto": "AGROBAY | WORKSHOP",
+      "contrato": "AVULSO",
+      "area": "BUSINESS SOLUTIONS",
+      "liderProjeto": "CAROLINE AMIEVA"
+    },
+    {
+      "centroDeCusto": "01.06.005.054",
+      "projeto": "CPSL IVECO LATAM",
+      "contrato": "CNH INDUSTRIAL",
+      "area": "HRD - HUMAN RESOURCE DEVELOPMENT",
+      "liderProjeto": "BEATRIZ PICORELLI"
+    },
+    {
+      "centroDeCusto": "01.05.002.055",
+      "projeto": "BACKOFFICE CRM CASE",
+      "contrato": "AVULSO",
+      "area": "OUTSOURCING",
+      "liderProjeto": "VINICIUS SOUZA"
+    },
+    {
+      "centroDeCusto": "01.07.010.056",
+      "projeto": "MAHINDRA/VITTACAR | WORKSHOP",
+      "contrato": "AVULSO",
+      "area": "BUSINESS SOLUTIONS",
+      "liderProjeto": "CAROLINE AMIEVA"
+    },
+    {
+      "centroDeCusto": "01.07.010.057",
+      "projeto": "AUTO-SALES | DIAGNÓSTICO",
+      "contrato": "AVULSO",
+      "area": "BUSINESS SOLUTIONS",
+      "liderProjeto": "CAROLINE AMIEVA"
+    },
+    {
+      "centroDeCusto": "01.08.010.058",
+      "projeto": "CAMPUS BH (UNIV. VEIGA DE ALMEIDA)",
+      "contrato": "AVULSO",
+      "area": "EDUCAÇÃO",
+      "liderProjeto": "JOICE LAGE"
+    },
+    {
+      "centroDeCusto": "01.06.003.059",
+      "projeto": "GESTÃO DO MOMENTO",
+      "contrato": "CNH INDUSTRIAL",
+      "area": "HRD - HUMAN RESOURCE DEVELOPMENT",
+      "liderProjeto": "BEATRIZ PICORELLI"
+    },
+    {
+      "centroDeCusto": "01.07.010.060",
+      "projeto": "DITRASA | GOVERNANÇA NHCE",
+      "contrato": "AVULSO",
+      "area": "BUSINESS SOLUTIONS",
+      "liderProjeto": "CAROLINE AMIEVA"
+    },
+    {
+      "centroDeCusto": "01.07.010.061",
+      "projeto": "FORTRAC | GESTÃO ORGANIZACIONAL",
+      "contrato": "AVULSO",
+      "area": "BUSINESS SOLUTIONS",
+      "liderProjeto": "CAROLINE AMIEVA"
+    },
+    {
+      "centroDeCusto": "01.07.010.062",
+      "projeto": "ELETROBRAS | PROGRAMA INTEGRAÇÃO",
+      "contrato": "AVULSO",
+      "area": "BUSINESS SOLUTIONS",
+      "liderProjeto": "CAROLINE AMIEVA"
+    },
+    {
+      "centroDeCusto": "01.04.011.063",
+      "projeto": "DEALER STANDARD CONSTRUCION",
+      "contrato": "CNH INDUSTRIAL",
+      "area": "DEALER DEVELOPMENT",
+      "liderProjeto": "JEFFERSON SOUZA"
+    },
+    {
+      "centroDeCusto": "01.07.010.064",
+      "projeto": "STELLANTIS | TRAINNING",
+      "contrato": "AVULSO",
+      "area": "BUSINESS SOLUTIONS",
+      "liderProjeto": "CAROLINE AMIEVA"
+    },
+    {
+      "centroDeCusto": "01.07.010.065",
+      "projeto": "CENTRAL IRRIGAÇÃO",
+      "contrato": "AVULSO",
+      "area": "BUSINESS SOLUTIONS",
+      "liderProjeto": "CAROLINE AMIEVA"
+    },
+    {
+      "centroDeCusto": "01.07.010.066",
+      "projeto": "NOCARVEL | AUDITORIA CAIXA DAGUA",
+      "contrato": "AVULSO",
+      "area": "BUSINESS SOLUTIONS",
+      "liderProjeto": "CAROLINE AMIEVA"
+    },
+    {
+      "centroDeCusto": "01.05.012.067",
+      "projeto": "CONSULTORIA PÓS-VENDAS (POE) PORSCHE",
+      "contrato": "AVULSO",
+      "area": "OUTSOURCING",
+      "liderProjeto": "FÁBIO CANASSA"
+    },
+    {
+      "centroDeCusto": "01.04.001.068",
+      "projeto": "WORKSHOP CURITIBA",
+      "contrato": "AVULSO",
+      "area": "DEALER DEVELOPMENT",
+      "liderProjeto": "BEATRIZ PICORELLI"
+    },
+    {
+      "centroDeCusto": "01.06.005.069",
+      "projeto": "QUALITY SHYMPHONY IVECO",
+      "contrato": "AVULSO",
+      "area": "HRD - HUMAN RESOURCE DEVELOPMENT",
+      "liderProjeto": "BEATRIZ PICORELLI"
+    },
+    {
+      "centroDeCusto": "01.06.001.070",
+      "projeto": "WS LETÍCIA",
+      "contrato": "AVULSO",
+      "area": "HRD - HUMAN RESOURCE DEVELOPMENT",
+      "liderProjeto": "BEATRIZ PICORELLI"
+    },
+    {
+      "centroDeCusto": "01.06.001.071",
+      "projeto": "PROJETO ESPECIAL 01",
+      "contrato": "CNH INDUSTRIAL",
+      "area": "HRD - HUMAN RESOURCE DEVELOPMENT",
+      "liderProjeto": "BEATRIZ PICORELLI"
+    },
+    {
+      "centroDeCusto": "01.07.010.072",
+      "projeto": "PARECIS | GESTÃO ORGANIZACIONAL",
+      "contrato": "AVULSO",
+      "area": "BUSINESS SOLUTIONS",
+      "liderProjeto": "CAROLINE AMIEVA"
+    },
+    {
+      "centroDeCusto": "01.07.010.073",
+      "projeto": "PALESTRA PACCAR PARTS",
+      "contrato": "AVULSO",
+      "area": "BUSINESS SOLUTIONS",
+      "liderProjeto": "CAROLINE AMIEVA"
+    },
+    {
+      "centroDeCusto": "01.07.010.074",
+      "projeto": "DLOC | BUSINESS MANAGEMENT",
+      "contrato": "AVULSO",
+      "area": "BUSINESS SOLUTIONS",
+      "liderProjeto": "CAROLINE AMIEVA"
+    },
+    {
+      "centroDeCusto": "01.07.010.075",
+      "projeto": "DEALERNET FLOW",
+      "contrato": "AVULSO",
+      "area": "BUSINESS SOLUTIONS",
+      "liderProjeto": "CAROLINE AMIEVA"
+    },
+    {
+      "centroDeCusto": "01.07.010.076",
+      "projeto": "VIAMONDO | PRODUTIVIDADE OFICINA",
+      "contrato": "AVULSO",
+      "area": "BUSINESS SOLUTIONS",
+      "liderProjeto": "CAROLINE AMIEVA"
+    },
+    {
+      "centroDeCusto": "01.04.002.077",
+      "projeto": "DDN - BUSINESS ASSESSMENT",
+      "contrato": "AVULSO",
+      "area": "DEALER DEVELOPMENT",
+      "liderProjeto": "JEFFERSON SOUZA"
+    },
+    {
+      "centroDeCusto": "01.07.010.078",
+      "projeto": "AUTOMAÇÃO ESSENCIALIDADE",
+      "contrato": "AVULSO",
+      "area": "BUSINESS SOLUTIONS",
+      "liderProjeto": "CAROLINE AMIEVA"
+    }
+  ]
+}

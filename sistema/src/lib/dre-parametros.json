@@ -1,0 +1,92 @@
+{
+  "2026": {
+    "aliquotaImpostos": 12.25,
+    "percentualComissao": 0,
+    "meses": {
+      "1": {
+        "salarios": 16000,
+        "despesasOperacionais": 163648.91,
+        "publicidade": 0,
+        "outras": 0,
+        "resultadoFinanceiro": 130796.7
+      },
+      "2": {
+        "salarios": 16000,
+        "despesasOperacionais": 163648.91,
+        "publicidade": 0,
+        "outras": 0,
+        "resultadoFinanceiro": 6147.43
+      },
+      "3": {
+        "salarios": 16000,
+        "despesasOperacionais": 163648.91,
+        "publicidade": 0,
+        "outras": 0,
+        "resultadoFinanceiro": 10479.48
+      },
+      "4": {
+        "salarios": 16000,
+        "despesasOperacionais": 163648.91,
+        "publicidade": 0,
+        "outras": 0,
+        "resultadoFinanceiro": 2170.74
+      },
+      "5": {
+        "salarios": 16000,
+        "despesasOperacionais": 163648.91,
+        "publicidade": 0,
+        "outras": 0,
+        "resultadoFinanceiro": 0
+      },
+      "6": {
+        "salarios": 16000,
+        "despesasOperacionais": 163648.91,
+        "publicidade": 0,
+        "outras": 0,
+        "resultadoFinanceiro": 8429.92
+      },
+      "7": {
+        "salarios": 16000,
+        "despesasOperacionais": 163648.91,
+        "publicidade": 0,
+        "outras": 0,
+        "resultadoFinanceiro": 4637.83
+      },
+      "8": {
+        "salarios": 16000,
+        "despesasOperacionais": 163648.91,
+        "publicidade": 0,
+        "outras": 0,
+        "resultadoFinanceiro": 8803.7
+      },
+      "9": {
+        "salarios": 16000,
+        "despesasOperacionais": 163648.91,
+        "publicidade": 0,
+        "outras": 0,
+        "resultadoFinanceiro": 8030.39
+      },
+      "10": {
+        "salarios": 16000,
+        "despesasOperacionais": 163648.91,
+        "publicidade": 0,
+        "outras": 0,
+        "resultadoFinanceiro": 5330.37
+      },
+      "11": {
+        "salarios": 16000,
+        "despesasOperacionais": 163648.91,
+        "publicidade": 0,
+        "outras": 0,
+        "resultadoFinanceiro": 0
+      },
+      "12": {
+        "salarios": 16000,
+        "despesasOperacionais": 163648.91,
+        "publicidade": 0,
+        "outras": 0,
+        "resultadoFinanceiro": 0
+      }
+    }
+  }
+}
