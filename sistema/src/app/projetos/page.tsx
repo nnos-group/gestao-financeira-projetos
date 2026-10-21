@@ -1,4 +1,4 @@
-import { supabaseAdmin, authDisabled } from "@/lib/supabase-server";
+import { supabaseAdmin } from "@/lib/supabase-server";
 import ThemeToggle from "@/components/ThemeToggle";
 import FloatingCardsList, { LancamentoItem } from "@/components/FloatingCardsList";
 import NovaAtividadeBotao from "@/components/NovaAtividadeBotao";
@@ -80,7 +80,6 @@ export default async function ProjetosPage({
 
   const isTodosMeses = sp.mes === "todos";
   const mes = isTodosMeses ? 0 : Math.min(12, Math.max(1, Number(sp.mes) || mesAtual));
-  const dev = authDisabled();
 
   const competencia = `${anoSelecionado}-${String(mes || 1).padStart(2, "0")}-01`;
 

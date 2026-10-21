@@ -8,11 +8,8 @@ export function supabaseAdmin() {
   return createClient(url, key, { auth: { persistSession: false } });
 }
 
-// Modo desenvolvimento sem login. Nunca permitido em produção.
+// Modo desenvolvimento sem login.
 export function authDisabled(): boolean {
-  if (process.env.AUTH_DISABLED !== "true") return false;
-  if (process.env.NODE_ENV === "production") {
-    throw new Error("AUTH_DISABLED não pode ser usado em produção.");
-  }
-  return true;
+  if (process.env.NODE_ENV === "production") return false;
+  return process.env.AUTH_DISABLED === "true";
 }
