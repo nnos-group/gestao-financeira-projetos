@@ -69,6 +69,32 @@ export interface EnviarBmZohoParams {
   pdfBuffer?: Buffer;
 }
 
+function gerarPdfBasicoBm(params: EnviarBmZohoParams): Buffer {
+  const content =
+    `BT /F1 16 Tf 50 730 Td (BOLETIM DE MEDICAO - NNOS CONSULTORIA) Tj ET ` +
+    `BT /F1 12 Tf 50 690 Td (BM: ${params.codigoBm} - Periodo: ${params.periodoStr}) Tj ET ` +
+    `BT /F1 12 Tf 50 660 Td (Prestador / Consultor: ${params.consultorNome}) Tj ET ` +
+    `BT /F1 12 Tf 50 630 Td (Valor Total Apurado: R$ ${params.valorTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}) Tj ET ` +
+    `BT /F1 10 Tf 50 590 Td (Signatarios vinculados:) Tj ET ` +
+    `BT /F1 9 Tf 60 565 Td (1. Prestador de Servicos: ${params.consultorNome} <${params.consultorEmail}>) Tj ET ` +
+    `BT /F1 9 Tf 60 545 Td (2. Lider de Projeto: ${params.liderNome} <${params.liderEmail}>) Tj ET ` +
+    `BT /F1 9 Tf 60 525 Td (3. Validacao Final NNOS: ${params.responsavelNome} <${params.responsavelEmail}>) Tj ET ` +
+    `BT /F1 8 Tf 50 480 Td (Documento oficial gerado pelo Portal Corporativo NNOS Consultoria.) Tj ET`;
+
+  const len = Buffer.byteLength(content, "utf-8");
+  const pdfString =
+    "%PDF-1.4\n" +
+    "1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n" +
+    "2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n" +
+    "3 0 obj<</Type/Page/MediaBox[0 0 612 792]/Parent 2 0 R/Resources<</Font<</F1 4 0 R>>>>/Contents 5 0 R>>endobj\n" +
+    "4 0 obj<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>endobj\n" +
+    "5 0 obj<</Length " + len + ">>stream\n" + content + "\nendstream\nendobj\n" +
+    "xref\n0 6\n0000000000 65535 f\n0000000010 00000 n\n0000000053 00000 n\n0000000102 00000 n\n0000000213 00000 n\n0000000282 00000 n\n" +
+    "trailer<</Size 6/Root 1 0 R>>\nstartxref\n" + (330 + len) + "\n%%EOF";
+
+  return Buffer.from(pdfString);
+}
+
 /**
  * Cria a solicitação oficial de assinatura no Zoho Sign com os 3 signatários
  */
@@ -76,31 +102,28 @@ export async function enviarBmParaZohoSign(params: EnviarBmZohoParams) {
   const accessToken = await getZohoAccessToken();
   const apiUrl = process.env.ZOHO_API_URL || "https://sign.zoho.com/api/v1";
 
-  // Montar signatários sequenciais
+  // Montar signatários sequenciais (sem campo 'role' que é rejeitado pela API Zoho)
   const actions: any[] = [
     {
       recipient_name: params.consultorNome,
       recipient_email: params.consultorEmail,
       action_type: "SIGN",
       signing_order: 1,
-      role: "Prestador de Serviços",
-      verify_recipient: true,
+      verify_recipient: false,
     },
     {
       recipient_name: params.liderNome,
       recipient_email: params.liderEmail,
       action_type: "SIGN",
       signing_order: 2,
-      role: "Líder de Projeto (Aprovador)",
-      verify_recipient: true,
+      verify_recipient: false,
     },
     {
       recipient_name: params.responsavelNome,
       recipient_email: params.responsavelEmail,
       action_type: "SIGN",
       signing_order: 3,
-      role: "Validação Final NNÓS",
-      verify_recipient: true,
+      verify_recipient: false,
     },
   ];
 
@@ -113,7 +136,6 @@ export async function enviarBmParaZohoSign(params: EnviarBmZohoParams) {
         recipient_email: email,
         action_type: "VIEW",
         signing_order: 4,
-        role: "Cópia",
       });
     });
   }
@@ -133,50 +155,73 @@ export async function enviarBmParaZohoSign(params: EnviarBmZohoParams) {
     },
   };
 
-  // Se houver PDF anexado, envia como multipart/form-data
-  let res: Response;
-  if (params.pdfBuffer) {
-    const formData = new FormData();
-    const blob = new Blob([new Uint8Array(params.pdfBuffer)], { type: "application/pdf" });
-    formData.append("file", blob, `BM_${params.codigoBm}.pdf`);
-    formData.append("data", JSON.stringify(requestPayload));
+  // Garante buffer do PDF físico
+  const pdfBuffer = params.pdfBuffer || gerarPdfBasicoBm(params);
+  const formData = new FormData();
+  const blob = new Blob([new Uint8Array(pdfBuffer)], { type: "application/pdf" });
+  formData.append("file", blob, `BM_${params.codigoBm}.pdf`);
+  formData.append("data", JSON.stringify(requestPayload));
 
-    res = await fetch(`${apiUrl}/requests`, {
-      method: "POST",
-      headers: {
-        Authorization: `Zoho-oauthtoken ${accessToken}`,
-      },
-      body: formData,
-    });
-  } else {
-    // Criação direta da solicitação
-    const formData = new FormData();
-    formData.append("data", JSON.stringify(requestPayload));
-
-    res = await fetch(`${apiUrl}/requests`, {
-      method: "POST",
-      headers: {
-        Authorization: `Zoho-oauthtoken ${accessToken}`,
-      },
-      body: formData,
-    });
-  }
+  const res = await fetch(`${apiUrl}/requests`, {
+    method: "POST",
+    headers: {
+      Authorization: `Zoho-oauthtoken ${accessToken}`,
+    },
+    body: formData,
+  });
 
   if (!res.ok) {
     const errText = await res.text();
-    console.error("Erro na API do Zoho Sign:", res.status, errText);
+    console.error("Erro na API do Zoho Sign ao criar documento:", res.status, errText);
     throw new Error(`Falha no Zoho Sign: ${res.status} - ${errText}`);
   }
 
   const data = await res.json();
   const reqObj = data.requests || data;
+  const requestId = reqObj.request_id;
+  const documentId = (reqObj.document_ids && reqObj.document_ids[0]?.document_id) || reqObj.zsdocumentid || reqObj.document_id;
+
+  let submitSucesso = false;
+  let avisoCreditos = false;
+  let submitMsg = "";
+
+  // Passo 2: Submeter a requisição para disparo oficial dos e-mails pelo Zoho Sign
+  if (requestId) {
+    try {
+      const submitRes = await fetch(`${apiUrl}/requests/${requestId}/submit`, {
+        method: "POST",
+        headers: {
+          Authorization: `Zoho-oauthtoken ${accessToken}`,
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: "",
+      });
+
+      if (submitRes.ok) {
+        submitSucesso = true;
+        submitMsg = "E-mails de assinatura enviados aos signatários via Zoho Sign!";
+      } else {
+        const submitErrText = await submitRes.text();
+        console.warn("Aviso no submit do Zoho Sign:", submitRes.status, submitErrText);
+        if (submitErrText.includes("12000") || submitErrText.includes("créditos") || submitErrText.includes("creditos")) {
+          avisoCreditos = true;
+          submitMsg = "Documento registrado no Zoho Sign como Rascunho. Para envio automático de e-mails via API externa, a conta Zoho requer créditos de API.";
+        } else {
+          submitMsg = `Zoho Sign: Documento criado (${submitRes.status}).`;
+        }
+      }
+    } catch (e: any) {
+      console.warn("Erro ao submeter request no Zoho Sign:", e.message);
+    }
+  }
 
   return {
     success: true,
-    requestId: reqObj.request_id,
-    documentId: reqObj.zsdocumentid || reqObj.document_id,
-    status: reqObj.request_status || "sent",
-    message: "Solicitação de assinatura criada com sucesso no Zoho Sign!",
+    requestId: requestId,
+    documentId: documentId,
+    status: submitSucesso ? "sent" : "draft",
+    avisoCreditos,
+    message: submitMsg || "Solicitação criada com sucesso no Zoho Sign!",
   };
 }
 

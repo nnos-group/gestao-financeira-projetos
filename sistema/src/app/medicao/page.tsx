@@ -117,23 +117,20 @@ export default function BoletimMedicaoPage() {
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {
-          const limpos = data.filter((b: any) => b.codigo !== '0908' && b.id !== 'bm-0908');
-          setBmsLista(limpos);
+          setBmsLista(data);
           try {
-            localStorage.setItem('nnos_bms_2026_v5', JSON.stringify(limpos));
-            localStorage.removeItem('nnos_bms_2026_v4');
+            localStorage.setItem('nnos_bms_2026_v5', JSON.stringify(data));
           } catch {}
         }
       })
       .catch((err) => {
         console.warn('Erro ao buscar /api/medicao', err);
         try {
-          const local = localStorage.getItem('nnos_bms_2026_v5') || localStorage.getItem('nnos_bms_2026_v4');
+          const local = localStorage.getItem('nnos_bms_2026_v5');
           if (local) {
             const parsed = JSON.parse(local);
             if (Array.isArray(parsed) && parsed.length > 0) {
-              const limpos = parsed.filter((b: any) => b.codigo !== '0908' && b.id !== 'bm-0908');
-              setBmsLista(limpos);
+              setBmsLista(parsed);
             }
           }
         } catch {}
@@ -141,15 +138,14 @@ export default function BoletimMedicaoPage() {
   }, []);
 
   const salvarBms = (novos: BoletimMedicaoItem[]) => {
-    const limpos = novos.filter((b) => b.codigo !== '0908' && b.id !== 'bm-0908');
-    setBmsLista(limpos);
+    setBmsLista(novos);
     try {
-      localStorage.setItem('nnos_bms_2026_v5', JSON.stringify(limpos));
+      localStorage.setItem('nnos_bms_2026_v5', JSON.stringify(novos));
     } catch {}
     fetch('/api/medicao', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(limpos),
+      body: JSON.stringify(novos),
     }).catch((e) => console.error('Erro ao salvar /api/medicao', e));
   };
 
@@ -500,6 +496,7 @@ export default function BoletimMedicaoPage() {
 
     let zohoReqId: string | undefined;
     let zohoDocId: string | undefined;
+    let avisoZoho: string | null = null;
 
     try {
       const resp = await fetch("/api/medicao/enviar-zoho", {
@@ -523,9 +520,14 @@ export default function BoletimMedicaoPage() {
         const json = await resp.json();
         zohoReqId = json.requestId;
         zohoDocId = json.documentId;
+        if (json.avisoCreditos) {
+          avisoZoho = "Documento registrado no Zoho Sign. Para envio automático de e-mails, a conta Zoho requer créditos de API.";
+        }
         console.log("✅ Zoho Sign Request ID:", zohoReqId, "Doc ID:", zohoDocId);
       } else {
-        console.warn("Aviso ao conectar com Zoho Sign:", await resp.text());
+        const txt = await resp.text();
+        console.warn("Aviso ao conectar com Zoho Sign:", txt);
+        avisoZoho = "Zoho Sign: Documento registrado localmente (verifique as credenciais da API).";
       }
     } catch (err: any) {
       console.warn("Falha ao disparar Zoho Sign:", err.message);
@@ -585,7 +587,11 @@ export default function BoletimMedicaoPage() {
     salvarBms([novoBMCompleto, ...bmsLista]);
     setModalAssinaturaAberto(false);
     setPainelGeracaoAberto(false);
-    showToast(`BM ${novoBMCompleto.codigo} registrado e enviado ao Zoho Sign com sucesso!`);
+    if (avisoZoho) {
+      showToast(`BM ${novoBMCompleto.codigo} registrado! ${avisoZoho}`);
+    } else {
+      showToast(`BM ${novoBMCompleto.codigo} registrado e enviado ao Zoho Sign com sucesso!`);
+    }
   };
 
   // Simular avanço de assinatura
