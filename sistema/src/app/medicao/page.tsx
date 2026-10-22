@@ -149,12 +149,19 @@ export default function BoletimMedicaoPage() {
     }).catch((e) => console.error('Erro ao salvar /api/medicao', e));
   };
 
+  const [bmParaExcluir, setBmParaExcluir] = useState<BoletimMedicaoItem | null>(null);
+
   const handleExcluirBm = (bm: BoletimMedicaoItem) => {
-    if (confirm(`Deseja realmente excluir o BM ${bm.codigo} (${bm.consultorNome})?`)) {
-      const novaLista = bmsLista.filter((item) => item.id !== bm.id && item.codigo !== bm.codigo);
-      salvarBms(novaLista);
-      showToast(`BM ${bm.codigo} excluído com sucesso!`);
-    }
+    setBmParaExcluir(bm);
+  };
+
+  const confirmarExclusao = () => {
+    if (!bmParaExcluir) return;
+    const cod = bmParaExcluir.codigo;
+    const novaLista = bmsLista.filter((item) => item.id !== bmParaExcluir.id && item.codigo !== cod);
+    salvarBms(novaLista);
+    setBmParaExcluir(null);
+    showToast(`BM ${cod} excluído com sucesso!`);
   };
 
   // Filtros da Central de Medições
@@ -2054,6 +2061,52 @@ Subitem Lista de Serviços LC 116/03: 8.02 (Instrução, treinamento, orientaç�
               <path d="M2.5 2.5L7.5 7.5M7.5 2.5L2.5 7.5" stroke="#64748b" strokeWidth="1.3" strokeLinecap="round"/>
             </svg>
           </button>
+        </div>
+      )}
+
+      {/* MODAL DE CONFIRMAÇÃO DE EXCLUSÃO */}
+      {bmParaExcluir && (
+        <div className="modal-backdrop" onClick={() => setBmParaExcluir(null)} style={{ zIndex: 9999 }}>
+          <div className="modal-card" style={{ maxWidth: "420px" }} onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 style={{ color: "#dc2626", display: "flex", alignItems: "center", gap: "8px" }}>
+                <span className="material-symbols-outlined" style={{ color: "#dc2626" }}>delete_forever</span>
+                <span>Excluir Boletim de Medição</span>
+              </h3>
+              <button
+                type="button"
+                className="btn-modal-close"
+                onClick={() => setBmParaExcluir(null)}
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            <div className="modal-body" style={{ padding: "16px 20px" }}>
+              <p style={{ fontSize: "14px", lineHeight: "1.5" }}>
+                Deseja realmente excluir o <strong>BM {bmParaExcluir.codigo}</strong> ({bmParaExcluir.consultorNome})?
+              </p>
+              <p style={{ fontSize: "12px", color: "var(--on-surface-variant)", marginTop: "8px" }}>
+                Esta ação removerá o registro e liberará as atividades para nova medição.
+              </p>
+            </div>
+            <div className="modal-footer" style={{ display: "flex", justifyContent: "flex-end", gap: "8px", padding: "14px 20px" }}>
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => setBmParaExcluir(null)}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="btn-primary"
+                style={{ backgroundColor: "#dc2626", borderColor: "#dc2626", color: "#ffffff" }}
+                onClick={confirmarExclusao}
+              >
+                Excluir Definitivamente
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
