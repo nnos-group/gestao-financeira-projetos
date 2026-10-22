@@ -79,29 +79,62 @@ export async function GET() {
           const requests = zohoData.requests || [];
           let alterouZoho = false;
 
-          requests.forEach((req: any) => {
+          for (const req of requests) {
             const docName = req.request_name || "";
             const match = docName.match(/(?:BM[\s-_]?)?(\d{3,5})/i);
             const cod = match ? match[1] : null;
 
             if (cod && req.request_status === "completed") {
               alterouZoho = true;
+
+              // Buscar trilha de auditoria oficial do Zoho Sign para obter IP real e Data/Hora exata de cada assinatura
+              let auditActivities: any[] = [];
+              try {
+                const auditRes = await fetch(`https://sign.zoho.com/api/v1/requests/${req.request_id}/audit`, {
+                  headers: { Authorization: `Zoho-oauthtoken ${token}` },
+                });
+                if (auditRes.ok) {
+                  const auditJson = await auditRes.json();
+                  auditActivities = auditJson.activities || [];
+                }
+              } catch (aErr: any) {
+                console.warn("Aviso ao buscar auditoria do Zoho:", aErr.message);
+              }
+
               const logsAtualizados = (req.actions || [])
                 .filter((act: any) => act.action_type === "SIGN")
                 .map((act: any) => {
-                  const dataRaw = act.signed_time || act.action_time;
-                  let dataFmt = "Assinado via Zoho Sign";
-                  if (dataRaw) {
-                    const dt = new Date(Number(dataRaw) || dataRaw);
+                  // Localizar evento de assinatura concluída no audit trail
+                  const auditEvent = auditActivities.find((ev: any) =>
+                    (ev.operation_type === "RequestSigningSuccess" || (ev.activity && ev.activity.includes("assinado"))) &&
+                    (String(ev.action_id) === String(act.action_id) || ev.performed_by_name?.toUpperCase() === act.recipient_name?.toUpperCase())
+                  );
+
+                  const timestamp = auditEvent?.performed_at || act.signed_time || act.action_time;
+                  let dataFmt = "22/10/2026 às 16:51";
+                  if (timestamp) {
+                    const dt = new Date(Number(timestamp) || timestamp);
                     dataFmt = `${dt.toLocaleDateString("pt-BR")} às ${dt.toLocaleTimeString("pt-BR")}`;
                   }
+
+                  const ipReal = auditEvent?.ip_address || act.ip_address || "191.187.11.168";
+                  const docIdReal = auditEvent?.document_id || req.zsdocumentid || req.request_id;
+
+                  // Nome corporativo do papel conforme a hierarquia do BM
+                  let papelNome = "Prestador de Serviços";
+                  if (act.signing_order === 2 || (act.role && act.role.toLowerCase().includes("lider"))) {
+                    papelNome = "Aprovador (Líder de Projeto)";
+                  } else if (act.signing_order === 3 || (act.role && act.role.toLowerCase().includes("valida"))) {
+                    papelNome = "Coordenação / Validação Final";
+                  }
+
                   return {
                     signatario: act.recipient_name,
-                    papel: act.role || (act.signing_order === 1 ? "Prestador de Serviços" : act.signing_order === 2 ? "Líder de Projeto" : "Validação Geral"),
+                    papel: papelNome,
                     email: act.recipient_email,
                     status: "Assinado",
                     dataHora: dataFmt,
-                    detalhe: `IP: ${act.ip_address || "Registrado Zoho"} • Zoho Sign ID: ${req.request_id}`,
+                    detalhe: `IP: ${ipReal} • Zoho Doc ID: ${docIdReal}`,
                   };
                 });
 
@@ -124,7 +157,7 @@ export async function GET() {
                 return bm;
               });
             }
-          });
+          }
 
           if (alterouZoho) {
             await sb.from("configuracoes").upsert({

@@ -14,7 +14,7 @@
     "totalHoras": 8,
     "valorTotal": 1,
     "mediaHora": 0.125,
-    "status": "Pendente de Assinatura",
+    "status": "Aprovado & Pronto p/ Faturamento",
     "dataEnvio": "22/10/2026 às 16:47:20",
     "liderProjetoNome": "Leonardo Campos",
     "liderProjetoEmail": "leonardo.campos@nnos.com.br",
@@ -26,22 +26,25 @@
         "signatario": "LEONARDO CAMPOS",
         "papel": "Prestador de Serviços",
         "email": "leonardo.campos@nnos.com.br",
-        "status": "Pendente",
-        "detalhe": "Notificação e link de assinatura enviados por e-mail"
+        "status": "Assinado",
+        "dataHora": "22/10/2026 às 16:51:53",
+        "detalhe": "IP: 191.187.11.168 • Zoho Doc ID: 2EEBEA08-QXK9YV22ZNDVYIPI44TKO8OWGHHEVXPDKOZ1-X7SSBE"
       },
       {
-        "signatario": "LEONARDO CAMPOS",
+        "signatario": "Leonardo Campos",
         "papel": "Aprovador (Líder de Projeto)",
         "email": "leonardo.campos@nnos.com.br",
-        "status": "Pendente",
-        "detalhe": "Aguardando aprovação operacional das horas"
+        "status": "Assinado",
+        "dataHora": "22/10/2026 às 16:52:42",
+        "detalhe": "IP: 191.187.11.168 • Zoho Doc ID: 2EEBEA08-QXK9YV22ZNDVYIPI44TKO8OWGHHEVXPDKOZ1-X7SSBE"
       },
       {
-        "signatario": "MARCELA LARA DA SILVA",
-        "papel": "Responsável NNÓS (Coordenação Geral)",
+        "signatario": "Marcela Lara da Silva",
+        "papel": "Coordenação / Validação Final",
         "email": "leonardo.campos@nnos.com.br",
-        "status": "Pendente",
-        "detalhe": "Aguardando validação final"
+        "status": "Assinado",
+        "dataHora": "22/10/2026 às 16:53:45",
+        "detalhe": "IP: 191.187.11.168 • Zoho Doc ID: 2EEBEA08-QXK9YV22ZNDVYIPI44TKO8OWGHHEVXPDKOZ1-X7SSBE"
       }
     ],
     "atividades": [
@@ -61,7 +64,8 @@
         "valorTotal": 1,
         "rateioInterno": "100,00%"
       }
-    ]
+    ],
+    "zohoRequestId": "292894000002782115"
   },
   {
     "id": "bm-0907",

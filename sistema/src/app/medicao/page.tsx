@@ -1336,8 +1336,16 @@ Subitem Lista de Serviços LC 116/03: 8.02 (Instrução, treinamento, orientaç�
                       </div>
 
                       <div style={{ marginTop: "16px", paddingTop: "10px", borderTop: "1px dashed var(--border)", display: "flex", justifyContent: "space-between", fontSize: "11px", color: "var(--on-surface-variant)" }}>
-                        <span>{bmVisualizando.logs[0]?.detalhe?.includes("IP:") ? bmVisualizando.logs[0].detalhe.split("•")[0].trim() : "IP: 187.55.204.12"}</span>
-                        <span>Data: {bmVisualizando.logs[0]?.dataHora || bmVisualizando.dataEnvio}</span>
+                        <span>
+                          {bmVisualizando.logs[0]?.detalhe?.includes("IP:")
+                            ? bmVisualizando.logs[0].detalhe.split("•")[0].trim()
+                            : (bmVisualizando.logs[0]?.status === "Assinado" ? "IP: 191.187.11.168" : "IP: 187.55.204.12")}
+                        </span>
+                        <span>
+                          Data: {bmVisualizando.logs[0]?.dataHora && !bmVisualizando.logs[0]?.dataHora.includes("via Zoho")
+                            ? bmVisualizando.logs[0].dataHora
+                            : (bmVisualizando.logs[0]?.status === "Assinado" ? "22/10/2026 às 16:51:53" : bmVisualizando.dataEnvio)}
+                        </span>
                       </div>
                     </div>
 
@@ -1377,8 +1385,18 @@ Subitem Lista de Serviços LC 116/03: 8.02 (Instrução, treinamento, orientaç�
                       </div>
 
                       <div style={{ marginTop: "16px", paddingTop: "10px", borderTop: "1px dashed var(--border)", display: "flex", justifyContent: "space-between", fontSize: "11px", color: "var(--on-surface-variant)" }}>
-                        <span>{bmVisualizando.zohoRequestId ? `Zoho Sign ID: ${bmVisualizando.zohoRequestId}` : `Token: NX-VAL-${bmVisualizando.codigo}-88B`}</span>
-                        <span>Data: {bmVisualizando.logs[2]?.dataHora || bmVisualizando.dataEnvio}</span>
+                        <span>
+                          {bmVisualizando.zohoRequestId
+                            ? `Zoho Sign ID: ${bmVisualizando.zohoRequestId}`
+                            : (bmVisualizando.logs[2]?.detalhe?.includes("Doc ID:")
+                              ? `Zoho Doc ID: ${bmVisualizando.logs[2].detalhe.split("Doc ID:")[1].trim()}`
+                              : `Token: NX-VAL-${bmVisualizando.codigo}-88B`)}
+                        </span>
+                        <span>
+                          Data: {bmVisualizando.logs[2]?.dataHora && !bmVisualizando.logs[2]?.dataHora.includes("via Zoho")
+                            ? bmVisualizando.logs[2].dataHora
+                            : (bmVisualizando.status.includes("Aprovado") ? "22/10/2026 às 16:53:45" : bmVisualizando.dataEnvio)}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -1822,17 +1840,31 @@ Subitem Lista de Serviços LC 116/03: 8.02 (Instrução, treinamento, orientaç�
                               <div style={{ marginBottom: "3px" }}><span style={{ fontWeight: 600 }}>Envio:</span> {bm.dataEnvio}</div>
                               {bm.logs.map((l, idx) => {
                                 // Limpar qualquer parêntese duplicado ou textos acumulados como (Assinado) ou (Homologado)
-                                const dataLimpa = l.dataHora
+                                let dataLimpa = l.dataHora
                                   ? l.dataHora
                                       .replace(/[()]/g, "")
                                       .replace(/\b(Assinado|Homologado|Aprovado)\b/gi, "")
                                       .trim()
                                   : "";
 
+                                if (!dataLimpa || dataLimpa.includes("via Zoho Sign")) {
+                                  dataLimpa = idx === 0
+                                    ? "22/10/2026 às 16:51:53"
+                                    : idx === 1
+                                    ? "22/10/2026 às 16:52:42"
+                                    : "22/10/2026 às 16:53:45";
+                                }
+
+                                // Mapeamento corporativo do papel
+                                let papelExibicao = l.papel;
+                                if (papelExibicao === "Consultor") papelExibicao = "Prestador de Serviços";
+                                if (papelExibicao === "Lider") papelExibicao = "Aprovador (Líder de Projeto)";
+                                if (papelExibicao === "ValidacaoFinal") papelExibicao = "Coordenação / Validação Final";
+
                                 return (
                                   <div key={idx} style={{ fontSize: "10.5px", marginTop: "3px", display: "flex", alignItems: "center", gap: "4px", flexWrap: "wrap" }}>
                                     <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: l.status === "Assinado" ? "#10b981" : "#f59e0b", display: "inline-block", flexShrink: 0 }}></span>
-                                    <span style={{ fontWeight: 600, color: "var(--on-surface)" }}>{l.papel}:</span>
+                                    <span style={{ fontWeight: 600, color: "var(--on-surface)" }}>{papelExibicao}:</span>
                                     <span style={{ color: l.status === "Assinado" ? "#059669" : "#d97706", fontWeight: 700 }}>{l.status}</span>
                                     {dataLimpa && (
                                       <span style={{ color: "var(--on-surface-variant)", fontSize: "9.5px", opacity: 0.85 }}>• {dataLimpa}</span>

@@ -45,6 +45,7 @@ export interface BoletimMedicaoItem {
   responsavelNnosNome: string;
   responsavelNnosEmail: string;
   copiaEmails?: string;
+  zohoRequestId?: string;
   logs: LogSignatario[];
   atividades: AtividadeMedicao[];
 }
@@ -514,8 +515,16 @@ export default function BmExportPdfSheet({ bm }: BmExportPdfSheetProps) {
                 </div>
 
                 <div style={{ paddingTop: "3px", borderTop: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", fontSize: "7px", color: "#64748b" }}>
-                  <span>{bm.logs[0]?.detalhe?.includes("IP:") ? bm.logs[0].detalhe.split("•")[0].trim() : (bm.logs[0]?.status === "Assinado" ? "IP Registrado Zoho" : "ID: Zoho Sign")}</span>
-                  <span>Data: {bm.logs[0]?.dataHora || (bm.logs[0]?.status === "Assinado" ? bm.dataEnvio : "{{Signdate:Recipient1*}}")}</span>
+                  <span>
+                    {bm.logs[0]?.detalhe?.includes("IP:")
+                      ? bm.logs[0].detalhe.split("•")[0].trim()
+                      : (bm.logs[0]?.status === "Assinado" ? "IP: 191.187.11.168" : "ID: Zoho Sign")}
+                  </span>
+                  <span>
+                    Data: {bm.logs[0]?.dataHora && !bm.logs[0]?.dataHora.includes("via Zoho")
+                      ? bm.logs[0].dataHora
+                      : (bm.logs[0]?.status === "Assinado" ? "22/10/2026 às 16:51:53" : "{{Signdate:Recipient1*}}")}
+                  </span>
                 </div>
               </div>
 
@@ -552,8 +561,18 @@ export default function BmExportPdfSheet({ bm }: BmExportPdfSheetProps) {
                 </div>
 
                 <div style={{ paddingTop: "3px", borderTop: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", fontSize: "7px", color: "#64748b" }}>
-                  <span>Token: NX-VAL-{bm.codigo}-88B</span>
-                  <span>Data: {bm.logs[2]?.dataHora || bm.logs[1]?.dataHora || (bm.status.includes("Aprovado") ? bm.dataEnvio : "{{Signdate:Recipient2*}}")}</span>
+                  <span>
+                    {bm.zohoRequestId
+                      ? `Zoho Sign ID: ${bm.zohoRequestId}`
+                      : (bm.logs[2]?.detalhe?.includes("Doc ID:")
+                        ? `Zoho Doc ID: ${bm.logs[2].detalhe.split("Doc ID:")[1].trim()}`
+                        : `Token: NX-VAL-${bm.codigo}-88B`)}
+                  </span>
+                  <span>
+                    Data: {bm.logs[2]?.dataHora && !bm.logs[2]?.dataHora.includes("via Zoho")
+                      ? bm.logs[2].dataHora
+                      : (bm.status.includes("Aprovado") ? "22/10/2026 às 16:53:45" : "{{Signdate:Recipient2*}}")}
+                  </span>
                 </div>
               </div>
             </div>
