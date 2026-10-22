@@ -185,8 +185,45 @@ export async function enviarBmParaZohoSign(params: EnviarBmZohoParams) {
   let avisoCreditos = false;
   let submitMsg = "";
 
-  // Passo 2: Submeter a requisição para disparo oficial dos e-mails pelo Zoho Sign
-  if (requestId) {
+  // Passo 2: Disparo dos e-mails
+  // Se houver Zoho Flow configurado (Zoho One), usa o Flow para disparar nativamente sem consumir créditos de API externa
+  const flowUrl = process.env.ZOHO_FLOW_WEBHOOK_URL;
+  if (requestId && flowUrl) {
+    try {
+      console.log(`🌊 [Zoho Flow] Disparando e-mail de assinatura para request ${requestId} via Zoho Flow...`);
+      const flowRes = await fetch(flowUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          request_id: requestId,
+          email_address: params.consultorEmail,
+          consultor_email: params.consultorEmail,
+          codigo_bm: params.codigoBm,
+          consultor_nome: params.consultorNome,
+          lider_email: params.liderEmail,
+          lider_nome: params.liderNome,
+          responsavel_email: params.responsavelEmail,
+          responsavel_nome: params.responsavelNome,
+          periodo: params.periodoStr,
+          valor_total: params.valorTotal,
+        }),
+      });
+
+      if (flowRes.ok) {
+        submitSucesso = true;
+        avisoCreditos = false;
+        submitMsg = "E-mail de assinatura enviado aos signatários via Zoho Flow (Zoho One)!";
+        console.log("✅ [Zoho Flow] Disparo realizado com sucesso pelo Zoho Flow!");
+      } else {
+        console.warn("Aviso ao disparar pelo Zoho Flow:", flowRes.status, await flowRes.text());
+      }
+    } catch (e: any) {
+      console.warn("Falha ao conectar com Zoho Flow:", e.message);
+    }
+  }
+
+  // Fallback: Tentativa via endpoint direto do Zoho Sign caso Flow não tenha disparado
+  if (requestId && !submitSucesso) {
     try {
       const submitRes = await fetch(`${apiUrl}/requests/${requestId}/submit`, {
         method: "POST",
@@ -205,7 +242,7 @@ export async function enviarBmParaZohoSign(params: EnviarBmZohoParams) {
         console.warn("Aviso no submit do Zoho Sign:", submitRes.status, submitErrText);
         if (submitErrText.includes("12000") || submitErrText.includes("créditos") || submitErrText.includes("creditos")) {
           avisoCreditos = true;
-          submitMsg = "Documento registrado no Zoho Sign como Rascunho. Para envio automático de e-mails via API externa, a conta Zoho requer créditos de API.";
+          submitMsg = "Documento registrado no Zoho Sign. Para envio automático de e-mails via API externa, a conta Zoho requer créditos de API.";
         } else {
           submitMsg = `Zoho Sign: Documento criado (${submitRes.status}).`;
         }
