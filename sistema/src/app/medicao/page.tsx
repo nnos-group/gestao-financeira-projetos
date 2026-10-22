@@ -1887,27 +1887,25 @@ Subitem Lista de Serviços LC 116/03: 8.02 (Instrução, treinamento, orientaç�
                                 </button>
 
                                 {bm.status !== "Aprovado & Pronto p/ Faturamento" && (
-                                  <>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleAvancarAssinatura(bm)}
-                                      className="btn-secondary"
-                                      style={{ padding: "6px 8px", fontSize: "11px" }}
-                                      title="Avançar etapa de assinatura"
-                                    >
-                                      <span className="material-symbols-outlined" style={{ fontSize: "14px", color: "var(--secondary)" }}>draw</span>
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleExcluirBm(bm)}
-                                      className="btn-secondary"
-                                      style={{ padding: "6px 8px", fontSize: "11px", color: "#dc2626" }}
-                                      title="Excluir este BM"
-                                    >
-                                      <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>delete</span>
-                                    </button>
-                                  </>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleAvancarAssinatura(bm)}
+                                    className="btn-secondary"
+                                    style={{ padding: "6px 8px", fontSize: "11px" }}
+                                    title="Avançar etapa de assinatura"
+                                  >
+                                    <span className="material-symbols-outlined" style={{ fontSize: "14px", color: "var(--secondary)" }}>draw</span>
+                                  </button>
                                 )}
+                                <button
+                                  type="button"
+                                  onClick={() => handleExcluirBm(bm)}
+                                  className="btn-secondary"
+                                  style={{ padding: "6px 8px", fontSize: "11px", color: "#dc2626" }}
+                                  title="Excluir este BM"
+                                >
+                                  <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>delete</span>
+                                </button>
                               </div>
                             </td>
                           </tr>

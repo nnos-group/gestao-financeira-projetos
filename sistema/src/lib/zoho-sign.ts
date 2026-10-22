@@ -84,21 +84,26 @@ export async function enviarBmParaZohoSign(params: EnviarBmZohoParams) {
   const accessToken = await getZohoAccessToken();
   const apiUrl = process.env.ZOHO_API_URL || "https://sign.zoho.com/api/v1";
 
-  // Montar signatários sequenciais
+  // Montar signatários sequenciais conforme regra de negócio:
+  // 1. Líder de Projeto: apenas Aprovador (APPROVE) - não assina
+  // 2. Consultor: Signatário (SIGN) - assina em Recipient1
+  // 3. Coordenação / Responsável NNÓS: Signatário (SIGN) - assina em Recipient2
   const actions: any[] = [
+    {
+      recipient_name: params.liderNome,
+      recipient_email: params.liderEmail,
+      action_type: "APPROVE",
+      signing_order: 1,
+      verify_recipient: false,
+      role: "Lider de Projeto (Aprovador)",
+    },
     {
       recipient_name: params.consultorNome,
       recipient_email: params.consultorEmail,
       action_type: "SIGN",
-      signing_order: 1,
-      verify_recipient: false,
-    },
-    {
-      recipient_name: params.liderNome,
-      recipient_email: params.liderEmail,
-      action_type: "SIGN",
       signing_order: 2,
       verify_recipient: false,
+      role: "Prestador de Servicos",
     },
     {
       recipient_name: params.responsavelNome,
@@ -106,6 +111,7 @@ export async function enviarBmParaZohoSign(params: EnviarBmZohoParams) {
       action_type: "SIGN",
       signing_order: 3,
       verify_recipient: false,
+      role: "Coordenacao Operacional",
     },
   ];
 
