@@ -285,6 +285,7 @@ export default function BoletimMedicaoPage() {
   const [liderEscolhidoEmail, setLiderEscolhidoEmail] = useState(LIDERES_PROJETO_PADRAO[0].email);
   const [receberCopia, setReceberCopia] = useState(true);
   const [emailCopia, setEmailCopia] = useState("leonardo.campos@nnos.com.br");
+  const [emailResponsavelNnos, setEmailResponsavelNnos] = useState("");
 
   // Toast
   const [toastMsg, setToastMsg] = useState<string | null>(null);
@@ -482,6 +483,7 @@ export default function BoletimMedicaoPage() {
 
     setBmEmCriacao(novoBM);
     setEmailConsultor(consultorObj.email);
+    setEmailResponsavelNnos(responsavelNnosAtual.email);
     setModalAssinaturaAberto(true);
   };
 
@@ -510,7 +512,7 @@ export default function BoletimMedicaoPage() {
           liderNome: liderEscolhidoNome,
           liderEmail: liderEscolhidoEmail,
           responsavelNome: responsavelNnosAtual.nome,
-          responsavelEmail: responsavelNnosAtual.email,
+          responsavelEmail: emailResponsavelNnos || responsavelNnosAtual.email,
           emailsCopia: receberCopia ? emailCopia : undefined,
           periodoStr: `${bmEmCriacao.mesReferencia} (${bmEmCriacao.periodoTipo})`,
           valorTotal: bmEmCriacao.valorTotal,
@@ -547,7 +549,7 @@ export default function BoletimMedicaoPage() {
       {
         signatario: responsavelNnosAtual.nome.toUpperCase(),
         papel: responsavelNnosAtual.papel,
-        email: responsavelNnosAtual.email,
+        email: emailResponsavelNnos || responsavelNnosAtual.email,
         status: "Pendente",
         detalhe: "Aguardando validação final",
       },
@@ -1875,14 +1877,26 @@ Subitem Lista de Serviços LC 116/03: 8.02 (Instrução, treinamento, orientaç�
                 </div>
 
                 {/* 3. Responsável NNÓS */}
-                <div className="form-field">
-                  <label style={{ fontSize: "11px", fontWeight: 700 }}>3. Responsável NNÓS (Signatário 3 - Validação Final) *</label>
-                  <input
-                    type="text"
-                    disabled
-                    value={`${responsavelNnosAtual.nome} (${responsavelNnosAtual.email})`}
-                    style={{ opacity: 0.85, backgroundColor: "var(--surface-container-low)" }}
-                  />
+                <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: "10px" }}>
+                  <div className="form-field">
+                    <label style={{ fontSize: "11px", fontWeight: 700 }}>3. Validação Final (Responsável NNÓS) *</label>
+                    <input
+                      type="text"
+                      disabled
+                      value={responsavelNnosAtual.nome}
+                      style={{ opacity: 0.85, backgroundColor: "var(--surface-container-low)" }}
+                    />
+                  </div>
+                  <div className="form-field">
+                    <label style={{ fontSize: "11px", fontWeight: 700 }}>E-mail da Validação Final *</label>
+                    <input
+                      type="email"
+                      required
+                      value={emailResponsavelNnos}
+                      onChange={(e) => setEmailResponsavelNnos(e.target.value)}
+                      placeholder="responsavel@nnos.com.br"
+                    />
+                  </div>
                 </div>
 
                 {/* Receber cópia após assinatura */}
