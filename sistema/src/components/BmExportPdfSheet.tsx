@@ -479,31 +479,43 @@ export default function BmExportPdfSheet({ bm }: BmExportPdfSheetProps) {
               </div>
             </div>
 
-            {/* Caixas de Assinatura */}
+            {/* Caixas de Assinatura Dinâmicas (Com Text Tags Zoho Sign para ancoragem dinâmica automática) */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
               {/* Assinatura Prestador */}
               <div style={{ border: "1px solid #dbeafe", backgroundColor: "#f8fafc", borderRadius: "8px", padding: "6px 8px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: "3px", borderBottom: "1px solid #e2e8f0" }}>
                   <span style={{ fontSize: "8px", textTransform: "uppercase", fontWeight: 700, color: "#0f2a4a" }}>Assinatura do Prestador</span>
-                  <span style={{ fontSize: "7px", backgroundColor: "#d1fae5", color: "#065f46", fontWeight: 700, padding: "1.5px 4px", borderRadius: "4px", display: "flex", alignItems: "center", gap: "2px" }}>
-                    <svg style={{ width: "8px", height: "8px", color: "#059669" }} fill="currentColor" viewBox="0 0 20 20"><path clipRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" fillRule="evenodd"></path></svg>
-                    Assinado Eletronicamente
-                  </span>
+                  {bm.logs[0]?.status === "Assinado" ? (
+                    <span style={{ fontSize: "7px", backgroundColor: "#d1fae5", color: "#065f46", fontWeight: 700, padding: "1.5px 4px", borderRadius: "4px", display: "flex", alignItems: "center", gap: "2px" }}>
+                      <svg style={{ width: "8px", height: "8px", color: "#059669" }} fill="currentColor" viewBox="0 0 20 20"><path clipRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" fillRule="evenodd"></path></svg>
+                      Assinado Eletronicamente
+                    </span>
+                  ) : (
+                    <span style={{ fontSize: "7px", backgroundColor: "#fef3c7", color: "#92400e", fontWeight: 700, padding: "1.5px 4px", borderRadius: "4px" }}>
+                      Aguardando Assinatura
+                    </span>
+                  )}
                 </div>
 
-                {/* Print 3: Reduzido o tamanho da fonte da assinatura para ficar em harmonia com o nome */}
+                {/* Print 3 & Zoho Text Tag: Se pendente exibe a tag dinâmica do Zoho Sign; se assinado exibe assinatura oficial */}
                 <div style={{ textAlign: "center", padding: "2px 0" }}>
-                  <p style={{ fontFamily: "'Caveat', cursive", fontSize: "16px", color: "#1e293b", letterSpacing: "0.02em", userSelect: "none", margin: 0, lineHeight: 1.1 }}>
-                    {formatarNomeAssinatura(bm.consultorNome)}
-                  </p>
+                  {bm.logs[0]?.status === "Assinado" ? (
+                    <p style={{ fontFamily: "'Caveat', cursive", fontSize: "16px", color: "#1e293b", letterSpacing: "0.02em", userSelect: "none", margin: 0, lineHeight: 1.1 }}>
+                      {formatarNomeAssinatura(bm.consultorNome)}
+                    </p>
+                  ) : (
+                    <p style={{ fontSize: "9px", fontWeight: 700, color: "#0284c7", letterSpacing: "0.02em", margin: "3px 0", userSelect: "none" }}>
+                      {"{{Signature:Recipient1*}}"}
+                    </p>
+                  )}
                   <div style={{ width: "120px", height: "1px", backgroundColor: "#cbd5e1", margin: "3px auto" }}></div>
                   <p style={{ fontSize: "8.5px", fontWeight: 700, color: "#0f172a", margin: "1px 0 0 0" }}>{bm.consultorNome}</p>
                   <p style={{ fontSize: "7px", color: "#64748b", margin: 0 }}>Razão Social: {razaoSocial} • CNPJ: {cnpj}</p>
                 </div>
 
                 <div style={{ paddingTop: "3px", borderTop: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", fontSize: "7px", color: "#64748b" }}>
-                  <span>{bm.logs[0]?.detalhe?.includes("IP:") ? bm.logs[0].detalhe.split("•")[0].trim() : "IP: 187.55.204.12"}</span>
-                  <span>Data: {bm.logs[0]?.dataHora || bm.dataEnvio}</span>
+                  <span>{bm.logs[0]?.detalhe?.includes("IP:") ? bm.logs[0].detalhe.split("•")[0].trim() : (bm.logs[0]?.status === "Assinado" ? "IP Registrado Zoho" : "ID: Zoho Sign")}</span>
+                  <span>Data: {bm.logs[0]?.dataHora || (bm.logs[0]?.status === "Assinado" ? bm.dataEnvio : "{{Signdate:Recipient1*}}")}</span>
                 </div>
               </div>
 
@@ -511,17 +523,29 @@ export default function BmExportPdfSheet({ bm }: BmExportPdfSheetProps) {
               <div style={{ border: "1px solid #dbeafe", backgroundColor: "#f8fafc", borderRadius: "8px", padding: "6px 8px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: "3px", borderBottom: "1px solid #e2e8f0" }}>
                   <span style={{ fontSize: "8px", textTransform: "uppercase", fontWeight: 700, color: "#0f2a4a" }}>Validação da Coordenação</span>
-                  <span style={{ fontSize: "7px", backgroundColor: "#d1fae5", color: "#065f46", fontWeight: 700, padding: "1.5px 4px", borderRadius: "4px", display: "flex", alignItems: "center", gap: "2px" }}>
-                    <svg style={{ width: "8px", height: "8px", color: "#059669" }} fill="currentColor" viewBox="0 0 20 20"><path clipRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" fillRule="evenodd"></path></svg>
-                    Validação Operacional
-                  </span>
+                  {(bm.logs[1]?.status === "Assinado" || bm.logs[2]?.status === "Assinado" || bm.status.includes("Aprovado")) ? (
+                    <span style={{ fontSize: "7px", backgroundColor: "#d1fae5", color: "#065f46", fontWeight: 700, padding: "1.5px 4px", borderRadius: "4px", display: "flex", alignItems: "center", gap: "2px" }}>
+                      <svg style={{ width: "8px", height: "8px", color: "#059669" }} fill="currentColor" viewBox="0 0 20 20"><path clipRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" fillRule="evenodd"></path></svg>
+                      Validação Operacional
+                    </span>
+                  ) : (
+                    <span style={{ fontSize: "7px", backgroundColor: "#fef3c7", color: "#92400e", fontWeight: 700, padding: "1.5px 4px", borderRadius: "4px" }}>
+                      Aguardando Validação
+                    </span>
+                  )}
                 </div>
 
-                {/* Print 3: Reduzido o tamanho da fonte da assinatura para ficar em harmonia com o nome */}
+                {/* Print 3 & Zoho Text Tag */}
                 <div style={{ textAlign: "center", padding: "2px 0" }}>
-                  <p style={{ fontFamily: "'Caveat', cursive", fontSize: "16px", color: "#1e293b", letterSpacing: "0.02em", userSelect: "none", margin: 0, lineHeight: 1.1 }}>
-                    {signatarioNnosNome}
-                  </p>
+                  {(bm.logs[1]?.status === "Assinado" || bm.logs[2]?.status === "Assinado" || bm.status.includes("Aprovado")) ? (
+                    <p style={{ fontFamily: "'Caveat', cursive", fontSize: "16px", color: "#1e293b", letterSpacing: "0.02em", userSelect: "none", margin: 0, lineHeight: 1.1 }}>
+                      {signatarioNnosNome}
+                    </p>
+                  ) : (
+                    <p style={{ fontSize: "9px", fontWeight: 700, color: "#0284c7", letterSpacing: "0.02em", margin: "3px 0", userSelect: "none" }}>
+                      {"{{Signature:Recipient2*}}"}
+                    </p>
+                  )}
                   <div style={{ width: "120px", height: "1px", backgroundColor: "#cbd5e1", margin: "3px auto" }}></div>
                   <p style={{ fontSize: "8.5px", fontWeight: 700, color: "#0f172a", margin: "1px 0 0 0" }}>{signatarioNnosUpper}</p>
                   <p style={{ fontSize: "7px", color: "#64748b", margin: 0 }}>Líder de Projetos / Coordenação Operacional • NNÓS</p>
@@ -529,7 +553,7 @@ export default function BmExportPdfSheet({ bm }: BmExportPdfSheetProps) {
 
                 <div style={{ paddingTop: "3px", borderTop: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", fontSize: "7px", color: "#64748b" }}>
                   <span>Token: NX-VAL-{bm.codigo}-88B</span>
-                  <span>Data: {bm.logs[2]?.dataHora || bm.dataEnvio}</span>
+                  <span>Data: {bm.logs[2]?.dataHora || bm.logs[1]?.dataHora || (bm.status.includes("Aprovado") ? bm.dataEnvio : "{{Signdate:Recipient2*}}")}</span>
                 </div>
               </div>
             </div>

@@ -25,7 +25,7 @@ export interface PagamentoItem {
   categoriaDoc?: typeof CATEGORIAS_DOCUMENTO[number];
 }
 
-export const CATEGORIAS_DOCUMENTO = [
+const CATEGORIAS_DOCUMENTO = [
   "NF",
   "RDV",
   "NNÓS MONEY",
@@ -34,7 +34,7 @@ export const CATEGORIAS_DOCUMENTO = [
   "APORTE",
 ] as const;
 
-export const ESTILOS_CATEGORIA_DOC: Record<
+const ESTILOS_CATEGORIA_DOC: Record<
   typeof CATEGORIAS_DOCUMENTO[number],
   {
     bg: string;
@@ -130,7 +130,7 @@ export const ESTILOS_CATEGORIA_DOC: Record<
   },
 };
 
-export function classificarCategoriaDocumento(p: { numeroNota?: string; tipoDespesa?: string; categoriaDoc?: string }): typeof CATEGORIAS_DOCUMENTO[number] {
+function classificarCategoriaDocumento(p: { numeroNota?: string; tipoDespesa?: string; categoriaDoc?: string }): typeof CATEGORIAS_DOCUMENTO[number] {
   if (p.categoriaDoc && (CATEGORIAS_DOCUMENTO as readonly string[]).includes(p.categoriaDoc)) {
     return p.categoriaDoc as typeof CATEGORIAS_DOCUMENTO[number];
   }

@@ -1,4 +1,4 @@
-// Módulo Oficial de Integração com o Zoho Sign para Envio e Coleta de Assinaturas de BM
+import { gerarPdfOficialBm, AtividadeBmPdf } from "./bm-pdf-generator";
 
 let cachedAccessToken: string | null = null;
 let tokenExpiresAt: number = 0;
@@ -58,41 +58,23 @@ export interface SignatarioEnvio {
 export interface EnviarBmZohoParams {
   codigoBm: string;
   consultorNome: string;
+  consultorRazaoSocial?: string;
+  consultorCnpj?: string;
+  consultorEndereco?: string;
   consultorEmail: string;
+  contrato?: string;
   liderNome: string;
   liderEmail: string;
   responsavelNome: string;
   responsavelEmail: string;
   emailsCopia?: string;
+  mesReferencia?: string;
   periodoStr: string;
+  totalHoras?: number;
+  mediaHora?: number;
   valorTotal: number;
-  pdfBuffer?: Buffer;
-}
-
-function gerarPdfBasicoBm(params: EnviarBmZohoParams): Buffer {
-  const content =
-    `BT /F1 16 Tf 50 730 Td (BOLETIM DE MEDICAO - NNOS CONSULTORIA) Tj ET ` +
-    `BT /F1 12 Tf 50 690 Td (BM: ${params.codigoBm} - Periodo: ${params.periodoStr}) Tj ET ` +
-    `BT /F1 12 Tf 50 660 Td (Prestador / Consultor: ${params.consultorNome}) Tj ET ` +
-    `BT /F1 12 Tf 50 630 Td (Valor Total Apurado: R$ ${params.valorTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}) Tj ET ` +
-    `BT /F1 10 Tf 50 590 Td (Signatarios vinculados:) Tj ET ` +
-    `BT /F1 9 Tf 60 565 Td (1. Prestador de Servicos: ${params.consultorNome} <${params.consultorEmail}>) Tj ET ` +
-    `BT /F1 9 Tf 60 545 Td (2. Lider de Projeto: ${params.liderNome} <${params.liderEmail}>) Tj ET ` +
-    `BT /F1 9 Tf 60 525 Td (3. Validacao Final NNOS: ${params.responsavelNome} <${params.responsavelEmail}>) Tj ET ` +
-    `BT /F1 8 Tf 50 480 Td (Documento oficial gerado pelo Portal Corporativo NNOS Consultoria.) Tj ET`;
-
-  const len = Buffer.byteLength(content, "utf-8");
-  const pdfString =
-    "%PDF-1.4\n" +
-    "1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n" +
-    "2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n" +
-    "3 0 obj<</Type/Page/MediaBox[0 0 612 792]/Parent 2 0 R/Resources<</Font<</F1 4 0 R>>>>/Contents 5 0 R>>endobj\n" +
-    "4 0 obj<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>endobj\n" +
-    "5 0 obj<</Length " + len + ">>stream\n" + content + "\nendstream\nendobj\n" +
-    "xref\n0 6\n0000000000 65535 f\n0000000010 00000 n\n0000000053 00000 n\n0000000102 00000 n\n0000000213 00000 n\n0000000282 00000 n\n" +
-    "trailer<</Size 6/Root 1 0 R>>\nstartxref\n" + (330 + len) + "\n%%EOF";
-
-  return Buffer.from(pdfString);
+  atividades?: AtividadeBmPdf[];
+  pdfBuffer?: Buffer | Uint8Array;
 }
 
 /**
@@ -102,7 +84,7 @@ export async function enviarBmParaZohoSign(params: EnviarBmZohoParams) {
   const accessToken = await getZohoAccessToken();
   const apiUrl = process.env.ZOHO_API_URL || "https://sign.zoho.com/api/v1";
 
-  // Montar signatários sequenciais (sem campo 'role' que é rejeitado pela API Zoho)
+  // Montar signatários sequenciais
   const actions: any[] = [
     {
       recipient_name: params.consultorNome,
@@ -155,8 +137,25 @@ export async function enviarBmParaZohoSign(params: EnviarBmZohoParams) {
     },
   };
 
-  // Garante buffer do PDF físico
-  const pdfBuffer = params.pdfBuffer || gerarPdfBasicoBm(params);
+  // Garante geração dinâmica do PDF oficial do BM com layout Print 3 e Text Tags Zoho Sign
+  const pdfBuffer = params.pdfBuffer || await gerarPdfOficialBm({
+    codigoBm: params.codigoBm,
+    consultorNome: params.consultorNome,
+    consultorRazaoSocial: params.consultorRazaoSocial,
+    consultorCnpj: params.consultorCnpj,
+    consultorEndereco: params.consultorEndereco,
+    consultorEmail: params.consultorEmail,
+    contrato: params.contrato,
+    mesReferencia: params.mesReferencia || params.periodoStr,
+    periodoStr: params.periodoStr,
+    totalHoras: params.totalHoras || 0,
+    mediaHora: params.mediaHora || 0,
+    valorTotal: params.valorTotal,
+    liderNome: params.liderNome,
+    responsavelNome: params.responsavelNome,
+    atividades: params.atividades || [],
+  });
+
   const formData = new FormData();
   const blob = new Blob([new Uint8Array(pdfBuffer)], { type: "application/pdf" });
   formData.append("file", blob, `BM_${params.codigoBm}.pdf`);
@@ -182,6 +181,8 @@ export async function enviarBmParaZohoSign(params: EnviarBmZohoParams) {
   const documentId = (reqObj.document_ids && reqObj.document_ids[0]?.document_id) || reqObj.zsdocumentid || reqObj.document_id;
 
   let submitSucesso = false;
+  let submitMsg = "";
+  let avisoCreditos = false;
   // Disparo dos e-mails
   // Se houver Zoho Flow configurado (Zoho One), usa o Flow para disparar nativamente via Modelo BM
   const flowUrl = process.env.ZOHO_FLOW_WEBHOOK_URL;

@@ -92,7 +92,7 @@ const expandirAnoSeDoisDigitos = (val: string): string => {
 };
 
 // Converte strings no formato DD/MM/AAAA ou AAAA-MM-DD para objeto Date
-export function parseDataBR(dataStr?: string | null): Date | null {
+function parseDataBR(dataStr?: string | null): Date | null {
   if (!dataStr) return null;
   const limpa = dataStr.trim();
   const partes = limpa.split("/");
@@ -117,7 +117,7 @@ export function parseDataBR(dataStr?: string | null): Date | null {
 }
 
 // Calcula automaticamente o fluxo e status de pagamento (dias adiantados / atraso / no prazo)
-export function calcularFluxoPagamento(
+function calcularFluxoPagamento(
   status?: string,
   vencimento?: string,
   dataPagto?: string

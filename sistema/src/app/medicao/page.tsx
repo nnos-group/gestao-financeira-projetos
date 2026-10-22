@@ -512,14 +512,22 @@ export default function BoletimMedicaoPage() {
         body: JSON.stringify({
           codigoBm: codBm,
           consultorNome: bmEmCriacao.consultorNome,
+          consultorRazaoSocial: bmEmCriacao.consultorRazaoSocial,
+          consultorCnpj: bmEmCriacao.consultorCnpj,
+          consultorEndereco: bmEmCriacao.consultorEndereco,
           consultorEmail: emailConsultor || bmEmCriacao.consultorEmail,
+          contrato: bmEmCriacao.contrato,
           liderNome: liderEscolhidoNome,
           liderEmail: liderEscolhidoEmail,
           responsavelNome: responsavelNnosAtual.nome,
           responsavelEmail: emailResponsavelNnos || responsavelNnosAtual.email,
           emailsCopia: receberCopia ? emailCopia : undefined,
+          mesReferencia: bmEmCriacao.mesReferencia,
           periodoStr: `${bmEmCriacao.mesReferencia} (${bmEmCriacao.periodoTipo})`,
+          totalHoras: bmEmCriacao.totalHoras,
+          mediaHora: bmEmCriacao.mediaHora,
           valorTotal: bmEmCriacao.valorTotal,
+          atividades: bmEmCriacao.atividades,
         }),
       });
 

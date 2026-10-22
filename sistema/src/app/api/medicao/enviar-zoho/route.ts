@@ -8,14 +8,22 @@ export async function POST(req: NextRequest) {
     const {
       codigoBm,
       consultorNome,
+      consultorRazaoSocial,
+      consultorCnpj,
+      consultorEndereco,
       consultorEmail,
+      contrato,
       liderNome,
       liderEmail,
       responsavelNome,
       responsavelEmail,
       emailsCopia,
+      mesReferencia,
       periodoStr,
+      totalHoras,
+      mediaHora,
       valorTotal,
+      atividades,
     } = body;
 
     if (!codigoBm || !consultorNome || !consultorEmail || !liderEmail || !responsavelEmail) {
@@ -25,19 +33,27 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    console.log(`🚀 [Zoho Sign API] Iniciando envio do BM ${codigoBm} para assinatura...`);
+    console.log(`🚀 [Zoho Sign API] Iniciando envio do BM ${codigoBm} para assinatura com layout oficial...`);
 
     const resultado = await enviarBmParaZohoSign({
       codigoBm,
       consultorNome,
+      consultorRazaoSocial,
+      consultorCnpj,
+      consultorEndereco,
       consultorEmail,
+      contrato,
       liderNome,
       liderEmail,
       responsavelNome,
       responsavelEmail,
       emailsCopia,
+      mesReferencia,
       periodoStr: periodoStr || "Mês de Referência",
+      totalHoras: Number(totalHoras) || 0,
+      mediaHora: Number(mediaHora) || 0,
       valorTotal: Number(valorTotal) || 0,
+      atividades: Array.isArray(atividades) ? atividades : [],
     });
 
     console.log(`✅ [Zoho Sign API] BM ${codigoBm} enviado com sucesso! Request ID: ${resultado.requestId}`);
