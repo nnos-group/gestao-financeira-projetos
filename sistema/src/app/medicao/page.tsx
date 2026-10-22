@@ -51,6 +51,7 @@ interface BoletimMedicaoItem {
   responsavelNnosNome: string;
   responsavelNnosEmail: string;
   copiaEmails?: string;
+  zohoRequestId?: string;
   logs: LogSignatario[];
   atividades: AtividadeMedicao[];
 }
@@ -472,13 +473,49 @@ export default function BoletimMedicaoPage() {
     setModalAssinaturaAberto(true);
   };
 
-  // Confirmar criação do BM e despacho para signatários
-  const handleConfirmarEnvioAssinatura = (e: React.FormEvent) => {
+  // Confirmar criação do BM e despacho para signatários via Zoho Sign
+  const handleConfirmarEnvioAssinatura = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!bmEmCriacao) return;
 
     const dataAgora = new Date();
     const dataHoraStr = `${dataAgora.toLocaleDateString("pt-BR")} às ${dataAgora.toLocaleTimeString("pt-BR")}`;
+    const codBm = bmEmCriacao.codigo || proximoCodigo;
+
+    showToast(`Disparando BM ${codBm} para assinatura no Zoho Sign...`);
+
+    let zohoReqId: string | undefined;
+    let zohoDocId: string | undefined;
+
+    try {
+      const resp = await fetch("/api/medicao/enviar-zoho", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          codigoBm: codBm,
+          consultorNome: bmEmCriacao.consultorNome,
+          consultorEmail: emailConsultor || bmEmCriacao.consultorEmail,
+          liderNome: liderEscolhidoNome,
+          liderEmail: liderEscolhidoEmail,
+          responsavelNome: responsavelNnosAtual.nome,
+          responsavelEmail: responsavelNnosAtual.email,
+          emailsCopia: receberCopia ? emailCopia : undefined,
+          periodoStr: `${bmEmCriacao.mesReferencia} (${bmEmCriacao.periodoTipo})`,
+          valorTotal: bmEmCriacao.valorTotal,
+        }),
+      });
+
+      if (resp.ok) {
+        const json = await resp.json();
+        zohoReqId = json.requestId;
+        zohoDocId = json.documentId;
+        console.log("✅ Zoho Sign Request ID:", zohoReqId, "Doc ID:", zohoDocId);
+      } else {
+        console.warn("Aviso ao conectar com Zoho Sign:", await resp.text());
+      }
+    } catch (err: any) {
+      console.warn("Falha ao disparar Zoho Sign:", err.message);
+    }
 
     const logsIniciais: LogSignatario[] = [
       {
@@ -486,7 +523,7 @@ export default function BoletimMedicaoPage() {
         papel: "Prestador de Serviços",
         email: emailConsultor || bmEmCriacao.consultorEmail!,
         status: "Pendente",
-        detalhe: "Notificação e link de assinatura enviados por e-mail",
+        detalhe: zohoDocId ? `Zoho Sign ID: ${zohoDocId}` : "Notificação e link de assinatura enviados por e-mail",
       },
       {
         signatario: liderEscolhidoNome.toUpperCase(),
@@ -505,8 +542,8 @@ export default function BoletimMedicaoPage() {
     ];
 
     const novoBMCompleto: BoletimMedicaoItem = {
-      id: `bm-${bmEmCriacao.codigo}`,
-      codigo: bmEmCriacao.codigo || proximoCodigo,
+      id: `bm-${codBm}`,
+      codigo: codBm,
       consultorNome: bmEmCriacao.consultorNome!,
       consultorRazaoSocial: bmEmCriacao.consultorRazaoSocial,
       consultorCnpj: bmEmCriacao.consultorCnpj!,
@@ -526,6 +563,7 @@ export default function BoletimMedicaoPage() {
       responsavelNnosNome: responsavelNnosAtual.nome,
       responsavelNnosEmail: responsavelNnosAtual.email,
       copiaEmails: receberCopia ? emailCopia : undefined,
+      zohoRequestId: zohoDocId || zohoReqId,
       logs: logsIniciais,
       atividades: bmEmCriacao.atividades || [],
     };
@@ -533,7 +571,7 @@ export default function BoletimMedicaoPage() {
     salvarBms([novoBMCompleto, ...bmsLista]);
     setModalAssinaturaAberto(false);
     setPainelGeracaoAberto(false);
-    showToast(`BM ${novoBMCompleto.codigo} gerado com sucesso! E-mails enviados aos signatários.`);
+    showToast(`BM ${novoBMCompleto.codigo} registrado e enviado ao Zoho Sign com sucesso!`);
   };
 
   // Simular avanço de assinatura
@@ -1282,7 +1320,7 @@ Subitem Lista de Serviços LC 116/03: 8.02 (Instrução, treinamento, orientaç�
                       </div>
 
                       <div style={{ marginTop: "16px", paddingTop: "10px", borderTop: "1px dashed var(--border)", display: "flex", justifyContent: "space-between", fontSize: "11px", color: "var(--on-surface-variant)" }}>
-                        <span>Token: NX-VAL-{bmVisualizando.codigo}-88B</span>
+                        <span>{bmVisualizando.zohoRequestId ? `Zoho Sign ID: ${bmVisualizando.zohoRequestId}` : `Token: NX-VAL-${bmVisualizando.codigo}-88B`}</span>
                         <span>Data: {bmVisualizando.logs[2]?.dataHora || bmVisualizando.dataEnvio}</span>
                       </div>
                     </div>

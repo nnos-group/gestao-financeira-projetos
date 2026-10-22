@@ -1,0 +1,203 @@
+// Módulo Oficial de Integração com o Zoho Sign para Envio e Coleta de Assinaturas de BM
+
+let cachedAccessToken: string | null = null;
+let tokenExpiresAt: number = 0;
+
+/**
+ * Obtém um Access Token válido utilizando o Refresh Token permanente
+ */
+export async function getZohoAccessToken(): Promise<string> {
+  const now = Date.now();
+  // Se o token em cache ainda for válido por mais de 5 minutos, reutiliza
+  if (cachedAccessToken && tokenExpiresAt > now + 300000) {
+    return cachedAccessToken;
+  }
+
+  const clientId = process.env.ZOHO_CLIENT_ID;
+  const clientSecret = process.env.ZOHO_CLIENT_SECRET;
+  const refreshToken = process.env.ZOHO_REFRESH_TOKEN;
+
+  if (!clientId || !clientSecret || !refreshToken) {
+    throw new Error("Credenciais do Zoho Sign (CLIENT_ID, CLIENT_SECRET ou REFRESH_TOKEN) não configuradas no ambiente.");
+  }
+
+  const params = new URLSearchParams({
+    refresh_token: refreshToken,
+    client_id: clientId,
+    client_secret: clientSecret,
+    grant_type: "refresh_token",
+  });
+
+  const res = await fetch(`https://accounts.zoho.com/oauth/v2/token?${params.toString()}`, {
+    method: "POST",
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Falha ao obter Access Token do Zoho: ${res.status} - ${errText}`);
+  }
+
+  const data = await res.json();
+  if (data.error) {
+    throw new Error(`Erro retornado pelo Zoho OAuth: ${data.error}`);
+  }
+
+  cachedAccessToken = data.access_token;
+  tokenExpiresAt = now + (data.expires_in || 3600) * 1000;
+
+  return cachedAccessToken!;
+}
+
+export interface SignatarioEnvio {
+  nome: string;
+  email: string;
+  papel: "Prestador de Serviços" | "Líder de Projeto" | "Coordenação / Validação Final";
+  ordem: number;
+}
+
+export interface EnviarBmZohoParams {
+  codigoBm: string;
+  consultorNome: string;
+  consultorEmail: string;
+  liderNome: string;
+  liderEmail: string;
+  responsavelNome: string;
+  responsavelEmail: string;
+  emailsCopia?: string;
+  periodoStr: string;
+  valorTotal: number;
+  pdfBuffer?: Buffer;
+}
+
+/**
+ * Cria a solicitação oficial de assinatura no Zoho Sign com os 3 signatários
+ */
+export async function enviarBmParaZohoSign(params: EnviarBmZohoParams) {
+  const accessToken = await getZohoAccessToken();
+  const apiUrl = process.env.ZOHO_API_URL || "https://sign.zoho.com/api/v1";
+
+  // Montar signatários sequenciais
+  const actions: any[] = [
+    {
+      recipient_name: params.consultorNome,
+      recipient_email: params.consultorEmail,
+      action_type: "SIGN",
+      signing_order: 1,
+      role: "Prestador de Serviços",
+      verify_recipient: true,
+    },
+    {
+      recipient_name: params.liderNome,
+      recipient_email: params.liderEmail,
+      action_type: "SIGN",
+      signing_order: 2,
+      role: "Líder de Projeto (Aprovador)",
+      verify_recipient: true,
+    },
+    {
+      recipient_name: params.responsavelNome,
+      recipient_email: params.responsavelEmail,
+      action_type: "SIGN",
+      signing_order: 3,
+      role: "Validação Final NNÓS",
+      verify_recipient: true,
+    },
+  ];
+
+  // Adicionar destinatários de cópia (visualizadores)
+  if (params.emailsCopia) {
+    const copias = params.emailsCopia.split(";").map((e) => e.trim()).filter(Boolean);
+    copias.forEach((email) => {
+      actions.push({
+        recipient_name: "Cópia Financeiro",
+        recipient_email: email,
+        action_type: "VIEW",
+        signing_order: 4,
+        role: "Cópia",
+      });
+    });
+  }
+
+  const requestName = `BM ${params.codigoBm} - ${params.consultorNome} (${params.periodoStr})`;
+  const notes = `Prezado(a),\n\nSegue para assinatura eletrônica o Boletim de Medição de Serviços (BM ${params.codigoBm}) referente ao período de ${params.periodoStr}.\nValor apurado: R$ ${params.valorTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}.\n\nPor favor, revise os dados e confirme a sua assinatura.\n\nAtenciosamente,\nNNÓS Consultoria e Treinamento`;
+
+  const requestPayload = {
+    requests: {
+      request_name: requestName,
+      is_sequential: true,
+      expiration_days: 7,
+      email_reminders: true,
+      reminder_period: 2,
+      notes: notes,
+      actions: actions,
+    },
+  };
+
+  // Se houver PDF anexado, envia como multipart/form-data
+  let res: Response;
+  if (params.pdfBuffer) {
+    const formData = new FormData();
+    const blob = new Blob([new Uint8Array(params.pdfBuffer)], { type: "application/pdf" });
+    formData.append("file", blob, `BM_${params.codigoBm}.pdf`);
+    formData.append("data", JSON.stringify(requestPayload));
+
+    res = await fetch(`${apiUrl}/requests`, {
+      method: "POST",
+      headers: {
+        Authorization: `Zoho-oauthtoken ${accessToken}`,
+      },
+      body: formData,
+    });
+  } else {
+    // Criação direta da solicitação
+    const formData = new FormData();
+    formData.append("data", JSON.stringify(requestPayload));
+
+    res = await fetch(`${apiUrl}/requests`, {
+      method: "POST",
+      headers: {
+        Authorization: `Zoho-oauthtoken ${accessToken}`,
+      },
+      body: formData,
+    });
+  }
+
+  if (!res.ok) {
+    const errText = await res.text();
+    console.error("Erro na API do Zoho Sign:", res.status, errText);
+    throw new Error(`Falha no Zoho Sign: ${res.status} - ${errText}`);
+  }
+
+  const data = await res.json();
+  const reqObj = data.requests || data;
+
+  return {
+    success: true,
+    requestId: reqObj.request_id,
+    documentId: reqObj.zsdocumentid || reqObj.document_id,
+    status: reqObj.request_status || "sent",
+    message: "Solicitação de assinatura criada com sucesso no Zoho Sign!",
+  };
+}
+
+/**
+ * Consulta o status e a trilha de auditoria de um documento assinado no Zoho Sign
+ */
+export async function obterDetalhesDocumentoZoho(requestId: string) {
+  const accessToken = await getZohoAccessToken();
+  const apiUrl = process.env.ZOHO_API_URL || "https://sign.zoho.com/api/v1";
+
+  const res = await fetch(`${apiUrl}/requests/${requestId}`, {
+    method: "GET",
+    headers: {
+      Authorization: `Zoho-oauthtoken ${accessToken}`,
+    },
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Falha ao obter documento do Zoho Sign: ${res.status} - ${errText}`);
+  }
+
+  return await res.json();
+}
