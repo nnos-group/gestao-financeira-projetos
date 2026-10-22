@@ -182,38 +182,37 @@ export async function enviarBmParaZohoSign(params: EnviarBmZohoParams) {
   const documentId = (reqObj.document_ids && reqObj.document_ids[0]?.document_id) || reqObj.zsdocumentid || reqObj.document_id;
 
   let submitSucesso = false;
-  let avisoCreditos = false;
-  let submitMsg = "";
-
-  // Passo 2: Disparo dos e-mails
-  // Se houver Zoho Flow configurado (Zoho One), usa o Flow para disparar nativamente sem consumir créditos de API externa
+  // Disparo dos e-mails
+  // Se houver Zoho Flow configurado (Zoho One), usa o Flow para disparar nativamente via Modelo BM
   const flowUrl = process.env.ZOHO_FLOW_WEBHOOK_URL;
-  if (requestId && flowUrl) {
+  if (flowUrl) {
     try {
-      console.log(`🌊 [Zoho Flow] Disparando e-mail de assinatura para request ${requestId} via Zoho Flow...`);
+      console.log(`🌊 [Zoho Flow] Disparando BM ${params.codigoBm} via Zoho Flow (Modelo BM)...`);
       const flowRes = await fetch(flowUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          request_id: requestId,
-          email_address: params.consultorEmail,
-          consultor_email: params.consultorEmail,
           codigo_bm: params.codigoBm,
           consultor_nome: params.consultorNome,
-          lider_email: params.liderEmail,
+          consultor_email: params.consultorEmail,
           lider_nome: params.liderNome,
-          responsavel_email: params.responsavelEmail,
+          lider_email: params.liderEmail,
           responsavel_nome: params.responsavelNome,
+          responsavel_email: params.responsavelEmail,
+          emails_copia: params.emailsCopia || "leonardo.campos@nnos.com.br",
           periodo: params.periodoStr,
           valor_total: params.valorTotal,
+          link_sistema: "https://gestao-financeira-projetos.vercel.app/medicao",
         }),
       });
 
       if (flowRes.ok) {
-        submitSucesso = true;
-        avisoCreditos = false;
-        submitMsg = "E-mail de assinatura enviado aos signatários via Zoho Flow (Zoho One)!";
-        console.log("✅ [Zoho Flow] Disparo realizado com sucesso pelo Zoho Flow!");
+        return {
+          success: true,
+          status: "sent",
+          avisoCreditos: false,
+          message: "Boletim de Medição disparado com sucesso para assinatura no Zoho Sign!",
+        };
       } else {
         console.warn("Aviso ao disparar pelo Zoho Flow:", flowRes.status, await flowRes.text());
       }
