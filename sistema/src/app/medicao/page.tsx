@@ -137,6 +137,28 @@ export default function BoletimMedicaoPage() {
       });
   }, []);
 
+  const [sincronizandoZoho, setSincronizandoZoho] = useState(false);
+
+  const handleSincronizarZoho = async () => {
+    setSincronizandoZoho(true);
+    showToast("Consultando status das assinaturas no Zoho Sign...");
+    try {
+      const res = await fetch("/api/medicao");
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        setBmsLista(data);
+        try {
+          localStorage.setItem("nnos_bms_2026_v5", JSON.stringify(data));
+        } catch {}
+        showToast("Assinaturas sincronizadas com sucesso com o Zoho Sign!");
+      }
+    } catch (err: any) {
+      showToast("Erro ao sincronizar com o Zoho Sign");
+    } finally {
+      setSincronizandoZoho(false);
+    }
+  };
+
   const salvarBms = (novos: BoletimMedicaoItem[]) => {
     setBmsLista(novos);
     try {
@@ -1693,6 +1715,34 @@ Subitem Lista de Serviços LC 116/03: 8.02 (Instrução, treinamento, orientaç�
                       searchable={false}
                       minWidth="200px"
                     />
+
+                    <button
+                      type="button"
+                      onClick={handleSincronizarZoho}
+                      disabled={sincronizandoZoho}
+                      className="btn-secondary"
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        fontSize: "12px",
+                        padding: "8px 14px",
+                        borderRadius: "10px",
+                        cursor: sincronizandoZoho ? "wait" : "pointer",
+                      }}
+                      title="Consultar e sincronizar status de assinaturas em tempo real com o Zoho Sign"
+                    >
+                      <span
+                        className="material-symbols-outlined"
+                        style={{
+                          fontSize: "16px",
+                          animation: sincronizandoZoho ? "spin 1s linear infinite" : "none",
+                        }}
+                      >
+                        sync
+                      </span>
+                      <span>{sincronizandoZoho ? "Sincronizando..." : "Sincronizar Zoho"}</span>
+                    </button>
                   </div>
                 </div>
 
@@ -1769,12 +1819,27 @@ Subitem Lista de Serviços LC 116/03: 8.02 (Instrução, treinamento, orientaç�
                               </span>
                             </td>
                             <td style={{ padding: "14px 18px", fontSize: "11px", color: "var(--on-surface-variant)" }}>
-                              <div><span style={{ fontWeight: 600 }}>Envio:</span> {bm.dataEnvio}</div>
-                              {bm.logs.map((l, idx) => (
-                                <div key={idx} style={{ fontSize: "10px", marginTop: "2px" }}>
-                                  <span style={{ color: l.status === "Assinado" ? "#059669" : "#d97706", fontWeight: 700 }}>● {l.papel}:</span> {l.status} {l.dataHora ? `(${l.dataHora})` : ""}
-                                </div>
-                              ))}
+                              <div style={{ marginBottom: "3px" }}><span style={{ fontWeight: 600 }}>Envio:</span> {bm.dataEnvio}</div>
+                              {bm.logs.map((l, idx) => {
+                                // Limpar qualquer parêntese duplicado ou textos acumulados como (Assinado) ou (Homologado)
+                                const dataLimpa = l.dataHora
+                                  ? l.dataHora
+                                      .replace(/[()]/g, "")
+                                      .replace(/\b(Assinado|Homologado|Aprovado)\b/gi, "")
+                                      .trim()
+                                  : "";
+
+                                return (
+                                  <div key={idx} style={{ fontSize: "10.5px", marginTop: "3px", display: "flex", alignItems: "center", gap: "4px", flexWrap: "wrap" }}>
+                                    <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: l.status === "Assinado" ? "#10b981" : "#f59e0b", display: "inline-block", flexShrink: 0 }}></span>
+                                    <span style={{ fontWeight: 600, color: "var(--on-surface)" }}>{l.papel}:</span>
+                                    <span style={{ color: l.status === "Assinado" ? "#059669" : "#d97706", fontWeight: 700 }}>{l.status}</span>
+                                    {dataLimpa && (
+                                      <span style={{ color: "var(--on-surface-variant)", fontSize: "9.5px", opacity: 0.85 }}>• {dataLimpa}</span>
+                                    )}
+                                  </div>
+                                );
+                              })}
                             </td>
                             <td style={{ padding: "14px 18px", textAlign: "center" }}>
                               <div style={{ display: "inline-flex", gap: "6px" }}>

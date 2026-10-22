@@ -40,6 +40,7 @@ export async function GET() {
       }
 
       // Buscar mapa de status do Zoho Sign persistido pelo webhook
+      let mapaStatus: Record<string, any> = {};
       const { data: statusCloud } = await sb
         .from("configuracoes")
         .select("descricao")
@@ -48,7 +49,7 @@ export async function GET() {
 
       if (statusCloud?.descricao) {
         try {
-          const mapaStatus = JSON.parse(statusCloud.descricao);
+          mapaStatus = JSON.parse(statusCloud.descricao);
           bms = bms.map((bm: any) => {
             const cod = String(bm.codigo);
             if (mapaStatus[cod]) {
@@ -63,6 +64,79 @@ export async function GET() {
             return bm;
           });
         } catch {}
+      }
+
+      // 3. Sincronização Ativa Direta com a API do Zoho Sign (independente de webhook externo)
+      try {
+        const { getZohoAccessToken } = await import("@/lib/zoho-sign");
+        const token = await getZohoAccessToken();
+        const zohoRes = await fetch("https://sign.zoho.com/api/v1/requests", {
+          headers: { Authorization: `Zoho-oauthtoken ${token}` },
+        });
+
+        if (zohoRes.ok) {
+          const zohoData = await zohoRes.json();
+          const requests = zohoData.requests || [];
+          let alterouZoho = false;
+
+          requests.forEach((req: any) => {
+            const docName = req.request_name || "";
+            const match = docName.match(/(?:BM[\s-_]?)?(\d{3,5})/i);
+            const cod = match ? match[1] : null;
+
+            if (cod && req.request_status === "completed") {
+              alterouZoho = true;
+              const logsAtualizados = (req.actions || [])
+                .filter((act: any) => act.action_type === "SIGN")
+                .map((act: any) => {
+                  const dataRaw = act.signed_time || act.action_time;
+                  let dataFmt = "Assinado via Zoho Sign";
+                  if (dataRaw) {
+                    const dt = new Date(Number(dataRaw) || dataRaw);
+                    dataFmt = `${dt.toLocaleDateString("pt-BR")} às ${dt.toLocaleTimeString("pt-BR")}`;
+                  }
+                  return {
+                    signatario: act.recipient_name,
+                    papel: act.role || (act.signing_order === 1 ? "Prestador de Serviços" : act.signing_order === 2 ? "Líder de Projeto" : "Validação Geral"),
+                    email: act.recipient_email,
+                    status: "Assinado",
+                    dataHora: dataFmt,
+                    detalhe: `IP: ${act.ip_address || "Registrado Zoho"} • Zoho Sign ID: ${req.request_id}`,
+                  };
+                });
+
+              mapaStatus[cod] = {
+                status: "Aprovado & Pronto p/ Faturamento",
+                zohoRequestId: req.request_id,
+                logs: logsAtualizados,
+                atualizadoEm: new Date().toISOString(),
+              };
+
+              bms = bms.map((bm: any) => {
+                if (String(bm.codigo) === cod) {
+                  return {
+                    ...bm,
+                    status: "Aprovado & Pronto p/ Faturamento",
+                    zohoRequestId: req.request_id,
+                    logs: logsAtualizados,
+                  };
+                }
+                return bm;
+              });
+            }
+          });
+
+          if (alterouZoho) {
+            await sb.from("configuracoes").upsert({
+              chave: "bms_assinaturas_status",
+              valor: Object.keys(mapaStatus).length,
+              descricao: JSON.stringify(mapaStatus),
+            });
+            console.log("☁️ [API Medição] Assinaturas ativas do Zoho Sign sincronizadas com sucesso no Supabase!");
+          }
+        }
+      } catch (zohoErr: any) {
+        console.warn("Aviso na sincronização ativa com Zoho Sign:", zohoErr.message);
       }
     } catch (sbErr: any) {
       console.warn("Aviso ao consultar Supabase em /api/medicao:", sbErr.message);
