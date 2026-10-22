@@ -117,20 +117,23 @@ export default function BoletimMedicaoPage() {
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {
-          setBmsLista(data);
+          const limpos = data.filter((b: any) => b.codigo !== '0908' && b.id !== 'bm-0908');
+          setBmsLista(limpos);
           try {
-            localStorage.setItem('nnos_bms_2026_v4', JSON.stringify(data));
+            localStorage.setItem('nnos_bms_2026_v5', JSON.stringify(limpos));
+            localStorage.removeItem('nnos_bms_2026_v4');
           } catch {}
         }
       })
       .catch((err) => {
         console.warn('Erro ao buscar /api/medicao', err);
         try {
-          const local = localStorage.getItem('nnos_bms_2026_v4');
+          const local = localStorage.getItem('nnos_bms_2026_v5') || localStorage.getItem('nnos_bms_2026_v4');
           if (local) {
             const parsed = JSON.parse(local);
             if (Array.isArray(parsed) && parsed.length > 0) {
-              setBmsLista(parsed);
+              const limpos = parsed.filter((b: any) => b.codigo !== '0908' && b.id !== 'bm-0908');
+              setBmsLista(limpos);
             }
           }
         } catch {}
@@ -138,15 +141,24 @@ export default function BoletimMedicaoPage() {
   }, []);
 
   const salvarBms = (novos: BoletimMedicaoItem[]) => {
-    setBmsLista(novos);
+    const limpos = novos.filter((b) => b.codigo !== '0908' && b.id !== 'bm-0908');
+    setBmsLista(limpos);
     try {
-      localStorage.setItem('nnos_bms_2026_v4', JSON.stringify(novos));
+      localStorage.setItem('nnos_bms_2026_v5', JSON.stringify(limpos));
     } catch {}
     fetch('/api/medicao', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(novos),
+      body: JSON.stringify(limpos),
     }).catch((e) => console.error('Erro ao salvar /api/medicao', e));
+  };
+
+  const handleExcluirBm = (bm: BoletimMedicaoItem) => {
+    if (confirm(`Deseja realmente excluir o BM ${bm.codigo} (${bm.consultorNome})?`)) {
+      const novaLista = bmsLista.filter((item) => item.id !== bm.id && item.codigo !== bm.codigo);
+      salvarBms(novaLista);
+      showToast(`BM ${bm.codigo} excluído com sucesso!`);
+    }
   };
 
   // Filtros da Central de Medições
@@ -1755,15 +1767,26 @@ Subitem Lista de Serviços LC 116/03: 8.02 (Instrução, treinamento, orientaç�
                                 </button>
 
                                 {bm.status !== "Aprovado & Pronto p/ Faturamento" && (
-                                  <button
-                                    type="button"
-                                    onClick={() => handleAvancarAssinatura(bm)}
-                                    className="btn-secondary"
-                                    style={{ padding: "6px 8px", fontSize: "11px" }}
-                                    title="Avançar etapa de assinatura"
-                                  >
-                                    <span className="material-symbols-outlined" style={{ fontSize: "14px", color: "var(--secondary)" }}>draw</span>
-                                  </button>
+                                  <>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleAvancarAssinatura(bm)}
+                                      className="btn-secondary"
+                                      style={{ padding: "6px 8px", fontSize: "11px" }}
+                                      title="Avançar etapa de assinatura"
+                                    >
+                                      <span className="material-symbols-outlined" style={{ fontSize: "14px", color: "var(--secondary)" }}>draw</span>
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleExcluirBm(bm)}
+                                      className="btn-secondary"
+                                      style={{ padding: "6px 8px", fontSize: "11px", color: "#dc2626" }}
+                                      title="Excluir este BM"
+                                    >
+                                      <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>delete</span>
+                                    </button>
+                                  </>
                                 )}
                               </div>
                             </td>
