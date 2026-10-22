@@ -391,7 +391,7 @@ export default async function ProjetosPage({
 
         {/* Conteúdo da Página */}
         <main className="content-container">
-          {dev && (
+          {process.env.NODE_ENV !== "production" && process.env.AUTH_DISABLED === "true" && (
             <div className="dev-banner">
               <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
                 info
