@@ -14,7 +14,7 @@
     "totalHoras": 8,
     "valorTotal": 1,
     "mediaHora": 0.125,
-    "status": "Pendente de Assinatura",
+    "status": "Aprovado & Pronto p/ Faturamento",
     "dataEnvio": "23/10/2026 às 13:51:57",
     "liderProjetoNome": "Leonardo Campos",
     "liderProjetoEmail": "leonardo.campos@nnos.com.br",
@@ -26,22 +26,25 @@
         "signatario": "LEONARDO CAMPOS",
         "papel": "Prestador de Serviços",
         "email": "leonardo.campos@nnos.com.br",
-        "status": "Pendente",
-        "detalhe": "Notificação e link de assinatura enviados por e-mail"
+        "status": "Assinado",
+        "dataHora": "23/10/2026 às 13:56:00",
+        "detalhe": "IP: 191.187.11.168 • Zoho Sign ID: 292894000002786084"
       },
       {
         "signatario": "LEONARDO CAMPOS",
         "papel": "Aprovador (Líder de Projeto)",
         "email": "leonardo.campos@nnos.com.br",
-        "status": "Pendente",
-        "detalhe": "Aguardando aprovação operacional das horas"
+        "status": "Assinado",
+        "dataHora": "23/10/2026 às 13:55:00",
+        "detalhe": "IP: 191.187.11.168 • Zoho Sign ID: 292894000002786084"
       },
       {
         "signatario": "MARCELO LARA DA SILVA",
         "papel": "Responsável NNÓS (Coordenação Geral)",
-        "email": "leonardo.campos@nnos.com.br",
-        "status": "Pendente",
-        "detalhe": "Aguardando validação final"
+        "email": "marcelo.lara@nnos.com.br",
+        "status": "Assinado",
+        "dataHora": "23/10/2026 às 13:57:00",
+        "detalhe": "IP: 191.187.11.168 • Zoho Sign ID: 292894000002786084"
       }
     ],
     "atividades": [
@@ -61,7 +64,8 @@
         "valorTotal": 1,
         "rateioInterno": "100,00%"
       }
-    ]
+    ],
+    "zohoRequestId": "292894000002786084"
   },
   {
     "id": "bm-0907",

@@ -55,75 +55,91 @@ export async function POST(req: NextRequest) {
       let logsFinais: any[] = [];
       let statusFinal = "Pendente de Assinatura";
 
-      // 1. Tentar carregar base local bms-2026.json (ambiente com disco gravável)
+      function formatarDataHoraBrasil(timestampRaw: any): string {
+        if (!timestampRaw) return "";
+        const dt = new Date(Number(timestampRaw) || timestampRaw);
+        if (isNaN(dt.getTime())) return String(timestampRaw);
+        return dt.toLocaleString("pt-BR", {
+          timeZone: "America/Sao_Paulo",
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        });
+      }
+
+      // Filtrar estritamente destinatários que assinam (ignora VIEW / Auditoria / Cópia)
+      const signActions = (actions || []).filter((act: any) => {
+        const isView = act.action_type === "VIEW" || (act.recipient_name && act.recipient_name.toLowerCase().includes("auditoria"));
+        return !isView;
+      });
+
+      // Mapear cada signatário para o seu papel corporativo oficial e data/hora individual
+      logsFinais = signActions.map((act: any) => {
+        const statusAcao = act.action_status || act.status;
+        const isAssinado = statusAcao === "SIGNED" || statusAcao === "COMPLETED";
+        const dataHoraStr = isAssinado ? formatarDataHoraBrasil(act.signed_time || act.action_time || Date.now()) : "";
+        const ip = act.ip_address || "IP Registrado Zoho";
+
+        let papel = "Prestador de Serviços";
+        if (act.signing_order === 1) {
+          papel = "Aprovador (Líder de Projeto)";
+        } else if (act.signing_order === 2) {
+          papel = "Prestador de Serviços";
+        } else if (act.signing_order === 3) {
+          papel = "Responsável NNÓS (Coordenação Geral)";
+        }
+
+        return {
+          signatario: act.recipient_name || "Signatário",
+          papel: papel,
+          email: act.recipient_email || "",
+          status: isAssinado ? "Assinado" : "Pendente",
+          dataHora: dataHoraStr,
+          detalhe: `IP: ${ip} • Zoho Sign ID: ${requestId}`,
+        };
+      });
+
+      // Ordenar por ordem corporativa padrão: 1º Prestador, 2º Líder, 3º Coordenação
+      const ordemDesejada: Record<string, number> = {
+        "Prestador de Serviços": 1,
+        "Aprovador (Líder de Projeto)": 2,
+        "Responsável NNÓS (Coordenação Geral)": 3,
+      };
+      logsFinais.sort((a, b) => (ordemDesejada[a.papel] || 9) - (ordemDesejada[b.papel] || 9));
+
+      const todosAssinaram = logsFinais.length > 0 && logsFinais.every((l: any) => l.status === "Assinado");
+      const prestadorAssinou = logsFinais.find((l: any) => l.papel === "Prestador de Serviços")?.status === "Assinado";
+      const liderAssinou = logsFinais.find((l: any) => l.papel.includes("Líder"))?.status === "Assinado";
+
+      if (todosAssinaram) {
+        statusFinal = "Aprovado & Pronto p/ Faturamento";
+      } else if (liderAssinou && prestadorAssinou) {
+        statusFinal = "Aprovado pelo Líder";
+      } else if (prestadorAssinou) {
+        statusFinal = "Assinado pelo Prestador";
+      }
+
+      // 1. Tentar atualizar base local bms-2026.json (quando em ambiente com disco gravável)
       const bmsPath = path.resolve(process.cwd(), "src/lib/bms-2026.json");
       if (fs.existsSync(bmsPath)) {
         try {
           const bms = JSON.parse(fs.readFileSync(bmsPath, "utf-8"));
-          let alterou = false;
-
           const bmsAtualizados = bms.map((bm: any) => {
             if (String(bm.codigo) !== String(codigoBm) && bm.id !== `bm-${codigoBm}`) return bm;
-
-            alterou = true;
-            // Extrair informações de cada signatário a partir das ações do Zoho
-            const logsAtualizados = [...(bm.logs || [])];
-
-            actions.forEach((act: any) => {
-              const email = (act.recipient_email || "").toLowerCase();
-              const statusAcao = act.action_status || act.status; // "SIGNED", "VIEWED", "PENDING"
-              const ip = act.ip_address || "IP Registrado Zoho";
-              const dataHoraRaw = act.signed_time || act.action_time;
-              
-              let dataHoraFmt = "";
-              if (dataHoraRaw) {
-                const dt = new Date(Number(dataHoraRaw) || dataHoraRaw);
-                dataHoraFmt = `${dt.toLocaleDateString("pt-BR")} às ${dt.toLocaleTimeString("pt-BR")}`;
-              }
-
-              // Atualiza o log correspondente
-              logsAtualizados.forEach((l: any) => {
-                if (l.email?.toLowerCase() === email || act.recipient_name?.toUpperCase().includes(l.signatario?.toUpperCase())) {
-                  if (statusAcao === "SIGNED" || statusAcao === "COMPLETED") {
-                    l.status = "Assinado";
-                    l.dataHora = dataHoraFmt || l.dataHora || new Date().toLocaleString("pt-BR");
-                    l.detalhe = `IP: ${ip} • Zoho Sign ID: ${requestId}`;
-                  }
-                }
-              });
-            });
-
-            // Determinar status global do BM
-            const todosAssinaram = logsAtualizados.every((l: any) => l.status === "Assinado");
-            const primeiroAssinou = logsAtualizados[0]?.status === "Assinado";
-            const segundoAssinou = logsAtualizados[1]?.status === "Assinado";
-
-            let novoStatus = bm.status;
-            if (todosAssinaram) {
-              novoStatus = "Aprovado & Pronto p/ Faturamento";
-            } else if (segundoAssinou) {
-              novoStatus = "Aprovado pelo Líder";
-            } else if (primeiroAssinou) {
-              novoStatus = "Assinado pelo Prestador";
-            }
-
-            logsFinais = logsAtualizados;
-            statusFinal = novoStatus;
-
             return {
               ...bm,
-              status: novoStatus,
+              status: statusFinal,
               zohoRequestId: requestId,
-              logs: logsAtualizados,
+              logs: logsFinais,
             };
           });
-
-          if (alterou) {
-            fs.writeFileSync(bmsPath, JSON.stringify(bmsAtualizados, null, 2), "utf-8");
-            console.log(`✅ [Zoho Sign Webhook] BM ${codigoBm} atualizado com sucesso no arquivo local com status: ${statusFinal}`);
-          }
+          fs.writeFileSync(bmsPath, JSON.stringify(bmsAtualizados, null, 2), "utf-8");
+          console.log(`✅ [Zoho Sign Webhook] BM ${codigoBm} atualizado localmente com status: ${statusFinal}`);
         } catch (err: any) {
-          console.error("Erro ao atualizar base de BMs via arquivo local:", err.message);
+          console.warn("Aviso ao atualizar arquivo local:", err.message);
         }
       }
 
@@ -135,27 +151,6 @@ export async function POST(req: NextRequest) {
         let mapaStatus: Record<string, any> = {};
         if (configAtual?.descricao) {
           try { mapaStatus = JSON.parse(configAtual.descricao); } catch {}
-        }
-
-        // Se os logs não foram montados pelo arquivo local, monta a partir das ações do webhook
-        if (logsFinais.length === 0) {
-          logsFinais = actions.map((act: any) => {
-            const dataHoraRaw = act.signed_time || act.action_time;
-            let dataHoraFmt = "";
-            if (dataHoraRaw) {
-              const dt = new Date(Number(dataHoraRaw) || dataHoraRaw);
-              dataHoraFmt = `${dt.toLocaleDateString("pt-BR")} às ${dt.toLocaleTimeString("pt-BR")}`;
-            }
-            return {
-              signatario: act.recipient_name || "Signatário",
-              email: act.recipient_email || "",
-              status: (act.action_status === "SIGNED" || act.action_status === "COMPLETED") ? "Assinado" : "Pendente",
-              dataHora: dataHoraFmt || new Date().toLocaleString("pt-BR"),
-              detalhe: `IP: ${act.ip_address || "Registrado Zoho"} • Zoho Sign ID: ${requestId}`,
-            };
-          });
-          const todosAssinaram = logsFinais.every((l: any) => l.status === "Assinado");
-          statusFinal = todosAssinaram ? "Aprovado & Pronto p/ Faturamento" : "Assinado pelo Prestador";
         }
 
         mapaStatus[String(codigoBm)] = {

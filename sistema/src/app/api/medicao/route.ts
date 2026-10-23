@@ -111,21 +111,36 @@ export async function GET() {
                   );
 
                   const timestamp = auditEvent?.performed_at || act.signed_time || act.action_time;
-                  let dataFmt = "22/10/2026 às 16:51";
+                  let dataFmt = "";
                   if (timestamp) {
                     const dt = new Date(Number(timestamp) || timestamp);
-                    dataFmt = `${dt.toLocaleDateString("pt-BR")} às ${dt.toLocaleTimeString("pt-BR")}`;
+                    if (!isNaN(dt.getTime())) {
+                      dataFmt = dt.toLocaleString("pt-BR", {
+                        timeZone: "America/Sao_Paulo",
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        second: "2-digit",
+                      });
+                    }
                   }
 
                   const ipReal = auditEvent?.ip_address || act.ip_address || "191.187.11.168";
                   const docIdReal = auditEvent?.document_id || req.zsdocumentid || req.request_id;
 
-                  // Nome corporativo do papel conforme a hierarquia do BM
+                  // Nome corporativo do papel conforme a ordem oficial do BM:
+                  // 1 = Líder de Projeto
+                  // 2 = Prestador de Serviços
+                  // 3 = Coordenação Geral
                   let papelNome = "Prestador de Serviços";
-                  if (act.signing_order === 2 || (act.role && act.role.toLowerCase().includes("lider"))) {
+                  if (act.signing_order === 1 || (act.role && act.role.toLowerCase().includes("lider"))) {
                     papelNome = "Aprovador (Líder de Projeto)";
-                  } else if (act.signing_order === 3 || (act.role && act.role.toLowerCase().includes("valida"))) {
-                    papelNome = "Coordenação / Validação Final";
+                  } else if (act.signing_order === 2) {
+                    papelNome = "Prestador de Serviços";
+                  } else if (act.signing_order === 3 || (act.role && act.role.toLowerCase().includes("valida")) || (act.role && act.role.toLowerCase().includes("coord"))) {
+                    papelNome = "Responsável NNÓS (Coordenação Geral)";
                   }
 
                   return {
