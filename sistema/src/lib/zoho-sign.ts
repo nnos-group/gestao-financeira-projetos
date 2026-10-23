@@ -92,10 +92,9 @@ export async function enviarBmParaZohoSign(params: EnviarBmZohoParams) {
     {
       recipient_name: params.liderNome,
       recipient_email: params.liderEmail,
-      action_type: "APPROVE",
+      action_type: "APPROVER",
       signing_order: 1,
       verify_recipient: false,
-      role: "Lider de Projeto (Aprovador)",
     },
     {
       recipient_name: params.consultorNome,
@@ -103,7 +102,6 @@ export async function enviarBmParaZohoSign(params: EnviarBmZohoParams) {
       action_type: "SIGN",
       signing_order: 2,
       verify_recipient: false,
-      role: "Prestador de Servicos",
     },
     {
       recipient_name: params.responsavelNome,
@@ -111,7 +109,6 @@ export async function enviarBmParaZohoSign(params: EnviarBmZohoParams) {
       action_type: "SIGN",
       signing_order: 3,
       verify_recipient: false,
-      role: "Coordenacao Operacional",
     },
   ];
 
@@ -128,7 +125,11 @@ export async function enviarBmParaZohoSign(params: EnviarBmZohoParams) {
     });
   }
 
-  const requestName = `BM ${params.codigoBm} - ${params.consultorNome} (${params.periodoStr})`;
+  const periodoLimpo = (params.periodoStr || "")
+    .replace(/\s*\(\s*/g, " - ")
+    .replace(/\s*\)\s*/g, "")
+    .trim();
+  const requestName = `BM ${params.codigoBm} - ${params.consultorNome} - ${periodoLimpo}`;
   const notes = `Prezado(a),\n\nSegue para assinatura eletrônica o Boletim de Medição de Serviços (BM ${params.codigoBm}) referente ao período de ${params.periodoStr}.\nValor apurado: R$ ${params.valorTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}.\n\nPor favor, revise os dados e confirme a sua assinatura.\n\nAtenciosamente,\nNNÓS Consultoria e Treinamento`;
 
   const requestPayload = {
@@ -209,6 +210,8 @@ export async function enviarBmParaZohoSign(params: EnviarBmZohoParams) {
           emails_copia: params.emailsCopia || "leonardo.campos@nnos.com.br",
           periodo: params.periodoStr,
           valor_total: params.valorTotal,
+          request_id: requestId,
+          document_id: documentId,
           link_sistema: "https://gestao-financeira-projetos.vercel.app/medicao",
         }),
       });
@@ -216,6 +219,8 @@ export async function enviarBmParaZohoSign(params: EnviarBmZohoParams) {
       if (flowRes.ok) {
         return {
           success: true,
+          requestId: requestId,
+          documentId: documentId,
           status: "sent",
           avisoCreditos: false,
           message: "Boletim de Medição disparado com sucesso para assinatura no Zoho Sign!",

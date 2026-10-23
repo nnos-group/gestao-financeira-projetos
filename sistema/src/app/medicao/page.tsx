@@ -545,7 +545,7 @@ export default function BoletimMedicaoPage() {
           responsavelEmail: emailResponsavelNnos || responsavelNnosAtual.email,
           emailsCopia: receberCopia ? emailCopia : undefined,
           mesReferencia: bmEmCriacao.mesReferencia,
-          periodoStr: `${bmEmCriacao.mesReferencia} (${bmEmCriacao.periodoTipo})`,
+          periodoStr: `${bmEmCriacao.mesReferencia} - ${bmEmCriacao.periodoTipo}`,
           totalHoras: bmEmCriacao.totalHoras,
           mediaHora: bmEmCriacao.mediaHora,
           valorTotal: bmEmCriacao.valorTotal,

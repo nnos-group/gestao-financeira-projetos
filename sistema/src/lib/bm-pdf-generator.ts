@@ -1,4 +1,6 @@
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
+import fs from "fs";
+import path from "path";
 
 export interface AtividadeBmPdf {
   projeto: string;
@@ -7,6 +9,7 @@ export interface AtividadeBmPdf {
   horas: number;
   valorHora: number;
   valorTotal: number;
+  rateioInterno?: string;
 }
 
 export interface BmPdfDados {
@@ -29,8 +32,8 @@ export interface BmPdfDados {
 
 export async function gerarPdfOficialBm(dados: BmPdfDados): Promise<Uint8Array> {
   const pdfDoc = await PDFDocument.create();
-  
-  // A4: 595.28 x 841.89 points
+
+  // Dimensões A4 oficial: 595.28 x 841.89 points
   const page = pdfDoc.addPage([595.28, 841.89]);
   const { width, height } = page.getSize();
 
@@ -38,299 +41,528 @@ export async function gerarPdfOficialBm(dados: BmPdfDados): Promise<Uint8Array> 
   const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
   const fontOblique = await pdfDoc.embedFont(StandardFonts.HelveticaOblique);
 
-  // Paleta de cores corporativa NNÓS
-  const cDark = rgb(0.06, 0.16, 0.29);     // #0f2a4a
-  const cPrimary = rgb(0.01, 0.52, 0.78);  // #0284c7
-  const cText = rgb(0.2, 0.25, 0.33);      // #334155
-  const cMuted = rgb(0.39, 0.45, 0.55);    // #64748b
-  const cBorder = rgb(0.88, 0.91, 0.94);   // #e2e8f0
-  const cBgLight = rgb(0.97, 0.98, 0.99);  // #f8fafc
-  const cSuccess = rgb(0.02, 0.47, 0.34);  // #047857
+  // Paleta Corporativa NNÓS (fiel ao BmExportPdfSheet.tsx)
+  const cDark = rgb(0.06, 0.09, 0.16);       // #0f172a (Navy escuro)
+  const cNavyHeader = rgb(0.06, 0.16, 0.29); // #0f2a4a (Cabeçalho da tabela)
+  const cPrimary = rgb(0.01, 0.52, 0.78);    // #0284c7 (Azul NNÓS)
+  const cText = rgb(0.2, 0.25, 0.33);        // #334155 (Texto padrão)
+  const cMuted = rgb(0.39, 0.45, 0.55);      // #64748b (Texto secundário)
+  const cBorder = rgb(0.88, 0.91, 0.94);     // #e2e8f0 (Bordas)
+  const cBgLight = rgb(0.97, 0.98, 0.99);    // #f8fafc (Fundo de cards)
+  const cSuccess = rgb(0.02, 0.59, 0.41);    // #059669 (Verde aprovação)
+  const cWhite = rgb(1, 1, 1);
 
-  let y = height - 35;
-  const marginX = 35;
-  const contentWidth = width - marginX * 2;
+  // Carregar Logotipo Oficial Coruja NNÓS
+  let logoImage: any = null;
+  try {
+    const possiblePaths = [
+      path.join(process.cwd(), "public/logo-coruja.png"),
+      path.join(process.cwd(), "sistema/public/logo-coruja.png"),
+      path.resolve(__dirname, "../../public/logo-coruja.png"),
+    ];
+    const foundPath = possiblePaths.find((p) => fs.existsSync(p));
+    if (foundPath) {
+      const logoBytes = fs.readFileSync(foundPath);
+      logoImage = await pdfDoc.embedPng(logoBytes);
+    }
+  } catch (err) {
+    console.warn("Aviso ao carregar logo-coruja.png no PDF:", err);
+  }
 
-  // 1. CABEÇALHO CORPORATIVO
+  const marginX = 24;
+  const contentWidth = width - marginX * 2; // 547.28
+  let y = height - 26;
+
+  const contratoLimpo = (dados.contrato || "SÓCIO").replace(/•\s*NNÓS/g, "").trim();
+  const dataHoje = new Date();
+  const dataEmissao = `${String(dataHoje.getDate()).padStart(2, "0")}/${String(dataHoje.getMonth() + 1).padStart(2, "0")}/${dataHoje.getFullYear()}`;
+  const razaoSocial = dados.consultorRazaoSocial || dados.consultorNome;
+  const cnpj = dados.consultorCnpj || "Não informado";
+  const endereco = dados.consultorEndereco || `E-mail: ${dados.consultorEmail}`;
+
+  // ==========================================
+  // 1. CABEÇALHO DO DOCUMENTO (DocumentHeader)
+  // ==========================================
+  const logoSize = 30;
+  if (logoImage) {
+    page.drawImage(logoImage, {
+      x: marginX,
+      y: y - logoSize,
+      width: logoSize,
+      height: logoSize,
+    });
+  }
+
+  const titleX = logoImage ? marginX + logoSize + 8 : marginX;
+  page.drawText("Boletim de Medição de Serviços", {
+    x: titleX,
+    y: y - 18,
+    size: 15,
+    font: fontBold,
+    color: cDark,
+  });
+
+  // Lado direito do cabeçalho
+  const infoHeaderTop = `BM ${dados.codigoBm} - Contrato ${contratoLimpo}`;
+  const infoHeaderTopWidth = fontBold.widthOfTextAtSize(infoHeaderTop, 10);
+  page.drawText(infoHeaderTop, {
+    x: marginX + contentWidth - infoHeaderTopWidth,
+    y: y - 14,
+    size: 10,
+    font: fontBold,
+    color: cDark,
+  });
+
+  const infoHeaderSub = `Emissão: ${dataEmissao}`;
+  const infoHeaderSubWidth = fontRegular.widthOfTextAtSize(infoHeaderSub, 8);
+  page.drawText(infoHeaderSub, {
+    x: marginX + contentWidth - infoHeaderSubWidth,
+    y: y - 25,
+    size: 8,
+    font: fontRegular,
+    color: cMuted,
+  });
+
+  y -= (logoSize + 8);
+
+  // Linha divisória oficial escura
+  page.drawLine({
+    start: { x: marginX, y: y },
+    end: { x: marginX + contentWidth, y: y },
+    color: cDark,
+    thickness: 1.5,
+  });
+
+  y -= 8;
+
+  // ==========================================
+  // 2. GRID DE 4 CARDS DE INDICADORES
+  // ==========================================
+  const cardGap = 8;
+  const cardW = (contentWidth - cardGap * 3) / 4; // ~130.8
+  const cardH = 46;
+
+  // Função auxiliar para desenhar cards métricos
+  const desenharCard = (x: number, titulo: string, valorPrincipal: string, detalhe: string, destaqueCor?: any) => {
+    page.drawRectangle({
+      x,
+      y: y - cardH,
+      width: cardW,
+      height: cardH,
+      color: cWhite,
+      borderColor: cBorder,
+      borderWidth: 1,
+    });
+
+    page.drawText(titulo.toUpperCase(), {
+      x: x + 8,
+      y: y - 12,
+      size: 6.8,
+      font: fontBold,
+      color: cMuted,
+    });
+
+    page.drawText(valorPrincipal, {
+      x: x + 8,
+      y: y - 27,
+      size: 12.5,
+      font: fontBold,
+      color: destaqueCor || cDark,
+    });
+
+    page.drawText(detalhe, {
+      x: x + 8,
+      y: y - 39,
+      size: 7,
+      font: fontBold,
+      color: destaqueCor || cMuted,
+    });
+  };
+
+  // Card 1: Valor Líquido Total
+  desenharCard(
+    marginX,
+    "Valor Líquido Total",
+    `R$ ${dados.valorTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`,
+    "Aprovado Operacional",
+    cSuccess
+  );
+
+  // Card 2: Carga Horária
+  desenharCard(
+    marginX + (cardW + cardGap),
+    "Carga Horária",
+    `${dados.totalHoras.toFixed(1)} h`,
+    `${dados.atividades.length} frentes - R$ ${dados.mediaHora.toFixed(2)}/h`
+  );
+
+  // Card 3: Mês de Referência
+  desenharCard(
+    marginX + (cardW + cardGap) * 2,
+    "Mês de Referência",
+    dados.mesReferencia,
+    dados.periodoStr.includes("Quinzena") ? dados.periodoStr : "Período Integral"
+  );
+
+  // Card 4: Cronograma Previsto
+  desenharCard(
+    marginX + (cardW + cardGap) * 3,
+    "Cronograma Previsto",
+    "10 e 25",
+    "NF ate dia 10 - Pagto dia 25"
+  );
+
+  y -= (cardH + 8);
+
+  // ==========================================
+  // 3. DADOS DAS PARTES (PRESTADOR E TOMADOR)
+  // ==========================================
+  const partyW = (contentWidth - cardGap) / 2; // ~269.6
+  const partyH = 68;
+
+  // Box Prestador
+  const p1X = marginX;
   page.drawRectangle({
-    x: marginX,
-    y: y - 55,
-    width: contentWidth,
-    height: 55,
+    x: p1X,
+    y: y - partyH,
+    width: partyW,
+    height: partyH,
     color: cBgLight,
     borderColor: cBorder,
     borderWidth: 1,
   });
 
-  // Título e dados da empresa
-  page.drawText("NNÓS CONSULTORIA E TREINAMENTO LTDA", {
-    x: marginX + 12,
-    y: y - 18,
-    size: 11,
-    font: fontBold,
-    color: cDark,
-  });
-  page.drawText("CNPJ: 36.443.716/0001-00  •  Belo Horizonte - MG", {
-    x: marginX + 12,
-    y: y - 32,
-    size: 8,
-    font: fontRegular,
-    color: cMuted,
-  });
-  page.drawText("Portal de Gestão Financeira e Medição Operacional de Projetos", {
-    x: marginX + 12,
-    y: y - 44,
-    size: 7.5,
-    font: fontRegular,
-    color: cMuted,
-  });
+  page.drawRectangle({ x: p1X + 8, y: y - 18, width: 14, height: 14, color: cNavyHeader });
+  page.drawText("PRESTADOR DE SERVIÇOS", { x: p1X + 28, y: y - 10, size: 6.5, font: fontBold, color: cMuted });
+  page.drawText(dados.consultorNome, { x: p1X + 28, y: y - 18, size: 9, font: fontBold, color: cDark });
 
-  // Caixa destacada com o número do BM à direita
+  page.drawLine({ start: { x: p1X + 8, y: y - 23 }, end: { x: p1X + partyW - 8, y: y - 23 }, color: cBorder, thickness: 0.5 });
+
+  page.drawText(`Razão Social: ${razaoSocial}`, { x: p1X + 8, y: y - 33, size: 7, font: fontRegular, color: cText });
+  page.drawText(`CNPJ / CPF: ${cnpj}`, { x: p1X + 8, y: y - 43, size: 7, font: fontRegular, color: cText });
+  const endLimpo = endereco.length > 55 ? endereco.substring(0, 52) + "..." : endereco;
+  page.drawText(`Endereço: ${endLimpo}`, { x: p1X + 8, y: y - 53, size: 6.8, font: fontRegular, color: cMuted });
+  page.drawText(`E-mail: ${dados.consultorEmail} - Contrato: ${contratoLimpo}`, { x: p1X + 8, y: y - 63, size: 6.8, font: fontRegular, color: cMuted });
+
+  // Box Tomador
+  const p2X = marginX + partyW + cardGap;
   page.drawRectangle({
-    x: marginX + contentWidth - 145,
-    y: y - 48,
-    width: 135,
-    height: 40,
-    color: rgb(0.93, 0.97, 1.0),
-    borderColor: cPrimary,
-    borderWidth: 1,
-  });
-  page.drawText("BOLETIM DE MEDIÇÃO", {
-    x: marginX + contentWidth - 138,
-    y: y - 22,
-    size: 8,
-    font: fontBold,
-    color: cPrimary,
-  });
-  page.drawText(`BM Nº ${dados.codigoBm}`, {
-    x: marginX + contentWidth - 138,
-    y: y - 38,
-    size: 14,
-    font: fontBold,
-    color: cDark,
-  });
-
-  y -= 68;
-
-  // 2. DADOS DO PRESTADOR E CONTRATO
-  page.drawRectangle({
-    x: marginX,
-    y: y - 60,
-    width: contentWidth,
-    height: 60,
-    color: rgb(1, 1, 1),
+    x: p2X,
+    y: y - partyH,
+    width: partyW,
+    height: partyH,
+    color: cBgLight,
     borderColor: cBorder,
     borderWidth: 1,
   });
 
-  page.drawText("DADOS DO PRESTADOR DE SERVIÇOS", {
-    x: marginX + 10,
-    y: y - 14,
-    size: 8,
-    font: fontBold,
-    color: cPrimary,
-  });
+  page.drawRectangle({ x: p2X + 8, y: y - 18, width: 14, height: 14, color: cNavyHeader });
+  page.drawText("TOMADOR DOS SERVIÇOS", { x: p2X + 28, y: y - 10, size: 6.5, font: fontBold, color: cMuted });
+  page.drawText("NNÓS CONSULTORIA E TREINAMENTO LTDA", { x: p2X + 28, y: y - 18, size: 9, font: fontBold, color: cDark });
 
-  const col1X = marginX + 10;
-  const col2X = marginX + 260;
+  page.drawLine({ start: { x: p2X + 8, y: y - 23 }, end: { x: p2X + partyW - 8, y: y - 23 }, color: cBorder, thickness: 0.5 });
 
-  const razaoSocial = dados.consultorRazaoSocial || dados.consultorNome;
-  const cnpj = dados.consultorCnpj || "Não informado";
-  const contrato = (dados.contrato || "Contrato de Prestação de Serviços").replace(/•\s*NNÓS/g, "").trim();
+  page.drawText("CNPJ da Empresa: 36.443.716/0001-00", { x: p2X + 8, y: y - 33, size: 7, font: fontRegular, color: cText });
+  page.drawText("Inscrição Municipal: 1.208.841/002-5", { x: p2X + 8, y: y - 43, size: 7, font: fontRegular, color: cText });
+  page.drawText("Sede: Rua Sergipe, nº 77 - Loja 1, Boa Viagem, Belo Horizonte - MG", { x: p2X + 8, y: y - 53, size: 6.8, font: fontRegular, color: cMuted });
+  page.drawText("Financeiro: leonardo.campos@nnos.com.br", { x: p2X + 8, y: y - 63, size: 6.8, font: fontRegular, color: cMuted });
 
-  page.drawText(`Prestador: ${dados.consultorNome}`, { x: col1X, y: y - 28, size: 8.5, font: fontBold, color: cDark });
-  page.drawText(`Razão Social: ${razaoSocial}`, { x: col1X, y: y - 40, size: 7.5, font: fontRegular, color: cText });
-  page.drawText(`CNPJ / CPF: ${cnpj}`, { x: col1X, y: y - 52, size: 7.5, font: fontRegular, color: cText });
+  y -= (partyH + 8);
 
-  page.drawText(`Período: ${dados.periodoStr}`, { x: col2X, y: y - 28, size: 8.5, font: fontBold, color: cDark });
-  page.drawText(`Vínculo Contratual: ${contrato}`, { x: col2X, y: y - 40, size: 7.5, font: fontRegular, color: cText });
-  page.drawText(`E-mail: ${dados.consultorEmail}`, { x: col2X, y: y - 52, size: 7.5, font: fontRegular, color: cText });
-
-  y -= 72;
-
-  // 3. CARDS DE RESUMO FINANCEIRO
-  const cardW = (contentWidth - 16) / 3;
-  const cardH = 42;
-
-  // Card 1: Total de Horas
-  page.drawRectangle({ x: marginX, y: y - cardH, width: cardW, height: cardH, color: cBgLight, borderColor: cBorder, borderWidth: 1 });
-  page.drawText("TOTAL DE HORAS", { x: marginX + 10, y: y - 14, size: 7, font: fontBold, color: cMuted });
-  page.drawText(`${dados.totalHoras}h`, { x: marginX + 10, y: y - 32, size: 13, font: fontBold, color: cDark });
-
-  // Card 2: Valor Hora Médio
-  const c2X = marginX + cardW + 8;
-  page.drawRectangle({ x: c2X, y: y - cardH, width: cardW, height: cardH, color: cBgLight, borderColor: cBorder, borderWidth: 1 });
-  page.drawText("VALOR MÉDIO DA HORA", { x: c2X + 10, y: y - 14, size: 7, font: fontBold, color: cMuted });
-  page.drawText(`R$ ${dados.mediaHora.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, { x: c2X + 10, y: y - 32, size: 13, font: fontBold, color: cDark });
-
-  // Card 3: Valor Total Líquido
-  const c3X = marginX + (cardW + 8) * 2;
-  page.drawRectangle({ x: c3X, y: y - cardH, width: cardW, height: cardH, color: rgb(0.92, 0.98, 0.95), borderColor: cSuccess, borderWidth: 1.5 });
-  page.drawText("TOTAL A FATURAR", { x: c3X + 10, y: y - 14, size: 7, font: fontBold, color: cSuccess });
-  page.drawText(`R$ ${dados.valorTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, { x: c3X + 10, y: y - 32, size: 13, font: fontBold, color: cSuccess });
-
-  y -= (cardH + 14);
-
-  // 4. DISCRIMINAÇÃO DAS ATIVIDADES APURADAS (TABELA DINÂMICA)
-  page.drawText("DISCRIMINAÇÃO DOS SERVIÇOS PRESTADOS", {
-    x: marginX,
-    y: y,
-    size: 8.5,
-    font: fontBold,
-    color: cDark,
-  });
-
-  y -= 10;
-
-  // Cabeçalho da Tabela
-  const tableHeaderH = 18;
+  // ==========================================
+  // 4. DETALHAMENTO OPERACIONAL DE HORAS (TABELA)
+  // ==========================================
+  const tHeaderH = 16;
   page.drawRectangle({
     x: marginX,
-    y: y - tableHeaderH,
+    y: y - tHeaderH,
     width: contentWidth,
-    height: tableHeaderH,
+    height: tHeaderH,
+    color: cNavyHeader,
+  });
+
+  page.drawText(`DETALHAMENTO OPERACIONAL DE HORAS - Atividades Apuradas (${dados.mesReferencia})`, {
+    x: marginX + 8,
+    y: y - 11,
+    size: 7.2,
+    font: fontBold,
+    color: cWhite,
+  });
+
+  const badgeLctos = `${dados.atividades.length} Lançamentos Registrados`;
+  const badgeWidth = fontBold.widthOfTextAtSize(badgeLctos, 6.8);
+  page.drawText(badgeLctos, {
+    x: marginX + contentWidth - badgeWidth - 8,
+    y: y - 11,
+    size: 6.8,
+    font: fontBold,
+    color: rgb(0.8, 0.9, 1),
+  });
+
+  y -= tHeaderH;
+
+  // Colunas da Tabela
+  const cColProj = marginX + 6;
+  const cColAtiv = marginX + 115;
+  const cColPer = marginX + 285;
+  const cColHoras = marginX + 375;
+  const cColVlH = marginX + 425;
+  const cColSub = marginX + 480;
+
+  // Sub-cabeçalho da Tabela
+  const subHeadH = 14;
+  page.drawRectangle({
+    x: marginX,
+    y: y - subHeadH,
+    width: contentWidth,
+    height: subHeadH,
     color: cDark,
   });
 
-  const pColProjeto = marginX + 8;
-  const pColAtividade = marginX + 130;
-  const pColHoras = marginX + 340;
-  const pColVlHora = marginX + 400;
-  const pColTotal = marginX + 465;
+  page.drawText("PROJETO", { x: cColProj, y: y - 10, size: 6.8, font: fontBold, color: cWhite });
+  page.drawText("ATIVIDADE / ESCOPO", { x: cColAtiv, y: y - 10, size: 6.8, font: fontBold, color: cWhite });
+  page.drawText("PERÍODO", { x: cColPer, y: y - 10, size: 6.8, font: fontBold, color: cWhite });
+  page.drawText("CH (HORAS)", { x: cColHoras, y: y - 10, size: 6.8, font: fontBold, color: cWhite });
+  page.drawText("VALOR / HORA", { x: cColVlH, y: y - 10, size: 6.8, font: fontBold, color: cWhite });
+  page.drawText("VALOR TOTAL", { x: cColSub, y: y - 10, size: 6.8, font: fontBold, color: cWhite });
 
-  page.drawText("PROJETO", { x: pColProjeto, y: y - 12, size: 7, font: fontBold, color: rgb(1, 1, 1) });
-  page.drawText("ATIVIDADE / DESCRIÇÃO", { x: pColAtividade, y: y - 12, size: 7, font: fontBold, color: rgb(1, 1, 1) });
-  page.drawText("HORAS", { x: pColHoras, y: y - 12, size: 7, font: fontBold, color: rgb(1, 1, 1) });
-  page.drawText("VL HORA", { x: pColVlHora, y: y - 12, size: 7, font: fontBold, color: rgb(1, 1, 1) });
-  page.drawText("SUBTOTAL", { x: pColTotal, y: y - 12, size: 7, font: fontBold, color: rgb(1, 1, 1) });
+  y -= subHeadH;
 
-  y -= tableHeaderH;
-
-  // Linhas de atividades apuradas
-  const rowH = 18;
-  dados.atividades.forEach((ativ, idx) => {
+  // Linhas das Atividades
+  const rowH = 16;
+  dados.atividades.forEach((at, idx) => {
     const isEven = idx % 2 === 0;
     page.drawRectangle({
       x: marginX,
       y: y - rowH,
       width: contentWidth,
       height: rowH,
-      color: isEven ? rgb(1, 1, 1) : cBgLight,
+      color: isEven ? cWhite : cBgLight,
       borderColor: cBorder,
       borderWidth: 0.5,
     });
 
-    const nomeProj = ativ.projeto.length > 22 ? ativ.projeto.substring(0, 22) + "..." : ativ.projeto;
-    const descAtiv = ativ.atividade.length > 36 ? ativ.atividade.substring(0, 36) + "..." : ativ.atividade;
+    const projStr = at.projeto.length > 20 ? at.projeto.substring(0, 18) + "..." : at.projeto;
+    const ativStr = at.atividade.length > 38 ? at.atividade.substring(0, 36) + "..." : at.atividade;
+    const perStr = at.periodo || dados.periodoStr;
 
-    page.drawText(nomeProj, { x: pColProjeto, y: y - 12, size: 7.5, font: fontBold, color: cText });
-    page.drawText(descAtiv, { x: pColAtividade, y: y - 12, size: 7.5, font: fontRegular, color: cText });
-    page.drawText(`${ativ.horas}h`, { x: pColHoras, y: y - 12, size: 7.5, font: fontRegular, color: cText });
-    page.drawText(`R$ ${ativ.valorHora.toFixed(2)}`, { x: pColVlHora, y: y - 12, size: 7.5, font: fontRegular, color: cText });
-    page.drawText(`R$ ${ativ.valorTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`, { x: pColTotal, y: y - 12, size: 7.5, font: fontBold, color: cDark });
+    page.drawText(projStr, { x: cColProj, y: y - 11, size: 7.2, font: fontBold, color: cDark });
+    page.drawText(ativStr, { x: cColAtiv, y: y - 11, size: 7, font: fontRegular, color: cText });
+    page.drawText(perStr, { x: cColPer, y: y - 11, size: 6.8, font: fontRegular, color: cMuted });
+    page.drawText(`${at.horas.toFixed(1)} h`, { x: cColHoras, y: y - 11, size: 7.2, font: fontBold, color: cDark });
+    page.drawText(`R$ ${at.valorHora.toFixed(2)}`, { x: cColVlH, y: y - 11, size: 7, font: fontRegular, color: cText });
+    page.drawText(`R$ ${at.valorTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`, {
+      x: cColSub,
+      y: y - 11,
+      size: 7.2,
+      font: fontBold,
+      color: cDark,
+    });
 
     y -= rowH;
   });
 
-  // Linha de Total Geral da Tabela
+  // Linha de Rodapé da Tabela (Total Consolidado da Medição)
+  const tFootH = 16;
   page.drawRectangle({
     x: marginX,
-    y: y - 20,
+    y: y - tFootH,
     width: contentWidth,
-    height: 20,
-    color: rgb(0.95, 0.96, 0.98),
-    borderColor: cBorder,
-    borderWidth: 1,
-  });
-  page.drawText("VALOR TOTAL APURADO:", { x: pColProjeto, y: y - 14, size: 8, font: fontBold, color: cDark });
-  page.drawText(`${dados.totalHoras}h`, { x: pColHoras, y: y - 14, size: 8, font: fontBold, color: cDark });
-  page.drawText(`R$ ${dados.valorTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, {
-    x: pColTotal - 10,
-    y: y - 14,
-    size: 8.5,
-    font: fontBold,
-    color: cSuccess,
+    height: tFootH,
+    color: cDark,
   });
 
-  y -= 30;
-
-  // 5. REGRAS DE FATURAMENTO E PRAZOS
-  page.drawRectangle({
-    x: marginX,
-    y: y - 36,
-    width: contentWidth,
-    height: 36,
-    color: rgb(0.99, 0.99, 0.97),
-    borderColor: rgb(0.93, 0.88, 0.70),
-    borderWidth: 1,
-  });
-  page.drawText("INSTRUÇÕES DE FATURAMENTO E CRÉDITO", { x: marginX + 10, y: y - 12, size: 7.5, font: fontBold, color: rgb(0.7, 0.45, 0.05) });
-  page.drawText("1. A emissão da Nota Fiscal de Prestação de Serviços deve ser realizada após a conclusão das assinaturas deste BM.", { x: marginX + 10, y: y - 22, size: 7, font: fontRegular, color: cText });
-  page.drawText("2. Enviar o arquivo XML e PDF da NF para: financeiro@nnos.com.br respeitando a data limite do cronograma.", { x: marginX + 10, y: y - 31, size: 7, font: fontRegular, color: cText });
-
-  y -= 46;
-
-  // 6. DECLARAÇÃO DE ACEITE E ASSINATURAS ELETRÔNICAS (COM TEXT TAGS ZOHO SIGN)
-  page.drawRectangle({
-    x: marginX,
-    y: y - 108,
-    width: contentWidth,
-    height: 108,
-    color: rgb(1, 1, 1),
-    borderColor: cBorder,
-    borderWidth: 1,
-  });
-
-  page.drawText("DECLARAÇÃO DE CONCORDÂNCIA E ASSINATURA ELETRÔNICA", {
-    x: marginX + 10,
-    y: y - 13,
+  page.drawText("TOTAL CONSOLIDADO DA MEDIÇÃO", { x: cColProj, y: y - 11, size: 7, font: fontBold, color: cWhite });
+  page.drawText(`${dados.totalHoras.toFixed(1)} h`, { x: cColHoras, y: y - 11, size: 7.2, font: fontBold, color: cWhite });
+  page.drawText(`(Média R$ ${dados.mediaHora.toFixed(2)})`, { x: cColVlH - 8, y: y - 11, size: 6.5, font: fontRegular, color: rgb(0.8, 0.9, 1) });
+  page.drawText(`R$ ${dados.valorTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`, {
+    x: cColSub,
+    y: y - 11,
     size: 7.5,
+    font: fontBold,
+    color: rgb(0.22, 0.74, 0.97), // #38bdf8
+  });
+
+  y -= (tFootH + 8);
+
+  // ==========================================
+  // 5. REGRAS DE EMISSÃO DA NOTA FISCAL & PRAZOS
+  // ==========================================
+  const rulesH = 58;
+
+  // Caixa Esquerda: Discriminação dos Serviços na NF
+  page.drawRectangle({
+    x: marginX,
+    y: y - rulesH,
+    width: partyW,
+    height: rulesH,
+    color: cWhite,
+    borderColor: cBorder,
+    borderWidth: 1,
+  });
+
+  page.drawText("DADOS OBRIGATÓRIOS PARA EMISSÃO DA NOTA FISCAL", { x: marginX + 8, y: y - 11, size: 6.8, font: fontBold, color: cDark });
+  page.drawText(`Copie no campo "Descrição dos Serviços" do emissor da Nota Fiscal:`, { x: marginX + 8, y: y - 20, size: 6.5, font: fontRegular, color: cMuted });
+
+  page.drawRectangle({
+    x: marginX + 6,
+    y: y - 48,
+    width: partyW - 12,
+    height: 25,
+    color: cBgLight,
+    borderColor: cBorder,
+    borderWidth: 0.5,
+  });
+
+  page.drawText(`BM: ${dados.codigoBm}  |  CONTRATO: ${contratoLimpo}  |  TOTAL: R$ ${dados.valorTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`, {
+    x: marginX + 10,
+    y: y - 31,
+    size: 6.8,
     font: fontBold,
     color: cDark,
   });
-  page.drawText('"Declaro concordar integralmente com os valores, horas e quantidades apuradas nesta medição de serviços."', {
+  page.drawText("Código CTISS: 0802-0/01-88 - Subitem LC 116/03: 8.02 (Instrução e treinamento)", {
     x: marginX + 10,
-    y: y - 24,
-    size: 7,
-    font: fontOblique,
-    color: cMuted,
+    y: y - 41,
+    size: 6.3,
+    font: fontRegular,
+    color: cText,
   });
 
-  const boxW = (contentWidth - 28) / 2;
-  const boxH = 68;
+  page.drawText(`Enviar PDF da NF para: leonardo.campos@nnos.com.br`, {
+    x: marginX + 8,
+    y: y - 54,
+    size: 6.5,
+    font: fontBold,
+    color: cPrimary,
+  });
 
-  // Caixa 1: Assinatura do Prestador (Recipient 1)
-  const b1X = marginX + 10;
-  page.drawRectangle({ x: b1X, y: y - 98, width: boxW, height: boxH, color: cBgLight, borderColor: cBorder, borderWidth: 1 });
-  page.drawText("ASSINATURA DO PRESTADOR", { x: b1X + 8, y: y - 40, size: 7, font: fontBold, color: cPrimary });
-  
-  // TEXT TAG ZOHO SIGN PARA O PRESTADOR (Posicionamento dinâmico automático)
-  page.drawText("{{Signature:Recipient1*}}", { x: b1X + 15, y: y - 62, size: 10, font: fontBold, color: cPrimary });
-  page.drawText("{{Signdate:Recipient1*}}", { x: b1X + 140, y: y - 62, size: 8, font: fontRegular, color: cMuted });
-  
-  page.drawLine({ start: { x: b1X + 8, y: y - 72 }, end: { x: b1X + boxW - 8, y: y - 72 }, color: cBorder, thickness: 1 });
-  page.drawText(dados.consultorNome, { x: b1X + 8, y: y - 82, size: 7.5, font: fontBold, color: cDark });
-  page.drawText(`Prestador de Serviços • CNPJ/CPF: ${cnpj}`, { x: b1X + 8, y: y - 92, size: 6.5, font: fontRegular, color: cMuted });
+  // Caixa Direita: Cronograma de Envio e Pagamento
+  page.drawRectangle({
+    x: p2X,
+    y: y - rulesH,
+    width: partyW,
+    height: rulesH,
+    color: cWhite,
+    borderColor: cBorder,
+    borderWidth: 1,
+  });
 
-  // Caixa 2: Validação da Coordenação / NNÓS (Recipient 2)
-  const b2X = marginX + 18 + boxW;
-  page.drawRectangle({ x: b2X, y: y - 98, width: boxW, height: boxH, color: cBgLight, borderColor: cBorder, borderWidth: 1 });
-  page.drawText("VALIDAÇÃO DA COORDENAÇÃO", { x: b2X + 8, y: y - 40, size: 7, font: fontBold, color: cPrimary });
+  page.drawText("CRONOGRAMA DE ENVIO E PAGAMENTO", { x: p2X + 8, y: y - 11, size: 6.8, font: fontBold, color: cDark });
 
-  // TEXT TAG ZOHO SIGN PARA A COORDENAÇÃO (Posicionamento dinâmico automático)
-  page.drawText("{{Signature:Recipient2*}}", { x: b2X + 15, y: y - 62, size: 10, font: fontBold, color: cPrimary });
-  page.drawText("{{Signdate:Recipient2*}}", { x: b2X + 140, y: y - 62, size: 8, font: fontRegular, color: cMuted });
+  page.drawText("1ª Quinzena: Envio da NF até o dia 25 do mês vigente.", { x: p2X + 8, y: y - 22, size: 6.8, font: fontRegular, color: cText });
+  page.drawText("- Previsão de Pagamento: Creditado no dia 10 subsequente.", { x: p2X + 12, y: y - 31, size: 6.5, font: fontBold, color: cSuccess });
 
-  page.drawLine({ start: { x: b2X + 8, y: y - 72 }, end: { x: b2X + boxW - 8, y: y - 72 }, color: cBorder, thickness: 1 });
-  page.drawText(dados.responsavelNome || "LEONARDO CAMPOS", { x: b2X + 8, y: y - 82, size: 7.5, font: fontBold, color: cDark });
-  page.drawText("Coordenação Operacional & Projetos • NNÓS Consultoria", { x: b2X + 8, y: y - 92, size: 6.5, font: fontRegular, color: cMuted });
+  page.drawText("Totalidade / Mês Cheio: Envio da NF até o dia 10 após o BM.", { x: p2X + 8, y: y - 41, size: 6.8, font: fontRegular, color: cText });
+  page.drawText("- Previsão de Pagamento: Creditado no dia 25 do mês corrente.", { x: p2X + 12, y: y - 50, size: 6.5, font: fontBold, color: cSuccess });
 
-  // 7. RODAPÉ INSTITUCIONAL
-  page.drawLine({ start: { x: marginX, y: 35 }, end: { x: width - marginX, y: 35 }, color: cDark, thickness: 1.5 });
-  page.drawText("NNÓS CONSULTORIA E TREINAMENTO LTDA  •  CNPJ: 36.443.716/0001-00", { x: marginX, y: 22, size: 7, font: fontBold, color: cDark });
-  page.drawText(`Autenticador: BM ${dados.codigoBm} • Documento gerado com validade jurídica via Zoho Sign`, {
-    x: marginX + contentWidth - 235,
-    y: 22,
+  y -= (rulesH + 8);
+
+  // ==========================================
+  // 6. DECLARAÇÃO DE ACEITE & ASSINATURAS DIGITAIS
+  // ==========================================
+  const signSecH = 92;
+  page.drawRectangle({
+    x: marginX,
+    y: y - signSecH,
+    width: contentWidth,
+    height: signSecH,
+    color: cWhite,
+    borderColor: cBorder,
+    borderWidth: 1,
+  });
+
+  // Declaração de Aceite com fundo verde suave
+  page.drawRectangle({
+    x: marginX + 6,
+    y: y - 20,
+    width: contentWidth - 12,
+    height: 16,
+    color: rgb(0.93, 0.98, 0.96),
+    borderColor: rgb(0.65, 0.95, 0.82),
+    borderWidth: 0.5,
+  });
+
+  page.drawText(`Declaração de Concordância e Aceite Operacional: "Declaro concordar integralmente com os valores, horas e quantidades apuradas nesta medição de serviços de ${dados.mesReferencia} para fins de faturamento."`, {
+    x: marginX + 10,
+    y: y - 14,
+    size: 6.2,
+    font: fontRegular,
+    color: cText,
+  });
+
+  const signBoxW = (contentWidth - 20) / 2;
+  const signBoxH = 64;
+  const sY = y - 24;
+
+  // Caixa de Assinatura 1: Prestador de Serviços (Recipient1)
+  const sb1X = marginX + 6;
+  page.drawRectangle({
+    x: sb1X,
+    y: sY - signBoxH,
+    width: signBoxW,
+    height: signBoxH,
+    color: cBgLight,
+    borderColor: rgb(0.86, 0.92, 0.98),
+    borderWidth: 1,
+  });
+
+  page.drawText("ASSINATURA DO PRESTADOR", { x: sb1X + 8, y: sY - 10, size: 6.8, font: fontBold, color: cNavyHeader });
+
+  // Text Tag Zoho Sign Recipient 1
+  page.drawText("{{Signature:Recipient1*}}", { x: sb1X + 16, y: sY - 28, size: 9, font: fontBold, color: cPrimary });
+  page.drawText("{{Signdate:Recipient1*}}", { x: sb1X + 150, y: sY - 28, size: 7.5, font: fontRegular, color: cMuted });
+
+  page.drawLine({ start: { x: sb1X + 8, y: sY - 36 }, end: { x: sb1X + signBoxW - 8, y: sY - 36 }, color: cBorder, thickness: 0.5 });
+  page.drawText(dados.consultorNome, { x: sb1X + 8, y: sY - 45, size: 7.5, font: fontBold, color: cDark });
+  page.drawText(`Razão Social: ${razaoSocial} - CNPJ: ${cnpj}`, { x: sb1X + 8, y: sY - 55, size: 6.5, font: fontRegular, color: cMuted });
+
+  // Caixa de Assinatura 2: Validação da Coordenação / NNÓS (Recipient2)
+  const sb2X = marginX + 14 + signBoxW;
+  page.drawRectangle({
+    x: sb2X,
+    y: sY - signBoxH,
+    width: signBoxW,
+    height: signBoxH,
+    color: cBgLight,
+    borderColor: rgb(0.86, 0.92, 0.98),
+    borderWidth: 1,
+  });
+
+  page.drawText("VALIDAÇÃO DA COORDENAÇÃO", { x: sb2X + 8, y: sY - 10, size: 6.8, font: fontBold, color: cNavyHeader });
+
+  // Text Tag Zoho Sign Recipient 2
+  page.drawText("{{Signature:Recipient2*}}", { x: sb2X + 16, y: sY - 28, size: 9, font: fontBold, color: cPrimary });
+  page.drawText("{{Signdate:Recipient2*}}", { x: sb2X + 150, y: sY - 28, size: 7.5, font: fontRegular, color: cMuted });
+
+  page.drawLine({ start: { x: sb2X + 8, y: sY - 36 }, end: { x: sb2X + signBoxW - 8, y: sY - 36 }, color: cBorder, thickness: 0.5 });
+  page.drawText(dados.responsavelNome || "MARCELA LARA DA SILVA", { x: sb2X + 8, y: sY - 45, size: 7.5, font: fontBold, color: cDark });
+  page.drawText("Coordenação Operacional & Projetos - NNÓS Consultoria", { x: sb2X + 8, y: sY - 55, size: 6.5, font: fontRegular, color: cMuted });
+
+  // ==========================================
+  // 7. RODAPÉ INSTITUCIONAL COM VALIDADE JURÍDICA
+  // ==========================================
+  const footY = 22;
+  page.drawLine({
+    start: { x: marginX, y: footY + 10 },
+    end: { x: marginX + contentWidth, y: footY + 10 },
+    color: cDark,
+    thickness: 1,
+  });
+
+  page.drawText("NNÓS CONSULTORIA E TREINAMENTO LTDA - CNPJ: 36.443.716/0001-00", {
+    x: marginX,
+    y: footY,
+    size: 6.8,
+    font: fontBold,
+    color: cDark,
+  });
+
+  const legalText = `Autenticador: BM ${dados.codigoBm} - Documento gerado com validade jurídica via Zoho Sign`;
+  const legalWidth = fontRegular.widthOfTextAtSize(legalText, 6.8);
+  page.drawText(legalText, {
+    x: marginX + contentWidth - legalWidth,
+    y: footY,
     size: 6.8,
     font: fontRegular,
     color: cPrimary,

@@ -9,12 +9,43 @@ export async function GET(
 ) {
   try {
     const { codigo } = await context.params;
-    const bmsPath = path.resolve(process.cwd(), "src/lib/bms-2026.json");
+    const possiblePaths = [
+      path.resolve(process.cwd(), "src/lib/bms-2026.json"),
+      path.resolve(process.cwd(), "sistema/src/lib/bms-2026.json"),
+      path.resolve(__dirname, "../../../../../src/lib/bms-2026.json"),
+    ];
 
     let bm: any = null;
-    if (fs.existsSync(bmsPath)) {
-      const bms = JSON.parse(fs.readFileSync(bmsPath, "utf-8"));
-      bm = bms.find((b: any) => String(b.codigo) === String(codigo));
+    for (const p of possiblePaths) {
+      if (fs.existsSync(p)) {
+        try {
+          const bms = JSON.parse(fs.readFileSync(p, "utf-8"));
+          bm = bms.find((b: any) => String(b.codigo) === String(codigo));
+          if (bm) break;
+        } catch {}
+      }
+    }
+
+    // Fallback: Se não encontrou localmente (ex: ambiente Vercel Serverless), busca na nuvem (Supabase)
+    if (!bm) {
+      try {
+        const { supabaseAdmin } = await import("@/lib/supabase-server");
+        const sb = supabaseAdmin();
+        const { data } = await sb
+          .from("configuracoes")
+          .select("descricao")
+          .eq("chave", "bms_lista_completa")
+          .maybeSingle();
+
+        if (data?.descricao) {
+          const cloudList = JSON.parse(data.descricao);
+          if (Array.isArray(cloudList)) {
+            bm = cloudList.find((b: any) => String(b.codigo) === String(codigo));
+          }
+        }
+      } catch (sbErr: any) {
+        console.warn("Aviso ao consultar Supabase para gerar PDF:", sbErr.message);
+      }
     }
 
     if (!bm) {
