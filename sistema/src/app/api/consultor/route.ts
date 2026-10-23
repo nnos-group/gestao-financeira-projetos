@@ -78,7 +78,8 @@ export async function GET(req: NextRequest) {
       const selectCampos =
         "id, competencia, atividade, modalidade, local, regiao, data_inicial, data_final, perfil, horas, custo_consultor, status, precisa_logistica, " +
         "projetos(id, nome, centros_custo(codigo, contrato, areas(nome), lideres(nome))), " +
-        "consultores(id, nome, tipo)";
+        "consultores(id, nome, tipo), " +
+        "viagens(id, custo_1, custo_2, custo_3, custo_4, custo_5, total, observacao_agencia, status)";
 
       for (let from = 0; ; from += 1000) {
         const { data: chunk, error } = await db

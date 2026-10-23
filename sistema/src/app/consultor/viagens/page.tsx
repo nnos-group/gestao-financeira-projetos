@@ -4,16 +4,46 @@ import React, { useState, useMemo } from "react";
 import ConsultorHeader from "@/components/ConsultorHeader";
 import { useConsultor } from "@/contexts/ConsultorContext";
 import ModernDropdown from "@/components/ModernDropdown";
-import { formatarPeriodoBR } from "@/lib/date-utils";
+import { formatarPeriodoBR, formatarDataHoraBR } from "@/lib/date-utils";
 
 export default function ConsultorViagensPage() {
-  const { consultorAtivo, dadosConsultor } = useConsultor();
+  const { consultorAtivo, dadosConsultor, recarregarDados } = useConsultor();
 
   const [busca, setBusca] = useState("");
   const [filtroStatus, setFiltroStatus] = useState("TODOS");
   const [anoSelecionado, setAnoSelecionado] = useState(2026);
   const [mesSelecionado, setMesSelecionado] = useState<number | null>(null);
   const [cardsExpandidos, setCardsExpandidos] = useState<Set<string>>(new Set());
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [aprovandoId, setAprovandoId] = useState<string | null>(null);
+
+  const showToast = (msg: string) => {
+    setToastMsg(msg);
+    setTimeout(() => setToastMsg(null), 3500);
+  };
+
+  const handleAprovarRecebimento = async (solicitacaoId: string) => {
+    try {
+      setAprovandoId(solicitacaoId);
+      const res = await fetch("/api/viagens/aprovar-vouchers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          solicitacaoId,
+          usuarioNome: consultorAtivo?.nome || "Consultor",
+        }),
+      });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error);
+
+      showToast("Recebimento dos vouchers APROVADO com sucesso no sistema!");
+      await recarregarDados();
+    } catch (e: any) {
+      showToast(`Erro ao aprovar vouchers: ${e.message}`);
+    } finally {
+      setAprovandoId(null);
+    }
+  };
 
   const alternarCard = (id: string) => {
     setCardsExpandidos((prev) => {
@@ -142,6 +172,32 @@ export default function ConsultorViagensPage() {
   return (
     <>
       <ConsultorHeader tituloPagina="Minhas Viagens" />
+
+      {toastMsg && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: "24px",
+            right: "24px",
+            backgroundColor: "#00152f",
+            color: "#ffffff",
+            padding: "12px 20px",
+            borderRadius: "8px",
+            fontSize: "13px",
+            fontWeight: 600,
+            boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
+            zIndex: 99999,
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+          }}
+        >
+          <span className="material-symbols-outlined" style={{ fontSize: "18px", color: "#10b981" }}>
+            check_circle
+          </span>
+          <span>{toastMsg}</span>
+        </div>
+      )}
 
       <main className="content-container" style={{ padding: "24px 28px", display: "flex", flexDirection: "column", gap: "20px" }}>
         {/* Título & Competência (Print 5) */}
@@ -641,6 +697,153 @@ export default function ConsultorViagensPage() {
                           100% Sincronizado
                         </span>
                       </div>
+
+                      {/* Bloco de Vouchers e Aprovação pelo Consultor */}
+                      {(() => {
+                        const todosVouchers: any[] = [];
+                        if (Array.isArray(v.categorias)) {
+                          v.categorias.forEach((c: any) => {
+                            const altAprov = c.alternativas?.find((a: any) => a.id === c.alternativaAprovadaId) || c.alternativas?.find((a: any) => a.selecionada) || c.alternativas?.[0];
+                            const docs = [...(altAprov?.vouchersDefinitivos || []), ...(altAprov?.anexos || []).filter((x: any) => x.tipo === "VOUCHER")];
+                            docs.forEach((d: any) => {
+                              if (!todosVouchers.some((ex) => ex.nome === d.nome)) {
+                                todosVouchers.push({ ...d, categoriaNome: c.nomeExibicao, localizador: altAprov?.localizadorOuReserva });
+                              }
+                            });
+                          });
+                        }
+
+                        const temVouchers = todosVouchers.length > 0;
+                        const vouchersAprovados = !!v.vouchersRecebidosAprovadosEm;
+
+                        return (
+                          <div
+                            style={{
+                              gridColumn: "1 / -1",
+                              marginTop: "8px",
+                              paddingTop: "14px",
+                              borderTop: "1px dashed var(--border)",
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: "12px",
+                            }}
+                          >
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
+                              <div>
+                                <span style={{ fontSize: "11px", fontWeight: 800, textTransform: "uppercase", color: "var(--primary)", letterSpacing: "0.5px", display: "flex", alignItems: "center", gap: "5px" }}>
+                                  <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "var(--secondary)" }}>confirmation_number</span>
+                                  Vouchers &amp; Reservas Disponíveis no Sistema
+                                </span>
+                                <p style={{ margin: "2px 0 0 0", fontSize: "11.5px", color: "var(--on-surface-variant)" }}>
+                                  Além do e-mail disparado pela agência, seus vouchers e localizadores ficam permanentemente salvos aqui.
+                                </p>
+                              </div>
+
+                              {vouchersAprovados ? (
+                                <div
+                                  style={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "6px",
+                                    padding: "6px 14px",
+                                    borderRadius: "8px",
+                                    backgroundColor: "#ecfdf5",
+                                    color: "#047857",
+                                    border: "1px solid #a7f3d0",
+                                    fontSize: "12px",
+                                    fontWeight: 700,
+                                  }}
+                                >
+                                  <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>verified</span>
+                                  <span>Recebimento Aprovado em {formatarDataHoraBR(v.vouchersRecebidosAprovadosEm)}</span>
+                                </div>
+                              ) : (
+                                <button
+                                  type="button"
+                                  disabled={aprovandoId === v.id}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleAprovarRecebimento(v.id);
+                                  }}
+                                  style={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "6px",
+                                    padding: "7px 16px",
+                                    borderRadius: "8px",
+                                    backgroundColor: "#059669",
+                                    color: "#ffffff",
+                                    border: "none",
+                                    fontSize: "12px",
+                                    fontWeight: 700,
+                                    cursor: "pointer",
+                                    boxShadow: "0 2px 4px rgba(5, 150, 105, 0.25)",
+                                  }}
+                                >
+                                  <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>check_circle</span>
+                                  <span>{aprovandoId === v.id ? "Aprovando..." : "Aprovar Recebimento dos Vouchers"}</span>
+                                </button>
+                              )}
+                            </div>
+
+                            {/* Lista de Vouchers */}
+                            {temVouchers ? (
+                              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                                {todosVouchers.map((doc: any, i: number) => (
+                                  <div
+                                    key={i}
+                                    style={{
+                                      display: "inline-flex",
+                                      alignItems: "center",
+                                      gap: "8px",
+                                      padding: "6px 12px",
+                                      borderRadius: "8px",
+                                      backgroundColor: "var(--surface-container-low)",
+                                      border: "1px solid var(--border)",
+                                      fontSize: "12px",
+                                    }}
+                                  >
+                                    <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "var(--secondary)" }}>
+                                      attach_file
+                                    </span>
+                                    <div>
+                                      <strong style={{ color: "var(--on-surface)", display: "block" }}>{doc.nome}</strong>
+                                      <span style={{ fontSize: "10px", color: "var(--on-surface-variant)" }}>
+                                        {doc.categoriaNome} {doc.localizador ? `• Loc: ${doc.localizador}` : ""}
+                                      </span>
+                                    </div>
+                                    {doc.url && (
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          window.open(doc.url, "_blank");
+                                        }}
+                                        style={{
+                                          background: "transparent",
+                                          border: "none",
+                                          cursor: "pointer",
+                                          color: "var(--primary)",
+                                          padding: "2px",
+                                          display: "inline-flex",
+                                          alignItems: "center",
+                                        }}
+                                        title="Abrir / Baixar Voucher"
+                                      >
+                                        <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>download</span>
+                                      </button>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <div style={{ fontSize: "11.5px", color: "var(--on-surface-variant)", fontStyle: "italic" }}>
+                                Nenhum anexo de voucher adicionado ainda pela agência.
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
                   )}
                 </div>

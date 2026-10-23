@@ -1030,6 +1030,39 @@ export async function registrarAlimentacaoFinanceiro(
 }
 
 /**
+ * Consultor aprova o recebimento dos vouchers emitidos pela agência
+ */
+export async function aprovarRecebimentoVouchersConsultor(
+  solicitacaoId: string,
+  usuarioNome: string = "Consultor"
+): Promise<ViagemSolicitacao> {
+  const lista = carregarSolicitacoesArquivo();
+  const sol = lista.find((s) => s.id === solicitacaoId);
+  if (!sol) throw new Error("Solicitação não encontrada");
+
+  const agora = new Date().toISOString();
+  sol.status = "AGUARDANDO_PRESTACAO_CONTAS";
+  sol.vouchersRecebidosAprovadosEm = agora;
+  sol.vouchersRecebidosAprovadosPor = usuarioNome;
+
+  sol.auditoria.push({
+    id: `aud-${Date.now()}`,
+    dataHora: agora,
+    perfilUsuario: "CONSULTOR",
+    usuarioNome,
+    acao: "VOUCHERS_RECEBIMENTO_APROVADO",
+    detalhes: `Consultor confirmou e aprovou o recebimento dos vouchers e das reservas no sistema.`,
+  });
+
+  sol.atualizadoEm = agora;
+  salvarSolicitacoesArquivo(lista);
+
+  await sincronizarViagemComSupabase(sol);
+
+  return sol;
+}
+
+/**
  * Sincroniza os custos da solicitação de viagem diretamente com a tabela viagens e lancamentos no Supabase
  */
 async function sincronizarViagemComSupabase(sol: ViagemSolicitacao): Promise<void> {

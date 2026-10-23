@@ -601,6 +601,31 @@ export default function CotacoesMatrixModal({
     }
   };
 
+  // Ação 6: Consultor aprova o recebimento dos vouchers e reservas
+  const handleAprovarRecebimentoVouchers = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/viagens/aprovar-vouchers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          solicitacaoId: sol.id,
+          usuarioNome: sol.consultor || "Consultor",
+        }),
+      });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error);
+
+      setSol(data.solicitacao);
+      showToast("Recebimento dos vouchers APROVADO com sucesso no sistema!");
+      onAtualizar();
+    } catch (err: any) {
+      showToast(`Erro ao aprovar vouchers: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <>
       <div
@@ -689,21 +714,40 @@ export default function CotacoesMatrixModal({
                       ? "rgba(0, 168, 150, 0.15)"
                       : perfilAtivo === "LIDER"
                       ? "rgba(15, 42, 74, 0.12)"
-                      : "rgba(217, 119, 6, 0.15)",
+                      : perfilAtivo === "FINANCEIRO"
+                      ? "rgba(217, 119, 6, 0.15)"
+                      : "rgba(37, 99, 235, 0.15)",
                   color:
                     perfilAtivo === "AGENCIA"
                       ? "var(--secondary, #00a896)"
                       : perfilAtivo === "LIDER"
                       ? "var(--primary, #0f2a4a)"
-                      : "#d97706",
+                      : perfilAtivo === "FINANCEIRO"
+                      ? "#d97706"
+                      : "#2563eb",
                   fontSize: "12px",
                   fontWeight: 700,
                 }}
               >
                 <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
-                  {perfilAtivo === "AGENCIA" ? "travel_explore" : perfilAtivo === "LIDER" ? "supervised_user_circle" : "account_balance"}
+                  {perfilAtivo === "AGENCIA"
+                    ? "travel_explore"
+                    : perfilAtivo === "LIDER"
+                    ? "supervised_user_circle"
+                    : perfilAtivo === "FINANCEIRO"
+                    ? "account_balance"
+                    : "badge"}
                 </span>
-                <span>Visão: {perfilAtivo === "AGENCIA" ? "Agência de Viagens" : perfilAtivo === "LIDER" ? "Líder de Projeto" : "Financeiro"}</span>
+                <span>
+                  Visão:{" "}
+                  {perfilAtivo === "AGENCIA"
+                    ? "Agência de Viagens"
+                    : perfilAtivo === "LIDER"
+                    ? "Líder de Projeto"
+                    : perfilAtivo === "FINANCEIRO"
+                    ? "Financeiro"
+                    : "Consultor"}
+                </span>
               </div>
 
               <button
@@ -1735,6 +1779,54 @@ export default function CotacoesMatrixModal({
                     <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>task_alt</span>
                     Concluir Prestação de Contas
                   </button>
+                </>
+              )}
+
+              {/* Botões do Perfil CONSULTOR */}
+              {perfilAtivo === "CONSULTOR" && (
+                <>
+                  {sol.vouchersRecebidosAprovadosEm ? (
+                    <div
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        padding: "8px 16px",
+                        borderRadius: "8px",
+                        backgroundColor: "#ecfdf5",
+                        color: "#047857",
+                        border: "1px solid #a7f3d0",
+                        fontSize: "12.5px",
+                        fontWeight: 700,
+                      }}
+                    >
+                      <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>verified</span>
+                      <span>Recebimento dos Vouchers Aprovado ({formatarDataHoraBR(sol.vouchersRecebidosAprovadosEm)})</span>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={loading}
+                      onClick={handleAprovarRecebimentoVouchers}
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        padding: "9px 22px",
+                        borderRadius: "8px",
+                        fontSize: "13px",
+                        fontWeight: 700,
+                        color: "#ffffff",
+                        backgroundColor: "#059669",
+                        border: "none",
+                        cursor: "pointer",
+                        boxShadow: "0 2px 6px rgba(5, 150, 105, 0.3)",
+                      }}
+                    >
+                      <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>check_circle</span>
+                      <span>Aprovar Recebimento dos Vouchers</span>
+                    </button>
+                  )}
                 </>
               )}
             </div>

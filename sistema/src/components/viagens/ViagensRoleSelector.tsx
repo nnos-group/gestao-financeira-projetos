@@ -2,7 +2,7 @@
 
 import React from "react";
 
-export type ViagensPerfil = "AGENCIA" | "LIDER" | "FINANCEIRO";
+export type ViagensPerfil = "AGENCIA" | "LIDER" | "FINANCEIRO" | "CONSULTOR";
 
 interface ViagensRoleSelectorProps {
   perfilAtivo: ViagensPerfil;
@@ -37,6 +37,14 @@ export default function ViagensRoleSelector({
       descricao: "Prestação de contas e diárias",
       badgeColor: "rgba(217, 119, 6, 0.15)",
       textColor: "#d97706",
+    },
+    {
+      id: "CONSULTOR" as ViagensPerfil,
+      nome: "Consultor",
+      icone: "badge",
+      descricao: "Vouchers emitidos e aprovação de recebimento",
+      badgeColor: "rgba(37, 99, 235, 0.15)",
+      textColor: "#2563eb",
     },
   ];
 

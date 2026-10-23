@@ -268,7 +268,7 @@ export default function ViagensDashboardClient({
               perfilAtivo={perfilAtivo}
               onChangePerfil={(p) => {
                 setPerfilAtivo(p);
-                showToast(`Visão alterada para: ${p === "AGENCIA" ? "Agência de Viagens" : p === "LIDER" ? "Líder de Projeto" : "Financeiro"}`);
+                showToast(`Visão alterada para: ${p === "AGENCIA" ? "Agência de Viagens" : p === "LIDER" ? "Líder de Projeto" : p === "FINANCEIRO" ? "Financeiro" : "Consultor"}`);
               }}
             />
 
@@ -416,6 +416,52 @@ export default function ViagensDashboardClient({
               }}
             >
               Ver Demandas
+            </button>
+          </div>
+        )}
+
+        {perfilAtivo === "CONSULTOR" && (
+          <div
+            style={{
+              background: "rgba(37, 99, 235, 0.06)",
+              border: "1px solid rgba(37, 99, 235, 0.25)",
+              borderRadius: "12px",
+              padding: "14px 20px",
+              marginBottom: "20px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "14px",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              <span className="material-symbols-outlined" style={{ fontSize: "24px", color: "#2563eb" }}>
+                badge
+              </span>
+              <div>
+                <strong style={{ fontSize: "13px", color: "var(--on-surface)" }}>
+                  Painel do Consultor: Consulte seus vouchers de viagens e aprove o recebimento diretamente no sistema.
+                </strong>
+                <p style={{ margin: "2px 0 0 0", fontSize: "12px", color: "var(--on-surface-variant)" }}>
+                  Além de receber por e-mail, todos os vouchers, passagens e reservas emitidos pela agência estão disponíveis aqui para conferência e aprovação.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setFiltroStatus("VOUCHERS_ENVIADOS")}
+              style={{
+                padding: "6px 14px",
+                borderRadius: "6px",
+                fontSize: "12px",
+                fontWeight: 700,
+                color: "#ffffff",
+                backgroundColor: "#2563eb",
+                border: "none",
+                cursor: "pointer",
+              }}
+            >
+              Ver Meus Vouchers
             </button>
           </div>
         )}
@@ -750,6 +796,10 @@ export default function ViagensDashboardClient({
                               ? "#dc2626"
                               : badge.label === "Reembolso Alimentação"
                               ? "var(--primary, #0f2a4a)"
+                              : perfilAtivo === "CONSULTOR"
+                              ? (item.status === "VOUCHERS_ENVIADOS" && !item.vouchersRecebidosAprovadosEm)
+                                ? "#059669"
+                                : "#2563eb"
                               : perfilAtivo === "AGENCIA"
                               ? "var(--secondary, #00a896)"
                               : perfilAtivo === "LIDER"
@@ -762,13 +812,23 @@ export default function ViagensDashboardClient({
                         }}
                       >
                         <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
-                          {item.requerReaprovacao ? "warning" : "visibility"}
+                          {item.requerReaprovacao
+                            ? "warning"
+                            : (perfilAtivo === "CONSULTOR" && item.status === "VOUCHERS_ENVIADOS" && !item.vouchersRecebidosAprovadosEm)
+                            ? "verified"
+                            : "visibility"}
                         </span>
                         <span>
                           {item.requerReaprovacao
                             ? "Analisar Reaprovação"
                             : badge.label === "Reembolso Alimentação"
                             ? "Ver Despesa"
+                            : perfilAtivo === "CONSULTOR"
+                            ? item.vouchersRecebidosAprovadosEm
+                              ? "Vouchers Aprovados"
+                              : item.status === "VOUCHERS_ENVIADOS"
+                              ? "Aprovar Vouchers"
+                              : "Ver Vouchers"
                             : perfilAtivo === "AGENCIA"
                             ? item.status === "AGUARDANDO_COTACAO" || item.status === "EM_COTACAO"
                               ? "Cotar Viagem"

@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import ConsultorHeader from "@/components/ConsultorHeader";
 import ModernDropdown from "@/components/ModernDropdown";
 import { useConsultor } from "@/contexts/ConsultorContext";
-import { formatarDataBR } from "@/lib/date-utils";
+import { formatarDataBR, formatarPeriodoBR, calcularPrazoPrestacaoContas } from "@/lib/date-utils";
 
 const MESES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 const MESES_NOMES = [
@@ -60,7 +60,7 @@ export default function ConsultorAgendaPage() {
   const [cidade, setCidade] = useState("todas");
   const [modalidade, setModalidade] = useState("todas");
   const [status, setStatus] = useState("todos");
-  const [expandido, setExpandido] = useState<string | null>(null);
+  const [expandidos, setExpandidos] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!anosDisponiveis.includes(ano)) setAno(anosDisponiveis[anosDisponiveis.length - 1]);
@@ -97,6 +97,32 @@ export default function ConsultorAgendaPage() {
   const totalHoras = filtradas.reduce((s, l) => s + Number(l.horas || 0), 0);
   const canceladas = filtradas.filter((l) => (l.status || "").toUpperCase().includes("CANCEL")).length;
 
+  // Prestação de contas em atraso
+  const prestacoesEmAtraso = useMemo(() => {
+    return filtradas.filter((l) => {
+      const v = Array.isArray(l.viagens) ? l.viagens[0] : l.viagens;
+      const info = calcularPrazoPrestacaoContas(l.data_final, l.precisa_logistica, v?.custo_5, l.status);
+      return info.status === "EM_ATRASO";
+    }).length;
+  }, [filtradas]);
+
+  const alternarItem = (id: string) => {
+    setExpandidos((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const expandirTodos = () => {
+    setExpandidos(new Set(filtradas.map((l) => l.id)));
+  };
+
+  const recolherTodos = () => {
+    setExpandidos(new Set());
+  };
+
   const limpar = () => {
     setBusca("");
     setCidade("todas");
@@ -104,7 +130,15 @@ export default function ConsultorAgendaPage() {
     setStatus("todos");
   };
 
-  const th: React.CSSProperties = { padding: "12px 16px", fontSize: "11px", fontWeight: 700, color: "var(--on-surface-variant)", textTransform: "uppercase", letterSpacing: "0.03em", textAlign: "left" };
+  const th: React.CSSProperties = {
+    padding: "12px 16px",
+    fontSize: "11px",
+    fontWeight: 700,
+    color: "var(--on-surface-variant)",
+    textTransform: "uppercase",
+    letterSpacing: "0.03em",
+    textAlign: "left",
+  };
 
   return (
     <>
@@ -120,40 +154,95 @@ export default function ConsultorAgendaPage() {
           </h1>
         </div>
 
-        {/* KPIs (sem informação de FATURAR) */}
-        <section className="kpis-grid" aria-label="Indicadores do Consultor" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
+        {/* 5 Cards de KPIs Operacionais (com Prestações em Atraso) */}
+        <section
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+            gap: "14px",
+          }}
+          aria-label="Indicadores do Consultor"
+        >
+          {/* Card 1: A Receber */}
           <div className="kpi-card">
             <div className="kpi-content">
               <span className="kpi-label">A RECEBER (CONSULTOR)</span>
-              <div className="kpi-value-row"><span className="kpi-value medium">{brl(totalConsultor)}</span></div>
+              <div className="kpi-value-row">
+                <span className="kpi-value medium" style={{ color: "#059669" }}>{brl(totalConsultor)}</span>
+              </div>
             </div>
-            <div className="kpi-icon-box success-bg"><span className="material-symbols-outlined" style={{ fontSize: "22px" }}>payments</span></div>
+            <div className="kpi-icon-box success-bg">
+              <span className="material-symbols-outlined" style={{ fontSize: "22px" }}>payments</span>
+            </div>
           </div>
+
+          {/* Card 2: Horas */}
           <div className="kpi-card">
             <div className="kpi-content">
               <span className="kpi-label">HORAS NA COMPETÊNCIA</span>
-              <div className="kpi-value-row"><span className="kpi-value medium">{totalHoras.toFixed(0)} h</span></div>
+              <div className="kpi-value-row">
+                <span className="kpi-value medium">{totalHoras.toFixed(0)} h</span>
+              </div>
             </div>
-            <div className="kpi-icon-box"><span className="material-symbols-outlined" style={{ fontSize: "22px" }}>schedule</span></div>
+            <div className="kpi-icon-box">
+              <span className="material-symbols-outlined" style={{ fontSize: "22px" }}>schedule</span>
+            </div>
           </div>
+
+          {/* Card 3: Atividades */}
           <div className="kpi-card">
             <div className="kpi-content">
               <span className="kpi-label">ATIVIDADES</span>
-              <div className="kpi-value-row"><span className="kpi-value medium">{filtradas.length}</span></div>
+              <div className="kpi-value-row">
+                <span className="kpi-value medium">{filtradas.length}</span>
+              </div>
             </div>
-            <div className="kpi-icon-box secondary-bg"><span className="material-symbols-outlined" style={{ fontSize: "22px" }}>event_note</span></div>
+            <div className="kpi-icon-box secondary-bg">
+              <span className="material-symbols-outlined" style={{ fontSize: "22px" }}>event_note</span>
+            </div>
           </div>
+
+          {/* Card 4: Prestações de Contas em Atraso (Print 2 & 3) */}
+          <div className="kpi-card" style={{ borderColor: prestacoesEmAtraso > 0 ? "#fca5a5" : "var(--border)" }}>
+            <div className="kpi-content">
+              <span className="kpi-label" style={{ color: prestacoesEmAtraso > 0 ? "#dc2626" : "var(--on-surface-variant)" }}>
+                PRESTAÇÕES EM ATRASO
+              </span>
+              <div className="kpi-value-row">
+                <span className="kpi-value medium" style={{ color: prestacoesEmAtraso > 0 ? "#dc2626" : "var(--primary)" }}>
+                  {prestacoesEmAtraso} {prestacoesEmAtraso === 1 ? "viagem" : "viagens"}
+                </span>
+              </div>
+            </div>
+            <div
+              className="kpi-icon-box"
+              style={{
+                backgroundColor: prestacoesEmAtraso > 0 ? "#fee2e2" : "var(--surface-container)",
+                color: prestacoesEmAtraso > 0 ? "#dc2626" : "var(--on-surface-variant)",
+              }}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: "22px" }}>
+                {prestacoesEmAtraso > 0 ? "warning" : "task_alt"}
+              </span>
+            </div>
+          </div>
+
+          {/* Card 5: Canceladas */}
           <div className="kpi-card">
             <div className="kpi-content">
               <span className="kpi-label">CANCELADAS</span>
-              <div className="kpi-value-row"><span className="kpi-value medium" style={{ color: "#b91c1c" }}>{canceladas} turmas</span></div>
+              <div className="kpi-value-row">
+                <span className="kpi-value medium" style={{ color: "#b91c1c" }}>{canceladas} turmas</span>
+              </div>
             </div>
-            <div className="kpi-icon-box cancel-bg"><span className="material-symbols-outlined" style={{ fontSize: "22px" }}>event_busy</span></div>
+            <div className="kpi-icon-box cancel-bg">
+              <span className="material-symbols-outlined" style={{ fontSize: "22px" }}>event_busy</span>
+            </div>
           </div>
         </section>
 
         <section style={{ backgroundColor: "var(--surface-container-lowest)", border: "1px solid var(--border)", borderRadius: "14px", overflow: "hidden" }}>
-          {/* Competência */}
+          {/* Competência: Ano e Chips de Meses */}
           <nav className="month-strip" aria-label="Seleção de Competência" style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", padding: "14px 16px", borderBottom: "1px solid var(--border)" }}>
             <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "var(--primary)" }}>calendar_month</span>
             <span className="month-label" style={{ fontWeight: 700, margin: 0 }}>COMPETÊNCIA:</span>
@@ -161,50 +250,102 @@ export default function ConsultorAgendaPage() {
               value={ano}
               onChange={(v) => setAno(Number(v))}
               options={anosDisponiveis.map((a) => ({ value: a, label: String(a) }))}
-              minWidth={90}
-              searchable={false}
+              minWidth={110}
             />
-            <button type="button" onClick={() => setMes(0)} className={`month-chip ${mes === 0 ? "active" : ""}`} style={{ border: "none", cursor: "pointer" }}>
-              Todos
-            </button>
-            {MESES.map((m, i) => (
+            <div className="month-chips" style={{ display: "flex", gap: "4px", flexWrap: "wrap", marginLeft: "8px" }}>
               <button
-                key={m}
                 type="button"
-                onClick={() => setMes(mes === i + 1 ? 0 : i + 1)}
-                className={`month-chip ${mes === i + 1 ? "active" : ""}`}
-                style={{ border: "none", cursor: "pointer" }}
+                onClick={() => setMes(0)}
+                className={`chip-month${mes === 0 ? " active" : ""}`}
+                style={{ padding: "5px 12px", borderRadius: "999px", fontSize: "12px", fontWeight: 700, border: "none", cursor: "pointer", background: mes === 0 ? "var(--primary)" : "transparent", color: mes === 0 ? "#fff" : "var(--on-surface-variant)" }}
               >
-                {m}
+                Todos
               </button>
-            ))}
+              {MESES.map((nome, idx) => {
+                const num = idx + 1;
+                const ativo = mes === num;
+                return (
+                  <button
+                    key={nome}
+                    type="button"
+                    onClick={() => setMes(num)}
+                    className={`chip-month${ativo ? " active" : ""}`}
+                    style={{ padding: "5px 12px", borderRadius: "999px", fontSize: "12px", fontWeight: 700, border: "none", cursor: "pointer", background: ativo ? "var(--primary)" : "transparent", color: ativo ? "#fff" : "var(--on-surface-variant)" }}
+                  >
+                    {nome}
+                  </button>
+                );
+              })}
+            </div>
           </nav>
 
-          {/* Filtros */}
-          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center", padding: "12px 16px", borderBottom: "1px solid var(--border)" }}>
-            <div style={{ flex: 1, minWidth: "240px", position: "relative" }}>
-              <span className="material-symbols-outlined" style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", fontSize: "18px", color: "var(--on-surface-variant)" }}>search</span>
+          {/* Barra de Filtros com Atalhos de Expandir/Recolher (Print 3) */}
+          <div style={{ display: "flex", gap: "10px", padding: "12px 16px", alignItems: "center", flexWrap: "wrap", borderBottom: "1px solid var(--border)", backgroundColor: "var(--surface-container-low)" }}>
+            <div style={{ flex: 1, minWidth: "240px", display: "flex", alignItems: "center", gap: "8px", background: "var(--surface-container-lowest)", border: "1px solid var(--border)", borderRadius: "8px", padding: "6px 12px" }}>
+              <span className="material-symbols-outlined" style={{ fontSize: "18px", color: "var(--on-surface-variant)" }}>search</span>
               <input
-                id="agenda-busca"
+                type="text"
+                placeholder="Filtrar por CC, Projeto, Atividade, Concessionária ou Cidade..."
                 value={busca}
                 onChange={(e) => setBusca(e.target.value)}
-                placeholder="Filtrar por CC, Projeto, Atividade, Concessionária ou Cidade..."
-                style={{ width: "100%", padding: "9px 12px 9px 36px", borderRadius: "10px", border: "1px solid var(--border)", background: "var(--surface-container-lowest)", color: "var(--on-surface)", fontSize: "13px" }}
+                style={{ border: "none", outline: "none", background: "transparent", fontSize: "12px", width: "100%", color: "var(--on-surface)" }}
               />
             </div>
-            <ModernDropdown value={cidade} onChange={(v) => setCidade(String(v))} icon="location_on" minWidth={200}
-              options={[{ value: "todas", label: "Todas as Cidades" }, ...cidades.map((c) => ({ value: c, label: c }))]} />
-            <ModernDropdown value={modalidade} onChange={(v) => setModalidade(String(v))} icon="flag" minWidth={180}
-              options={[{ value: "todas", label: "Modalidade" }, ...modalidades.map((c) => ({ value: c, label: c }))]} />
-            <ModernDropdown value={status} onChange={(v) => setStatus(String(v))} icon="check_circle" minWidth={190}
-              options={[{ value: "todos", label: "Status da Atividade" }, ...statusLista.map((c) => ({ value: c, label: c }))]} />
+
+            <ModernDropdown value={cidade} onChange={(v) => setCidade(String(v))} options={[{ value: "todas", label: "Todas as Cidades" }, ...cidades.map((c) => ({ value: c, label: c }))]} />
+            <ModernDropdown value={modalidade} onChange={(v) => setModalidade(String(v))} options={[{ value: "todas", label: "Modalidade" }, ...modalidades.map((c) => ({ value: c, label: c }))]} />
+            <ModernDropdown value={status} onChange={(v) => setStatus(String(v))} options={[{ value: "todos", label: "Status da Atividade" }, ...statusLista.map((c) => ({ value: c, label: c }))]} />
+
+            {/* Botões de Expandir e Recolher Todos (Print 3) */}
+            <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+              <button
+                type="button"
+                onClick={expandirTodos}
+                title="Expandir todas as atividades"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: "34px",
+                  height: "34px",
+                  borderRadius: "8px",
+                  border: "1px solid var(--border)",
+                  backgroundColor: "var(--surface-container-lowest)",
+                  color: "var(--primary)",
+                  cursor: "pointer",
+                }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>unfold_more</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={recolherTodos}
+                title="Recolher todas as atividades"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: "34px",
+                  height: "34px",
+                  borderRadius: "8px",
+                  border: "1px solid var(--border)",
+                  backgroundColor: "var(--surface-container-lowest)",
+                  color: "var(--primary)",
+                  cursor: "pointer",
+                }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>unfold_less</span>
+              </button>
+            </div>
+
             <button type="button" onClick={limpar} className="btn-secondary" style={{ padding: "8px 14px", fontSize: "12px" }}>
               <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>restart_alt</span>
               <span>Limpar</span>
             </button>
           </div>
 
-          {/* Tabela */}
+          {/* Tabela de Atividades */}
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
               <thead>
@@ -225,17 +366,34 @@ export default function ConsultorAgendaPage() {
                   filtradas.map((l) => {
                     const cor = corStatus(l.status);
                     const dias = diasEntre(l.data_inicial, l.data_final);
-                    const aberto = expandido === l.id;
+                    const aberto = expandidos.has(l.id);
                     const remoto = (l.modalidade || "").toLowerCase().match(/remot|online|ead|virtual/);
                     const cc = l.projetos?.centros_custo;
+                    const v = Array.isArray(l.viagens) ? l.viagens[0] : l.viagens;
+                    const precisaLog = l.precisa_logistica === true || l.precisa_logistica === "SIM" || l.precisa_logistica === "true";
+                    const infoPrazo = calcularPrazoPrestacaoContas(l.data_final, l.precisa_logistica, v?.custo_5, l.status);
+
+                    const custo1 = Number(v?.custo_1 || 0);
+                    const custo2 = Number(v?.custo_2 || 0);
+                    const custo3 = Number(v?.custo_3 || 0);
+                    const custo4 = Number(v?.custo_4 || 0);
+                    const custo5 = Number(v?.custo_5 || 0);
+                    const custoTotalViagem = Number(v?.total || (custo1 + custo2 + custo3 + custo4 + custo5));
+
                     return (
                       <React.Fragment key={l.id}>
                         <tr style={{ borderTop: "1px solid var(--border)" }}>
                           <td style={{ padding: "14px 16px" }}>
                             <div style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
-                              <button type="button" onClick={() => setExpandido(aberto ? null : l.id)} aria-label="Detalhes"
-                                style={{ border: "none", background: "transparent", cursor: "pointer", color: "var(--on-surface-variant)", padding: 0 }}>
-                                <span className="material-symbols-outlined" style={{ fontSize: "20px", transform: aberto ? "rotate(180deg)" : "none", transition: "transform .15s" }}>expand_more</span>
+                              <button
+                                type="button"
+                                onClick={() => alternarItem(l.id)}
+                                aria-label="Detalhes"
+                                style={{ border: "none", background: "transparent", cursor: "pointer", color: "var(--on-surface-variant)", padding: 0 }}
+                              >
+                                <span className="material-symbols-outlined" style={{ fontSize: "20px", transform: aberto ? "rotate(180deg)" : "none", transition: "transform .15s" }}>
+                                  expand_more
+                                </span>
                               </button>
                               <div>
                                 <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
@@ -285,16 +443,144 @@ export default function ConsultorAgendaPage() {
                           </td>
                           <td style={{ padding: "14px 16px", textAlign: "right", fontWeight: 700 }}>{brl(l.custo_consultor)}</td>
                         </tr>
+
+                        {/* SUBSEÇÃO EXPANDIDA COM DETALHAMENTO LOGÍSTICO COMPLETO (Print 3 - SEM REPASSE) */}
                         {aberto && (
-                          <tr style={{ background: "var(--surface-container-low)" }}>
-                            <td colSpan={5} style={{ padding: "12px 52px", fontSize: "12px", color: "var(--on-surface-variant)" }}>
-                              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "10px" }}>
-                                <div><strong>Centro de Custo:</strong> {cc?.codigo || "—"}</div>
-                                <div><strong>Contrato:</strong> {cc?.contrato || "—"}</div>
-                                <div><strong>Área:</strong> {cc?.areas?.nome || "—"}</div>
-                                <div><strong>Líder do Projeto:</strong> {cc?.lideres?.nome || "—"}</div>
-                                <div><strong>Modalidade:</strong> {l.modalidade || "—"}</div>
-                                <div><strong>Precisa de logística:</strong> {l.precisa_logistica ? "Sim" : "Não"}</div>
+                          <tr style={{ background: "var(--surface-container-lowest)", borderBottom: "2px solid var(--border)" }}>
+                            <td colSpan={5} style={{ padding: "16px 24px 20px 24px" }}>
+                              <div style={{ border: "1px solid var(--border)", borderRadius: "12px", padding: "16px 20px", backgroundColor: "#f8fafc" }}>
+                                {/* Header do Detalhamento Logístico */}
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px", flexWrap: "wrap", gap: "8px" }}>
+                                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                    <span className="material-symbols-outlined" style={{ color: "var(--secondary, #00a896)", fontSize: "18px" }}>
+                                      flight
+                                    </span>
+                                    <strong style={{ fontSize: "12px", textTransform: "uppercase", letterSpacing: "0.04em", color: "var(--primary)" }}>
+                                      Detalhamento Logístico &amp; Despesas de Viagem
+                                    </strong>
+                                  </div>
+
+                                  <div style={{ fontSize: "11px", color: "var(--on-surface-variant)" }}>
+                                    Precisa Logística?{" "}
+                                    <strong style={{ color: precisaLog ? "var(--secondary, #00a896)" : "var(--on-surface-variant)" }}>
+                                      {precisaLog ? "SIM" : "NÃO"}
+                                    </strong>
+                                  </div>
+                                </div>
+
+                                {/* 6 Caixas de Custo de Viagem (Print 3) */}
+                                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "10px", marginBottom: "14px" }}>
+                                  {/* Caixa 1: Aéreo */}
+                                  <div style={{ padding: "10px 12px", borderRadius: "8px", border: "1px solid var(--border)", backgroundColor: "#ffffff" }}>
+                                    <span style={{ fontSize: "10px", color: "var(--on-surface-variant)", textTransform: "uppercase", display: "block" }}>Passagem Aérea</span>
+                                    <div style={{ fontSize: "14px", fontWeight: 800, color: "var(--on-surface)", marginTop: "2px" }}>
+                                      {brl(custo1)}
+                                    </div>
+                                    <span style={{ fontSize: "10px", color: "var(--on-surface-variant)" }}>{custo1 > 0 ? "Contratado" : "Sem aéreo"}</span>
+                                  </div>
+
+                                  {/* Caixa 2: Hotel */}
+                                  <div style={{ padding: "10px 12px", borderRadius: "8px", border: "1px solid var(--border)", backgroundColor: "#ffffff" }}>
+                                    <span style={{ fontSize: "10px", color: "var(--on-surface-variant)", textTransform: "uppercase", display: "block" }}>Hotel / Estadia</span>
+                                    <div style={{ fontSize: "14px", fontWeight: 800, color: "var(--on-surface)", marginTop: "2px" }}>
+                                      {brl(custo2)}
+                                    </div>
+                                    <span style={{ fontSize: "10px", color: "var(--on-surface-variant)" }}>{custo2 > 0 ? "Contratado" : "Sem diárias"}</span>
+                                  </div>
+
+                                  {/* Caixa 3: Carro */}
+                                  <div style={{ padding: "10px 12px", borderRadius: "8px", border: "1px solid var(--border)", backgroundColor: "#ffffff" }}>
+                                    <span style={{ fontSize: "10px", color: "var(--on-surface-variant)", textTransform: "uppercase", display: "block" }}>Carro / Traslado</span>
+                                    <div style={{ fontSize: "14px", fontWeight: 800, color: "var(--on-surface)", marginTop: "2px" }}>
+                                      {brl(custo3)}
+                                    </div>
+                                    <span style={{ fontSize: "10px", color: "var(--on-surface-variant)" }}>{custo3 > 0 ? "Contratado" : "Sem traslado"}</span>
+                                  </div>
+
+                                  {/* Caixa 4: Seguro */}
+                                  <div style={{ padding: "10px 12px", borderRadius: "8px", border: "1px solid var(--border)", backgroundColor: "#ffffff" }}>
+                                    <span style={{ fontSize: "10px", color: "var(--on-surface-variant)", textTransform: "uppercase", display: "block" }}>Seguro / Outros</span>
+                                    <div style={{ fontSize: "14px", fontWeight: 800, color: "var(--on-surface)", marginTop: "2px" }}>
+                                      {brl(custo4)}
+                                    </div>
+                                    <span style={{ fontSize: "10px", color: "var(--on-surface-variant)" }}>{custo4 > 0 ? "Apólice internacional" : "Não aplicável"}</span>
+                                  </div>
+
+                                  {/* Caixa 5: Alimentação / Diária */}
+                                  <div style={{ padding: "10px 12px", borderRadius: "8px", border: "1.5px solid #fed7aa", backgroundColor: "#fffaf5" }}>
+                                    <span style={{ fontSize: "10px", color: "#c2410c", textTransform: "uppercase", display: "block", fontWeight: 700 }}>Alimentação / Diária</span>
+                                    <div style={{ fontSize: "14px", fontWeight: 800, color: "#ea580c", marginTop: "2px" }}>
+                                      {brl(custo5)}
+                                    </div>
+                                    <span style={{ fontSize: "10px", color: "var(--on-surface-variant)" }}>Despesa Consultor</span>
+                                  </div>
+
+                                  {/* Caixa 6: Total Viagem (Destaque Marinho) */}
+                                  <div style={{ padding: "10px 12px", borderRadius: "8px", backgroundColor: "#00152f", color: "#ffffff", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                                    <span style={{ fontSize: "10px", textTransform: "uppercase", color: "#93c5fd", fontWeight: 700 }}>TOTAL VIAGEM</span>
+                                    <div style={{ fontSize: "14px", fontWeight: 800, color: "#ffffff", marginTop: "2px" }}>
+                                      {brl(custoTotalViagem)}
+                                    </div>
+                                    <span style={{ fontSize: "10px", color: "#93c5fd" }}>Conciliado 100%</span>
+                                  </div>
+                                </div>
+
+                                {/* Rodapé do Detalhamento: Prazo Prestação de Contas & Observações Agência */}
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    flexWrap: "wrap",
+                                    gap: "14px",
+                                    paddingTop: "12px",
+                                    borderTop: "1px solid var(--border)",
+                                    fontSize: "12px",
+                                  }}
+                                >
+                                  {/* Prazo Prestação de Contas */}
+                                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                                    <div
+                                      style={{
+                                        width: "30px",
+                                        height: "30px",
+                                        borderRadius: "50%",
+                                        backgroundColor: infoPrazo.corBg,
+                                        color: infoPrazo.corTexto,
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                      }}
+                                    >
+                                      <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
+                                        {infoPrazo.icone}
+                                      </span>
+                                    </div>
+                                    <div>
+                                      <span style={{ fontSize: "10px", color: "var(--on-surface-variant)", display: "block" }}>
+                                        {infoPrazo.label}
+                                      </span>
+                                      <strong style={{ color: infoPrazo.corTexto, fontSize: "11px" }}>
+                                        {infoPrazo.badgeTexto}
+                                      </strong>
+                                    </div>
+                                  </div>
+
+                                  {/* Observações Agência de Viagens */}
+                                  <div style={{ flex: 1, minWidth: "220px", display: "flex", flexDirection: "column" }}>
+                                    <span style={{ fontSize: "10px", color: "var(--on-surface-variant)" }}>
+                                      Observações Agência de Viagens
+                                    </span>
+                                    <span style={{ fontSize: "11px", color: "var(--on-surface)", fontStyle: "italic" }}>
+                                      {v?.observacao_agencia || "Nenhuma instrução adicional registrada."}
+                                    </span>
+                                  </div>
+
+                                  {/* Dados Contratuais Complementares */}
+                                  <div style={{ fontSize: "11px", color: "var(--on-surface-variant)", textAlign: "right" }}>
+                                    <span>CC: <strong>{cc?.codigo || "—"}</strong> • Contrato: <strong>{cc?.contrato || "—"}</strong></span>
+                                  </div>
+                                </div>
                               </div>
                             </td>
                           </tr>

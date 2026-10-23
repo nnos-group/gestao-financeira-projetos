@@ -53,7 +53,7 @@ export interface CategoriaCotacoes {
 export interface AuditoriaEvento {
   id: string;
   dataHora: string;
-  perfilUsuario: "AGENCIA" | "LIDER" | "FINANCEIRO";
+  perfilUsuario: "AGENCIA" | "LIDER" | "FINANCEIRO" | "CONSULTOR";
   usuarioNome: string;
   acao: string;
   detalhes?: string;
@@ -106,6 +106,10 @@ export interface ViagemSolicitacao {
   // Vouchers e e-mail
   vouchersEnviadosEm?: string;
   destinatariosEnvio?: string[];
+
+  // Confirmação de recebimento pelo consultor
+  vouchersRecebidosAprovadosEm?: string;
+  vouchersRecebidosAprovadosPor?: string;
 
   // Prestação de contas
   prestacaoContasConcluidaEm?: string;

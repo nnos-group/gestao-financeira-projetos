@@ -46,30 +46,11 @@ export default function ConsultorPage() {
           }}
         >
           <div>
-            <div
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "6px",
-                backgroundColor: "#eff6ff",
-                color: "#1d4ed8",
-                border: "1px solid #bfdbfe",
-                padding: "4px 10px",
-                borderRadius: "999px",
-                fontSize: "11px",
-                fontWeight: 700,
-                marginBottom: "10px",
-                textTransform: "uppercase",
-              }}
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>verified_user</span>
-              Portal Exclusivo do Consultor · NNÓS
-            </div>
             <h1 style={{ fontSize: "24px", fontWeight: 800, margin: "0 0 6px 0", color: "var(--primary)", letterSpacing: "-0.02em" }}>
               Olá, {consultorAtivo?.nome || "Consultor"}!
             </h1>
             <p style={{ margin: 0, fontSize: "13px", color: "var(--on-surface-variant)", maxWidth: "600px", lineHeight: 1.5 }}>
-              Acompanhe sua agenda operacional, viagens agendadas, boletins de medição e previsão de repasses financeiros em um único painel.
+              Acompanhe sua agenda operacional, viagens agendadas, boletins de medição e previsão de pagamentos em um único painel.
             </p>
           </div>
 
@@ -139,10 +120,10 @@ export default function ConsultorPage() {
             </div>
           </div>
 
-          {/* Card 2: Previsão de Repasse */}
+          {/* Card 2: Previsão de Pagamento */}
           <div className="kpi-card">
             <div className="kpi-content">
-              <span className="kpi-label">PREVISÃO DE REPASSE</span>
+              <span className="kpi-label">PREVISÃO DE PAGAMENTO</span>
               <div className="kpi-value-row">
                 <span className="kpi-value medium" style={{ color: "#059669" }}>
                   {brl(kpis.totalRepasse)}
@@ -366,7 +347,7 @@ export default function ConsultorPage() {
               badge
             </span>
             <h3 style={{ fontSize: "15px", fontWeight: 700, margin: 0, color: "var(--primary)" }}>
-              Dados Cadastrais &amp; Conta Bancária p/ Repasses
+              Dados Cadastrais &amp; Conta Bancária p/ Pagamentos
             </h3>
           </div>
 

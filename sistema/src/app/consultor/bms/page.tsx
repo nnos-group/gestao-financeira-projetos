@@ -6,6 +6,8 @@ import { useConsultor } from "@/contexts/ConsultorContext";
 import ModernDropdown from "@/components/ModernDropdown";
 import { formatarPeriodoBR, formatarDataBR } from "@/lib/date-utils";
 
+import BmExportPdfSheet from "@/components/BmExportPdfSheet";
+
 export default function ConsultorBmsPage() {
   const { consultorAtivo, dadosConsultor } = useConsultor();
   const [busca, setBusca] = useState("");
@@ -57,7 +59,7 @@ export default function ConsultorBmsPage() {
       })
       .join("\n");
 
-    const texto = `BM: ${bm.codigo} | CONTRATO: ${String(bm.contrato || "").replace(/•\s*NNÓS/g, "").trim()}\n${linhasProjetos}\n\nCódigo CTISS: 0802-0/01-88 (Instrução e treinamento)\nSubitem LC 116/03: 8.02 (Instrução, treinamento, orientação pedagógica)`;
+    const texto = `BM: ${bm.codigo} | CONTRATO: ${String(bm.contrato || "").replace(/•\s*NNÓS/g, "").trim()}\n${linhasProjetos}`;
 
     navigator.clipboard.writeText(texto);
     showToast("Discriminação copiada para a área de transferência!");
@@ -66,25 +68,49 @@ export default function ConsultorBmsPage() {
   return (
     <>
       <style jsx global>{`
+        @page {
+          size: A4 portrait;
+          margin: 6mm;
+        }
+
         @media print {
-          body * {
-            visibility: hidden;
-          }
-          #secao-bm-imprimir,
-          #secao-bm-imprimir * {
-            visibility: visible;
-          }
-          #secao-bm-imprimir {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            margin: 0;
-            padding: 0;
-            background: #ffffff !important;
-          }
-          .no-print {
+          aside.sidebar,
+          header,
+          .top-header,
+          .no-print,
+          .screen-nav-bar,
+          .content-container,
+          button,
+          .btn-primary,
+          .btn-secondary {
             display: none !important;
+          }
+
+          html, body, .app-layout, .main-wrapper, .main-content {
+            background: #ffffff !important;
+            color: #000000 !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            width: 100% !important;
+            box-shadow: none !important;
+          }
+
+          .print-only-a4 {
+            display: block !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+
+          .a4-sheet {
+            width: 100% !important;
+            height: 100vh !important;
+            min-height: 100vh !important;
+            max-height: 100vh !important;
+            box-shadow: none !important;
+            border: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
           }
         }
       `}</style>
@@ -850,6 +876,9 @@ export default function ConsultorBmsPage() {
           </>
         )}
       </main>
+
+      {/* Folha Oficial A4 Renderizada Exclusivamente para Exportar PDF (Print 3 e 5) */}
+      {bmVisualizando && <BmExportPdfSheet bm={bmVisualizando} />}
     </>
   );
 }

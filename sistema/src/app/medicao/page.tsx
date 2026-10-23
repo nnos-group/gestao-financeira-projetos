@@ -709,10 +709,7 @@ export default function BoletimMedicaoPage() {
     });
 
     const rawText = `BM: ${bm.codigo} | CONTRATO: ${bm.contrato}
-${linhasProjetos.join("\n")}
-
-Código de Tributação do Município (CTISS): 0802-0/01-88
-Subitem Lista de Serviços LC 116/03: 8.02 (Instrução, treinamento, orientação pedagógica e educacional).`;
+${linhasProjetos.join("\n")}`;
 
     if (navigator?.clipboard) {
       navigator.clipboard.writeText(rawText).then(() => {
