@@ -81,13 +81,51 @@ export interface EnviarBmZohoParams {
  * Cria a solicitação oficial de assinatura no Zoho Sign com os 3 signatários
  */
 export async function enviarBmParaZohoSign(params: EnviarBmZohoParams) {
+  // 1. Se houver Zoho Flow configurado (Zoho One), despacha diretamente via Webhook do Flow
+  const flowUrl = process.env.ZOHO_FLOW_WEBHOOK_URL;
+  if (flowUrl) {
+    console.log(`🌊 [Zoho Flow] Disparando Webhook BM ${params.codigoBm} diretamente...`);
+    try {
+      const flowRes = await fetch(flowUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          codigo_bm: params.codigoBm,
+          consultor_nome: params.consultorNome,
+          consultor_email: params.consultorEmail,
+          lider_nome: params.liderNome,
+          lider_email: params.liderEmail,
+          responsavel_nome: params.responsavelNome,
+          responsavel_email: params.responsavelEmail,
+          emails_copia: params.emailsCopia || "leonardo.campos@nnos.com.br",
+          periodo: params.periodoStr,
+          valor_total: params.valorTotal,
+          link_sistema: "https://gestao-financeira-projetos.vercel.app/medicao",
+        }),
+      });
+
+      if (flowRes.ok) {
+        return {
+          success: true,
+          status: "sent",
+          avisoCreditos: false,
+          message: "Boletim de Medição enviado para o fluxo de assinaturas do Zoho Sign!",
+        };
+      } else {
+        const flowErr = await flowRes.text();
+        console.warn("Aviso ao disparar pelo Zoho Flow:", flowRes.status, flowErr);
+        throw new Error(`Falha no Zoho Flow (${flowRes.status}): ${flowErr}`);
+      }
+    } catch (e: any) {
+      console.error("Erro ao disparar Webhook do Zoho Flow:", e.message);
+      throw e;
+    }
+  }
+
+  // Fallback: API REST direta (caso não haja Zoho Flow)
   const accessToken = await getZohoAccessToken();
   const apiUrl = process.env.ZOHO_API_URL || "https://sign.zoho.com/api/v1";
 
-  // Montar signatários sequenciais conforme regra de negócio:
-  // 1. Líder de Projeto: apenas Aprovador (APPROVE) - não assina
-  // 2. Consultor: Signatário (SIGN) - assina em Recipient1
-  // 3. Coordenação / Responsável NNÓS: Signatário (SIGN) - assina em Recipient2
   const actions: any[] = [
     {
       recipient_name: params.liderNome,
@@ -102,19 +140,6 @@ export async function enviarBmParaZohoSign(params: EnviarBmZohoParams) {
       action_type: "SIGN",
       signing_order: 2,
       verify_recipient: false,
-      fields: [
-        {
-          field_name: "Assinatura do Prestador",
-          field_type_name: "Signature",
-          field_label: "Assinatura",
-          page_no: 0,
-          is_mandatory: true,
-          x_coord: 35,
-          y_coord: 695,
-          abs_width: 220,
-          abs_height: 45,
-        },
-      ],
     },
     {
       recipient_name: params.responsavelNome,
@@ -122,19 +147,6 @@ export async function enviarBmParaZohoSign(params: EnviarBmZohoParams) {
       action_type: "SIGN",
       signing_order: 3,
       verify_recipient: false,
-      fields: [
-        {
-          field_name: "Validação da Coordenação",
-          field_type_name: "Signature",
-          field_label: "Assinatura",
-          page_no: 0,
-          is_mandatory: true,
-          x_coord: 305,
-          y_coord: 695,
-          abs_width: 220,
-          abs_height: 45,
-        },
-      ],
     },
   ];
 

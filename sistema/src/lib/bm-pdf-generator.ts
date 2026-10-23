@@ -515,10 +515,9 @@ export async function gerarPdfOficialBm(dados: BmPdfDados): Promise<Uint8Array> 
   // Text Tag Zoho Sign Recipient 1
   // Texto visível limpo e elegante
   page.drawText("Espaco reservado para assinatura eletronica", { x: sb1X + 16, y: sY - 24, size: 7, font: fontOblique, color: cMuted });
-  page.drawText("Aguardando Assinatura", { x: sb1X + signBoxW - 100, y: sY - 24, size: 6.8, font: fontBold, color: rgb(0.85, 0.55, 0.1) });
   // Text Tags Zoho Sign em branco (invisível ao olho humano, detectável pelo parser do Zoho Sign)
-  page.drawText("{{Signature:Recipient1*}}", { x: sb1X + 16, y: sY - 24, size: 2, font: fontRegular, color: cWhite });
-  page.drawText("{{Signdate:Recipient1*}}", { x: sb1X + 150, y: sY - 24, size: 2, font: fontRegular, color: cWhite });
+  page.drawText("{{Signature:Recipient1*}}", { x: sb1X + 16, y: sY - 24, size: 8, font: fontRegular, color: cWhite });
+  page.drawText("{{Signdate:Recipient1*}}", { x: sb1X + 130, y: sY - 24, size: 8, font: fontRegular, color: cWhite });
 
   page.drawLine({ start: { x: sb1X + 8, y: sY - 36 }, end: { x: sb1X + signBoxW - 8, y: sY - 36 }, color: cBorder, thickness: 0.5 });
   page.drawText(dados.consultorNome, { x: sb1X + 8, y: sY - 45, size: 7.5, font: fontBold, color: cDark });
@@ -541,10 +540,9 @@ export async function gerarPdfOficialBm(dados: BmPdfDados): Promise<Uint8Array> 
   // Text Tag Zoho Sign Recipient 2
   // Texto visível limpo e elegante
   page.drawText("Espaco reservado para validacao operacional", { x: sb2X + 16, y: sY - 24, size: 7, font: fontOblique, color: cMuted });
-  page.drawText("Aguardando Validacao", { x: sb2X + signBoxW - 95, y: sY - 24, size: 6.8, font: fontBold, color: rgb(0.85, 0.55, 0.1) });
   // Text Tags Zoho Sign em branco (invisível ao olho humano, detectável pelo parser do Zoho Sign)
-  page.drawText("{{Signature:Recipient2*}}", { x: sb2X + 16, y: sY - 24, size: 2, font: fontRegular, color: cWhite });
-  page.drawText("{{Signdate:Recipient2*}}", { x: sb2X + 150, y: sY - 24, size: 2, font: fontRegular, color: cWhite });
+  page.drawText("{{Signature:Recipient2*}}", { x: sb2X + 16, y: sY - 24, size: 8, font: fontRegular, color: cWhite });
+  page.drawText("{{Signdate:Recipient2*}}", { x: sb2X + 130, y: sY - 24, size: 8, font: fontRegular, color: cWhite });
 
   page.drawLine({ start: { x: sb2X + 8, y: sY - 36 }, end: { x: sb2X + signBoxW - 8, y: sY - 36 }, color: cBorder, thickness: 0.5 });
   page.drawText(dados.responsavelNome || "MARCELA LARA DA SILVA", { x: sb2X + 8, y: sY - 45, size: 7.5, font: fontBold, color: cDark });
