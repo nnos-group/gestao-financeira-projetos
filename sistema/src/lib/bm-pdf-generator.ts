@@ -232,11 +232,9 @@ export async function gerarPdfOficialBm(dados: BmPdfDados): Promise<Uint8Array> 
     borderWidth: 1,
   });
 
-  page.drawRectangle({ x: p1X + 8, y: y - 18, width: 14, height: 14, color: cNavyHeader });
-  page.drawText("PRESTADOR DE SERVIÇOS", { x: p1X + 28, y: y - 10, size: 6.5, font: fontBold, color: cMuted });
-  page.drawText(dados.consultorNome, { x: p1X + 28, y: y - 18, size: 9, font: fontBold, color: cDark });
-
-  page.drawLine({ start: { x: p1X + 8, y: y - 23 }, end: { x: p1X + partyW - 8, y: y - 23 }, color: cBorder, thickness: 0.5 });
+  page.drawText("PRESTADOR DE SERVIÇOS", { x: p1X + 10, y: y - 12, size: 7, font: fontBold, color: cPrimary });
+  page.drawText(dados.consultorNome, { x: p1X + 10, y: y - 23, size: 9.5, font: fontBold, color: cDark });
+  page.drawLine({ start: { x: p1X + 10, y: y - 27 }, end: { x: p1X + partyW - 10, y: y - 27 }, color: cBorder, thickness: 0.5 });
 
   page.drawText(`Razão Social: ${razaoSocial}`, { x: p1X + 8, y: y - 33, size: 7, font: fontRegular, color: cText });
   page.drawText(`CNPJ / CPF: ${cnpj}`, { x: p1X + 8, y: y - 43, size: 7, font: fontRegular, color: cText });
@@ -256,11 +254,9 @@ export async function gerarPdfOficialBm(dados: BmPdfDados): Promise<Uint8Array> 
     borderWidth: 1,
   });
 
-  page.drawRectangle({ x: p2X + 8, y: y - 18, width: 14, height: 14, color: cNavyHeader });
-  page.drawText("TOMADOR DOS SERVIÇOS", { x: p2X + 28, y: y - 10, size: 6.5, font: fontBold, color: cMuted });
-  page.drawText("NNÓS CONSULTORIA E TREINAMENTO LTDA", { x: p2X + 28, y: y - 18, size: 9, font: fontBold, color: cDark });
-
-  page.drawLine({ start: { x: p2X + 8, y: y - 23 }, end: { x: p2X + partyW - 8, y: y - 23 }, color: cBorder, thickness: 0.5 });
+  page.drawText("TOMADOR DOS SERVIÇOS", { x: p2X + 10, y: y - 12, size: 7, font: fontBold, color: cPrimary });
+  page.drawText("NNÓS CONSULTORIA E TREINAMENTO LTDA", { x: p2X + 10, y: y - 23, size: 9.5, font: fontBold, color: cDark });
+  page.drawLine({ start: { x: p2X + 10, y: y - 27 }, end: { x: p2X + partyW - 10, y: y - 27 }, color: cBorder, thickness: 0.5 });
 
   page.drawText("CNPJ da Empresa: 36.443.716/0001-00", { x: p2X + 8, y: y - 33, size: 7, font: fontRegular, color: cText });
   page.drawText("Inscrição Municipal: 1.208.841/002-5", { x: p2X + 8, y: y - 43, size: 7, font: fontRegular, color: cText });
@@ -461,7 +457,7 @@ export async function gerarPdfOficialBm(dados: BmPdfDados): Promise<Uint8Array> 
   // ==========================================
   // 6. DECLARAÇÃO DE ACEITE & ASSINATURAS DIGITAIS
   // ==========================================
-  const signSecH = 92;
+  const signSecH = 96;
   page.drawRectangle({
     x: marginX,
     y: y - signSecH,
@@ -472,28 +468,35 @@ export async function gerarPdfOficialBm(dados: BmPdfDados): Promise<Uint8Array> 
     borderWidth: 1,
   });
 
-  // Declaração de Aceite com fundo verde suave
+  // Declaração de Aceite com fundo verde suave (2 linhas sem estouro)
   page.drawRectangle({
     x: marginX + 6,
-    y: y - 20,
+    y: y - 24,
     width: contentWidth - 12,
-    height: 16,
+    height: 20,
     color: rgb(0.93, 0.98, 0.96),
     borderColor: rgb(0.65, 0.95, 0.82),
     borderWidth: 0.5,
   });
 
-  page.drawText(`Declaração de Concordância e Aceite Operacional: "Declaro concordar integralmente com os valores, horas e quantidades apuradas nesta medição de serviços de ${dados.mesReferencia} para fins de faturamento."`, {
+  page.drawText("Declaração de Concordância e Aceite Operacional", {
     x: marginX + 10,
-    y: y - 14,
-    size: 6.2,
-    font: fontRegular,
+    y: y - 10,
+    size: 6.8,
+    font: fontBold,
+    color: cDark,
+  });
+  page.drawText('"Declaro concordar com os valores, horas e quantidades apuradas nesta medição de serviços para faturamento."', {
+    x: marginX + 10,
+    y: y - 19,
+    size: 6.3,
+    font: fontOblique,
     color: cText,
   });
 
   const signBoxW = (contentWidth - 20) / 2;
   const signBoxH = 64;
-  const sY = y - 24;
+  const sY = y - 28;
 
   // Caixa de Assinatura 1: Prestador de Serviços (Recipient1)
   const sb1X = marginX + 6;
