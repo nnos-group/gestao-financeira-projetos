@@ -228,48 +228,6 @@ export async function enviarBmParaZohoSign(params: EnviarBmZohoParams) {
   let submitSucesso = false;
   let submitMsg = "";
   let avisoCreditos = false;
-  // Disparo dos e-mails
-  // Se houver Zoho Flow configurado (Zoho One), usa o Flow para disparar nativamente via Modelo BM
-  const flowUrl = process.env.ZOHO_FLOW_WEBHOOK_URL;
-  if (flowUrl) {
-    try {
-      console.log(`🌊 [Zoho Flow] Disparando BM ${params.codigoBm} via Zoho Flow (Modelo BM)...`);
-      const flowRes = await fetch(flowUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          codigo_bm: params.codigoBm,
-          consultor_nome: params.consultorNome,
-          consultor_email: params.consultorEmail,
-          lider_nome: params.liderNome,
-          lider_email: params.liderEmail,
-          responsavel_nome: params.responsavelNome,
-          responsavel_email: params.responsavelEmail,
-          emails_copia: params.emailsCopia || "leonardo.campos@nnos.com.br",
-          periodo: params.periodoStr,
-          valor_total: params.valorTotal,
-          request_id: requestId,
-          document_id: documentId,
-          link_sistema: "https://gestao-financeira-projetos.vercel.app/medicao",
-        }),
-      });
-
-      if (flowRes.ok) {
-        return {
-          success: true,
-          requestId: requestId,
-          documentId: documentId,
-          status: "sent",
-          avisoCreditos: false,
-          message: "Boletim de Medição disparado com sucesso para assinatura no Zoho Sign!",
-        };
-      } else {
-        console.warn("Aviso ao disparar pelo Zoho Flow:", flowRes.status, await flowRes.text());
-      }
-    } catch (e: any) {
-      console.warn("Falha ao conectar com Zoho Flow:", e.message);
-    }
-  }
 
   // Fallback: Tentativa via endpoint direto do Zoho Sign caso Flow não tenha disparado
   if (requestId && !submitSucesso) {
