@@ -1344,7 +1344,7 @@ Subitem Lista de Serviços LC 116/03: 8.02 (Instrução, treinamento, orientaç�
                         <span>
                           Data: {bmVisualizando.logs[0]?.dataHora && !bmVisualizando.logs[0]?.dataHora.includes("via Zoho")
                             ? bmVisualizando.logs[0].dataHora
-                            : (bmVisualizando.logs[0]?.status === "Assinado" ? "22/10/2026 às 16:51:53" : bmVisualizando.dataEnvio)}
+                            : (bmVisualizando.logs[0]?.status === "Assinado" ? (bmVisualizando.logs[0]?.dataHora || "Assinado Eletronicamente") : "Status: Pendente")}
                         </span>
                       </div>
                     </div>
@@ -1847,12 +1847,8 @@ Subitem Lista de Serviços LC 116/03: 8.02 (Instrução, treinamento, orientaç�
                                       .trim()
                                   : "";
 
-                                if (!dataLimpa || dataLimpa.includes("via Zoho Sign")) {
-                                  dataLimpa = idx === 0
-                                    ? "22/10/2026 às 16:51:53"
-                                    : idx === 1
-                                    ? "22/10/2026 às 16:52:42"
-                                    : "22/10/2026 às 16:53:45";
+                                if (l.status !== "Assinado") {
+                                  dataLimpa = "";
                                 }
 
                                 // Mapeamento corporativo do papel

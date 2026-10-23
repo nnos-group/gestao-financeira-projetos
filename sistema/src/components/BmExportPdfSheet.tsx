@@ -505,9 +505,9 @@ export default function BmExportPdfSheet({ bm }: BmExportPdfSheetProps) {
                       {formatarNomeAssinatura(bm.consultorNome)}
                     </p>
                   ) : (
-                    <p style={{ fontSize: "9px", fontWeight: 700, color: "#0284c7", letterSpacing: "0.02em", margin: "3px 0", userSelect: "none" }}>
-                      {"{{Signature:Recipient1*}}"}
-                    </p>
+                    <div style={{ height: "18px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <span style={{ fontSize: "8px", color: "#94a3b8", fontStyle: "italic" }}>Espaço reservado para assinatura eletrônica</span>
+                    </div>
                   )}
                   <div style={{ width: "120px", height: "1px", backgroundColor: "#cbd5e1", margin: "3px auto" }}></div>
                   <p style={{ fontSize: "8.5px", fontWeight: 700, color: "#0f172a", margin: "1px 0 0 0" }}>{bm.consultorNome}</p>
@@ -518,12 +518,12 @@ export default function BmExportPdfSheet({ bm }: BmExportPdfSheetProps) {
                   <span>
                     {bm.logs[0]?.detalhe?.includes("IP:")
                       ? bm.logs[0].detalhe.split("•")[0].trim()
-                      : (bm.logs[0]?.status === "Assinado" ? "IP: 191.187.11.168" : "ID: Zoho Sign")}
+                      : (bm.logs[0]?.status === "Assinado" ? (bm.logs[0]?.detalhe || "Assinado Eletronicamente") : "Autenticação via Zoho Sign")}
                   </span>
                   <span>
                     Data: {bm.logs[0]?.dataHora && !bm.logs[0]?.dataHora.includes("via Zoho")
                       ? bm.logs[0].dataHora
-                      : (bm.logs[0]?.status === "Assinado" ? "22/10/2026 às 16:51:53" : "{{Signdate:Recipient1*}}")}
+                      : (bm.logs[0]?.status === "Assinado" ? (bm.logs[0]?.dataHora || "Assinado") : "Aguardando Assinatura")}
                   </span>
                 </div>
               </div>
@@ -551,9 +551,9 @@ export default function BmExportPdfSheet({ bm }: BmExportPdfSheetProps) {
                       {signatarioNnosNome}
                     </p>
                   ) : (
-                    <p style={{ fontSize: "9px", fontWeight: 700, color: "#0284c7", letterSpacing: "0.02em", margin: "3px 0", userSelect: "none" }}>
-                      {"{{Signature:Recipient2*}}"}
-                    </p>
+                    <div style={{ height: "18px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <span style={{ fontSize: "8px", color: "#94a3b8", fontStyle: "italic" }}>Espaço reservado para validação operacional</span>
+                    </div>
                   )}
                   <div style={{ width: "120px", height: "1px", backgroundColor: "#cbd5e1", margin: "3px auto" }}></div>
                   <p style={{ fontSize: "8.5px", fontWeight: 700, color: "#0f172a", margin: "1px 0 0 0" }}>{signatarioNnosUpper}</p>
@@ -566,12 +566,12 @@ export default function BmExportPdfSheet({ bm }: BmExportPdfSheetProps) {
                       ? `Zoho Sign ID: ${bm.zohoRequestId}`
                       : (bm.logs[2]?.detalhe?.includes("Doc ID:")
                         ? `Zoho Doc ID: ${bm.logs[2].detalhe.split("Doc ID:")[1].trim()}`
-                        : `Token: NX-VAL-${bm.codigo}-88B`)}
+                        : "Validação Operacional NNÓS")}
                   </span>
                   <span>
                     Data: {bm.logs[2]?.dataHora && !bm.logs[2]?.dataHora.includes("via Zoho")
                       ? bm.logs[2].dataHora
-                      : (bm.status.includes("Aprovado") ? "22/10/2026 às 16:53:45" : "{{Signdate:Recipient2*}}")}
+                      : (bm.status.includes("Aprovado") ? (bm.logs[2]?.dataHora || bm.logs[1]?.dataHora || "Validado") : "Aguardando Validação")}
                   </span>
                 </div>
               </div>
