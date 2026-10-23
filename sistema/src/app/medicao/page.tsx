@@ -294,7 +294,7 @@ export default function BoletimMedicaoPage() {
       };
     }
     return {
-      nome: "Marcela Lara da Silva",
+      nome: "Marcelo Lara da Silva",
       email: "marcela.lara@nnos.com.br",
       papel: "Responsável NNÓS (Coordenação Geral)",
     };
@@ -1374,7 +1374,7 @@ Subitem Lista de Serviços LC 116/03: 8.02 (Instrução, treinamento, orientaç�
                           <strong style={{ fontSize: "13px", color: "var(--primary)", display: "block" }}>
                             {bmVisualizando.consultorNome.toLowerCase().includes("marcelo")
                               ? "LEONARDO CAMPOS"
-                              : "MARCELA LARA DA SILVA"}
+                              : "MARCELO LARA DA SILVA"}
                           </strong>
                           <span style={{ fontSize: "11px", color: "var(--on-surface-variant)" }}>
                             {bmVisualizando.consultorNome.toLowerCase().includes("marcelo")

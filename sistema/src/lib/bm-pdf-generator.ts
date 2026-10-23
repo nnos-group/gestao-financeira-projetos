@@ -543,7 +543,7 @@ export async function gerarPdfOficialBm(dados: BmPdfDados): Promise<Uint8Array> 
   page.drawText("{{Signdate:Recipient3*}}", { x: sb2X + 140, y: sY - 28, size: 8, font: fontRegular, color: cWhite });
 
   page.drawLine({ start: { x: sb2X + 8, y: sY - 36 }, end: { x: sb2X + signBoxW - 8, y: sY - 36 }, color: cBorder, thickness: 0.5 });
-  page.drawText(dados.responsavelNome || "MARCELA LARA DA SILVA", { x: sb2X + 8, y: sY - 45, size: 7.5, font: fontBold, color: cDark });
+  page.drawText(dados.responsavelNome || "Marcelo Lara da Silva", { x: sb2X + 8, y: sY - 45, size: 7.5, font: fontBold, color: cDark });
   page.drawText("Coordenação Operacional & Projetos - NNÓS Consultoria", { x: sb2X + 8, y: sY - 55, size: 6.5, font: fontRegular, color: cMuted });
 
   // ==========================================

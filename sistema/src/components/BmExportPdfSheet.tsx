@@ -88,7 +88,7 @@ export default function BmExportPdfSheet({ bm }: BmExportPdfSheetProps) {
     : formatarNomeAssinatura(bm.responsavelNnosNome || "Marcelo Lara da Silva");
   const signatarioNnosUpper = isMarcelo
     ? "LEONARDO CAMPOS"
-    : (bm.responsavelNnosNome ? bm.responsavelNnosNome.toUpperCase() : "MARCELA LARA DA SILVA");
+    : (bm.responsavelNnosNome ? bm.responsavelNnosNome.toUpperCase() : "MARCELO LARA DA SILVA");
 
   return (
     <div className="print-only-a4" style={{ display: "none" }}>
