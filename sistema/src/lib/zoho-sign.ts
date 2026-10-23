@@ -102,6 +102,19 @@ export async function enviarBmParaZohoSign(params: EnviarBmZohoParams) {
       action_type: "SIGN",
       signing_order: 2,
       verify_recipient: false,
+      fields: [
+        {
+          field_name: "Assinatura do Prestador",
+          field_type_name: "Signature",
+          field_label: "Assinatura",
+          page_no: 0,
+          is_mandatory: true,
+          x_coord: 35,
+          y_coord: 695,
+          abs_width: 220,
+          abs_height: 45,
+        },
+      ],
     },
     {
       recipient_name: params.responsavelNome,
@@ -109,6 +122,19 @@ export async function enviarBmParaZohoSign(params: EnviarBmZohoParams) {
       action_type: "SIGN",
       signing_order: 3,
       verify_recipient: false,
+      fields: [
+        {
+          field_name: "Validação da Coordenação",
+          field_type_name: "Signature",
+          field_label: "Assinatura",
+          page_no: 0,
+          is_mandatory: true,
+          x_coord: 305,
+          y_coord: 695,
+          abs_width: 220,
+          abs_height: 45,
+        },
+      ],
     },
   ];
 
