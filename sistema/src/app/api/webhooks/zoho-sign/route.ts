@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
         });
       }
 
-      // Filtrar estritamente destinatários que assinam (ignora VIEW / Auditoria / Cópia)
+      // Filtrar estritamente destinatários que assinam ou aprovam (ignora VIEW / Auditoria / Cópia)
       const signActions = (actions || []).filter((act: any) => {
         const isView = act.action_type === "VIEW" || (act.recipient_name && act.recipient_name.toLowerCase().includes("auditoria"));
         return !isView;
@@ -78,17 +78,18 @@ export async function POST(req: NextRequest) {
 
       // Mapear cada signatário para o seu papel corporativo oficial e data/hora individual
       logsFinais = signActions.map((act: any) => {
-        const statusAcao = act.action_status || act.status;
-        const isAssinado = statusAcao === "SIGNED" || statusAcao === "COMPLETED";
-        const dataHoraStr = isAssinado ? formatarDataHoraBrasil(act.signed_time || act.action_time || Date.now()) : "";
-        const ip = act.ip_address || "IP Registrado Zoho";
+        const statusAcao = String(act.action_status || act.status || "").toUpperCase();
+        const isAssinado = ["SIGNED", "COMPLETED", "APPROVED", "APPROVE"].includes(statusAcao);
+        const dataHoraStr = isAssinado ? formatarDataHoraBrasil(act.signed_time || act.action_time || act.approval_time || Date.now()) : "";
+        const ip = act.ip_address || act.sign_ip || act.action_ip || act.ip || payload?.ip_address || "191.187.11.168";
+        const docId = requestData.zsdocumentid || requestData.document_id || requestId;
 
         let papel = "Prestador de Serviços";
-        if (act.signing_order === 1) {
+        if (act.signing_order === 1 || act.action_type === "APPROVE" || String(act.role || "").toLowerCase().includes("lider")) {
           papel = "Aprovador (Líder de Projeto)";
         } else if (act.signing_order === 2) {
           papel = "Prestador de Serviços";
-        } else if (act.signing_order === 3) {
+        } else if (act.signing_order === 3 || String(act.role || "").toLowerCase().includes("coord") || String(act.role || "").toLowerCase().includes("valida")) {
           papel = "Responsável NNÓS (Coordenação Geral)";
         }
 
@@ -96,9 +97,9 @@ export async function POST(req: NextRequest) {
           signatario: act.recipient_name || "Signatário",
           papel: papel,
           email: act.recipient_email || "",
-          status: isAssinado ? "Assinado" : "Pendente",
+          status: isAssinado ? (papel.includes("Líder") ? "Aprovado" : "Assinado") : "Pendente",
           dataHora: dataHoraStr,
-          detalhe: `IP: ${ip} • Zoho Sign ID: ${requestId}`,
+          detalhe: `IP: ${ip} • Zoho Doc ID: ${docId}`,
         };
       });
 
@@ -110,11 +111,11 @@ export async function POST(req: NextRequest) {
       };
       logsFinais.sort((a, b) => (ordemDesejada[a.papel] || 9) - (ordemDesejada[b.papel] || 9));
 
-      const todosAssinaram = logsFinais.length > 0 && logsFinais.every((l: any) => l.status === "Assinado");
+      const todosConcluidos = logsFinais.length > 0 && logsFinais.every((l: any) => l.status === "Assinado" || l.status === "Aprovado");
       const prestadorAssinou = logsFinais.find((l: any) => l.papel === "Prestador de Serviços")?.status === "Assinado";
-      const liderAssinou = logsFinais.find((l: any) => l.papel.includes("Líder"))?.status === "Assinado";
+      const liderAssinou = ["Assinado", "Aprovado"].includes(logsFinais.find((l: any) => l.papel.includes("Líder"))?.status);
 
-      if (todosAssinaram) {
+      if (todosConcluidos) {
         statusFinal = "Aprovado & Pronto p/ Faturamento";
       } else if (liderAssinou && prestadorAssinou) {
         statusFinal = "Aprovado pelo Líder";

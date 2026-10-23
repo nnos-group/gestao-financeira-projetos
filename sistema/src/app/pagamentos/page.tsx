@@ -655,6 +655,7 @@ export default function PagamentosPage() {
               <span className="material-symbols-outlined">monitoring</span>
               <span>Relatórios</span>
             </a>
+            <a href="/consultor" className="nav-item"><span className="material-symbols-outlined">support_agent</span><span>Consultor</span></a>
           </nav>
         </div>
 

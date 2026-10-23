@@ -12,6 +12,7 @@ const MENU = [
   { href: "/faturamento", icon: "receipt", label: "Faturamento" },
   { href: "/pagamentos", icon: "payments", label: "Pagamentos" },
   { href: "/relatorios", icon: "monitoring", label: "Relatórios" },
+  { href: "/consultor", icon: "support_agent", label: "Consultor" },
 ];
 
 export default function RelatorioShell({

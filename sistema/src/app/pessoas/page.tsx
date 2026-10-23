@@ -105,8 +105,8 @@ export default function PessoasPage() {
     setModalAberto(true);
   };
 
-  const handleSalvar = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSalvar = (e?: React.SyntheticEvent) => {
+    if (e) e.preventDefault();
     if (!formData.nome || !formData.nome.trim()) {
       alert("Por favor, preencha o Nome da pessoa.");
       return;
@@ -114,7 +114,7 @@ export default function PessoasPage() {
 
     const nomeNormalizado = formData.nome.trim().toUpperCase();
     const jaExisteNome = pessoas.some(
-      (it) => it.id !== pessoaSelecionada?.id && it.nome.trim().toUpperCase() === nomeNormalizado
+      (it) => String(it.id) !== String(pessoaSelecionada?.id) && it.nome?.trim().toUpperCase() === nomeNormalizado
     );
     if (jaExisteNome) {
       alert(`Atenção: Já existe um integrante cadastrado com o nome "${nomeNormalizado}". Registros em duplicidade não são permitidos.`);
@@ -125,23 +125,10 @@ export default function PessoasPage() {
       const cpfDigitos = formData.cpf.replace(/\D/g, "");
       if (cpfDigitos.length >= 11) {
         const jaExisteCpf = pessoas.some(
-          (it) => it.id !== pessoaSelecionada?.id && it.cpf && it.cpf.replace(/\D/g, "") === cpfDigitos
+          (it) => String(it.id) !== String(pessoaSelecionada?.id) && it.cpf && it.cpf.replace(/\D/g, "") === cpfDigitos
         );
         if (jaExisteCpf) {
           alert(`Atenção: Já existe um integrante cadastrado com o CPF "${formData.cpf}". Registros em duplicidade não são permitidos.`);
-          return;
-        }
-      }
-    }
-
-    if (formData.cnpj && formData.cnpj.trim()) {
-      const cnpjDigitos = formData.cnpj.replace(/\D/g, "");
-      if (cnpjDigitos.length >= 14) {
-        const jaExisteCnpj = pessoas.some(
-          (it) => it.id !== pessoaSelecionada?.id && it.cnpj && it.cnpj.replace(/\D/g, "") === cnpjDigitos
-        );
-        if (jaExisteCnpj) {
-          alert(`Atenção: Já existe um integrante cadastrado com o CNPJ "${formData.cnpj}". Registros em duplicidade não são permitidos.`);
           return;
         }
       }
@@ -152,7 +139,7 @@ export default function PessoasPage() {
     if (pessoaSelecionada) {
       // Edição
       novasPessoas = pessoas.map((it) =>
-        it.id === pessoaSelecionada.id ? ({ ...it, ...formData } as PessoaItem) : it
+        String(it.id) === String(pessoaSelecionada.id) ? ({ ...it, ...formData } as PessoaItem) : it
       );
     } else {
       // Novo
@@ -201,14 +188,16 @@ export default function PessoasPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(novasPessoas),
     })
-      .then(() => {
+      .then(async (res) => {
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(json?.error || `HTTP ${res.status}`);
         setToastMsg("Ficha salva com sucesso");
         setTimeout(() => setToastMsg(null), 4000);
       })
       .catch((err) => {
         console.error("Erro ao gravar na API:", err);
-        setToastMsg("Ficha salva com sucesso");
-        setTimeout(() => setToastMsg(null), 4000);
+        setToastMsg(`Erro ao salvar no servidor: ${err.message}. Alteração mantida apenas neste navegador.`);
+        setTimeout(() => setToastMsg(null), 6000);
       });
 
     setModalAberto(false);
@@ -372,6 +361,7 @@ export default function PessoasPage() {
               <span className="material-symbols-outlined">monitoring</span>
               <span>Relatórios</span>
             </a>
+            <a href="/consultor" className="nav-item"><span className="material-symbols-outlined">support_agent</span><span>Consultor</span></a>
           </nav>
         </div>
 
@@ -1438,7 +1428,7 @@ export default function PessoasPage() {
               </button>
             </div>
 
-            <form onSubmit={handleSalvar}>
+            <form noValidate onSubmit={handleSalvar}>
               <div className="modal-body">
                 {/* Aba 1: Identificação & Vínculo */}
                 {abaAtiva === "geral" && (
@@ -1704,20 +1694,21 @@ export default function PessoasPage() {
                   Cancelar
                 </button>
                 <button
-                  type="submit"
+                  type="button"
+                  onClick={() => handleSalvar()}
                   style={{
                     display: "inline-flex",
                     alignItems: "center",
                     gap: "8px",
                     padding: "10px 24px",
                     borderRadius: "8px",
-                    backgroundColor: "#00152f",
+                    backgroundColor: "var(--primary, #0284c7)",
                     color: "#ffffff",
                     fontSize: "13px",
                     fontWeight: 700,
                     cursor: "pointer",
                     border: "none",
-                    boxShadow: "0 2px 6px rgba(0,21,47,0.2)",
+                    boxShadow: "0 2px 6px rgba(2,132,199,0.25)",
                     transition: "all 0.15s ease",
                   }}
                 >

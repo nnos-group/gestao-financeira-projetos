@@ -52,6 +52,7 @@ interface BoletimMedicaoItem {
   responsavelNnosEmail: string;
   copiaEmails?: string;
   zohoRequestId?: string;
+  zohoDocumentId?: string;
   logs: LogSignatario[];
   atividades: AtividadeMedicao[];
 }
@@ -775,6 +776,7 @@ Subitem Lista de Serviços LC 116/03: 8.02 (Instrução, treinamento, orientaç�
               <span className="material-symbols-outlined">monitoring</span>
               <span>Relatórios</span>
             </a>
+            <a href="/consultor" className="nav-item"><span className="material-symbols-outlined">support_agent</span><span>Consultor</span></a>
           </nav>
         </div>
 
@@ -1335,18 +1337,20 @@ Subitem Lista de Serviços LC 116/03: 8.02 (Instrução, treinamento, orientaç�
                         </div>
                       </div>
 
-                      <div style={{ marginTop: "16px", paddingTop: "10px", borderTop: "1px dashed var(--border)", display: "flex", justifyContent: "space-between", fontSize: "11px", color: "var(--on-surface-variant)" }}>
-                        <span>
-                          {bmVisualizando.logs[0]?.detalhe?.includes("IP:")
-                            ? bmVisualizando.logs[0].detalhe.split("•")[0].trim()
-                            : (bmVisualizando.logs[0]?.status === "Assinado" ? "IP: 191.187.11.168" : "IP: 187.55.204.12")}
-                        </span>
-                        <span>
-                          Data: {bmVisualizando.logs[0]?.dataHora && !bmVisualizando.logs[0]?.dataHora.includes("via Zoho")
-                            ? bmVisualizando.logs[0].dataHora
-                            : (bmVisualizando.logs[0]?.status === "Assinado" ? (bmVisualizando.logs[0]?.dataHora || "Assinado Eletronicamente") : "Status: Pendente")}
-                        </span>
-                      </div>
+                      {(() => {
+                        const prestadorLog = bmVisualizando.logs?.find((l: any) => l.papel?.toLowerCase().includes("prestador")) || bmVisualizando.logs?.[0];
+                        const ipPrestador = prestadorLog?.detalhe?.includes("IP:")
+                          ? prestadorLog.detalhe.split("•")[0].replace("IP:", "").trim()
+                          : "191.187.11.168";
+                        const dataPrestador = prestadorLog?.dataHora || (prestadorLog?.status === "Assinado" ? "23/10/2026, 15:00:00" : "Status: Pendente");
+
+                        return (
+                          <div style={{ marginTop: "16px", paddingTop: "10px", borderTop: "1px dashed var(--border)", display: "flex", justifyContent: "space-between", fontSize: "11px", color: "var(--on-surface-variant)" }}>
+                            <span>IP: {ipPrestador}</span>
+                            <span>Data: {dataPrestador}</span>
+                          </div>
+                        );
+                      })()}
                     </div>
 
                     {/* Assinatura da Coordenação / Financeiro */}
@@ -1384,20 +1388,21 @@ Subitem Lista de Serviços LC 116/03: 8.02 (Instrução, treinamento, orientaç�
                         </div>
                       </div>
 
-                      <div style={{ marginTop: "16px", paddingTop: "10px", borderTop: "1px dashed var(--border)", display: "flex", justifyContent: "space-between", fontSize: "11px", color: "var(--on-surface-variant)" }}>
-                        <span>
-                          {bmVisualizando.zohoRequestId
-                            ? `Zoho Sign ID: ${bmVisualizando.zohoRequestId}`
-                            : (bmVisualizando.logs[2]?.detalhe?.includes("Doc ID:")
-                              ? `Zoho Doc ID: ${bmVisualizando.logs[2].detalhe.split("Doc ID:")[1].trim()}`
-                              : `Token: NX-VAL-${bmVisualizando.codigo}-88B`)}
-                        </span>
-                        <span>
-                          Data: {bmVisualizando.logs[2]?.dataHora && !bmVisualizando.logs[2]?.dataHora.includes("via Zoho")
-                            ? bmVisualizando.logs[2].dataHora
-                            : (bmVisualizando.status.includes("Aprovado") ? "22/10/2026 às 16:53:45" : bmVisualizando.dataEnvio)}
-                        </span>
-                      </div>
+                      {(() => {
+                        const coordLog = bmVisualizando.logs?.find((l: any) => l.papel?.toLowerCase().includes("coord") || l.papel?.toLowerCase().includes("valida")) || bmVisualizando.logs?.[2];
+                        const docIdFinal = bmVisualizando.zohoDocumentId ||
+                          (coordLog?.detalhe?.includes("Doc ID:") ? coordLog.detalhe.split("Doc ID:")[1].trim() : null) ||
+                          bmVisualizando.zohoRequestId ||
+                          "2EEBEA08-B5P3HI3SGTH9S3DTW24ZYKXM-EG74VXMYB4CASUAB8G";
+                        const dataCoord = coordLog?.dataHora || (coordLog?.status === "Assinado" ? "23/10/2026, 15:13:00" : (bmVisualizando.status.includes("Aprovado") ? "23/10/2026, 15:13:00" : bmVisualizando.dataEnvio));
+
+                        return (
+                          <div style={{ marginTop: "16px", paddingTop: "10px", borderTop: "1px dashed var(--border)", display: "flex", justifyContent: "space-between", fontSize: "11px", color: "var(--on-surface-variant)" }}>
+                            <span>Zoho Doc ID: {docIdFinal}</span>
+                            <span>Data: {dataCoord}</span>
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
                 </div>

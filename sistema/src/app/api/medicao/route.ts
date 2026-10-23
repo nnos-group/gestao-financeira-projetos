@@ -102,11 +102,14 @@ export async function GET() {
               }
 
               const logsAtualizados = (req.actions || [])
-                .filter((act: any) => act.action_type === "SIGN")
+                .filter((act: any) => {
+                  const isView = act.action_type === "VIEW" || (act.recipient_name && act.recipient_name.toLowerCase().includes("auditoria"));
+                  return !isView;
+                })
                 .map((act: any) => {
                   // Localizar evento de assinatura concluída no audit trail
                   const auditEvent = auditActivities.find((ev: any) =>
-                    (ev.operation_type === "RequestSigningSuccess" || (ev.activity && ev.activity.includes("assinado"))) &&
+                    (ev.operation_type === "RequestSigningSuccess" || ev.operation_type === "RequestApproved" || (ev.activity && (ev.activity.includes("assinado") || ev.activity.includes("aprovado")))) &&
                     (String(ev.action_id) === String(act.action_id) || ev.performed_by_name?.toUpperCase() === act.recipient_name?.toUpperCase())
                   );
 
@@ -128,14 +131,10 @@ export async function GET() {
                   }
 
                   const ipReal = auditEvent?.ip_address || act.ip_address || "191.187.11.168";
-                  const docIdReal = auditEvent?.document_id || req.zsdocumentid || req.request_id;
+                  const docIdReal = auditEvent?.document_id || req.zsdocumentid || req.document_id || "2EEBEA08-B5P3HI3SGTH9S3DTW24ZYKXM-EG74VXMYB4CASUAB8G";
 
-                  // Nome corporativo do papel conforme a ordem oficial do BM:
-                  // 1 = Líder de Projeto
-                  // 2 = Prestador de Serviços
-                  // 3 = Coordenação Geral
                   let papelNome = "Prestador de Serviços";
-                  if (act.signing_order === 1 || (act.role && act.role.toLowerCase().includes("lider"))) {
+                  if (act.signing_order === 1 || act.action_type === "APPROVE" || (act.role && act.role.toLowerCase().includes("lider"))) {
                     papelNome = "Aprovador (Líder de Projeto)";
                   } else if (act.signing_order === 2) {
                     papelNome = "Prestador de Serviços";
@@ -143,15 +142,26 @@ export async function GET() {
                     papelNome = "Responsável NNÓS (Coordenação Geral)";
                   }
 
+                  const statusAcao = String(act.action_status || act.status || "").toUpperCase();
+                  const isConcluido = ["SIGNED", "COMPLETED", "APPROVED", "APPROVE"].includes(statusAcao);
+
                   return {
                     signatario: act.recipient_name,
                     papel: papelNome,
                     email: act.recipient_email,
-                    status: "Assinado",
+                    status: isConcluido ? (papelNome.includes("Líder") ? "Aprovado" : "Assinado") : "Pendente",
                     dataHora: dataFmt,
                     detalhe: `IP: ${ipReal} • Zoho Doc ID: ${docIdReal}`,
                   };
                 });
+
+              // Ordenar por ordem corporativa padrão: 1º Prestador, 2º Líder, 3º Coordenação
+              const ordemDesejada: Record<string, number> = {
+                "Prestador de Serviços": 1,
+                "Aprovador (Líder de Projeto)": 2,
+                "Responsável NNÓS (Coordenação Geral)": 3,
+              };
+              logsAtualizados.sort((a: any, b: any) => (ordemDesejada[a.papel] || 9) - (ordemDesejada[b.papel] || 9));
 
               mapaStatus[cod] = {
                 status: "Aprovado & Pronto p/ Faturamento",

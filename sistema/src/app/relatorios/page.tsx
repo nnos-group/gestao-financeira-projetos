@@ -166,6 +166,7 @@ export default function RelatoriosPage() {
             <a href="/faturamento" className="nav-item"><span className="material-symbols-outlined">receipt</span><span>Faturamento</span></a>
             <a href="/pagamentos" className="nav-item"><span className="material-symbols-outlined">payments</span><span>Pagamentos</span></a>
             <a href="/relatorios" className="nav-item active"><span className="material-symbols-outlined">monitoring</span><span>Relatórios</span></a>
+            <a href="/consultor" className="nav-item"><span className="material-symbols-outlined">support_agent</span><span>Consultor</span></a>
           </nav>
         </div>
         <div className="sidebar-footer">
