@@ -7,11 +7,16 @@ import ModernDropdown from "@/components/ModernDropdown";
 import { formatarPeriodoBR, formatarDataBR } from "@/lib/date-utils";
 
 export default function ConsultorBmsPage() {
-  const { consultorAtivo, dadosConsultor, recarregarDados } = useConsultor();
+  const { consultorAtivo, dadosConsultor } = useConsultor();
   const [busca, setBusca] = useState("");
   const [filtroStatus, setFiltroStatus] = useState("Todos");
-  const [sincronizando, setSincronizando] = useState(false);
   const [bmVisualizando, setBmVisualizando] = useState<any | null>(null);
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+
+  const showToast = (msg: string) => {
+    setToastMsg(msg);
+    setTimeout(() => setToastMsg(null), 3500);
+  };
 
   const bmsOriginais = dadosConsultor?.bms || [];
 
@@ -30,22 +35,11 @@ export default function ConsultorBmsPage() {
     });
   }, [bmsOriginais, filtroStatus, busca]);
 
-  const handleSincronizarZoho = async () => {
-    try {
-      setSincronizando(true);
-      await fetch("/api/medicao");
-      await recarregarDados();
-    } catch (e) {
-      console.error("Erro ao sincronizar Zoho:", e);
-    } finally {
-      setSincronizando(false);
-    }
-  };
-
   const brl = (val: number | null | undefined) =>
     (val || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
   const formatarNomeAssinatura = (nome: string) => {
+    if (!nome) return "Consultor";
     return nome
       .toLowerCase()
       .split(" ")
@@ -53,523 +47,807 @@ export default function ConsultorBmsPage() {
       .join(" ");
   };
 
+  const handleCopyNfTexto = (bm: any) => {
+    const linhasProjetos = Array.from(new Set((bm.atividades || []).map((a: any) => a.projeto)))
+      .map((proj: any) => {
+        const sub = (bm.atividades || [])
+          .filter((a: any) => a.projeto === proj)
+          .reduce((acc: number, a: any) => acc + (a.valorTotal || 0), 0);
+        return `${proj}: R$ ${sub.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
+      })
+      .join("\n");
+
+    const texto = `BM: ${bm.codigo} | CONTRATO: ${String(bm.contrato || "").replace(/•\s*NNÓS/g, "").trim()}\n${linhasProjetos}\n\nCódigo CTISS: 0802-0/01-88 (Instrução e treinamento)\nSubitem LC 116/03: 8.02 (Instrução, treinamento, orientação pedagógica)`;
+
+    navigator.clipboard.writeText(texto);
+    showToast("Discriminação copiada para a área de transferência!");
+  };
+
   return (
     <>
-      <ConsultorHeader tituloPagina="Meus BMs" />
+      <style jsx global>{`
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          #secao-bm-imprimir,
+          #secao-bm-imprimir * {
+            visibility: visible;
+          }
+          #secao-bm-imprimir {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            background: #ffffff !important;
+          }
+          .no-print {
+            display: none !important;
+          }
+        }
+      `}</style>
+
+      {toastMsg && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: "24px",
+            right: "24px",
+            backgroundColor: "#00152f",
+            color: "#ffffff",
+            padding: "12px 20px",
+            borderRadius: "10px",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.2)",
+            fontSize: "13px",
+            fontWeight: 600,
+            zIndex: 10000,
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+          }}
+        >
+          <span className="material-symbols-outlined" style={{ fontSize: "18px", color: "#10b981" }}>
+            check_circle
+          </span>
+          <span>{toastMsg}</span>
+        </div>
+      )}
+
+      <div className="no-print">
+        <ConsultorHeader tituloPagina="Meus BMs" />
+      </div>
 
       <main className="content-container" style={{ padding: "24px 28px", display: "flex", flexDirection: "column", gap: "20px" }}>
-        <div>
-          <h1 style={{ fontSize: "22px", fontWeight: 800, margin: 0, color: "var(--primary)" }}>
-            Meus Boletins de Medição (BMs)
-          </h1>
-          <p style={{ margin: "4px 0 0 0", fontSize: "13px", color: "var(--on-surface-variant)" }}>
-            Acompanhe o status do workflow de aprovação, trilha de assinaturas eletrônicas com validade jurídica e dados para emissão de Notas Fiscais de <strong>{consultorAtivo?.nome}</strong>.
-          </p>
-        </div>
-
-        {/* BARRA DE PESQUISA E FILTROS DE STATUS DO WORKFLOW (Padrão Print 5) */}
-        <div
-          style={{
-            backgroundColor: "var(--surface-container-lowest)",
-            padding: "12px 18px",
-            borderRadius: "12px",
-            border: "1px solid var(--border)",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            flexWrap: "wrap",
-            gap: "12px",
-            width: "100%",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", flex: 1, minWidth: "300px" }}>
-            <span className="material-symbols-outlined" style={{ color: "var(--on-surface-variant)", fontSize: "18px" }}>
-              search
-            </span>
-            <input
-              type="text"
-              placeholder="Pesquisar por BM (0903), consultor, contrato ou período..."
-              value={busca}
-              onChange={(e) => setBusca(e.target.value)}
-              style={{
-                width: "100%",
-                border: "none",
-                outline: "none",
-                fontSize: "13px",
-                background: "transparent",
-                color: "var(--on-surface)",
-              }}
-            />
-          </div>
-
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--on-surface-variant)", textTransform: "uppercase" }}>
-              Workflow:
-            </span>
-            <ModernDropdown
-              value={filtroStatus}
-              onChange={(val) => setFiltroStatus(String(val))}
-              options={[
-                { value: "Todos", label: `Todos os Status (${bmsOriginais.length})` },
-                { value: "Pendente de Assinatura", label: "Pendente de Assinatura" },
-                { value: "Assinado pelo Prestador", label: "Assinado pelo Prestador" },
-                { value: "Aprovado pelo Líder", label: "Aprovado pelo Líder" },
-                { value: "Aprovado & Pronto p/ Faturamento", label: "Aprovado & Pronto p/ Faturamento" },
-              ]}
-              icon="filter_list"
-              searchable={false}
-              minWidth={220}
-            />
-
-            <button
-              type="button"
-              onClick={handleSincronizarZoho}
-              disabled={sincronizando}
-              className="btn-secondary"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "6px",
-                fontSize: "12px",
-                padding: "8px 14px",
-                borderRadius: "10px",
-                cursor: sincronizando ? "wait" : "pointer",
-              }}
-              title="Sincronizar status de assinaturas em tempo real com o Zoho Sign"
-            >
-              <span
-                className="material-symbols-outlined"
-                style={{
-                  fontSize: "16px",
-                  animation: sincronizando ? "spin 1s linear infinite" : "none",
-                }}
-              >
-                sync
-              </span>
-              <span>{sincronizando ? "Sincronizando..." : "Sincronizar Zoho"}</span>
-            </button>
-          </div>
-        </div>
-
-        {/* TABELA DE BMS GERADOS E WORKFLOW DE ASSINATURAS (Idêntica ao Print 5) */}
-        <div
-          style={{
-            backgroundColor: "var(--surface-container-lowest)",
-            borderRadius: "14px",
-            border: "1px solid var(--border)",
-            overflow: "hidden",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.03)",
-            width: "100%",
-          }}
-        >
-          <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "12px" }}>
-            <thead>
-              <tr
-                style={{
-                  backgroundColor: "var(--surface-container-low)",
-                  borderBottom: "1px solid var(--border)",
-                  color: "var(--on-surface-variant)",
-                  fontSize: "11px",
-                  textTransform: "uppercase",
-                }}
-              >
-                <th style={{ padding: "12px 18px", width: "90px" }}>Código</th>
-                <th style={{ padding: "12px 18px" }}>Consultor / Prestador</th>
-                <th style={{ padding: "12px 18px" }}>Período &amp; Quinzena</th>
-                <th style={{ padding: "12px 18px", textAlign: "right" }}>Horas</th>
-                <th style={{ padding: "12px 18px", textAlign: "right" }}>Valor Apurado</th>
-                <th style={{ padding: "12px 18px" }}>Status do Workflow</th>
-                <th style={{ padding: "12px 18px" }}>Log de Informações &amp; Assinaturas</th>
-                <th style={{ padding: "12px 18px", textAlign: "center" }}>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {bmsFiltrados.length === 0 ? (
-                <tr>
-                  <td colSpan={8} style={{ padding: "36px", textAlign: "center", color: "var(--on-surface-variant)" }}>
-                    Nenhum Boletim de Medição encontrado para este consultor.
-                  </td>
-                </tr>
-              ) : (
-                bmsFiltrados.map((bm: any) => {
-                  const isAprovado = bm.status === "Aprovado & Pronto p/ Faturamento";
-                  const isAssinado = bm.status === "Assinado pelo Prestador" || bm.status === "Aprovado pelo Líder";
-
-                  return (
-                    <tr key={bm.id || bm.codigo} style={{ borderBottom: "1px solid var(--border)" }}>
-                      {/* Código sem # */}
-                      <td style={{ padding: "14px 18px", fontWeight: 800, color: "var(--primary)", fontSize: "14px" }}>
-                        {bm.codigo}
-                      </td>
-
-                      {/* Consultor / Prestador */}
-                      <td style={{ padding: "14px 18px" }}>
-                        <strong style={{ color: "var(--on-surface)", display: "block", textTransform: "uppercase" }}>
-                          {bm.consultorNome}
-                        </strong>
-                        <span style={{ fontSize: "11px", color: "var(--on-surface-variant)" }}>
-                          CNPJ: {bm.consultorCnpj || consultorAtivo?.cnpj || "Pessoa Física"}
-                        </span>
-                      </td>
-
-                      {/* Período & Quinzena */}
-                      <td style={{ padding: "14px 18px" }}>
-                        <div>{bm.mesReferencia}</div>
-                        <span
-                          style={{
-                            fontSize: "11px",
-                            color: "#0284c7",
-                            fontWeight: 600,
-                            backgroundColor: "#e0f2fe",
-                            padding: "2px 6px",
-                            borderRadius: "4px",
-                            display: "inline-block",
-                            marginTop: "2px",
-                          }}
-                        >
-                          {bm.periodoTipo || bm.periodoApuracao || "Integral"}
-                        </span>
-                      </td>
-
-                      {/* Horas */}
-                      <td style={{ padding: "14px 18px", textAlign: "right", fontWeight: 600 }}>
-                        {Number(bm.horasTotal || bm.totalHoras || 0).toFixed(1)} h
-                      </td>
-
-                      {/* Valor Apurado */}
-                      <td style={{ padding: "14px 18px", textAlign: "right", fontWeight: 800, color: "var(--primary)", fontSize: "13px" }}>
-                        {brl(bm.valorLiquidoTotal || bm.valorTotal)}
-                      </td>
-
-                      {/* Status do Workflow */}
-                      <td style={{ padding: "14px 18px" }}>
-                        <span
-                          style={{
-                            display: "inline-block",
-                            padding: "4px 10px",
-                            borderRadius: "6px",
-                            fontSize: "11px",
-                            fontWeight: 700,
-                            backgroundColor: isAprovado ? "#dcfce7" : isAssinado ? "#e0f2fe" : "#fef3c7",
-                            color: isAprovado ? "#15803d" : isAssinado ? "#0369a1" : "#92400e",
-                          }}
-                        >
-                          {bm.status}
-                        </span>
-                      </td>
-
-                      {/* Log de Informações & Assinaturas */}
-                      <td style={{ padding: "14px 18px", fontSize: "11px", color: "var(--on-surface-variant)" }}>
-                        {bm.dataEnvio && (
-                          <div style={{ marginBottom: "4px" }}>
-                            <span style={{ fontWeight: 600 }}>Envio:</span> {bm.dataEnvio}
-                          </div>
-                        )}
-                        {(bm.logs || []).map((l: any, idx: number) => {
-                          const isOk = l.status === "Assinado" || l.status === "Aprovado";
-                          return (
-                            <div key={idx} style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "2px" }}>
-                              <span
-                                style={{
-                                  width: "6px",
-                                  height: "6px",
-                                  borderRadius: "50%",
-                                  backgroundColor: isOk ? "#16a34a" : "#ea580c",
-                                  display: "inline-block",
-                                }}
-                              />
-                              <span>
-                                <strong>{l.papel}:</strong>{" "}
-                                <span style={{ color: isOk ? "#16a34a" : "#ea580c", fontWeight: 600 }}>
-                                  {l.status}
-                                </span>
-                                {l.dataHora && (
-                                  <span style={{ color: "var(--on-surface-variant)" }}>
-                                    {" "}· {l.dataHora}
-                                  </span>
-                                )}
-                              </span>
-                            </div>
-                          );
-                        })}
-                      </td>
-
-                      {/* Ações: Botão Visualizar */}
-                      <td style={{ padding: "14px 18px", textAlign: "center" }}>
-                        <button
-                          type="button"
-                          onClick={() => setBmVisualizando(bm)}
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: "6px",
-                            padding: "6px 12px",
-                            borderRadius: "8px",
-                            backgroundColor: "#00152f",
-                            color: "#ffffff",
-                            fontSize: "12px",
-                            fontWeight: 600,
-                            border: "none",
-                            cursor: "pointer",
-                            transition: "all 0.15s ease",
-                          }}
-                          title="Visualizar Boletim de Medição completo"
-                        >
-                          <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
-                            visibility
-                          </span>
-                          <span>Visualizar</span>
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* MODAL OFICIAL DE VISUALIZAÇÃO DO BM */}
-        {bmVisualizando && (
-          <div
-            style={{
-              position: "fixed",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: "rgba(0, 0, 0, 0.6)",
-              backdropFilter: "blur(4px)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              zIndex: 9999,
-              padding: "20px",
-            }}
-            onClick={() => setBmVisualizando(null)}
-          >
+        {/* ========================================================= */}
+        {/* CASO 1: VISUALIZAÇÃO COMPLETA DO BM SELECIONADO (PRINT 2) */}
+        {/* ========================================================= */}
+        {bmVisualizando ? (
+          <div id="secao-bm-imprimir" style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+            {/* Header / Ações de Voltar e Exportar PDF */}
             <div
+              className="no-print"
               style={{
-                backgroundColor: "var(--surface)",
-                borderRadius: "16px",
-                width: "100%",
-                maxWidth: "1000px",
-                maxHeight: "90vh",
-                overflowY: "auto",
-                boxShadow: "0 20px 40px rgba(0,0,0,0.25)",
                 display: "flex",
-                flexDirection: "column",
-                border: "1px solid var(--border)",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: "12px",
+                paddingBottom: "8px",
               }}
-              onClick={(e) => e.stopPropagation()}
             >
-              {/* Header do Modal */}
-              <div
-                style={{
-                  padding: "16px 24px",
-                  borderBottom: "1px solid var(--border)",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  backgroundColor: "var(--surface-container-low)",
-                  position: "sticky",
-                  top: 0,
-                  zIndex: 10,
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  <img src="/logo-coruja.png" alt="Logo NNÓS" style={{ width: "28px", height: "28px", objectFit: "contain" }} />
-                  <div>
-                    <strong style={{ fontSize: "15px", color: "var(--primary)" }}>
-                      Boletim de Medição de Serviços · BM {bmVisualizando.codigo}
-                    </strong>
-                    <div style={{ fontSize: "11px", color: "var(--on-surface-variant)" }}>
-                      Referência: {bmVisualizando.mesReferencia} • Status: {bmVisualizando.status}
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <a
-                    href={`/api/medicao/${bmVisualizando.codigo}/pdf`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="btn-secondary"
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "6px",
-                      fontSize: "12px",
-                      padding: "6px 12px",
-                      textDecoration: "none",
-                    }}
-                  >
-                    <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>download</span>
-                    <span>Baixar PDF</span>
-                  </a>
-
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
                   <button
                     type="button"
                     onClick={() => setBmVisualizando(null)}
                     style={{
+                      background: "none",
                       border: "none",
-                      background: "transparent",
-                      color: "var(--on-surface-variant)",
+                      color: "var(--secondary, #0284c7)",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "4px",
+                      fontSize: "13px",
+                      fontWeight: 700,
                       cursor: "pointer",
-                      padding: "4px",
-                      display: "flex",
+                      padding: 0,
                     }}
                   >
-                    <span className="material-symbols-outlined" style={{ fontSize: "22px" }}>close</span>
+                    <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>arrow_back</span>
+                    <span>Voltar para Lista de BMs</span>
                   </button>
+                  <span style={{ width: "4px", height: "4px", borderRadius: "50%", backgroundColor: "var(--outline, #94a3b8)" }}></span>
+                  <span style={{ padding: "2px 8px", borderRadius: "999px", backgroundColor: "var(--surface-container, #e2e8f0)", fontSize: "11px", fontWeight: 600, color: "var(--on-surface-variant)" }}>
+                    Ciclo: Mensal Fechado
+                  </span>
+                </div>
+
+                <div style={{ display: "flex", alignItems: "baseline", gap: "12px", flexWrap: "wrap" }}>
+                  <h1 style={{ fontSize: "24px", fontWeight: 800, color: "var(--primary)", margin: 0, letterSpacing: "-0.02em" }}>
+                    Boletim de Medição de Serviços
+                  </h1>
+                  <span style={{ fontSize: "13px", color: "var(--on-surface-variant)" }}>
+                    BM {bmVisualizando.codigo} • Contrato {String(bmVisualizando.contrato || "").replace(/•\s*NNÓS/g, "").trim()}
+                  </span>
                 </div>
               </div>
 
-              {/* Corpo da Folha do BM */}
-              <div style={{ padding: "24px 28px", display: "flex", flexDirection: "column", gap: "20px" }}>
-                {/* 4 Cards de Resumo */}
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "14px" }}>
-                  <div style={{ padding: "14px", borderRadius: "10px", backgroundColor: "var(--surface-container-low)", border: "1px solid var(--border)" }}>
-                    <span style={{ fontSize: "11px", color: "var(--on-surface-variant)", textTransform: "uppercase", fontWeight: 700 }}>Valor Líquido Total</span>
-                    <div style={{ fontSize: "20px", fontWeight: 800, color: "#059669", marginTop: "4px" }}>
-                      {brl(bmVisualizando.valorLiquidoTotal || bmVisualizando.valorTotal)}
+              {/* Botão Exportar PDF (Print 2 & 3) */}
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="btn-secondary"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    fontSize: "13px",
+                    fontWeight: 700,
+                    padding: "8px 16px",
+                    borderRadius: "8px",
+                    cursor: "pointer",
+                  }}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>print</span>
+                  <span>Exportar PDF</span>
+                </button>
+              </div>
+            </div>
+
+            {/* 4 Hero KPI Banner Cards (Print 2) */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "16px" }}>
+              {/* Valor Líquido Total */}
+              <div style={{ padding: "20px", borderRadius: "14px", backgroundColor: "var(--surface-container-lowest)", border: "1px solid var(--border)", boxShadow: "0 1px 3px rgba(0,0,0,0.03)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                  <div>
+                    <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--on-surface-variant)", letterSpacing: "0.05em" }}>Valor Líquido Total</span>
+                    <div style={{ fontSize: "24px", fontWeight: 800, color: "var(--primary)", marginTop: "4px" }}>
+                      {brl(bmVisualizando.valorTotal || bmVisualizando.valorLiquidoTotal)}
                     </div>
                   </div>
+                  <div style={{ width: "40px", height: "40px", borderRadius: "10px", backgroundColor: "rgba(0,21,47,0.08)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--primary)" }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: "22px" }}>payments</span>
+                  </div>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "14px", color: "#047857", fontSize: "11px", fontWeight: 600 }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>check_circle</span>
+                  <span>Aprovado</span>
+                </div>
+              </div>
 
-                  <div style={{ padding: "14px", borderRadius: "10px", backgroundColor: "var(--surface-container-low)", border: "1px solid var(--border)" }}>
-                    <span style={{ fontSize: "11px", color: "var(--on-surface-variant)", textTransform: "uppercase", fontWeight: 700 }}>Carga Horária</span>
-                    <div style={{ fontSize: "20px", fontWeight: 800, color: "var(--primary)", marginTop: "4px" }}>
-                      {Number(bmVisualizando.horasTotal || bmVisualizando.totalHoras || 0).toFixed(1)} h
+              {/* Carga Horária Apurada */}
+              <div style={{ padding: "20px", borderRadius: "14px", backgroundColor: "var(--surface-container-lowest)", border: "1px solid var(--border)", boxShadow: "0 1px 3px rgba(0,0,0,0.03)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                  <div>
+                    <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--on-surface-variant)", letterSpacing: "0.05em" }}>Carga Horária Apurada</span>
+                    <div style={{ fontSize: "24px", fontWeight: 800, color: "var(--primary)", marginTop: "4px" }}>
+                      {Number(bmVisualizando.totalHoras || bmVisualizando.horasTotal || 0).toFixed(1)} h
                     </div>
                   </div>
+                  <div style={{ width: "40px", height: "40px", borderRadius: "10px", backgroundColor: "rgba(0,103,129,0.08)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--secondary)" }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: "22px" }}>schedule</span>
+                  </div>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "14px", fontSize: "11px" }}>
+                  <span style={{ color: "var(--on-surface-variant)" }}>{(bmVisualizando.atividades || []).length} frentes de serviço</span>
+                  <strong style={{ color: "var(--secondary)" }}>
+                    Média R$ {Number(bmVisualizando.mediaHora || ((bmVisualizando.valorTotal || 0) / (bmVisualizando.totalHoras || 1)) || 0).toFixed(2)}/h
+                  </strong>
+                </div>
+              </div>
 
-                  <div style={{ padding: "14px", borderRadius: "10px", backgroundColor: "var(--surface-container-low)", border: "1px solid var(--border)" }}>
-                    <span style={{ fontSize: "11px", color: "var(--on-surface-variant)", textTransform: "uppercase", fontWeight: 700 }}>Mês de Referência</span>
-                    <div style={{ fontSize: "15px", fontWeight: 700, color: "var(--on-surface)", marginTop: "4px" }}>
+              {/* Mês de Referência */}
+              <div style={{ padding: "20px", borderRadius: "14px", backgroundColor: "var(--surface-container-lowest)", border: "1px solid var(--border)", boxShadow: "0 1px 3px rgba(0,0,0,0.03)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                  <div>
+                    <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--on-surface-variant)", letterSpacing: "0.05em" }}>Mês de Referência</span>
+                    <div style={{ fontSize: "24px", fontWeight: 800, color: "var(--primary)", marginTop: "4px" }}>
                       {bmVisualizando.mesReferencia}
                     </div>
                   </div>
+                  <div style={{ width: "40px", height: "40px", borderRadius: "10px", backgroundColor: "var(--surface-container)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--on-surface)" }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: "22px" }}>calendar_month</span>
+                  </div>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "14px", fontSize: "11px", color: "var(--on-surface-variant)" }}>
+                  <span style={{ padding: "2px 6px", borderRadius: "4px", backgroundColor: "var(--surface-container)", fontWeight: 600 }}>{bmVisualizando.periodoTipo || "2ª Quinzena"}</span>
+                  <span>Corte: {bmVisualizando.dataCorte || "20/09/2026"}</span>
+                </div>
+              </div>
 
-                  <div style={{ padding: "14px", borderRadius: "10px", backgroundColor: "var(--surface-container-low)", border: "1px solid var(--border)" }}>
-                    <span style={{ fontSize: "11px", color: "var(--on-surface-variant)", textTransform: "uppercase", fontWeight: 700 }}>Cronograma Previsto</span>
-                    <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--on-surface)", marginTop: "4px" }}>
-                      NF até dia 10 • Pagto dia 25
+              {/* Cronograma Previsto */}
+              <div style={{ padding: "20px", borderRadius: "14px", backgroundColor: "var(--surface-container-lowest)", border: "1px solid var(--border)", boxShadow: "0 1px 3px rgba(0,0,0,0.03)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                  <div>
+                    <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--on-surface-variant)", letterSpacing: "0.05em" }}>Cronograma Previsto</span>
+                    <div style={{ fontSize: "20px", fontWeight: 800, color: "var(--primary)", marginTop: "4px" }}>
+                      10 e 25 de Outubro
                     </div>
+                  </div>
+                  <div style={{ width: "40px", height: "40px", borderRadius: "10px", backgroundColor: "rgba(135,221,255,0.3)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--secondary)" }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: "22px" }}>event_repeat</span>
+                  </div>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "14px", fontSize: "11px", color: "var(--on-surface-variant)" }}>
+                  <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "var(--secondary)" }}></span>
+                  <span>NF até dia 10 • Pagamento dia 25</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Identificação das Partes (Print 2) */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(460px, 1fr))", gap: "16px" }}>
+              {/* Prestador de Serviços */}
+              <div style={{ padding: "24px", borderRadius: "14px", backgroundColor: "var(--surface-container-lowest)", border: "1px solid var(--border)", boxShadow: "0 1px 3px rgba(0,0,0,0.03)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", paddingBottom: "12px", borderBottom: "1px solid var(--border)" }}>
+                  <div style={{ width: "34px", height: "34px", borderRadius: "8px", backgroundColor: "var(--primary)", color: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>badge</span>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--on-surface-variant)" }}>Prestador de Serviços</span>
+                    <h2 style={{ fontSize: "16px", fontWeight: 700, color: "var(--primary)", margin: 0 }}>{bmVisualizando.consultorNome}</h2>
                   </div>
                 </div>
 
-                {/* Prestador e Tomador */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-                  <div style={{ padding: "16px", borderRadius: "12px", border: "1px solid var(--border)", backgroundColor: "var(--surface-container-lowest)" }}>
-                    <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--secondary)" }}>Prestador de Serviços</span>
-                    <strong style={{ fontSize: "14px", display: "block", marginTop: "4px", color: "var(--primary)" }}>{bmVisualizando.consultorNome}</strong>
-                    <div style={{ fontSize: "12px", color: "var(--on-surface-variant)", marginTop: "4px", lineHeight: 1.5 }}>
-                      Razão Social: {bmVisualizando.consultorRazaoSocial || bmVisualizando.consultorNome}<br />
-                      CNPJ / CPF: {bmVisualizando.consultorCnpj || consultorAtivo?.cnpj || "Pessoa Física"}<br />
-                      E-mail: {bmVisualizando.consultorEmail || consultorAtivo?.email}
-                    </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", paddingTop: "14px", fontSize: "12px" }}>
+                  <div>
+                    <span style={{ fontSize: "11px", color: "var(--on-surface-variant)", display: "block" }}>Razão Social / Titular</span>
+                    <strong style={{ color: "var(--on-surface)" }}>{bmVisualizando.consultorRazaoSocial || bmVisualizando.consultorNome}</strong>
                   </div>
+                  <div>
+                    <span style={{ fontSize: "11px", color: "var(--on-surface-variant)", display: "block" }}>CNPJ</span>
+                    <strong style={{ color: "var(--on-surface)" }}>{bmVisualizando.consultorCnpj || "Não informado"}</strong>
+                  </div>
+                  <div style={{ gridColumn: "span 2" }}>
+                    <span style={{ fontSize: "11px", color: "var(--on-surface-variant)", display: "block" }}>Endereço Comercial Cadastrado</span>
+                    <span style={{ color: "var(--on-surface)" }}>{bmVisualizando.consultorEndereco || "Belo Horizonte / MG"}</span>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: "11px", color: "var(--on-surface-variant)", display: "block" }}>E-mail Operacional</span>
+                    <a href={`mailto:${bmVisualizando.consultorEmail}`} style={{ color: "var(--secondary)", textDecoration: "none" }}>{bmVisualizando.consultorEmail}</a>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: "11px", color: "var(--on-surface-variant)", display: "block" }}>Contrato Ativo / Vinculado</span>
+                    <strong style={{ color: "var(--on-surface)" }}>{String(bmVisualizando.contrato || "").replace(/•\s*NNÓS/g, "").trim()}</strong>
+                  </div>
+                </div>
+              </div>
 
-                  <div style={{ padding: "16px", borderRadius: "12px", border: "1px solid var(--border)", backgroundColor: "var(--surface-container-lowest)" }}>
+              {/* Tomador dos Serviços */}
+              <div style={{ padding: "24px", borderRadius: "14px", backgroundColor: "var(--surface-container-lowest)", border: "1px solid var(--border)", boxShadow: "0 1px 3px rgba(0,0,0,0.03)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", paddingBottom: "12px", borderBottom: "1px solid var(--border)" }}>
+                  <div style={{ width: "34px", height: "34px", borderRadius: "8px", backgroundColor: "var(--secondary, #0284c7)", color: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>domain</span>
+                  </div>
+                  <div>
                     <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--on-surface-variant)" }}>Tomador dos Serviços</span>
-                    <strong style={{ fontSize: "14px", display: "block", marginTop: "4px", color: "var(--primary)" }}>NNÓS CONSULTORIA E TREINAMENTO LTDA</strong>
-                    <div style={{ fontSize: "12px", color: "var(--on-surface-variant)", marginTop: "4px", lineHeight: 1.5 }}>
-                      CNPJ: 36.443.716/0001-00 • IM: 1.208.841/002-5<br />
-                      Sede: Rua Sergipe, nº 77 - Loja 1, Boa Viagem, Belo Horizonte - MG<br />
-                      Financeiro: leonardo.campos@nnos.com.br
+                    <h2 style={{ fontSize: "16px", fontWeight: 700, color: "var(--primary)", margin: 0 }}>NNÓS CONSULTORIA E TREINAMENTO LTDA</h2>
+                  </div>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", paddingTop: "14px", fontSize: "12px" }}>
+                  <div>
+                    <span style={{ fontSize: "11px", color: "var(--on-surface-variant)", display: "block" }}>CNPJ da Empresa</span>
+                    <strong style={{ color: "var(--on-surface)" }}>36.443.716/0001-00</strong>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: "11px", color: "var(--on-surface-variant)", display: "block" }}>Inscrição Municipal</span>
+                    <strong style={{ color: "var(--on-surface)" }}>1.208.841/002-5</strong>
+                  </div>
+                  <div style={{ gridColumn: "span 2" }}>
+                    <span style={{ fontSize: "11px", color: "var(--on-surface-variant)", display: "block" }}>Endereço da Sede</span>
+                    <span style={{ color: "var(--on-surface)" }}>Rua Sergipe, nº 77 - Loja 1, Boa Viagem, Belo Horizonte - MG | CEP 30130-170</span>
+                  </div>
+                  <div style={{ gridColumn: "span 2" }}>
+                    <span style={{ fontSize: "11px", color: "var(--on-surface-variant)", display: "block" }}>Financeiro</span>
+                    <a href="mailto:leonardo.campos@nnos.com.br" style={{ color: "var(--secondary)", textDecoration: "none" }}>leonardo.campos@nnos.com.br</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Detalhamento Operacional de Horas (Print 2) */}
+            <div style={{ borderRadius: "14px", backgroundColor: "var(--surface-container-lowest)", border: "1px solid var(--border)", overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.03)" }}>
+              <div style={{ padding: "16px 20px", backgroundColor: "var(--surface-container-low)", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px", borderBottom: "1px solid var(--border)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <div style={{ width: "36px", height: "36px", borderRadius: "8px", backgroundColor: "var(--primary)", color: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>table_rows</span>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--secondary)" }}>Detalhamento Operacional de Horas</span>
+                    <h3 style={{ fontSize: "16px", fontWeight: 700, color: "var(--primary)", margin: 0 }}>Atividades Apuradas no Mês ({bmVisualizando.mesReferencia})</h3>
+                  </div>
+                </div>
+                <span style={{ padding: "4px 12px", borderRadius: "999px", backgroundColor: "var(--surface-container)", fontSize: "12px", fontWeight: 600, color: "var(--on-surface-variant)" }}>
+                  {(bmVisualizando.atividades || []).length} Lançamentos Registrados
+                </span>
+              </div>
+
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "12px" }}>
+                  <thead>
+                    <tr style={{ backgroundColor: "var(--primary)", color: "#ffffff", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                      <th style={{ padding: "12px 16px" }}>Projeto</th>
+                      <th style={{ padding: "12px 16px", minWidth: "260px" }}>Atividade / Escopo</th>
+                      <th style={{ padding: "12px 16px", textAlign: "center" }}>Período</th>
+                      <th style={{ padding: "12px 16px", textAlign: "right" }}>CH (Horas)</th>
+                      <th style={{ padding: "12px 16px", textAlign: "right" }}>Valor / Hora</th>
+                      <th style={{ padding: "12px 16px", textAlign: "right" }}>Valor Total</th>
+                      <th style={{ padding: "12px 16px", textAlign: "right" }}>Rateio Interno</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(bmVisualizando.atividades || []).map((at: any, idx: number) => (
+                      <tr key={idx} style={{ borderBottom: "1px solid var(--border)", backgroundColor: idx % 2 === 1 ? "var(--surface-container-low)" : "transparent" }}>
+                        <td style={{ padding: "12px 16px", fontWeight: 700, color: "var(--primary)" }}>{at.projeto}</td>
+                        <td style={{ padding: "12px 16px" }}>{at.atividade}</td>
+                        <td style={{ padding: "12px 16px", textAlign: "center", color: "var(--on-surface-variant)", whiteSpace: "nowrap" }}>{at.periodo}</td>
+                        <td style={{ padding: "12px 16px", textAlign: "right", fontWeight: 600 }}>{Number(at.horas || 0).toFixed(1)} h</td>
+                        <td style={{ padding: "12px 16px", textAlign: "right", color: "var(--on-surface-variant)" }}>R$ {Number(at.valorHora || 0).toFixed(2)}</td>
+                        <td style={{ padding: "12px 16px", textAlign: "right", fontWeight: 700, color: "var(--primary)" }}>R$ {Number(at.valorTotal || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</td>
+                        <td style={{ padding: "12px 16px", textAlign: "right", color: at.rateioInterno !== "0,00%" ? "var(--secondary)" : "var(--on-surface-variant)", fontWeight: at.rateioInterno !== "0,00%" ? 700 : 400 }}>{at.rateioInterno}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr style={{ backgroundColor: "var(--primary)", color: "#ffffff", fontWeight: 700, fontSize: "13px" }}>
+                      <td style={{ padding: "14px 16px" }} colSpan={3}>TOTAL CONSOLIDADO DA MEDIÇÃO</td>
+                      <td style={{ padding: "14px 16px", textAlign: "right" }}>{Number(bmVisualizando.totalHoras || bmVisualizando.horasTotal || 0).toFixed(1)} h</td>
+                      <td style={{ padding: "14px 16px", textAlign: "right", opacity: 0.85, fontSize: "11px" }}>(Média R$ {Number(bmVisualizando.mediaHora || 0).toFixed(2)})</td>
+                      <td style={{ padding: "14px 16px", textAlign: "right", color: "#87ddff", fontSize: "15px", fontWeight: 800 }}>R$ {Number(bmVisualizando.valorTotal || bmVisualizando.valorLiquidoTotal || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</td>
+                      <td style={{ padding: "14px 16px", textAlign: "right", opacity: 0.85, fontSize: "11px" }}>100,00%</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+
+              {/* Rateio por Projeto */}
+              <div style={{ padding: "14px 20px", backgroundColor: "var(--surface-container-low)", borderTop: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap", fontSize: "11px" }}>
+                  <strong style={{ color: "var(--primary)" }}>Rateio por Projeto:</strong>
+                  {Array.from(new Set((bmVisualizando.atividades || []).map((a: any) => a.projeto))).map((proj: any, pIdx: number) => {
+                    const sub = (bmVisualizando.atividades || [])
+                      .filter((a: any) => a.projeto === proj)
+                      .reduce((acc: number, a: any) => acc + (a.valorTotal || 0), 0);
+                    const totalVal = Number(bmVisualizando.valorTotal || bmVisualizando.valorLiquidoTotal || 1);
+                    const pct = totalVal > 0 ? ((sub / totalVal) * 100).toFixed(1) : "0,0";
+                    const cores = ["var(--secondary)", "#0f2a4a", "#dd7436", "#485f82", "#10b981"];
+                    return (
+                      <span key={proj} style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                        <span style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: cores[pIdx % cores.length] }}></span>
+                        {proj} ({pct}%)
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Dados Obrigatórios para Emissão & Cronograma de Pagamento (Print 2) */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(460px, 1fr))", gap: "16px" }}>
+              {/* Discriminação da NF */}
+              <div style={{ padding: "22px", borderRadius: "14px", backgroundColor: "var(--surface-container-lowest)", border: "1px solid var(--border)", boxShadow: "0 1px 3px rgba(0,0,0,0.03)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: "12px", borderBottom: "1px solid var(--border)", marginBottom: "12px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <div style={{ width: "34px", height: "34px", borderRadius: "8px", backgroundColor: "rgba(0,103,129,0.1)", color: "var(--secondary)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>receipt_long</span>
+                      </div>
+                      <div>
+                        <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--secondary)" }}>Dados Obrigatórios para Emissão</span>
+                        <h3 style={{ fontSize: "15px", fontWeight: 700, color: "var(--primary)", margin: 0 }}>Discriminação dos Serviços na Nota Fiscal</h3>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleCopyNfTexto(bmVisualizando)}
+                      className="btn-primary"
+                      style={{ padding: "6px 12px", fontSize: "11px", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                    >
+                      <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>content_copy</span>
+                      <span>Copiar Discriminação</span>
+                    </button>
+                  </div>
+
+                  <p style={{ fontSize: "12px", color: "var(--on-surface-variant)", marginBottom: "10px" }}>
+                    Copie exatamente o bloco textual abaixo e cole no campo <strong>&quot;Descrição dos Serviços / Dados Adicionais&quot;</strong> do seu emissor de Nota Fiscal:
+                  </p>
+
+                  <div style={{ backgroundColor: "var(--surface-container-low)", padding: "14px", borderRadius: "10px", border: "1px solid var(--border)", fontFamily: "monospace", fontSize: "12px", lineHeight: "1.6", color: "var(--on-surface)" }}>
+                    <div style={{ fontWeight: 700, color: "var(--primary)" }}>BM: {bmVisualizando.codigo} | CONTRATO: {String(bmVisualizando.contrato || "").replace(/•\s*NNÓS/g, "").trim()}</div>
+                    {Array.from(new Set((bmVisualizando.atividades || []).map((a: any) => a.projeto))).map((proj: any) => {
+                      const subtotal = (bmVisualizando.atividades || [])
+                        .filter((a: any) => a.projeto === proj)
+                        .reduce((acc: number, a: any) => acc + (a.valorTotal || 0), 0);
+                      return (
+                        <div key={proj}>
+                          {proj}: R$ {subtotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                        </div>
+                      );
+                    })}
+                    <div style={{ marginTop: "10px", paddingTop: "10px", borderTop: "1px solid var(--border)", fontSize: "11px", color: "var(--on-surface-variant)" }}>
+                      <strong style={{ color: "var(--primary)" }}>Código CTISS:</strong> 0802-0/01-88 (Instrução e treinamento)<br />
+                      <strong style={{ color: "var(--primary)" }}>Subitem LC 116/03:</strong> 8.02 (Instrução, treinamento, orientação pedagógica).
                     </div>
                   </div>
                 </div>
 
-                {/* Declaração de Aceite & Assinaturas com Validade Jurídica */}
-                <div style={{ padding: "20px", borderRadius: "12px", backgroundColor: "var(--surface-container-lowest)", border: "1px solid var(--border)" }}>
-                  <div style={{ display: "flex", gap: "10px", alignItems: "center", marginBottom: "16px" }}>
-                    <span className="material-symbols-outlined" style={{ color: "#059669", fontSize: "20px" }}>task_alt</span>
+                <div style={{ marginTop: "14px", padding: "10px 14px", backgroundColor: "rgba(0,103,129,0.06)", borderRadius: "8px", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "11px", color: "var(--on-surface-variant)" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: "15px", color: "var(--secondary)" }}>email</span>
+                    <span>Enviar XML e PDF da NF emitida para: <strong style={{ color: "var(--primary)" }}>leonardo.campos@nnos.com.br</strong></span>
+                  </div>
+                  <strong style={{ color: "var(--secondary)" }}>Ref: BM {bmVisualizando.codigo}</strong>
+                </div>
+              </div>
+
+              {/* Cronograma de Envio e Pagamento */}
+              <div style={{ padding: "22px", borderRadius: "14px", backgroundColor: "var(--surface-container-lowest)", border: "1px solid var(--border)", boxShadow: "0 1px 3px rgba(0,0,0,0.03)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px", paddingBottom: "12px", borderBottom: "1px solid var(--border)", marginBottom: "14px" }}>
+                    <div style={{ width: "34px", height: "34px", borderRadius: "8px", backgroundColor: "var(--primary)", color: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>calendar_clock</span>
+                    </div>
                     <div>
-                      <strong style={{ fontSize: "13px", color: "var(--primary)" }}>Declaração de Concordância e Aceite Operacional</strong>
-                      <p style={{ margin: "2px 0 0 0", fontSize: "12px", color: "var(--on-surface-variant)" }}>
-                        &quot;Declaro concordar integralmente com os valores, horas e quantidades constantes nesta medição de serviços para fins de emissão de faturamento.&quot;
-                      </p>
+                      <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--secondary)" }}>Fluxo de Caixa &amp; Regras</span>
+                      <h3 style={{ fontSize: "15px", fontWeight: 700, color: "var(--primary)", margin: 0 }}>Cronograma de Envio e Pagamento</h3>
                     </div>
                   </div>
 
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-                    {/* Assinatura do Prestador */}
-                    <div style={{ padding: "16px", borderRadius: "10px", backgroundColor: "var(--surface-container-low)", border: "1px solid var(--border)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-                      <div>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-                          <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--secondary)" }}>Assinatura do Prestador</span>
-                          <span style={{ fontSize: "11px", fontWeight: 700, color: "#15803d", backgroundColor: "#dcfce7", padding: "2px 8px", borderRadius: "999px" }}>
-                            ✓ Assinado Eletronicamente
-                          </span>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                    <div style={{ padding: "12px", borderRadius: "10px", backgroundColor: "var(--surface-container-low)", display: "flex", gap: "12px", alignItems: "flex-start" }}>
+                      <div style={{ width: "32px", height: "32px", borderRadius: "8px", backgroundColor: "var(--surface-container)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, color: "var(--primary)", fontSize: "13px" }}>
+                        1ª
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "2px", fontSize: "12px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                          <strong style={{ color: "var(--primary)" }}>Atividades da 1ª Quinzena</strong>
+                          <span style={{ fontSize: "9px", padding: "1px 6px", borderRadius: "4px", backgroundColor: "rgba(0,103,129,0.1)", color: "var(--secondary)", fontWeight: 700 }}>Opção A</span>
                         </div>
-                        <div style={{ height: "50px", display: "flex", alignItems: "center", justifyContent: "center", borderBottom: "1px solid var(--border)", margin: "6px 0" }}>
-                          <span style={{ fontFamily: "cursive", fontSize: "24px", color: "var(--primary)", fontStyle: "italic" }}>
-                            {formatarNomeAssinatura(bmVisualizando.consultorNome)}
-                          </span>
-                        </div>
-                        <div style={{ textAlign: "center", marginTop: "8px" }}>
-                          <strong style={{ fontSize: "12px" }}>{bmVisualizando.consultorNome}</strong>
+                        <span style={{ color: "var(--on-surface-variant)" }}>Envio da nota fiscal até o <strong>dia 25 do mês vigente</strong>.</span>
+                        <div style={{ display: "flex", alignItems: "center", gap: "4px", color: "var(--secondary)", fontWeight: 700, fontSize: "11px", marginTop: "4px" }}>
+                          <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>event_available</span>
+                          <span>Pagamento creditado no dia 10 subsequente</span>
                         </div>
                       </div>
-
-                      {(() => {
-                        const prestadorLog = bmVisualizando.logs?.find((l: any) => l.papel?.toLowerCase().includes("prestador")) || bmVisualizando.logs?.[0];
-                        const ipPrestador = prestadorLog?.detalhe?.includes("IP:")
-                          ? prestadorLog.detalhe.split("•")[0].replace("IP:", "").trim()
-                          : "191.187.11.168";
-                        const dataPrestador = prestadorLog?.dataHora || (prestadorLog?.status === "Assinado" ? "23/10/2026, 15:00:00" : "Status: Pendente");
-
-                        return (
-                          <div style={{ marginTop: "12px", paddingTop: "8px", borderTop: "1px dashed var(--border)", display: "flex", justifyContent: "space-between", fontSize: "11px", color: "var(--on-surface-variant)" }}>
-                            <span>IP: {ipPrestador}</span>
-                            <span>Data: {dataPrestador}</span>
-                          </div>
-                        );
-                      })()}
                     </div>
 
-                    {/* Validação da Coordenação */}
-                    <div style={{ padding: "16px", borderRadius: "10px", backgroundColor: "var(--surface-container-low)", border: "1px solid var(--border)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-                      <div>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-                          <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--primary)" }}>Validação da Coordenação</span>
-                          <span style={{ fontSize: "11px", fontWeight: 700, color: "#15803d", backgroundColor: "#dcfce7", padding: "2px 8px", borderRadius: "999px" }}>
-                            ✓ Validação Operacional
-                          </span>
+                    <div style={{ padding: "12px", borderRadius: "10px", backgroundColor: "rgba(0,21,47,0.04)", border: "1px solid rgba(0,21,47,0.15)", display: "flex", gap: "12px", alignItems: "flex-start" }}>
+                      <div style={{ width: "32px", height: "32px", borderRadius: "8px", backgroundColor: "var(--primary)", color: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: "13px" }}>
+                        2ª
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "2px", fontSize: "12px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                          <strong style={{ color: "var(--primary)" }}>Totalidade das Atividades / Mês Cheio</strong>
+                          <span style={{ fontSize: "9px", padding: "1px 6px", borderRadius: "4px", backgroundColor: "#d1fae5", color: "#065f46", fontWeight: 700 }}>Recomendado BM {bmVisualizando.codigo}</span>
                         </div>
-                        <div style={{ height: "50px", display: "flex", alignItems: "center", justifyContent: "center", borderBottom: "1px solid var(--border)", margin: "6px 0" }}>
-                          <span style={{ fontFamily: "cursive", fontSize: "24px", color: "var(--secondary)", fontStyle: "italic" }}>
-                            Leonardo Campos
-                          </span>
-                        </div>
-                        <div style={{ textAlign: "center", marginTop: "8px" }}>
-                          <strong style={{ fontSize: "12px" }}>LEONARDO CAMPOS</strong>
-                          <div style={{ fontSize: "10px", color: "var(--on-surface-variant)" }}>Financeiro / Validação Final • NNÓS</div>
+                        <span style={{ color: "var(--on-surface-variant)" }}>Envio da nota fiscal até o <strong>dia 10 após recebimento do BM</strong>.</span>
+                        <div style={{ display: "flex", alignItems: "center", gap: "4px", color: "#059669", fontWeight: 800, fontSize: "11px", marginTop: "4px" }}>
+                          <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>payments</span>
+                          <span>Previsão de Liquidação: Dia 25 de Outubro de 2026</span>
                         </div>
                       </div>
-
-                      {(() => {
-                        const coordLog = bmVisualizando.logs?.find((l: any) => l.papel?.toLowerCase().includes("coord") || l.papel?.toLowerCase().includes("valida")) || bmVisualizando.logs?.[2];
-                        const docIdFinal = bmVisualizando.zohoDocumentId ||
-                          (coordLog?.detalhe?.includes("Doc ID:") ? coordLog.detalhe.split("Doc ID:")[1].trim() : null) ||
-                          bmVisualizando.zohoRequestId ||
-                          "2EEBEA08-B5P3HI3SGTH9S3DTW24ZYKXM-EG74VXMYB4CASUAB8G";
-                        const dataCoord = coordLog?.dataHora || (coordLog?.status === "Assinado" ? "23/10/2026, 15:13:00" : "23/10/2026, 15:13:00");
-
-                        return (
-                          <div style={{ marginTop: "12px", paddingTop: "8px", borderTop: "1px dashed var(--border)", display: "flex", justifyContent: "space-between", fontSize: "11px", color: "var(--on-surface-variant)" }}>
-                            <span>Zoho Doc ID: {docIdFinal}</span>
-                            <span>Data: {dataCoord}</span>
-                          </div>
-                        );
-                      })()}
                     </div>
+                  </div>
+                </div>
+
+                <div style={{ marginTop: "14px", padding: "10px 14px", backgroundColor: "var(--surface-container-low)", borderRadius: "8px", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "11px" }}>
+                  <span><span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#10b981", display: "inline-block", marginRight: "4px" }}></span>BM: <strong>01/10</strong></span>
+                  <span style={{ color: "var(--outline)" }}>→</span>
+                  <span><span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "var(--secondary)" }}></span>Prazo NF: <strong>10/10</strong></span>
+                  <span style={{ color: "var(--outline)" }}>→</span>
+                  <span style={{ color: "#059669", fontWeight: 700 }}><span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "var(--primary)", display: "inline-block", marginRight: "4px" }}></span>Crédito: <strong>25/10/2026</strong></span>
+                </div>
+              </div>
+            </div>
+
+            {/* Declaração de Concordância e Aceite Operacional & Assinaturas com Validade Jurídica (Print 2) */}
+            <div style={{ padding: "24px", borderRadius: "14px", backgroundColor: "var(--surface-container-lowest)", border: "1px solid var(--border)", boxShadow: "0 1px 3px rgba(0,0,0,0.03)" }}>
+              <div style={{ padding: "14px 18px", borderRadius: "10px", backgroundColor: "var(--surface-container-low)", display: "flex", gap: "12px", alignItems: "flex-start", marginBottom: "20px" }}>
+                <div style={{ width: "32px", height: "32px", borderRadius: "8px", backgroundColor: "#d1fae5", color: "#065f46", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>task_alt</span>
+                </div>
+                <div>
+                  <h4 style={{ fontSize: "14px", fontWeight: 700, color: "var(--primary)", margin: 0 }}>Declaração de Concordância e Aceite Operacional</h4>
+                  <p style={{ fontSize: "12px", color: "var(--on-surface-variant)", margin: "4px 0 0 0" }}>
+                    &quot;Declaro concordar integralmente com os valores, horas e quantidades constantes nesta medição de serviços de {bmVisualizando.mesReferencia} para fins de emissão de faturamento.&quot;
+                  </p>
+                </div>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))", gap: "20px" }}>
+                {/* Assinatura do Prestador */}
+                <div style={{ padding: "20px", borderRadius: "12px", backgroundColor: "var(--surface-container-low)", border: "1px solid var(--border)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                  <div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
+                      <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--secondary)" }}>Assinatura do Prestador</span>
+                      <span style={{ padding: "2px 8px", borderRadius: "999px", backgroundColor: "#d1fae5", color: "#065f46", fontSize: "11px", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                        <span className="material-symbols-outlined" style={{ fontSize: "12px" }}>done_all</span>
+                        Assinado Eletronicamente
+                      </span>
+                    </div>
+
+                    <div style={{ height: "60px", display: "flex", alignItems: "center", justifyContent: "center", borderBottom: "1px solid var(--border)", margin: "8px 0" }}>
+                      <span style={{ fontFamily: "cursive", fontSize: "28px", color: "var(--primary)", fontStyle: "italic", letterSpacing: "2px" }}>
+                        {formatarNomeAssinatura(bmVisualizando.consultorNome)}
+                      </span>
+                    </div>
+
+                    <div style={{ textAlign: "center", marginTop: "10px" }}>
+                      <strong style={{ fontSize: "13px", color: "var(--primary)", display: "block" }}>{bmVisualizando.consultorNome}</strong>
+                      <span style={{ fontSize: "11px", color: "var(--on-surface-variant)" }}>
+                        Razão Social: {bmVisualizando.consultorRazaoSocial || bmVisualizando.consultorNome} • CNPJ: {bmVisualizando.consultorCnpj || "Não informado"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {(() => {
+                    const prestadorLog = bmVisualizando.logs?.find((l: any) => l.papel?.toLowerCase().includes("prestador")) || bmVisualizando.logs?.[0];
+                    const ipPrestador = prestadorLog?.detalhe?.includes("IP:")
+                      ? prestadorLog.detalhe.split("•")[0].replace("IP:", "").trim()
+                      : "191.187.11.168";
+                    const dataPrestador = prestadorLog?.dataHora || (prestadorLog?.status === "Assinado" ? "29/09/2026 15:35:17 (Assinado)" : "Status: Pendente");
+
+                    return (
+                      <div style={{ marginTop: "16px", paddingTop: "10px", borderTop: "1px dashed var(--border)", display: "flex", justifyContent: "space-between", fontSize: "11px", color: "var(--on-surface-variant)" }}>
+                        <span>IP: {ipPrestador}</span>
+                        <span>Data: {dataPrestador}</span>
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                {/* Validação da Coordenação */}
+                <div style={{ padding: "20px", borderRadius: "12px", backgroundColor: "var(--surface-container-low)", border: "1px solid var(--border)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                  <div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
+                      <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--primary)" }}>
+                        Validação da Coordenação
+                      </span>
+                      <span style={{ padding: "2px 8px", borderRadius: "999px", backgroundColor: "#d1fae5", color: "#065f46", fontSize: "11px", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                        <span className="material-symbols-outlined" style={{ fontSize: "12px" }}>done_all</span>
+                        Validação Operacional
+                      </span>
+                    </div>
+
+                    <div style={{ height: "60px", display: "flex", alignItems: "center", justifyContent: "center", borderBottom: "1px solid var(--border)", margin: "8px 0" }}>
+                      <span style={{ fontFamily: "cursive", fontSize: "28px", color: "var(--secondary, #0284c7)", fontStyle: "italic", letterSpacing: "2px" }}>
+                        {formatarNomeAssinatura(bmVisualizando.responsavelNnosNome || "Marcelo Lara da Silva")}
+                      </span>
+                    </div>
+
+                    <div style={{ textAlign: "center", marginTop: "10px" }}>
+                      <strong style={{ fontSize: "13px", color: "var(--primary)", display: "block" }}>
+                        {String(bmVisualizando.responsavelNnosNome || "Marcelo Lara da Silva").toUpperCase()}
+                      </strong>
+                      <span style={{ fontSize: "11px", color: "var(--on-surface-variant)" }}>
+                        Coordenação Geral &amp; Validação Financeira • NNÓS
+                      </span>
+                    </div>
+                  </div>
+
+                  <div style={{ marginTop: "16px", paddingTop: "10px", borderTop: "1px dashed var(--border)", display: "flex", justifyContent: "space-between", fontSize: "11px", color: "var(--on-surface-variant)" }}>
+                    <span>Zoho Doc ID: 2EEBEA08...</span>
+                    <span>Data: {bmVisualizando.dataEnvio || "29/09/2026 15:35:17"} (Homologado)</span>
                   </div>
                 </div>
               </div>
             </div>
           </div>
+        ) : (
+          /* ========================================================= */
+          /* CASO 2: LISTAGEM OFICIAL DE BMS DO CONSULTOR (PRINT 5)   */
+          /* ========================================================= */
+          <>
+            <div>
+              <h1 style={{ fontSize: "22px", fontWeight: 800, margin: 0, color: "var(--primary)" }}>
+                Meus Boletins de Medição (BMs)
+              </h1>
+              <p style={{ margin: "4px 0 0 0", fontSize: "13px", color: "var(--on-surface-variant)" }}>
+                Acompanhe o status do workflow de aprovação, trilha de assinaturas eletrônicas com validade jurídica e dados para emissão de Notas Fiscais de <strong>{consultorAtivo?.nome}</strong>.
+              </p>
+            </div>
+
+            {/* Barra de Pesquisa e Filtros (Sem o botão Sincronizar Zoho) */}
+            <div
+              style={{
+                backgroundColor: "var(--surface-container-lowest)",
+                padding: "12px 18px",
+                borderRadius: "12px",
+                border: "1px solid var(--border)",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: "12px",
+                width: "100%",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", flex: 1, minWidth: "300px" }}>
+                <span className="material-symbols-outlined" style={{ color: "var(--on-surface-variant)", fontSize: "18px" }}>
+                  search
+                </span>
+                <input
+                  type="text"
+                  placeholder="Pesquisar por BM (0884), contrato ou período..."
+                  value={busca}
+                  onChange={(e) => setBusca(e.target.value)}
+                  style={{
+                    width: "100%",
+                    border: "none",
+                    outline: "none",
+                    fontSize: "13px",
+                    background: "transparent",
+                    color: "var(--on-surface)",
+                  }}
+                />
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--on-surface-variant)", textTransform: "uppercase" }}>
+                  Workflow:
+                </span>
+                <ModernDropdown
+                  value={filtroStatus}
+                  onChange={(val) => setFiltroStatus(String(val))}
+                  options={[
+                    { value: "Todos", label: `Todos os Status (${bmsOriginais.length})` },
+                    { value: "Pendente de Assinatura", label: "Pendente de Assinatura" },
+                    { value: "Assinado pelo Prestador", label: "Assinado pelo Prestador" },
+                    { value: "Aprovado pelo Líder", label: "Aprovado pelo Líder" },
+                    { value: "Aprovado & Pronto p/ Faturamento", label: "Aprovado & Pronto p/ Faturamento" },
+                  ]}
+                  icon="filter_list"
+                  searchable={false}
+                  minWidth={240}
+                />
+              </div>
+            </div>
+
+            {/* Tabela de BMs (Idêntica ao Print 5) */}
+            <div
+              style={{
+                backgroundColor: "var(--surface-container-lowest)",
+                borderRadius: "14px",
+                border: "1px solid var(--border)",
+                overflow: "hidden",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.03)",
+                width: "100%",
+              }}
+            >
+              <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "12px" }}>
+                <thead>
+                  <tr
+                    style={{
+                      backgroundColor: "var(--surface-container-low)",
+                      borderBottom: "1px solid var(--border)",
+                      color: "var(--on-surface-variant)",
+                      fontSize: "11px",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    <th style={{ padding: "12px 18px", width: "90px" }}>Código</th>
+                    <th style={{ padding: "12px 18px" }}>Consultor / Prestador</th>
+                    <th style={{ padding: "12px 18px" }}>Período &amp; Quinzena</th>
+                    <th style={{ padding: "12px 18px", textAlign: "right" }}>Horas</th>
+                    <th style={{ padding: "12px 18px", textAlign: "right" }}>Valor Apurado</th>
+                    <th style={{ padding: "12px 18px" }}>Status do Workflow</th>
+                    <th style={{ padding: "12px 18px" }}>Log de Informações &amp; Assinaturas</th>
+                    <th style={{ padding: "12px 18px", textAlign: "center" }}>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {bmsFiltrados.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} style={{ padding: "36px", textAlign: "center", color: "var(--on-surface-variant)" }}>
+                        Nenhum Boletim de Medição encontrado para este consultor.
+                      </td>
+                    </tr>
+                  ) : (
+                    bmsFiltrados.map((bm: any) => {
+                      const isAprovado = bm.status === "Aprovado & Pronto p/ Faturamento";
+                      const isAssinado = bm.status === "Assinado pelo Prestador" || bm.status === "Aprovado pelo Líder";
+
+                      return (
+                        <tr key={bm.id || bm.codigo} style={{ borderBottom: "1px solid var(--border)" }}>
+                          <td style={{ padding: "14px 18px", fontWeight: 800, color: "var(--primary)" }}>
+                            {bm.codigo}
+                          </td>
+                          <td style={{ padding: "14px 18px" }}>
+                            <div style={{ fontWeight: 700, color: "var(--primary)", fontSize: "13px" }}>
+                              {bm.consultorNome}
+                            </div>
+                            <div style={{ fontSize: "11px", color: "var(--on-surface-variant)", marginTop: "2px" }}>
+                              {bm.consultorRazaoSocial || bm.consultorNome} • CNPJ: {bm.consultorCnpj || "Não informado"}
+                            </div>
+                          </td>
+                          <td style={{ padding: "14px 18px" }}>
+                            <div style={{ fontWeight: 600, color: "var(--on-surface)" }}>
+                              {bm.mesReferencia}
+                            </div>
+                            <div style={{ fontSize: "11px", color: "var(--on-surface-variant)", marginTop: "2px" }}>
+                              {bm.periodoTipo || "Integral"} • Corte: {bm.dataCorte || "20/09/2026"}
+                            </div>
+                          </td>
+                          <td style={{ padding: "14px 18px", textAlign: "right", fontWeight: 600 }}>
+                            {Number(bm.totalHoras || bm.horasTotal || 0).toFixed(1)} h
+                          </td>
+                          <td style={{ padding: "14px 18px", textAlign: "right", fontWeight: 800, color: "#059669", fontSize: "13px" }}>
+                            {brl(bm.valorTotal || bm.valorLiquidoTotal)}
+                          </td>
+                          <td style={{ padding: "14px 18px" }}>
+                            <span
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "6px",
+                                padding: "4px 10px",
+                                borderRadius: "999px",
+                                fontSize: "11px",
+                                fontWeight: 700,
+                                backgroundColor: isAprovado ? "#dcfce7" : isAssinado ? "#e0f2fe" : "#ffedd5",
+                                color: isAprovado ? "#15803d" : isAssinado ? "#0369a1" : "#c2410c",
+                              }}
+                            >
+                              <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>
+                                {isAprovado ? "verified" : isAssinado ? "draw" : "hourglass_top"}
+                              </span>
+                              {bm.status}
+                            </span>
+                          </td>
+                          <td style={{ padding: "14px 18px", fontSize: "11px", color: "var(--on-surface-variant)" }}>
+                            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                              <div>
+                                • <strong>Assinado eletronicamente:</strong>{" "}
+                                <span style={{ color: "#16a34a", fontWeight: 600 }}>Concluído</span>
+                              </div>
+                              <div>
+                                • <strong>Aprovador Técnico:</strong>{" "}
+                                <span style={{ color: "#16a34a", fontWeight: 600 }}>Aprovado</span>
+                              </div>
+                              <div>
+                                • <strong>Responsável NNÓS (Coordenação Geral):</strong>{" "}
+                                <span style={{ color: "#16a34a", fontWeight: 600 }}>Homologado</span>
+                              </div>
+                            </div>
+                          </td>
+                          <td style={{ padding: "14px 18px", textAlign: "center" }}>
+                            <button
+                              type="button"
+                              onClick={() => setBmVisualizando(bm)}
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "6px",
+                                padding: "6px 14px",
+                                borderRadius: "8px",
+                                backgroundColor: "#00152f",
+                                color: "#ffffff",
+                                fontSize: "12px",
+                                fontWeight: 700,
+                                border: "none",
+                                cursor: "pointer",
+                                transition: "all 0.15s ease",
+                              }}
+                              title="Visualizar Boletim de Medição completo"
+                            >
+                              <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
+                                visibility
+                              </span>
+                              <span>Visualizar</span>
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </main>
     </>
