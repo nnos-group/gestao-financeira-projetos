@@ -144,6 +144,9 @@ export async function GET(request: Request) {
 
     // Iterar pelas pessoas da base
     pessoasLista.forEach((p: any) => {
+      // Funcionários CLT não participam da emissão de Boletins de Medição (BM)
+      if (p.tipo === "funcionario") return;
+
       const chavePessoa = norm(p.nome);
       // Atividades correspondentes
       let atividadesPessoa = mapaAtividadesPorConsultor.get(chavePessoa) || [];
@@ -160,7 +163,7 @@ export async function GET(request: Request) {
 
       if (atividadesPessoa.length === 0) return;
 
-      const tagMedicao = (p.tipo_medicao || "QUINZENAL").toUpperCase();
+      const tagMedicao = (p.tipo_medicao || "INTEGRAL").toUpperCase();
       let atividadesFiltradas: any[] = [];
       let periodoRotulo = "";
 

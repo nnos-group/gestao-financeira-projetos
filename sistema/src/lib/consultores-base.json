@@ -24,7 +24,8 @@
     "conta": "",
     "pix": "55.408.003/0001-50",
     "contrato_ativo": "SÓCIO",
-    "valor_hora_padrao": 0
+    "valor_hora_padrao": 0,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "socio-2",
@@ -51,7 +52,8 @@
     "conta": "",
     "pix": "088.051.246-64",
     "contrato_ativo": "SÓCIO",
-    "valor_hora_padrao": 0
+    "valor_hora_padrao": 0,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "socio-3",
@@ -78,7 +80,8 @@
     "conta": "",
     "pix": "404.391.784-87",
     "contrato_ativo": "SÓCIO",
-    "valor_hora_padrao": 0
+    "valor_hora_padrao": 0,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "socio-4",
@@ -105,7 +108,8 @@
     "conta": "",
     "pix": "037.661.444-72         CEF - Caixa Econômica Federal",
     "contrato_ativo": "SÓCIO",
-    "valor_hora_padrao": 0
+    "valor_hora_padrao": 0,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "socio-5",
@@ -132,7 +136,8 @@
     "conta": "",
     "pix": "092.489.436-91",
     "contrato_ativo": "SÓCIO",
-    "valor_hora_padrao": 0
+    "valor_hora_padrao": 0,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "socio-6",
@@ -159,7 +164,8 @@
     "conta": "",
     "pix": "eliza.fortuna@nnos.com.br",
     "contrato_ativo": "SÓCIO",
-    "valor_hora_padrao": 0
+    "valor_hora_padrao": 0,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "socio-7",
@@ -186,7 +192,8 @@
     "conta": "",
     "pix": "06208491636",
     "contrato_ativo": "SÓCIO",
-    "valor_hora_padrao": 0
+    "valor_hora_padrao": 0,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "socio-8",
@@ -213,7 +220,8 @@
     "conta": "",
     "pix": "21 98179-5838 ( conferir  meu nome ao transferir ))",
     "contrato_ativo": "SÓCIO",
-    "valor_hora_padrao": 0
+    "valor_hora_padrao": 0,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "socio-9",
@@ -240,7 +248,8 @@
     "conta": "",
     "pix": "47935006920",
     "contrato_ativo": "SÓCIO",
-    "valor_hora_padrao": 0
+    "valor_hora_padrao": 0,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "socio-10",
@@ -267,7 +276,8 @@
     "conta": "",
     "pix": "78225825934 CPF",
     "contrato_ativo": "SÓCIO",
-    "valor_hora_padrao": 0
+    "valor_hora_padrao": 0,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "socio-11",
@@ -294,7 +304,8 @@
     "conta": "",
     "pix": "pedrocolares@yahoo.com.br",
     "contrato_ativo": "SÓCIO",
-    "valor_hora_padrao": 0
+    "valor_hora_padrao": 0,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "socio-12",
@@ -321,7 +332,8 @@
     "conta": "36395433-6",
     "pix": "53.757.566/0001-29",
     "contrato_ativo": "SÓCIO",
-    "valor_hora_padrao": 0
+    "valor_hora_padrao": 0,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "socio-13",
@@ -348,7 +360,8 @@
     "conta": "",
     "pix": "062.574.096-32",
     "contrato_ativo": "SÓCIO",
-    "valor_hora_padrao": 0
+    "valor_hora_padrao": 0,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "socio-14",
@@ -375,7 +388,8 @@
     "conta": "",
     "pix": "111.675.296-42",
     "contrato_ativo": "SÓCIO",
-    "valor_hora_padrao": 0
+    "valor_hora_padrao": 0,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "func-15",
@@ -1293,7 +1307,8 @@
     "conta": "",
     "pix": "09.024.198.0001/18",
     "contrato_ativo": "2023.0001",
-    "valor_hora_padrao": 180
+    "valor_hora_padrao": 180,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "parceiro-49",
@@ -1320,7 +1335,8 @@
     "conta": "",
     "pix": "10429291000191",
     "contrato_ativo": "2023.0002",
-    "valor_hora_padrao": 180
+    "valor_hora_padrao": 180,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "parceiro-50",
@@ -1347,7 +1363,8 @@
     "conta": "",
     "pix": "adilson.pasini@gmail.com",
     "contrato_ativo": "2023.0003",
-    "valor_hora_padrao": 180
+    "valor_hora_padrao": 180,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "parceiro-51",
@@ -1374,7 +1391,8 @@
     "conta": "",
     "pix": "31 996827495",
     "contrato_ativo": "2023.0004",
-    "valor_hora_padrao": 180
+    "valor_hora_padrao": 180,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "parceiro-52",
@@ -1401,7 +1419,8 @@
     "conta": "",
     "pix": "24.317.138/0001-87",
     "contrato_ativo": "2023.0005",
-    "valor_hora_padrao": 180
+    "valor_hora_padrao": 180,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "parceiro-53",
@@ -1428,7 +1447,8 @@
     "conta": "",
     "pix": "24.317.138/0001-87",
     "contrato_ativo": "2023.0005",
-    "valor_hora_padrao": 180
+    "valor_hora_padrao": 180,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "parceiro-54",
@@ -1455,7 +1475,8 @@
     "conta": "",
     "pix": "04797209674",
     "contrato_ativo": "2023.0006",
-    "valor_hora_padrao": 180
+    "valor_hora_padrao": 180,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "parceiro-55",
@@ -1482,7 +1503,8 @@
     "conta": "",
     "pix": "23.882.875/0001-60",
     "contrato_ativo": "2023.0007",
-    "valor_hora_padrao": 180
+    "valor_hora_padrao": 180,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "parceiro-56",
@@ -1509,7 +1531,8 @@
     "conta": "",
     "pix": "10.935.471/0001-45",
     "contrato_ativo": "2023.0008",
-    "valor_hora_padrao": 180
+    "valor_hora_padrao": 180,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "parceiro-57",
@@ -1536,7 +1559,8 @@
     "conta": "",
     "pix": "19.979.944/0001-80",
     "contrato_ativo": "2023.0009",
-    "valor_hora_padrao": 180
+    "valor_hora_padrao": 180,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "parceiro-58",
@@ -1563,7 +1587,8 @@
     "conta": "",
     "pix": "10971188000179",
     "contrato_ativo": "2025.0026",
-    "valor_hora_padrao": 180
+    "valor_hora_padrao": 180,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "parceiro-59",
@@ -1590,7 +1615,8 @@
     "conta": "",
     "pix": "11 986096363",
     "contrato_ativo": "2023.0012",
-    "valor_hora_padrao": 180
+    "valor_hora_padrao": 180,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "parceiro-60",
@@ -1617,7 +1643,8 @@
     "conta": "",
     "pix": "22.694.660/0001-52",
     "contrato_ativo": "2023.0013",
-    "valor_hora_padrao": 180
+    "valor_hora_padrao": 180,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "parceiro-61",
@@ -1644,7 +1671,8 @@
     "conta": "",
     "pix": "+55 (55) 99689-3599",
     "contrato_ativo": "2023.0014",
-    "valor_hora_padrao": 180
+    "valor_hora_padrao": 180,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "parceiro-62",
@@ -1671,7 +1699,8 @@
     "conta": "",
     "pix": "87198029604",
     "contrato_ativo": "2023.0015",
-    "valor_hora_padrao": 180
+    "valor_hora_padrao": 180,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "parceiro-63",
@@ -1698,7 +1727,8 @@
     "conta": "",
     "pix": "23639894000160",
     "contrato_ativo": "2023.0016",
-    "valor_hora_padrao": 180
+    "valor_hora_padrao": 180,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "parceiro-64",
@@ -1725,7 +1755,8 @@
     "conta": "",
     "pix": "11940177032",
     "contrato_ativo": "2023.0017",
-    "valor_hora_padrao": 180
+    "valor_hora_padrao": 180,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "parceiro-65",
@@ -1752,7 +1783,8 @@
     "conta": "",
     "pix": "676.829.796-15",
     "contrato_ativo": "2023.0018",
-    "valor_hora_padrao": 180
+    "valor_hora_padrao": 180,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "parceiro-66",
@@ -1779,7 +1811,8 @@
     "conta": "",
     "pix": "53.022.850/0001-57",
     "contrato_ativo": "2023.0019",
-    "valor_hora_padrao": 180
+    "valor_hora_padrao": 180,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "parceiro-67",
@@ -1806,7 +1839,8 @@
     "conta": "",
     "pix": "17414744000155",
     "contrato_ativo": "2023.0020",
-    "valor_hora_padrao": 180
+    "valor_hora_padrao": 180,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "parceiro-68",
@@ -1833,7 +1867,8 @@
     "conta": "",
     "pix": "828.939.476-00",
     "contrato_ativo": "2024.0021",
-    "valor_hora_padrao": 180
+    "valor_hora_padrao": 180,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "parceiro-69",
@@ -1860,7 +1895,8 @@
     "conta": "",
     "pix": "55.877.933/0001-53",
     "contrato_ativo": "2024.0022",
-    "valor_hora_padrao": 180
+    "valor_hora_padrao": 180,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "parceiro-70",
@@ -1887,7 +1923,8 @@
     "conta": "",
     "pix": "62727125534",
     "contrato_ativo": "2024.0023",
-    "valor_hora_padrao": 180
+    "valor_hora_padrao": 180,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "parceiro-71",
@@ -1914,7 +1951,8 @@
     "conta": "",
     "pix": "33.313.599/0001-72",
     "contrato_ativo": "2024.0024",
-    "valor_hora_padrao": 180
+    "valor_hora_padrao": 180,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "parceiro-72",
@@ -1941,7 +1979,8 @@
     "conta": "",
     "pix": "40.651.497/0001-22",
     "contrato_ativo": "2024.0025",
-    "valor_hora_padrao": 180
+    "valor_hora_padrao": 180,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "parceiro-73",
@@ -1968,7 +2007,8 @@
     "conta": "",
     "pix": "60.592.562/0001-01",
     "contrato_ativo": "2025.0028",
-    "valor_hora_padrao": 180
+    "valor_hora_padrao": 180,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "parceiro-74",
@@ -1995,7 +2035,8 @@
     "conta": "",
     "pix": "renato@inovarautomotivo.com.br",
     "contrato_ativo": "2025.0029",
-    "valor_hora_padrao": 180
+    "valor_hora_padrao": 180,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "parceiro-75",
@@ -2022,7 +2063,8 @@
     "conta": "",
     "pix": "23.904.854/0001-06",
     "contrato_ativo": "2025.0030",
-    "valor_hora_padrao": 180
+    "valor_hora_padrao": 180,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "parceiro-76",
@@ -2049,7 +2091,8 @@
     "conta": "",
     "pix": "34.976.097/0001-94",
     "contrato_ativo": "2025.0031",
-    "valor_hora_padrao": 180
+    "valor_hora_padrao": 180,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "parceiro-77",
@@ -2076,7 +2119,8 @@
     "conta": "",
     "pix": "58.271.308/0001-51",
     "contrato_ativo": "2025.0032",
-    "valor_hora_padrao": 180
+    "valor_hora_padrao": 180,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "parceiro-78",
@@ -2103,7 +2147,8 @@
     "conta": "",
     "pix": "57.561.394/0001-74",
     "contrato_ativo": "2025.0033",
-    "valor_hora_padrao": 180
+    "valor_hora_padrao": 180,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "parceiro-79",
@@ -2130,7 +2175,8 @@
     "conta": "",
     "pix": "55.629.681/0001-43",
     "contrato_ativo": "2025.0034",
-    "valor_hora_padrao": 180
+    "valor_hora_padrao": 180,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "parceiro-80",
@@ -2157,7 +2203,8 @@
     "conta": "",
     "pix": "19982205353",
     "contrato_ativo": "2025.0035",
-    "valor_hora_padrao": 180
+    "valor_hora_padrao": 180,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "parceiro-81",
@@ -2184,7 +2231,8 @@
     "conta": "",
     "pix": "adaoladeira@adaoladeira.com.br",
     "contrato_ativo": "2025.0036",
-    "valor_hora_padrao": 180
+    "valor_hora_padrao": 180,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "parceiro-82",
@@ -2211,7 +2259,8 @@
     "conta": "",
     "pix": "34685538000176",
     "contrato_ativo": "2025.0037",
-    "valor_hora_padrao": 180
+    "valor_hora_padrao": 180,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "parceiro-83",
@@ -2238,7 +2287,8 @@
     "conta": "",
     "pix": "64.063.992/0001-89",
     "contrato_ativo": "2026.0038",
-    "valor_hora_padrao": 180
+    "valor_hora_padrao": 180,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "parceiro-84",
@@ -2265,7 +2315,8 @@
     "conta": "",
     "pix": "46.744.267/0001-94",
     "contrato_ativo": "2026.0039",
-    "valor_hora_padrao": 180
+    "valor_hora_padrao": 180,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "parceiro-85",
@@ -2292,7 +2343,8 @@
     "conta": "",
     "pix": "64.762.026/0001-50",
     "contrato_ativo": "2026.0040",
-    "valor_hora_padrao": 180
+    "valor_hora_padrao": 180,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "parceiro-86",
@@ -2319,7 +2371,8 @@
     "conta": "",
     "pix": "16993040421",
     "contrato_ativo": "2026.0041",
-    "valor_hora_padrao": 180
+    "valor_hora_padrao": 180,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "parceiro-87",
@@ -2346,7 +2399,8 @@
     "conta": "",
     "pix": "404.987.938-77",
     "contrato_ativo": "2026.0042",
-    "valor_hora_padrao": 180
+    "valor_hora_padrao": 180,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "parceiro-88",
@@ -2373,7 +2427,8 @@
     "conta": "",
     "pix": "66.727.474/0001-48",
     "contrato_ativo": "2026.0043",
-    "valor_hora_padrao": 180
+    "valor_hora_padrao": 180,
+    "tipo_medicao": "INTEGRAL"
   },
   {
     "id": "parceiro-89",
@@ -2400,6 +2455,7 @@
     "conta": "",
     "pix": "66.894.870/0001-60",
     "contrato_ativo": "2026.0044",
-    "valor_hora_padrao": 180
+    "valor_hora_padrao": 180,
+    "tipo_medicao": "INTEGRAL"
   }
 ]

@@ -32,7 +32,11 @@ export default function PessoasPage() {
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          setPessoas(parsed);
+          const normalizadas = parsed.map((item: PessoaItem) => ({
+            ...item,
+            tipo_medicao: item.tipo === "funcionario" ? undefined : (item.tipo_medicao || "INTEGRAL"),
+          }));
+          setPessoas(normalizadas);
         }
       }
     } catch (e) {
@@ -43,9 +47,13 @@ export default function PessoasPage() {
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {
-          setPessoas(data);
+          const normalizadas = data.map((item: PessoaItem) => ({
+            ...item,
+            tipo_medicao: item.tipo === "funcionario" ? undefined : (item.tipo_medicao || "INTEGRAL"),
+          }));
+          setPessoas(normalizadas);
           try {
-            localStorage.setItem("nnos_pessoas_cadastradas_v2", JSON.stringify(data));
+            localStorage.setItem("nnos_pessoas_cadastradas_v2", JSON.stringify(normalizadas));
           } catch (e) {}
         }
       })
@@ -91,7 +99,7 @@ export default function PessoasPage() {
       tipo: "parceiro",
       perfil: "SÊNIOR",
       ativo: true,
-      tipo_medicao: "QUINZENAL",
+      tipo_medicao: "INTEGRAL",
       aeroporto_preferencial: "CNF (Confins / BH)",
       cidade_base: "Belo Horizonte / MG",
     });
@@ -101,7 +109,10 @@ export default function PessoasPage() {
 
   const abrirEditarPessoa = (p: PessoaItem) => {
     setPessoaSelecionada(p);
-    setFormData({ ...p, tipo_medicao: p.tipo_medicao || "QUINZENAL" });
+    setFormData({
+      ...p,
+      tipo_medicao: p.tipo === "funcionario" ? undefined : (p.tipo_medicao || "INTEGRAL"),
+    });
     setAbaAtiva("geral");
     setModalAberto(true);
   };
@@ -139,8 +150,13 @@ export default function PessoasPage() {
 
     if (pessoaSelecionada) {
       // Edição
+      const dadosAtualizados: PessoaItem = {
+        ...pessoaSelecionada,
+        ...formData,
+        tipo_medicao: formData.tipo === "funcionario" ? undefined : (formData.tipo_medicao || "INTEGRAL"),
+      } as PessoaItem;
       novasPessoas = pessoas.map((it) =>
-        String(it.id) === String(pessoaSelecionada.id) ? ({ ...it, ...formData } as PessoaItem) : it
+        String(it.id) === String(pessoaSelecionada.id) ? dadosAtualizados : it
       );
     } else {
       // Novo
@@ -150,6 +166,7 @@ export default function PessoasPage() {
         nome_completo: formData.nome_completo || formData.nome!,
         tipo: formData.tipo || "parceiro",
         perfil: formData.perfil || "SÊNIOR",
+        tipo_medicao: formData.tipo === "funcionario" ? undefined : (formData.tipo_medicao || "INTEGRAL"),
         email: formData.email || `${formData.nome!.toLowerCase().replace(/\s+/g, ".")}@nnos.com.br`,
         telefone: formData.telefone || "",
         cargo: formData.cargo || "",
@@ -1031,22 +1048,24 @@ export default function PessoasPage() {
                           <td style={{ padding: "14px 16px" }}>
                             <div style={{ display: "flex", flexDirection: "column", gap: "6px", alignItems: "flex-start" }}>
                               {renderBadgeTipo(p.tipo)}
-                              <span
-                                style={{
-                                  fontSize: "10px",
-                                  fontWeight: 800,
-                                  padding: "2px 7px",
-                                  borderRadius: "4px",
-                                  backgroundColor: p.tipo_medicao === "INTEGRAL" ? "#f3e8ff" : "#e0f2fe",
-                                  color: p.tipo_medicao === "INTEGRAL" ? "#7e22ce" : "#0369a1",
-                                  border: p.tipo_medicao === "INTEGRAL" ? "1px solid #d8b4fe" : "1px solid #bae6fd",
-                                  textTransform: "uppercase",
-                                  letterSpacing: "0.4px",
-                                }}
-                                title={`Regra de Medição BM: ${p.tipo_medicao === "INTEGRAL" ? "Integral (Mês Cheio)" : "Quinzenal (1ª e 2ª Quinzena)"}`}
-                              >
-                                {p.tipo_medicao === "INTEGRAL" ? "Integral" : "Quinzenal"}
-                              </span>
+                              {p.tipo !== "funcionario" && (
+                                <span
+                                  style={{
+                                    fontSize: "10px",
+                                    fontWeight: 800,
+                                    padding: "2px 7px",
+                                    borderRadius: "4px",
+                                    backgroundColor: p.tipo_medicao === "QUINZENAL" ? "#e0f2fe" : "#f3e8ff",
+                                    color: p.tipo_medicao === "QUINZENAL" ? "#0369a1" : "#7e22ce",
+                                    border: p.tipo_medicao === "QUINZENAL" ? "1px solid #bae6fd" : "1px solid #d8b4fe",
+                                    textTransform: "uppercase",
+                                    letterSpacing: "0.4px",
+                                  }}
+                                  title={`Regra de Medição BM: ${p.tipo_medicao === "QUINZENAL" ? "Quinzenal (1ª e 2ª Quinzena)" : "Integral (Mês Cheio)"}`}
+                                >
+                                  {p.tipo_medicao === "QUINZENAL" ? "Quinzenal" : "Integral"}
+                                </span>
+                              )}
                             </div>
                           </td>
 
@@ -1509,19 +1528,37 @@ export default function PessoasPage() {
 
                       <div className="form-field">
                         <label>Tipo de Medição BM *</label>
-                        <select
-                          value={formData.tipo_medicao || "QUINZENAL"}
-                          onChange={(e) => setFormData({ ...formData, tipo_medicao: e.target.value as any })}
-                          style={{
-                            fontWeight: 700,
-                            color: formData.tipo_medicao === "INTEGRAL" ? "#7e22ce" : "#0369a1",
-                            backgroundColor: formData.tipo_medicao === "INTEGRAL" ? "#faf5ff" : "#f0f9ff",
-                            border: formData.tipo_medicao === "INTEGRAL" ? "1px solid #d8b4fe" : "1px solid #bae6fd",
-                          }}
-                        >
-                          <option value="QUINZENAL">Quinzenal</option>
-                          <option value="INTEGRAL">Integral (Mês Cheio)</option>
-                        </select>
+                        {formData.tipo === "funcionario" ? (
+                          <input
+                            type="text"
+                            disabled
+                            value="Não se Aplica (Funcionário / CLT)"
+                            style={{
+                              backgroundColor: "var(--surface-container-low)",
+                              color: "var(--on-surface-variant)",
+                              opacity: 0.75,
+                              fontSize: "12.5px",
+                              fontWeight: 600,
+                              padding: "10px",
+                              borderRadius: "8px",
+                              border: "1px solid var(--border)",
+                            }}
+                          />
+                        ) : (
+                          <select
+                            value={formData.tipo_medicao || "INTEGRAL"}
+                            onChange={(e) => setFormData({ ...formData, tipo_medicao: e.target.value as any })}
+                            style={{
+                              fontWeight: 700,
+                              color: formData.tipo_medicao === "QUINZENAL" ? "#0369a1" : "#7e22ce",
+                              backgroundColor: formData.tipo_medicao === "QUINZENAL" ? "#f0f9ff" : "#faf5ff",
+                              border: formData.tipo_medicao === "QUINZENAL" ? "1px solid #bae6fd" : "1px solid #d8b4fe",
+                            }}
+                          >
+                            <option value="INTEGRAL">Integral (Mês Cheio)</option>
+                            <option value="QUINZENAL">Quinzenal</option>
+                          </select>
+                        )}
                       </div>
                     </div>
 
