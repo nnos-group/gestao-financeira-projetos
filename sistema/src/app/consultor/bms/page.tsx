@@ -677,6 +677,63 @@ export default function ConsultorBmsPage() {
               </p>
             </div>
 
+            {/* CARDS DE INDICADORES CONSOLIDADOS DE 2026 (Idêntico ao Print 5) */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px", width: "100%" }}>
+              {/* Card 1: BMS Emitidos */}
+              <div style={{ backgroundColor: "var(--surface-container-lowest)", padding: "18px 20px", borderRadius: "12px", border: "1px solid var(--border)", boxShadow: "0 1px 3px rgba(0,0,0,0.03)", display: "flex", alignItems: "center", gap: "14px" }}>
+                <div style={{ width: "42px", height: "42px", borderRadius: "10px", backgroundColor: "rgba(0,21,47,0.08)", color: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: "22px" }}>receipt_long</span>
+                </div>
+                <div>
+                  <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--on-surface-variant)" }}>BMs Emitidos (2026)</span>
+                  <h3 style={{ fontSize: "20px", fontWeight: 800, color: "var(--primary)", margin: "2px 0 0 0" }}>{bmsOriginais.length}</h3>
+                  <span style={{ fontSize: "10px", color: "var(--secondary)" }}>Ano 2026 consolidado</span>
+                </div>
+              </div>
+
+              {/* Card 2: Total Faturado */}
+              <div style={{ backgroundColor: "var(--surface-container-lowest)", padding: "18px 20px", borderRadius: "12px", border: "1px solid var(--border)", boxShadow: "0 1px 3px rgba(0,0,0,0.03)", display: "flex", alignItems: "center", gap: "14px" }}>
+                <div style={{ width: "42px", height: "42px", borderRadius: "10px", backgroundColor: "rgba(0,103,129,0.1)", color: "var(--secondary)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: "22px" }}>payments</span>
+                </div>
+                <div>
+                  <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--on-surface-variant)" }}>Total Faturado (2026)</span>
+                  <h3 style={{ fontSize: "20px", fontWeight: 800, color: "var(--secondary)", margin: "2px 0 0 0" }}>
+                    R$ {bmsOriginais.reduce((acc: number, b: any) => acc + (b.valorTotal || b.valorLiquidoTotal || 0), 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </h3>
+                  <span style={{ fontSize: "10px", color: "#059669", fontWeight: 600 }}>{bmsOriginais.length} Medições Faturadas</span>
+                </div>
+              </div>
+
+              {/* Card 3: Carga Horária Medida */}
+              <div style={{ backgroundColor: "var(--surface-container-lowest)", padding: "18px 20px", borderRadius: "12px", border: "1px solid var(--border)", boxShadow: "0 1px 3px rgba(0,0,0,0.03)", display: "flex", alignItems: "center", gap: "14px" }}>
+                <div style={{ width: "42px", height: "42px", borderRadius: "10px", backgroundColor: "rgba(16,185,129,0.1)", color: "#059669", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: "22px" }}>schedule</span>
+                </div>
+                <div>
+                  <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--on-surface-variant)" }}>Carga Horária Medida</span>
+                  <h3 style={{ fontSize: "20px", fontWeight: 800, color: "var(--primary)", margin: "2px 0 0 0" }}>
+                    {bmsOriginais.reduce((acc: number, b: any) => acc + (b.totalHoras || b.horasTotal || 0), 0).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} h
+                  </h3>
+                  <span style={{ fontSize: "10px", color: "var(--on-surface-variant)" }}>Horas técnicas aprovadas</span>
+                </div>
+              </div>
+
+              {/* Card 4: Prestador Ativo */}
+              <div style={{ backgroundColor: "var(--surface-container-lowest)", padding: "18px 20px", borderRadius: "12px", border: "1px solid var(--border)", boxShadow: "0 1px 3px rgba(0,0,0,0.03)", display: "flex", alignItems: "center", gap: "14px" }}>
+                <div style={{ width: "42px", height: "42px", borderRadius: "10px", backgroundColor: "rgba(245,158,11,0.1)", color: "#d97706", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: "22px" }}>group</span>
+                </div>
+                <div>
+                  <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--on-surface-variant)" }}>Prestador Ativo</span>
+                  <h3 style={{ fontSize: "20px", fontWeight: 800, color: "var(--primary)", margin: "2px 0 0 0" }}>
+                    1
+                  </h3>
+                  <span style={{ fontSize: "10px", color: "var(--on-surface-variant)" }}>Profissional c/ BM em 2026</span>
+                </div>
+              </div>
+            </div>
+
             {/* Barra de Pesquisa e Filtros (Sem o botão Sincronizar Zoho) */}
             <div
               style={{
@@ -825,46 +882,108 @@ export default function ConsultorBmsPage() {
                             </span>
                           </td>
                           <td style={{ padding: "14px 18px", fontSize: "11px", color: "var(--on-surface-variant)" }}>
-                            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-                              <div>
-                                • <strong>Assinado eletronicamente:</strong>{" "}
-                                <span style={{ color: "#16a34a", fontWeight: 600 }}>Concluído</span>
-                              </div>
-                              <div>
-                                • <strong>Aprovador Técnico:</strong>{" "}
-                                <span style={{ color: "#16a34a", fontWeight: 600 }}>Aprovado</span>
-                              </div>
-                              <div>
-                                • <strong>Responsável NNÓS (Coordenação Geral):</strong>{" "}
-                                <span style={{ color: "#16a34a", fontWeight: 600 }}>Homologado</span>
-                              </div>
+                            <div style={{ marginBottom: "3px" }}>
+                              <span style={{ fontWeight: 600 }}>Envio:</span> {bm.dataEnvio || "20/09/2026 15:59:13"}
                             </div>
+                            {Array.isArray(bm.logs) && bm.logs.length > 0 ? (
+                              bm.logs.map((l: any, idx: number) => {
+                                let dataLimpa = l.dataHora
+                                  ? l.dataHora
+                                      .replace(/[()]/g, "")
+                                      .replace(/\b(Assinado|Homologado|Aprovado|Concluído)\b/gi, "")
+                                      .trim()
+                                  : "";
+
+                                let papelExibicao = l.papel;
+                                if (papelExibicao === "Consultor") papelExibicao = "Prestador de Serviços";
+                                if (papelExibicao === "Lider") papelExibicao = "Aprovador Técnico";
+                                if (papelExibicao === "ValidacaoFinal") papelExibicao = "Responsável NNÓS (Coordenação Geral)";
+
+                                const isConcluido = l.status === "Assinado" || l.status === "Aprovado" || l.status === "Homologado" || l.status === "Concluído";
+
+                                return (
+                                  <div key={idx} style={{ fontSize: "10.5px", marginTop: "3px", display: "flex", alignItems: "center", gap: "4px", flexWrap: "wrap" }}>
+                                    <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: isConcluido ? "#10b981" : "#f59e0b", display: "inline-block", flexShrink: 0 }}></span>
+                                    <span style={{ fontWeight: 600, color: "var(--on-surface)" }}>{papelExibicao}:</span>
+                                    <span style={{ color: isConcluido ? "#059669" : "#d97706", fontWeight: 700 }}>{l.status}</span>
+                                    {dataLimpa && (
+                                      <span style={{ color: "var(--on-surface-variant)", fontSize: "9.5px", opacity: 0.85 }}>• {dataLimpa}</span>
+                                    )}
+                                  </div>
+                                );
+                              })
+                            ) : (
+                              <div style={{ display: "flex", flexDirection: "column", gap: "2px", marginTop: "3px" }}>
+                                <div style={{ fontSize: "10.5px", display: "flex", alignItems: "center", gap: "4px" }}>
+                                  <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#10b981", display: "inline-block", flexShrink: 0 }}></span>
+                                  <span style={{ fontWeight: 600, color: "var(--on-surface)" }}>Prestador de Serviços:</span>
+                                  <span style={{ color: "#059669", fontWeight: 700 }}>Assinado</span>
+                                  <span style={{ color: "var(--on-surface-variant)", fontSize: "9.5px", opacity: 0.85 }}>• {bm.dataEnvio || "20/09/2026 15:59:13"}</span>
+                                </div>
+                                <div style={{ fontSize: "10.5px", display: "flex", alignItems: "center", gap: "4px" }}>
+                                  <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#10b981", display: "inline-block", flexShrink: 0 }}></span>
+                                  <span style={{ fontWeight: 600, color: "var(--on-surface)" }}>Aprovador Técnico:</span>
+                                  <span style={{ color: "#059669", fontWeight: 700 }}>Aprovado</span>
+                                  <span style={{ color: "var(--on-surface-variant)", fontSize: "9.5px", opacity: 0.85 }}>• {bm.dataEnvio || "20/09/2026 15:59:13"}</span>
+                                </div>
+                                <div style={{ fontSize: "10.5px", display: "flex", alignItems: "center", gap: "4px" }}>
+                                  <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#10b981", display: "inline-block", flexShrink: 0 }}></span>
+                                  <span style={{ fontWeight: 600, color: "var(--on-surface)" }}>Responsável NNÓS (Coordenação Geral):</span>
+                                  <span style={{ color: "#059669", fontWeight: 700 }}>Homologado</span>
+                                  <span style={{ color: "var(--on-surface-variant)", fontSize: "9.5px", opacity: 0.85 }}>• {bm.dataEnvio || "20/09/2026 15:59:13"}</span>
+                                </div>
+                              </div>
+                            )}
                           </td>
                           <td style={{ padding: "14px 18px", textAlign: "center" }}>
-                            <button
-                              type="button"
-                              onClick={() => setBmVisualizando(bm)}
-                              style={{
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: "6px",
-                                padding: "6px 14px",
-                                borderRadius: "8px",
-                                backgroundColor: "#00152f",
-                                color: "#ffffff",
-                                fontSize: "12px",
-                                fontWeight: 700,
-                                border: "none",
-                                cursor: "pointer",
-                                transition: "all 0.15s ease",
-                              }}
-                              title="Visualizar Boletim de Medição completo"
-                            >
-                              <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
-                                visibility
-                              </span>
-                              <span>Visualizar</span>
-                            </button>
+                            <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", justifyContent: "center" }}>
+                              <button
+                                type="button"
+                                onClick={() => setBmVisualizando(bm)}
+                                style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "6px",
+                                  padding: "6px 14px",
+                                  borderRadius: "8px",
+                                  backgroundColor: "#00152f",
+                                  color: "#ffffff",
+                                  fontSize: "12px",
+                                  fontWeight: 700,
+                                  border: "none",
+                                  cursor: "pointer",
+                                  transition: "all 0.15s ease",
+                                }}
+                                title="Visualizar Boletim de Medição completo"
+                              >
+                                <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
+                                  visibility
+                                </span>
+                                <span>Visualizar</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setBmVisualizando(bm)}
+                                style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  width: "32px",
+                                  height: "32px",
+                                  borderRadius: "8px",
+                                  backgroundColor: "#fff1f2",
+                                  border: "1px solid #fecdd3",
+                                  color: "#e11d48",
+                                  cursor: "pointer",
+                                  transition: "all 0.15s ease",
+                                }}
+                                title="Exportar PDF do Boletim de Medição"
+                              >
+                                <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
+                                  picture_as_pdf
+                                </span>
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );

@@ -74,10 +74,9 @@ export default function ConsultorViagensPage() {
 
   const viagensOriginais = dadosConsultor?.viagens || [];
 
-  // Filtragem
-  const viagensFiltradas = useMemo(() => {
+  // Viagens da competência (ano e mês) para cálculo dos KPIs
+  const viagensCompetencia = useMemo(() => {
     return viagensOriginais.filter((v: any) => {
-      // Filtro de mês/ano
       if (v.dataInicial || v.data_inicial) {
         const dStr = v.dataInicial || v.data_inicial;
         let anoItem = 2026;
@@ -94,14 +93,21 @@ export default function ConsultorViagensPage() {
         if (anoSelecionado && anoItem !== anoSelecionado) return false;
         if (mesSelecionado !== null && mesItem !== mesSelecionado) return false;
       }
+      return true;
+    });
+  }, [viagensOriginais, anoSelecionado, mesSelecionado]);
 
+  // Filtragem completa com status e busca
+  const viagensFiltradas = useMemo(() => {
+    return viagensCompetencia.filter((v: any) => {
       // Filtro de status
       if (filtroStatus !== "TODOS") {
         const st = (v.status || "").toUpperCase();
         if (filtroStatus === "CONCLUIDO" && !st.includes("CONCLU")) return false;
         if (filtroStatus === "VOUCHERS_ENVIADOS" && !st.includes("VOUCHER")) return false;
-        if (filtroStatus === "EM_COTACAO" && !st.includes("COTAC")) return false;
-        if (filtroStatus === "APROVADO" && !st.includes("APROV")) return false;
+        if ((filtroStatus === "EM_COTACAO" || filtroStatus === "AGUARDANDO_COTACAO") && !st.includes("COTAC")) return false;
+        if (filtroStatus === "AGUARDANDO_APROVACAO" && (!st.includes("APROV") || st.includes("COMPRA"))) return false;
+        if (filtroStatus === "APROVADO_AGUARDANDO_COMPRA" && !st.includes("COMPRA") && !st.includes("CONTRAT")) return false;
       }
 
       // Filtro de busca
@@ -116,19 +122,19 @@ export default function ConsultorViagensPage() {
 
       return true;
     });
-  }, [viagensOriginais, anoSelecionado, mesSelecionado, filtroStatus, busca]);
+  }, [viagensCompetencia, filtroStatus, busca]);
 
-  // Contadores KPIs (Print 5)
+  // Contadores KPIs (calculados sobre a competência para não zerarem ao filtrar por status)
   const kpis = useMemo(() => {
-    const total = viagensFiltradas.length;
-    const emCotacao = viagensFiltradas.filter((v: any) => (v.status || "").toUpperCase().includes("COTAC")).length;
-    const paraAprovar = viagensFiltradas.filter((v: any) => (v.status || "").toUpperCase().includes("AGUARDANDO_APROVACAO")).length;
-    const paraComprar = viagensFiltradas.filter((v: any) => (v.status || "").toUpperCase().includes("COMPRA") || (v.status || "").toUpperCase().includes("CONTRATACAO")).length;
-    const vouchersEnviados = viagensFiltradas.filter((v: any) => (v.status || "").toUpperCase().includes("VOUCHER")).length;
-    const concluidas = viagensFiltradas.filter((v: any) => (v.status || "").toUpperCase().includes("CONCLU")).length;
+    const total = viagensCompetencia.length;
+    const emCotacao = viagensCompetencia.filter((v: any) => (v.status || "").toUpperCase().includes("COTAC")).length;
+    const paraAprovar = viagensCompetencia.filter((v: any) => (v.status || "").toUpperCase().includes("APROV") && !(v.status || "").toUpperCase().includes("COMPRA")).length;
+    const paraComprar = viagensCompetencia.filter((v: any) => (v.status || "").toUpperCase().includes("COMPRA") || (v.status || "").toUpperCase().includes("CONTRATACAO")).length;
+    const vouchersEnviados = viagensCompetencia.filter((v: any) => (v.status || "").toUpperCase().includes("VOUCHER")).length;
+    const concluidas = viagensCompetencia.filter((v: any) => (v.status || "").toUpperCase().includes("CONCLU")).length;
 
     return { total, emCotacao, paraAprovar, paraComprar, vouchersEnviados, concluidas };
-  }, [viagensFiltradas]);
+  }, [viagensCompetencia]);
 
   const politicas = [
     {
@@ -216,25 +222,35 @@ export default function ConsultorViagensPage() {
             </p>
           </div>
 
-          {/* Seletor de Competência (Ano e Meses) */}
+          {/* Seletor de Competência com ModernDropdown de Ano */}
           <div
             style={{
               display: "flex",
               alignItems: "center",
               gap: "8px",
               backgroundColor: "var(--surface-container-lowest)",
-              padding: "6px 10px",
+              padding: "4px 8px",
               borderRadius: "12px",
               border: "1px solid var(--border)",
               boxShadow: "0 1px 3px rgba(0,0,0,0.02)",
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "12px", fontWeight: 700, color: "var(--on-surface)" }}>
-              <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "var(--primary)" }}>calendar_today</span>
-              <span>{anoSelecionado}</span>
-            </div>
+            <ModernDropdown
+              value={anoSelecionado}
+              onChange={(val) => setAnoSelecionado(Number(val))}
+              options={[
+                { value: 2024, label: "2024" },
+                { value: 2025, label: "2025" },
+                { value: 2026, label: "2026" },
+                { value: 2027, label: "2027" },
+              ]}
+              icon="calendar_today"
+              searchable={false}
+              minWidth={105}
+              buttonStyle={{ padding: "3px 8px", fontSize: "12px", height: "28px", border: "none", backgroundColor: "transparent" }}
+            />
 
-            <div style={{ height: "18px", width: "1px", backgroundColor: "var(--border)", margin: "0 4px" }} />
+            <div style={{ height: "18px", width: "1px", backgroundColor: "var(--border)", margin: "0 2px" }} />
 
             <div style={{ display: "flex", gap: "2px", flexWrap: "wrap" }}>
               <button
@@ -280,45 +296,111 @@ export default function ConsultorViagensPage() {
           </div>
         </div>
 
-        {/* 6 Cards de Indicadores Operacionais (Idêntico ao Print 5) */}
+        {/* 6 Cards de Indicadores Operacionais Interativos (Filtro por Card igual Viagens & Logística Integrada) */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: "12px" }}>
           {/* Todas Demandas */}
-          <div style={{ padding: "16px", borderRadius: "12px", backgroundColor: "var(--surface-container-lowest)", border: "1px solid var(--border)", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
+          <div
+            onClick={() => setFiltroStatus("TODOS")}
+            style={{
+              padding: "16px",
+              borderRadius: "12px",
+              backgroundColor: "var(--surface-container-lowest)",
+              border: filtroStatus === "TODOS" ? "2px solid var(--primary)" : "1px solid var(--border)",
+              boxShadow: filtroStatus === "TODOS" ? "0 4px 12px rgba(0, 43, 73, 0.1)" : "0 1px 3px rgba(0,0,0,0.02)",
+              cursor: "pointer",
+              transition: "all 0.15s ease",
+            }}
+          >
             <span style={{ fontSize: "10px", fontWeight: 800, textTransform: "uppercase", color: "var(--on-surface-variant)", letterSpacing: "0.04em" }}>TODAS DEMANDAS</span>
             <div style={{ fontSize: "22px", fontWeight: 800, color: "var(--primary)", marginTop: "4px" }}>{kpis.total}</div>
-            <span style={{ fontSize: "10px", color: "var(--on-surface-variant)" }}>Competência ativa</span>
+            <span style={{ fontSize: "10px", color: "var(--primary)", fontWeight: filtroStatus === "TODOS" ? 700 : 500 }}>Competência ativa</span>
           </div>
 
           {/* 1. Em Cotação */}
-          <div style={{ padding: "16px", borderRadius: "12px", backgroundColor: "var(--surface-container-lowest)", border: "1px solid var(--border)", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
+          <div
+            onClick={() => setFiltroStatus("EM_COTACAO")}
+            style={{
+              padding: "16px",
+              borderRadius: "12px",
+              backgroundColor: "var(--surface-container-lowest)",
+              border: (filtroStatus === "EM_COTACAO" || filtroStatus === "AGUARDANDO_COTACAO") ? "2px solid #d97706" : "1px solid var(--border)",
+              boxShadow: (filtroStatus === "EM_COTACAO" || filtroStatus === "AGUARDANDO_COTACAO") ? "0 4px 12px rgba(217, 119, 6, 0.15)" : "0 1px 3px rgba(0,0,0,0.02)",
+              cursor: "pointer",
+              transition: "all 0.15s ease",
+            }}
+          >
             <span style={{ fontSize: "10px", fontWeight: 800, textTransform: "uppercase", color: "#d97706", letterSpacing: "0.04em" }}>1. EM COTAÇÃO</span>
             <div style={{ fontSize: "22px", fontWeight: 800, color: "#d97706", marginTop: "4px" }}>{kpis.emCotacao}</div>
             <span style={{ fontSize: "10px", color: "var(--on-surface-variant)" }}>Agência cotando</span>
           </div>
 
           {/* 2. Para Aprovar */}
-          <div style={{ padding: "16px", borderRadius: "12px", backgroundColor: "var(--surface-container-lowest)", border: "1px solid var(--border)", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
+          <div
+            onClick={() => setFiltroStatus("AGUARDANDO_APROVACAO")}
+            style={{
+              padding: "16px",
+              borderRadius: "12px",
+              backgroundColor: "var(--surface-container-lowest)",
+              border: filtroStatus === "AGUARDANDO_APROVACAO" ? "2px solid var(--primary, #0f2a4a)" : "1px solid var(--border)",
+              boxShadow: filtroStatus === "AGUARDANDO_APROVACAO" ? "0 4px 12px rgba(15, 42, 74, 0.15)" : "0 1px 3px rgba(0,0,0,0.02)",
+              cursor: "pointer",
+              transition: "all 0.15s ease",
+            }}
+          >
             <span style={{ fontSize: "10px", fontWeight: 800, textTransform: "uppercase", color: "var(--primary)", letterSpacing: "0.04em" }}>2. PARA APROVAR</span>
             <div style={{ fontSize: "22px", fontWeight: 800, color: "var(--primary)", marginTop: "4px" }}>{kpis.paraAprovar}</div>
             <span style={{ fontSize: "10px", color: "var(--on-surface-variant)" }}>Líder de Projeto</span>
           </div>
 
           {/* 3. Para Comprar */}
-          <div style={{ padding: "16px", borderRadius: "12px", backgroundColor: "var(--surface-container-lowest)", border: "1px solid var(--border)", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
+          <div
+            onClick={() => setFiltroStatus("APROVADO_AGUARDANDO_COMPRA")}
+            style={{
+              padding: "16px",
+              borderRadius: "12px",
+              backgroundColor: "var(--surface-container-lowest)",
+              border: filtroStatus === "APROVADO_AGUARDANDO_COMPRA" ? "2px solid #0284c7" : "1px solid var(--border)",
+              boxShadow: filtroStatus === "APROVADO_AGUARDANDO_COMPRA" ? "0 4px 12px rgba(2, 132, 199, 0.15)" : "0 1px 3px rgba(0,0,0,0.02)",
+              cursor: "pointer",
+              transition: "all 0.15s ease",
+            }}
+          >
             <span style={{ fontSize: "10px", fontWeight: 800, textTransform: "uppercase", color: "#0284c7", letterSpacing: "0.04em" }}>3. PARA COMPRAR</span>
             <div style={{ fontSize: "22px", fontWeight: 800, color: "#0284c7", marginTop: "4px" }}>{kpis.paraComprar}</div>
             <span style={{ fontSize: "10px", color: "var(--on-surface-variant)" }}>Agência emitindo</span>
           </div>
 
           {/* 4. Vouchers Enviados */}
-          <div style={{ padding: "16px", borderRadius: "12px", backgroundColor: "var(--surface-container-lowest)", border: "1px solid var(--border)", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
+          <div
+            onClick={() => setFiltroStatus("VOUCHERS_ENVIADOS")}
+            style={{
+              padding: "16px",
+              borderRadius: "12px",
+              backgroundColor: "var(--surface-container-lowest)",
+              border: filtroStatus === "VOUCHERS_ENVIADOS" ? "2px solid #0d9488" : "1px solid var(--border)",
+              boxShadow: filtroStatus === "VOUCHERS_ENVIADOS" ? "0 4px 12px rgba(13, 148, 136, 0.15)" : "0 1px 3px rgba(0,0,0,0.02)",
+              cursor: "pointer",
+              transition: "all 0.15s ease",
+            }}
+          >
             <span style={{ fontSize: "10px", fontWeight: 800, textTransform: "uppercase", color: "#0d9488", letterSpacing: "0.04em" }}>4. VOUCHERS ENVIADOS</span>
             <div style={{ fontSize: "22px", fontWeight: 800, color: "#0d9488", marginTop: "4px" }}>{kpis.vouchersEnviados}</div>
             <span style={{ fontSize: "10px", color: "var(--on-surface-variant)" }}>Viajante informado</span>
           </div>
 
           {/* 5. Concluídas */}
-          <div style={{ padding: "16px", borderRadius: "12px", backgroundColor: "var(--surface-container-lowest)", border: "1px solid var(--border)", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
+          <div
+            onClick={() => setFiltroStatus("CONCLUIDO")}
+            style={{
+              padding: "16px",
+              borderRadius: "12px",
+              backgroundColor: "var(--surface-container-lowest)",
+              border: filtroStatus === "CONCLUIDO" ? "2px solid #16a34a" : "1px solid var(--border)",
+              boxShadow: filtroStatus === "CONCLUIDO" ? "0 4px 12px rgba(22, 163, 74, 0.15)" : "0 1px 3px rgba(0,0,0,0.02)",
+              cursor: "pointer",
+              transition: "all 0.15s ease",
+            }}
+          >
             <span style={{ fontSize: "10px", fontWeight: 800, textTransform: "uppercase", color: "#16a34a", letterSpacing: "0.04em" }}>5. CONCLUÍDAS</span>
             <div style={{ fontSize: "22px", fontWeight: 800, color: "#16a34a", marginTop: "4px" }}>{kpis.concluidas}</div>
             <span style={{ fontSize: "10px", color: "var(--on-surface-variant)" }}>Prestação finalizada</span>
@@ -455,11 +537,12 @@ export default function ConsultorViagensPage() {
               value={filtroStatus}
               onChange={(val) => setFiltroStatus(String(val))}
               options={[
-                { value: "TODOS", label: "Todos os Status" },
-                { value: "EM_COTACAO", label: "Em Cotação" },
-                { value: "APROVADO", label: "Aprovado / Para Comprar" },
-                { value: "VOUCHERS_ENVIADOS", label: "Vouchers Enviados" },
-                { value: "CONCLUIDO", label: "Concluído 100%" },
+                { value: "TODOS", label: `Todos os Status (${viagensCompetencia.length})` },
+                { value: "EM_COTACAO", label: "1. Em Cotação" },
+                { value: "AGUARDANDO_APROVACAO", label: "2. Para Aprovar" },
+                { value: "APROVADO_AGUARDANDO_COMPRA", label: "3. Para Comprar" },
+                { value: "VOUCHERS_ENVIADOS", label: "4. Vouchers Enviados" },
+                { value: "CONCLUIDO", label: "5. Concluídas 100%" },
               ]}
               icon="filter_list"
               searchable={false}

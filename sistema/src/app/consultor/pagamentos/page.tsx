@@ -232,25 +232,36 @@ export default function ConsultorPagamentosPage() {
             </p>
           </div>
 
-          {/* Seletor de Competência */}
+          {/* Seletor de Competência com ModernDropdown de Ano */}
           <div
             style={{
               display: "flex",
               alignItems: "center",
               gap: "8px",
               backgroundColor: "var(--surface-container-lowest)",
-              padding: "6px 10px",
+              padding: "4px 8px",
               borderRadius: "12px",
               border: "1px solid var(--border)",
               boxShadow: "0 1px 3px rgba(0,0,0,0.02)",
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "12px", fontWeight: 700, color: "var(--on-surface)" }}>
-              <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "var(--primary)" }}>calendar_today</span>
-              <span>{anoSelecionado}</span>
-            </div>
+            <ModernDropdown
+              value={anoSelecionado}
+              onChange={(val) => setAnoSelecionado(String(val))}
+              options={[
+                { value: "TODOS", label: "Todos os Anos" },
+                { value: "2024", label: "2024" },
+                { value: "2025", label: "2025" },
+                { value: "2026", label: "2026" },
+                { value: "2027", label: "2027" },
+              ]}
+              icon="calendar_today"
+              searchable={false}
+              minWidth={115}
+              buttonStyle={{ padding: "3px 8px", fontSize: "12px", height: "28px", border: "none", backgroundColor: "transparent" }}
+            />
 
-            <div style={{ height: "18px", width: "1px", backgroundColor: "var(--border)", margin: "0 4px" }} />
+            <div style={{ height: "18px", width: "1px", backgroundColor: "var(--border)", margin: "0 2px" }} />
 
             <div style={{ display: "flex", gap: "2px", flexWrap: "wrap" }}>
               <button
@@ -294,75 +305,6 @@ export default function ConsultorPagamentosPage() {
               })}
             </div>
           </div>
-        </div>
-
-        {/* Chips de Categorias Documentais (Idêntico ao padrão oficial) */}
-        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-          <button
-            type="button"
-            onClick={() => setFiltroCategoria("TODAS")}
-            style={{
-              padding: "6px 14px",
-              borderRadius: "999px",
-              fontSize: "12px",
-              fontWeight: 700,
-              cursor: "pointer",
-              border: "1px solid var(--border)",
-              backgroundColor: filtroCategoria === "TODAS" ? "var(--primary)" : "var(--surface-container-lowest)",
-              color: filtroCategoria === "TODAS" ? "#ffffff" : "var(--on-surface)",
-              boxShadow: "0 1px 2px rgba(0,0,0,0.03)",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "6px",
-            }}
-          >
-            <span>Todas as Categorias</span>
-            <span style={{ fontSize: "10px", padding: "1px 6px", borderRadius: "999px", backgroundColor: filtroCategoria === "TODAS" ? "rgba(255,255,255,0.25)" : "var(--surface-container)" }}>
-              {contagemCategorias["TODAS"]}
-            </span>
-          </button>
-
-          {CATEGORIAS_DOCUMENTO.map((cat) => {
-            const estilo = ESTILOS_CATEGORIA_DOC[cat];
-            const isAtiva = filtroCategoria === cat;
-            const count = contagemCategorias[cat] || 0;
-
-            return (
-              <button
-                key={cat}
-                type="button"
-                onClick={() => setFiltroCategoria(cat)}
-                style={{
-                  padding: "6px 12px",
-                  borderRadius: "999px",
-                  fontSize: "11px",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                  border: isAtiva ? `1px solid ${estilo.chipActiveBg}` : `1px solid ${estilo.border}`,
-                  backgroundColor: isAtiva ? estilo.chipActiveBg : estilo.bg,
-                  color: isAtiva ? "#ffffff" : estilo.text,
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  transition: "all 0.15s ease",
-                }}
-              >
-                <span>{cat}</span>
-                <span
-                  style={{
-                    fontSize: "10px",
-                    padding: "1px 6px",
-                    borderRadius: "999px",
-                    backgroundColor: isAtiva ? "rgba(255,255,255,0.25)" : "#ffffff",
-                    color: isAtiva ? "#ffffff" : estilo.text,
-                    fontWeight: 800,
-                  }}
-                >
-                  {count}
-                </span>
-              </button>
-            );
-          })}
         </div>
 
         {/* 4 Cards de Indicadores Financeiros (KPIs Idênticos ao Oficial) */}
@@ -555,58 +497,6 @@ export default function ConsultorPagamentosPage() {
               );
             })}
           </div>
-
-          {/* Linha 3: Barra de Competência (Ano e Meses) */}
-          <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap", paddingTop: "4px", borderTop: "1px solid var(--border)" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", fontWeight: 700, color: "var(--on-surface)" }}>
-              <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "var(--primary)" }}>calendar_today</span>
-              <span>Competência: {anoSelecionado}</span>
-            </div>
-
-            <div style={{ height: "18px", width: "1px", backgroundColor: "var(--border)" }} />
-
-            <div style={{ display: "flex", gap: "2px", flexWrap: "wrap" }}>
-              <button
-                type="button"
-                onClick={() => setMesSelecionado(null)}
-                style={{
-                  padding: "4px 10px",
-                  borderRadius: "6px",
-                  fontSize: "11px",
-                  fontWeight: 700,
-                  border: "none",
-                  cursor: "pointer",
-                  backgroundColor: mesSelecionado === null ? "#002b49" : "transparent",
-                  color: mesSelecionado === null ? "#ffffff" : "var(--on-surface-variant)",
-                }}
-              >
-                Todos
-              </button>
-              {mesesChips.map((m) => {
-                const isAtivo = mesSelecionado === m.num;
-                return (
-                  <button
-                    key={m.num}
-                    type="button"
-                    onClick={() => setMesSelecionado(m.num)}
-                    style={{
-                      padding: "4px 8px",
-                      borderRadius: "6px",
-                      fontSize: "11px",
-                      fontWeight: isAtivo ? 800 : 500,
-                      border: "none",
-                      cursor: "pointer",
-                      backgroundColor: isAtivo ? "#002b49" : "transparent",
-                      color: isAtivo ? "#ffffff" : "var(--on-surface-variant)",
-                      transition: "all 0.15s ease",
-                    }}
-                  >
-                    {m.rotulo}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
         </div>
 
         {/* Tabela de Pagamentos (Layout Idêntico ao Print 1) */}
@@ -667,13 +557,12 @@ export default function ConsultorPagamentosPage() {
                   <th style={{ padding: "10px 12px", width: "105px" }}>Status</th>
                   <th style={{ padding: "10px 10px", textAlign: "center", width: "65px" }}>BM</th>
                   <th style={{ padding: "10px 14px", minWidth: "100px" }}>Obs.</th>
-                  <th style={{ padding: "10px 12px", textAlign: "center", width: "60px" }}>Ações</th>
                 </tr>
               </thead>
               <tbody>
                 {pagamentosFiltrados.length === 0 ? (
                   <tr>
-                    <td colSpan={11} style={{ padding: "36px", textAlign: "center", color: "var(--on-surface-variant)" }}>
+                    <td colSpan={10} style={{ padding: "36px", textAlign: "center", color: "var(--on-surface-variant)" }}>
                       Nenhum registro de pagamento encontrado para os filtros selecionados.
                     </td>
                   </tr>
@@ -822,17 +711,6 @@ export default function ConsultorPagamentosPage() {
                         {/* Obs */}
                         <td style={{ padding: "10px 14px", color: "#64748b", fontSize: "11px", whiteSpace: "nowrap" }}>
                           {item.observacoes || "—"}
-                        </td>
-
-                        {/* Ações */}
-                        <td style={{ padding: "10px 12px", textAlign: "center", whiteSpace: "nowrap" }}>
-                          <span
-                            className="material-symbols-outlined"
-                            style={{ fontSize: "17px", color: "var(--primary)", cursor: "pointer" }}
-                            title="Visualizar Detalhes"
-                          >
-                            visibility
-                          </span>
                         </td>
                       </tr>
                     );
