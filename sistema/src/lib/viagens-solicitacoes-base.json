@@ -2118,7 +2118,7 @@
     "destino": "SOROCABA-SP",
     "dataInicial": "2026-10-26",
     "dataFinal": "2026-10-30",
-    "status": "VOUCHERS_ENVIADOS",
+    "status": "AGUARDANDO_PRESTACAO_CONTAS",
     "agenciaNome": "FÁTIMA",
     "necessidades": {
       "aereo": true,
@@ -2439,10 +2439,18 @@
         "usuarioNome": "Agência Fátima",
         "acao": "VOUCHERS_DISPARADOS_EMAIL",
         "detalhes": "Vouchers e dados das reservas encaminhados com sucesso para leonardo.campos@nnos.com.br, agencia.fatima@nnos.com.br, gestao.projetos@nnos.com.br."
+      },
+      {
+        "id": "aud-1793043805687",
+        "dataHora": "2026-10-26T19:43:25.687Z",
+        "perfilUsuario": "CONSULTOR",
+        "usuarioNome": "ALEJANDRO LAPUENTE",
+        "acao": "VOUCHERS_RECEBIMENTO_APROVADO",
+        "detalhes": "Consultor confirmou e aprovou o recebimento dos vouchers e das reservas no sistema."
       }
     ],
     "criadoEm": "2026-10-26T18:12:43.680Z",
-    "atualizadoEm": "2026-10-26T18:21:58.747Z",
+    "atualizadoEm": "2026-10-26T19:43:25.687Z",
     "aprovadoPor": "Líder de Projeto",
     "aprovadoEm": "2026-10-26T18:17:59.063Z",
     "vouchersEnviadosEm": "2026-10-26T18:21:58.747Z",
@@ -2450,7 +2458,9 @@
       "leonardo.campos@nnos.com.br",
       "agencia.fatima@nnos.com.br",
       "gestao.projetos@nnos.com.br"
-    ]
+    ],
+    "vouchersRecebidosAprovadosEm": "2026-10-26T19:43:25.687Z",
+    "vouchersRecebidosAprovadosPor": "ALEJANDRO LAPUENTE"
   },
   {
     "id": "sol-0de0fa07-0baf-42e7-b643-bb0046c9d167",

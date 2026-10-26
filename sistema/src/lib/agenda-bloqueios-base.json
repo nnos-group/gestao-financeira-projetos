@@ -1,1 +1,13 @@
-[]
+[
+  {
+    "consultorNome": "ALEJANDRO LAPUENTE",
+    "consultorId": "5805623c-ee92-48a5-8ee6-ab6662ce5d04",
+    "dataInicial": "2026-12-28",
+    "dataFinal": "2026-12-31",
+    "tipo": "FERIAS",
+    "motivo": "Férias / Recesso",
+    "observacoes": "",
+    "id": "blk-1793044489213-oer6",
+    "criadoEm": "2026-10-26T19:54:49.213Z"
+  }
+]

@@ -8,6 +8,7 @@ export interface PessoaItem {
   telefone?: string;
   cargo?: string;
   ativo?: boolean;
+  tipo_medicao?: "QUINZENAL" | "INTEGRAL";
   
   // Viagens & Logística (Pessoa Física)
   cpf?: string;

@@ -7,6 +7,7 @@ import ModernDropdown from "@/components/ModernDropdown";
 import bms2026Base from "@/lib/bms-2026.json";
 import consultoresBase from "@/lib/consultores-base.json";
 import { formatarNomeCurto } from "@/lib/consultor-utils";
+import EnvioMassaBmModal from "@/components/medicao/EnvioMassaBmModal";
 
 interface AtividadeMedicao {
   projeto: string;
@@ -111,6 +112,7 @@ const MESES_LISTA = [
 export default function BoletimMedicaoPage() {
   const [bmsLista, setBmsLista] = useState<BoletimMedicaoItem[]>(INITIAL_BMS);
   const [bmVisualizando, setBmVisualizando] = useState<BoletimMedicaoItem | null>(null);
+  const [modalEnvioMassaAberto, setModalEnvioMassaAberto] = useState(false);
 
   // Sincronização e persistência de dados dos BMs (API como fonte da verdade, localStorage como fallback)
   useEffect(() => {
@@ -1458,7 +1460,36 @@ ${linhasProjetos.join("\n")}`;
                       </p>
                     </div>
 
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                      <button
+                        type="button"
+                        onClick={() => setModalEnvioMassaAberto(true)}
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "6px",
+                          fontSize: "13px",
+                          padding: "10px 18px",
+                          backgroundColor: "#0d9488",
+                          color: "#ffffff",
+                          border: "none",
+                          borderRadius: "8px",
+                          fontWeight: 700,
+                          cursor: "pointer",
+                          boxShadow: "0 2px 8px rgba(13, 148, 136, 0.25)",
+                          transition: "all 0.2s ease",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = "#0f766e";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = "#0d9488";
+                        }}
+                      >
+                        <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>forward_to_inbox</span>
+                        <span>Enviar BMs em Massa</span>
+                      </button>
+
                       <button
                         type="button"
                         onClick={() => setPainelGeracaoAberto(!painelGeracaoAberto)}
@@ -2209,6 +2240,29 @@ ${linhasProjetos.join("\n")}`;
             </div>
           </div>
         </div>
+      )}
+
+      {/* Modal de Envio de BMs em Massa */}
+      {modalEnvioMassaAberto && (
+        <EnvioMassaBmModal
+          onClose={() => setModalEnvioMassaAberto(false)}
+          onConcluido={async () => {
+            try {
+              const res = await fetch("/api/medicao");
+              const data = await res.json();
+              if (Array.isArray(data) && data.length > 0) {
+                setBmsLista(data);
+                try {
+                  localStorage.setItem("nnos_bms_2026_v5", JSON.stringify(data));
+                } catch {}
+              }
+            } catch (err) {
+              console.warn("Erro ao recarregar BMs após envio em massa:", err);
+            }
+          }}
+          showToast={showToast}
+          bmsListaExistente={bmsLista}
+        />
       )}
 
       {/* Estilos de Impressão A4: Na tela interativa exibe o formato rico; ao Exportar PDF / window.print() renderiza EXCLUSIVAMENTE o layout A4 fornecido */}

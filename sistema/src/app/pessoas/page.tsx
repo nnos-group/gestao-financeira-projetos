@@ -91,6 +91,7 @@ export default function PessoasPage() {
       tipo: "parceiro",
       perfil: "SÊNIOR",
       ativo: true,
+      tipo_medicao: "QUINZENAL",
       aeroporto_preferencial: "CNF (Confins / BH)",
       cidade_base: "Belo Horizonte / MG",
     });
@@ -100,7 +101,7 @@ export default function PessoasPage() {
 
   const abrirEditarPessoa = (p: PessoaItem) => {
     setPessoaSelecionada(p);
-    setFormData({ ...p });
+    setFormData({ ...p, tipo_medicao: p.tipo_medicao || "QUINZENAL" });
     setAbaAtiva("geral");
     setModalAberto(true);
   };
@@ -1026,8 +1027,28 @@ export default function PessoasPage() {
                             </div>
                           </td>
 
-                          {/* Vínculo */}
-                          <td style={{ padding: "14px 16px" }}>{renderBadgeTipo(p.tipo)}</td>
+                          {/* Vínculo & Medição */}
+                          <td style={{ padding: "14px 16px" }}>
+                            <div style={{ display: "flex", flexDirection: "column", gap: "6px", alignItems: "flex-start" }}>
+                              {renderBadgeTipo(p.tipo)}
+                              <span
+                                style={{
+                                  fontSize: "10px",
+                                  fontWeight: 800,
+                                  padding: "2px 7px",
+                                  borderRadius: "4px",
+                                  backgroundColor: p.tipo_medicao === "INTEGRAL" ? "#f3e8ff" : "#e0f2fe",
+                                  color: p.tipo_medicao === "INTEGRAL" ? "#7e22ce" : "#0369a1",
+                                  border: p.tipo_medicao === "INTEGRAL" ? "1px solid #d8b4fe" : "1px solid #bae6fd",
+                                  textTransform: "uppercase",
+                                  letterSpacing: "0.4px",
+                                }}
+                                title={`Regra de Medição BM: ${p.tipo_medicao === "INTEGRAL" ? "Integral (Mês Cheio)" : "Quinzenal (1ª e 2ª Quinzena)"}`}
+                              >
+                                {p.tipo_medicao === "INTEGRAL" ? "Integral" : "Quinzenal"}
+                              </span>
+                            </div>
+                          </td>
 
                           {/* Perfil */}
                           <td style={{ padding: "14px 16px" }}>
@@ -1455,7 +1476,7 @@ export default function PessoasPage() {
                       </div>
                     </div>
 
-                    <div className="modal-grid-2">
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "14px", marginBottom: "14px" }}>
                       <div className="form-field">
                         <label>Tipo de Vínculo (Tag) *</label>
                         <select
@@ -1483,6 +1504,23 @@ export default function PessoasPage() {
                           <option value="DIRETORIA">DIRETORIA</option>
                           <option value="COORDENADOR">COORDENADOR</option>
                           <option value="OPERACIONAL">OPERACIONAL</option>
+                        </select>
+                      </div>
+
+                      <div className="form-field">
+                        <label>Tipo de Medição BM *</label>
+                        <select
+                          value={formData.tipo_medicao || "QUINZENAL"}
+                          onChange={(e) => setFormData({ ...formData, tipo_medicao: e.target.value as any })}
+                          style={{
+                            fontWeight: 700,
+                            color: formData.tipo_medicao === "INTEGRAL" ? "#7e22ce" : "#0369a1",
+                            backgroundColor: formData.tipo_medicao === "INTEGRAL" ? "#faf5ff" : "#f0f9ff",
+                            border: formData.tipo_medicao === "INTEGRAL" ? "1px solid #d8b4fe" : "1px solid #bae6fd",
+                          }}
+                        >
+                          <option value="QUINZENAL">Quinzenal</option>
+                          <option value="INTEGRAL">Integral (Mês Cheio)</option>
                         </select>
                       </div>
                     </div>

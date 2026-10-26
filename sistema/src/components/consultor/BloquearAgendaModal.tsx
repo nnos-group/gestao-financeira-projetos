@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { AgendaBloqueio } from "@/lib/agenda-bloqueios";
-import { formatarPeriodoBR, formatarDataHoraBR } from "@/lib/date-utils";
+import { formatarPeriodoBR } from "@/lib/date-utils";
 
 interface BloquearAgendaModalProps {
   consultorNome: string;
@@ -101,54 +101,19 @@ export default function BloquearAgendaModal({
   };
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        width: "100vw",
-        height: "100vh",
-        backgroundColor: "rgba(15, 23, 42, 0.7)",
-        backdropFilter: "blur(4px)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 9999,
-        padding: "16px",
-      }}
-      onClick={onClose}
-    >
+    <div className="modal-backdrop" onClick={onClose} style={{ zIndex: 1050 }}>
       <div
-        style={{
-          width: "100%",
-          maxWidth: "680px",
-          maxHeight: "92vh",
-          backgroundColor: "#ffffff",
-          borderRadius: "16px",
-          border: "1px solid var(--border)",
-          boxShadow: "0 20px 40px rgba(0,0,0,0.25)",
-          display: "flex",
-          flexDirection: "column",
-          overflow: "hidden",
-        }}
+        className="modal-card"
+        style={{ maxWidth: "660px", maxHeight: "92vh" }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header do Modal */}
-        <div
-          style={{
-            padding: "18px 24px",
-            borderBottom: "1px solid #e2e8f0",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            backgroundColor: "#f8fafc",
-          }}
-        >
+        {/* Header do Modal com Design System Moderno (Print 3) */}
+        <div className="modal-header">
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <div
               style={{
-                width: "38px",
-                height: "38px",
+                width: "36px",
+                height: "36px",
                 borderRadius: "10px",
                 backgroundColor: "#fee2e2",
                 color: "#dc2626",
@@ -157,111 +122,89 @@ export default function BloquearAgendaModal({
                 justifyContent: "center",
               }}
             >
-              <span className="material-symbols-outlined" style={{ fontSize: "22px" }}>
+              <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>
                 event_busy
               </span>
             </div>
             <div>
-              <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 800, color: "#0f172a" }}>
+              <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 800, color: "var(--primary)" }}>
                 Bloquear Período na Agenda
               </h3>
-              <p style={{ margin: "2px 0 0 0", fontSize: "12px", color: "#64748b" }}>
-                Consultor: <strong style={{ color: "#0f2a4a" }}>{consultorNome}</strong>
+              <p style={{ margin: "2px 0 0 0", fontSize: "11.5px", color: "var(--on-surface-variant)" }}>
+                Consultor: <strong style={{ color: "var(--on-surface)" }}>{consultorNome}</strong>
               </p>
             </div>
           </div>
 
           <button
             type="button"
+            className="btn-modal-close"
             onClick={onClose}
-            style={{
-              background: "transparent",
-              border: "none",
-              cursor: "pointer",
-              color: "#94a3b8",
-              padding: "4px",
-              display: "flex",
-              alignItems: "center",
-            }}
+            title="Fechar modal"
           >
-            <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>close</span>
+            <span className="material-symbols-outlined">close</span>
           </button>
         </div>
 
-        {/* Corpo do Modal com Scroll */}
-        <div style={{ padding: "20px 24px", overflowY: "auto", flex: 1, display: "flex", flexDirection: "column", gap: "20px" }}>
-          <div
-            style={{
-              backgroundColor: "#fef3c7",
-              border: "1px solid #fde68a",
-              borderRadius: "10px",
-              padding: "12px 16px",
-              fontSize: "12.5px",
-              color: "#92400e",
-              lineHeight: 1.5,
-              display: "flex",
-              alignItems: "flex-start",
-              gap: "10px",
-            }}
-          >
-            <span className="material-symbols-outlined" style={{ fontSize: "20px", color: "#d97706", flexShrink: 0 }}>
-              info
-            </span>
-            <div>
-              <strong>Como funciona o bloqueio:</strong> Quando o Líder de Projeto for agendar uma atividade em Projetos &amp; Atividades que coincida com o período bloqueado, o sistema alertará que você está indisponível para aquela data.
-            </div>
-          </div>
-
-          {/* Formulário de Novo Bloqueio */}
-          <form onSubmit={handleSalvar} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+        {/* Formulário com Scroll Body */}
+        <form
+          onSubmit={handleSalvar}
+          style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, overflow: "hidden" }}
+        >
+          <div className="modal-body" style={{ overflowY: "auto", flex: 1, minHeight: 0 }}>
+            {/* Caixa Informativa Moderna */}
+            <div
+              style={{
+                backgroundColor: "#fffbeb",
+                border: "1px solid #fde68a",
+                borderRadius: "12px",
+                padding: "12px 16px",
+                fontSize: "12.5px",
+                color: "#92400e",
+                lineHeight: 1.5,
+                display: "flex",
+                alignItems: "flex-start",
+                gap: "10px",
+                marginBottom: "4px",
+              }}
+            >
+              <span
+                className="material-symbols-outlined"
+                style={{ fontSize: "20px", color: "#d97706", flexShrink: 0, marginTop: "1px" }}
+              >
+                info
+              </span>
               <div>
-                <label style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "#334155", marginBottom: "4px" }}>
-                  Data Inicial *
-                </label>
+                <strong style={{ color: "#78350f" }}>Como funciona o bloqueio:</strong> Quando o Líder de Projeto for agendar uma atividade em Projetos &amp; Atividades que coincida com o período bloqueado, o sistema alertará que você está indisponível para aquela data.
+              </div>
+            </div>
+
+            {/* Grid 2 Colunas para Datas */}
+            <div className="modal-grid-2">
+              <div className="form-field">
+                <label>Data Inicial *</label>
                 <input
                   type="date"
                   value={dataInicial}
                   onChange={(e) => setDataInicial(e.target.value)}
                   required
-                  style={{
-                    width: "100%",
-                    padding: "8px 12px",
-                    borderRadius: "8px",
-                    border: "1px solid #cbd5e1",
-                    fontSize: "13px",
-                    color: "#0f172a",
-                    backgroundColor: "#ffffff",
-                  }}
                 />
               </div>
 
-              <div>
-                <label style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "#334155", marginBottom: "4px" }}>
-                  Data Final *
-                </label>
+              <div className="form-field">
+                <label>Data Final *</label>
                 <input
                   type="date"
                   value={dataFinal}
                   onChange={(e) => setDataFinal(e.target.value)}
                   required
-                  style={{
-                    width: "100%",
-                    padding: "8px 12px",
-                    borderRadius: "8px",
-                    border: "1px solid #cbd5e1",
-                    fontSize: "13px",
-                    color: "#0f172a",
-                    backgroundColor: "#ffffff",
-                  }}
                 />
               </div>
             </div>
 
-            <div>
-              <label style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "#334155", marginBottom: "4px" }}>
-                Motivo / Tipo de Bloqueio *
-              </label>
+            {/* Motivo e Tags */}
+            <div className="form-field">
+              <label>Motivo / Tipo de Bloqueio *</label>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "8px" }}>
                 {motivosPredefinidos.map((m) => {
                   const sel = motivo === m.rotulo;
@@ -274,14 +217,15 @@ export default function BloquearAgendaModal({
                         setTipo(m.tipo);
                       }}
                       style={{
-                        padding: "5px 10px",
+                        padding: "6px 12px",
                         borderRadius: "20px",
                         fontSize: "11px",
                         fontWeight: 700,
-                        border: sel ? "1px solid #dc2626" : "1px solid #cbd5e1",
-                        backgroundColor: sel ? "#dc2626" : "#f8fafc",
-                        color: sel ? "#ffffff" : "#475569",
+                        border: sel ? "1px solid #dc2626" : "1px solid var(--border)",
+                        backgroundColor: sel ? "#dc2626" : "var(--surface-container-low, #f1f5f9)",
+                        color: sel ? "#ffffff" : "var(--on-surface-variant, #475569)",
                         cursor: "pointer",
+                        boxShadow: sel ? "0 2px 4px rgba(220, 38, 38, 0.25)" : "none",
                         transition: "all 0.15s ease",
                       }}
                     >
@@ -295,21 +239,13 @@ export default function BloquearAgendaModal({
                 value={motivo}
                 onChange={(e) => setMotivo(e.target.value)}
                 placeholder="Ex: Momento OFF / Pessoal, Viagem, etc."
-                style={{
-                  width: "100%",
-                  padding: "8px 12px",
-                  borderRadius: "8px",
-                  border: "1px solid #cbd5e1",
-                  fontSize: "13px",
-                  color: "#0f172a",
-                }}
+                required
               />
             </div>
 
-            <div>
-              <label style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "#334155", marginBottom: "4px" }}>
-                Observações Adicionais (Opcional)
-              </label>
+            {/* Observações Adicionais */}
+            <div className="form-field">
+              <label>Observações Adicionais (Opcional)</label>
               <textarea
                 value={observacoes}
                 onChange={(e) => setObservacoes(e.target.value)}
@@ -317,119 +253,158 @@ export default function BloquearAgendaModal({
                 rows={2}
                 style={{
                   width: "100%",
-                  padding: "8px 12px",
+                  padding: "10px 14px",
                   borderRadius: "8px",
-                  border: "1px solid #cbd5e1",
-                  fontSize: "12.5px",
-                  color: "#0f172a",
+                  border: "1px solid var(--border)",
+                  backgroundColor: "var(--surface-container-low, #f1f5f9)",
+                  fontSize: "13px",
+                  color: "var(--on-surface)",
                   resize: "vertical",
                 }}
               />
             </div>
 
-            <div style={{ display: "flex", justifyContent: "flex-end" }}>
-              <button
-                type="submit"
-                disabled={salvando}
+            {/* Seus Bloqueios Registrados */}
+            <div style={{ marginTop: "14px", borderTop: "1px solid var(--border)", paddingTop: "14px" }}>
+              <h4
                 style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  padding: "9px 20px",
-                  borderRadius: "8px",
-                  backgroundColor: "#dc2626",
-                  color: "#ffffff",
-                  border: "none",
-                  fontSize: "13px",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                  boxShadow: "0 2px 6px rgba(220, 38, 38, 0.25)",
+                  margin: "0 0 10px 0",
+                  fontSize: "11.5px",
+                  fontWeight: 800,
+                  color: "var(--on-surface-variant)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px",
                 }}
               >
-                <span className="material-symbols-outlined" style={{ fontSize: "17px" }}>lock</span>
-                <span>{salvando ? "Bloqueando..." : "Confirmar Bloqueio"}</span>
-              </button>
-            </div>
-          </form>
+                Seus Bloqueios Registrados ({bloqueios.length})
+              </h4>
 
-          {/* Lista de Bloqueios Cadastrados */}
-          <div style={{ marginTop: "10px", borderTop: "1px solid #e2e8f0", paddingTop: "16px" }}>
-            <h4 style={{ margin: "0 0 10px 0", fontSize: "13px", fontWeight: 800, color: "#1e293b", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-              Seus Bloqueios Registrados ({bloqueios.length})
-            </h4>
-
-            {bloqueios.length === 0 ? (
-              <p style={{ margin: 0, fontSize: "12px", color: "#64748b", fontStyle: "italic" }}>
-                Nenhum período de bloqueio cadastrado para este consultor.
-              </p>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                {bloqueios.map((b) => (
-                  <div
-                    key={b.id}
-                    style={{
-                      padding: "10px 14px",
-                      borderRadius: "10px",
-                      backgroundColor: "#fff1f2",
-                      border: "1px solid #fecdd3",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      gap: "12px",
-                    }}
-                  >
-                    <div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                        <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "#e11d48" }}>
-                          event_busy
-                        </span>
-                        <strong style={{ fontSize: "13px", color: "#9f1239" }}>
-                          {formatarPeriodoBR(b.dataInicial, b.dataFinal)}
-                        </strong>
-                        <span
-                          style={{
-                            fontSize: "10px",
-                            fontWeight: 700,
-                            padding: "1px 6px",
-                            borderRadius: "4px",
-                            backgroundColor: "rgba(225, 29, 72, 0.15)",
-                            color: "#9f1239",
-                          }}
-                        >
-                          {b.motivo}
-                        </span>
-                      </div>
-                      {b.observacoes && (
-                        <p style={{ margin: "3px 0 0 24px", fontSize: "11.5px", color: "#64748b" }}>
-                          {b.observacoes}
-                        </p>
-                      )}
-                    </div>
-
-                    <button
-                      type="button"
-                      disabled={removendoId === b.id}
-                      onClick={() => handleRemover(b.id)}
+              {bloqueios.length === 0 ? (
+                <div
+                  style={{
+                    padding: "16px",
+                    borderRadius: "10px",
+                    backgroundColor: "var(--surface-container-lowest, #ffffff)",
+                    border: "1px dashed var(--border)",
+                    textAlign: "center",
+                    fontSize: "12px",
+                    color: "var(--on-surface-variant)",
+                    fontStyle: "italic",
+                  }}
+                >
+                  Nenhum período de bloqueio cadastrado para este consultor.
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  {bloqueios.map((b) => (
+                    <div
+                      key={b.id}
                       style={{
-                        padding: "4px 8px",
-                        borderRadius: "6px",
-                        backgroundColor: "#ffffff",
-                        border: "1px solid #fecdd3",
-                        color: "#e11d48",
-                        fontSize: "11px",
-                        fontWeight: 700,
-                        cursor: "pointer",
+                        padding: "12px 16px",
+                        borderRadius: "10px",
+                        backgroundColor: "var(--surface-container-lowest, #ffffff)",
+                        border: "1px solid rgba(220, 38, 38, 0.2)",
+                        borderLeft: "4px solid #dc2626",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: "12px",
+                        boxShadow: "0 1px 3px rgba(0,0,0,0.02)",
                       }}
-                      title="Excluir este bloqueio"
                     >
-                      {removendoId === b.id ? "Removendo..." : "Desbloquear"}
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
+                      <div>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                          <span
+                            className="material-symbols-outlined"
+                            style={{ fontSize: "16px", color: "#dc2626" }}
+                          >
+                            event_busy
+                          </span>
+                          <strong style={{ fontSize: "13px", color: "#991b1b" }}>
+                            {formatarPeriodoBR(b.dataInicial, b.dataFinal)}
+                          </strong>
+                          <span
+                            style={{
+                              fontSize: "10.5px",
+                              fontWeight: 700,
+                              padding: "2px 8px",
+                              borderRadius: "4px",
+                              backgroundColor: "rgba(220, 38, 38, 0.12)",
+                              color: "#b91c1c",
+                            }}
+                          >
+                            {b.motivo}
+                          </span>
+                        </div>
+                        {b.observacoes && (
+                          <p style={{ margin: "4px 0 0 24px", fontSize: "11.5px", color: "var(--on-surface-variant)" }}>
+                            {b.observacoes}
+                          </p>
+                        )}
+                      </div>
+
+                      <button
+                        type="button"
+                        disabled={removendoId === b.id}
+                        onClick={() => handleRemover(b.id)}
+                        style={{
+                          padding: "5px 10px",
+                          borderRadius: "6px",
+                          backgroundColor: "#ffffff",
+                          border: "1px solid #fecdd3",
+                          color: "#dc2626",
+                          fontSize: "11px",
+                          fontWeight: 700,
+                          cursor: "pointer",
+                          transition: "all 0.15s ease",
+                        }}
+                        title="Excluir este bloqueio"
+                      >
+                        {removendoId === b.id ? "Removendo..." : "Desbloquear"}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+
+          {/* Footer Idêntico ao Print 3 */}
+          <div className="modal-footer">
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={onClose}
+              disabled={salvando}
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={salvando}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "9px 22px",
+                borderRadius: "8px",
+                backgroundColor: "#dc2626",
+                color: "#ffffff",
+                border: "none",
+                fontSize: "13px",
+                fontWeight: 700,
+                cursor: "pointer",
+                boxShadow: "0 2px 6px rgba(220, 38, 38, 0.28)",
+                transition: "background 0.15s ease",
+              }}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
+                lock
+              </span>
+              <span>{salvando ? "Bloqueando..." : "Confirmar Bloqueio"}</span>
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

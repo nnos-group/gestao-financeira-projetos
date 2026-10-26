@@ -127,6 +127,9 @@ export default function CotacoesMatrixModal({
   // Controle de expansão de histórico de alternativas descartadas
   const [expandirHistorico, setExpandirHistorico] = useState(false);
 
+  // Modo de edição explícito da Agência para solicitações já em andamento ou concluídas
+  const [modoEdicaoAgencia, setModoEdicaoAgencia] = useState(false);
+
   // Modal de Pré-visualização do E-mail do Viajante
   const [showEmailPreviewModal, setShowEmailPreviewModal] = useState(false);
   const [emailPreviewData, setEmailPreviewData] = useState<any>(null);
@@ -1268,14 +1271,18 @@ export default function CotacoesMatrixModal({
                         sol.status === "APROVADO_AGUARDANDO_COMPRA" ||
                         sol.status === "VOUCHERS_PENDENTES" ||
                         sol.status === "VOUCHERS_ENVIADOS" ||
-                        sol.status === "CONCLUIDO"
+                        sol.status === "AGUARDANDO_PRESTACAO_CONTAS" ||
+                        sol.status === "CONCLUIDO" ||
+                        modoEdicaoAgencia
                       );
 
                       if (
                         sol.status !== "APROVADO_AGUARDANDO_COMPRA" &&
                         sol.status !== "VOUCHERS_PENDENTES" &&
                         sol.status !== "VOUCHERS_ENVIADOS" &&
-                        sol.status !== "CONCLUIDO"
+                        sol.status !== "AGUARDANDO_PRESTACAO_CONTAS" &&
+                        sol.status !== "CONCLUIDO" &&
+                        !modoEdicaoAgencia
                       ) {
                         return null;
                       }
@@ -1703,8 +1710,42 @@ export default function CotacoesMatrixModal({
                     </button>
                   )}
 
-                  {(sol.status === "VOUCHERS_PENDENTES" || sol.status === "VOUCHERS_ENVIADOS" || sol.status === "CONCLUIDO") && (
-                    <div style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
+                  {(sol.status === "VOUCHERS_PENDENTES" ||
+                    sol.status === "VOUCHERS_ENVIADOS" ||
+                    sol.status === "AGUARDANDO_PRESTACAO_CONTAS" ||
+                    sol.status === "CONCLUIDO" ||
+                    modoEdicaoAgencia) && (
+                    <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                      {/* Botão Editar Logística para permitir alterações e emissão de novos vouchers */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setModoEdicaoAgencia(!modoEdicaoAgencia);
+                          if (!modoEdicaoAgencia) {
+                            showToast("Modo de edição da logística ATIVADO. Você pode alterar valores, localizadores e vouchers.");
+                          }
+                        }}
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "6px",
+                          padding: "8px 14px",
+                          borderRadius: "8px",
+                          fontSize: "13px",
+                          fontWeight: 700,
+                          color: modoEdicaoAgencia ? "#dc2626" : "var(--primary, #0f2a4a)",
+                          backgroundColor: modoEdicaoAgencia ? "#fee2e2" : "var(--surface, #ffffff)",
+                          border: modoEdicaoAgencia ? "1px solid #fca5a5" : "1px solid var(--border, #cbd5e1)",
+                          cursor: "pointer",
+                        }}
+                        title="Habilita ou desabilita a edição dos campos de contratação, localizadores e anexos"
+                      >
+                        <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
+                          {modoEdicaoAgencia ? "edit_off" : "edit"}
+                        </span>
+                        <span>{modoEdicaoAgencia ? "Concluir Edição" : "Editar Logística"}</span>
+                      </button>
+
                       <button
                         type="button"
                         onClick={abrirPreviewEmail}
@@ -1743,10 +1784,17 @@ export default function CotacoesMatrixModal({
                           backgroundColor: "#059669",
                           border: "none",
                           cursor: "pointer",
+                          boxShadow: "0 2px 4px rgba(5, 150, 105, 0.25)",
                         }}
                       >
                         <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>send</span>
-                        <span>{sol.status === "VOUCHERS_ENVIADOS" || sol.status === "CONCLUIDO" ? "Salvar & Reenviar Vouchers" : "Enviar Vouchers ao Viajante"}</span>
+                        <span>
+                          {sol.status === "VOUCHERS_ENVIADOS" ||
+                          sol.status === "AGUARDANDO_PRESTACAO_CONTAS" ||
+                          sol.status === "CONCLUIDO"
+                            ? "Salvar & Reenviar Vouchers"
+                            : "Enviar Vouchers ao Viajante"}
+                        </span>
                       </button>
                     </div>
                   )}
