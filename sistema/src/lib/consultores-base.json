@@ -1308,7 +1308,7 @@
     "pix": "09.024.198.0001/18",
     "contrato_ativo": "2023.0001",
     "valor_hora_padrao": 180,
-    "tipo_medicao": "INTEGRAL"
+    "tipo_medicao": "QUINZENAL"
   },
   {
     "id": "parceiro-49",
@@ -1364,7 +1364,7 @@
     "pix": "adilson.pasini@gmail.com",
     "contrato_ativo": "2023.0003",
     "valor_hora_padrao": 180,
-    "tipo_medicao": "INTEGRAL"
+    "tipo_medicao": "QUINZENAL"
   },
   {
     "id": "parceiro-51",
@@ -1392,7 +1392,7 @@
     "pix": "31 996827495",
     "contrato_ativo": "2023.0004",
     "valor_hora_padrao": 180,
-    "tipo_medicao": "INTEGRAL"
+    "tipo_medicao": "QUINZENAL"
   },
   {
     "id": "parceiro-52",
@@ -1420,7 +1420,7 @@
     "pix": "24.317.138/0001-87",
     "contrato_ativo": "2023.0005",
     "valor_hora_padrao": 180,
-    "tipo_medicao": "INTEGRAL"
+    "tipo_medicao": "QUINZENAL"
   },
   {
     "id": "parceiro-53",
@@ -1588,7 +1588,7 @@
     "pix": "10971188000179",
     "contrato_ativo": "2025.0026",
     "valor_hora_padrao": 180,
-    "tipo_medicao": "INTEGRAL"
+    "tipo_medicao": "QUINZENAL"
   },
   {
     "id": "parceiro-59",
@@ -2204,7 +2204,7 @@
     "pix": "19982205353",
     "contrato_ativo": "2025.0035",
     "valor_hora_padrao": 180,
-    "tipo_medicao": "INTEGRAL"
+    "tipo_medicao": "QUINZENAL"
   },
   {
     "id": "parceiro-81",

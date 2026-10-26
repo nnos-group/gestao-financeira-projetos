@@ -582,23 +582,52 @@ export async function aprovarLogisticaLider(
   let somaAprovada = 0;
 
   sol.categorias.forEach((cat) => {
-    const altEscolhidaId = escolhasPorCategoria[cat.categoria];
+    const altEscolhidaId = escolhasPorCategoria[cat.categoria] || cat.alternativaAprovadaId || cat.alternativas.find((a) => a.selecionada)?.id;
     if (altEscolhidaId) {
       cat.alternativaAprovadaId = altEscolhidaId;
       cat.alternativas.forEach((alt) => {
         alt.selecionada = alt.id === altEscolhidaId;
         if (alt.selecionada) {
-          somaAprovada += alt.valor || 0;
+          const valorEfetivo = (alt.valorContratado !== undefined && alt.valorContratado > 0)
+            ? alt.valorContratado
+            : (alt.valor || 0);
+          somaAprovada += valorEfetivo;
         }
       });
+    } else {
+      const altAprov = cat.alternativas.find((a) => a.id === cat.alternativaAprovadaId) || cat.alternativas.find((a) => a.selecionada);
+      if (altAprov) {
+        const valorEfetivo = (altAprov.valorContratado !== undefined && altAprov.valorContratado > 0)
+          ? altAprov.valorContratado
+          : (altAprov.valor || 0);
+        somaAprovada += valorEfetivo;
+      }
     }
   });
 
+  // Se houver valor contratado registrado pela agência maior que somaAprovada em caso de reaprovação,
+  // a aprovação do Líder cobre o novo montante total
+  if (sol.totalContratado && sol.totalContratado > somaAprovada && (sol.requerReaprovacao || sol.status === "AGUARDANDO_REAPROVACAO")) {
+    somaAprovada = sol.totalContratado;
+  }
+
   sol.totalAprovado = Math.round(somaAprovada * 100) / 100;
-  sol.status = "APROVADO_AGUARDANDO_COMPRA";
+  sol.diferencaValor = Math.max(0, Math.round((sol.totalContratado - sol.totalAprovado) * 100) / 100);
   sol.requerReaprovacao = false;
+  sol.motivoReaprovacao = undefined;
   sol.aprovadoPor = aprovadorNome;
   sol.aprovadoEm = agora;
+
+  // REINICIA o fluxo de confirmação de recebimento do consultor
+  sol.vouchersRecebidosAprovadosEm = undefined;
+  sol.vouchersRecebidosAprovadosPor = undefined;
+
+  // Se já possui vouchers definitivos ou localizadores preenchidos pela agência, avança para VOUCHERS_ENVIADOS
+  const temVouchers = sol.categorias.some((c) =>
+    c.alternativas.some((a) => (a.vouchersDefinitivos && a.vouchersDefinitivos.length > 0) || a.localizadorOuReserva)
+  );
+  sol.status = temVouchers ? "VOUCHERS_ENVIADOS" : "APROVADO_AGUARDANDO_COMPRA";
+
   if (justificativas && Object.keys(justificativas).length > 0) {
     sol.justificativasLider = { ...(sol.justificativasLider || {}), ...justificativas };
   }
@@ -613,13 +642,13 @@ export async function aprovarLogisticaLider(
     perfilUsuario: "LIDER",
     usuarioNome: aprovadorNome,
     acao: "LOGISTICA_APROVADA",
-    detalhes: `Composição da viagem aprovada com total de R$ ${sol.totalAprovado.toFixed(2)}.${justTexto} Aguardando compra da agência.`,
+    detalhes: `Composição da viagem aprovada com total de R$ ${sol.totalAprovado.toFixed(2)}.${justTexto} Aguardando conferência e confirmação do consultor.`,
   });
 
   sol.atualizadoEm = agora;
   salvarSolicitacoesArquivo(lista);
 
-  // Sincroniza custos aprovados provisórios no Supabase
+  // Sincroniza custos aprovados no Supabase
   await sincronizarViagemComSupabase(sol);
 
   return sol;
@@ -646,6 +675,10 @@ export async function registrarCompraAgencia(
 
   const agora = new Date().toISOString();
   let totalContratado = 0;
+
+  // Qualquer alteração feita pela agência reinicia a confirmação de recebimento do consultor
+  sol.vouchersRecebidosAprovadosEm = undefined;
+  sol.vouchersRecebidosAprovadosPor = undefined;
 
   dadosContratacao.compras.forEach((c) => {
     let cat = sol.categorias.find((x) => x.categoria === c.categoria);
@@ -758,6 +791,9 @@ export async function enviarVouchersViajante(
   sol.status = "VOUCHERS_ENVIADOS";
   sol.vouchersEnviadosEm = agora;
   sol.destinatariosEnvio = destinatarios;
+  // Reinicia confirmação do consultor para que ele aprove o recebimento dos novos vouchers
+  sol.vouchersRecebidosAprovadosEm = undefined;
+  sol.vouchersRecebidosAprovadosPor = undefined;
 
   sol.auditoria.push({
     id: `aud-${Date.now()}`,

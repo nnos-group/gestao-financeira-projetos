@@ -574,7 +574,7 @@ export default function CotacoesMatrixModal({
           };
         });
 
-      await fetch("/api/viagens/comprar", {
+      const resComprar = await fetch("/api/viagens/comprar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -583,7 +583,20 @@ export default function CotacoesMatrixModal({
           usuarioNome: "Agência Fátima",
         }),
       });
+      const dataComprar = await resComprar.json();
+      if (!dataComprar.ok) throw new Error(dataComprar.error);
 
+      // Se a alteração fez o valor contratado exceder o aprovado:
+      // Reinicia o fluxo de aprovação do Líder e confirmação do consultor, sem gerar reprovação automática!
+      if (dataComprar.requerReaprovacao || dataComprar.solicitacao?.requerReaprovacao) {
+        setSol(dataComprar.solicitacao);
+        showToast("⚠️ Alterações salvas! Como o valor excedeu o orçamento aprovado, o fluxo foi reiniciado e enviado para reaprovação do Líder. Após aprovado, os novos vouchers serão confirmados pelo consultor.");
+        onAtualizar();
+        setModoEdicaoAgencia(false);
+        return;
+      }
+
+      // Se o valor está aprovado ou dentro do orçamento:
       // 2. Dispara e-mail de vouchers para leonardo.campos@nnos.com.br
       const res = await fetch("/api/viagens/enviar-vouchers", {
         method: "POST",
@@ -599,8 +612,9 @@ export default function CotacoesMatrixModal({
 
       setSol(data.solicitacao);
       setShowEmailPreviewModal(false);
-      showToast(data.mensagem || "Vouchers disparados com sucesso ao viajante!");
+      showToast(data.mensagem || "Vouchers atualizados com sucesso! Aguardando confirmação de recebimento do consultor.");
       onAtualizar();
+      setModoEdicaoAgencia(false);
       onClose();
     } catch (err: any) {
       showToast(`Erro ao enviar vouchers: ${err.message}`);
@@ -817,17 +831,47 @@ export default function CotacoesMatrixModal({
                 padding: "12px 24px",
                 display: "flex",
                 alignItems: "center",
+                justifyContent: "space-between",
                 gap: "12px",
                 color: "#9f1239",
+                flexWrap: "wrap",
               }}
             >
-              <span className="material-symbols-outlined" style={{ fontSize: "22px" }}>warning</span>
-              <div style={{ flex: 1, fontSize: "13px" }}>
-                <strong>Reaprovação Necessária:</strong> {sol.motivoReaprovacao}
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", flex: 1, minWidth: "280px" }}>
+                <span className="material-symbols-outlined" style={{ fontSize: "22px" }}>warning</span>
+                <div style={{ fontSize: "13px" }}>
+                  <strong>Reaprovação Necessária:</strong> {sol.motivoReaprovacao}
+                  <span style={{ display: "block", fontSize: "11.5px", color: "#9f1239", marginTop: "2px" }}>
+                    Qualquer alteração na logística reinicia o fluxo de aprovação do líder e a confirmação de recebimento do consultor.
+                  </span>
+                </div>
               </div>
-              {perfilAtivo === "LIDER" && (
+              {perfilAtivo === "LIDER" ? (
+                <button
+                  type="button"
+                  disabled={loading}
+                  onClick={handleAprovarLider}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    padding: "8px 16px",
+                    borderRadius: "8px",
+                    backgroundColor: "#be123c",
+                    color: "#ffffff",
+                    border: "none",
+                    fontWeight: 700,
+                    fontSize: "12.5px",
+                    cursor: "pointer",
+                    boxShadow: "0 2px 6px rgba(190, 18, 60, 0.3)",
+                  }}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>thumb_up</span>
+                  Aprovar Novo Orçamento ({brl(sol.totalContratado)})
+                </button>
+              ) : (
                 <span style={{ fontSize: "12px", fontWeight: 700, color: "#be123c" }}>
-                  Por favor, revise os novos valores abaixo e clique em &quot;Aprovar Logística&quot;.
+                  Aguardando reaprovação do Líder de Projetos.
                 </span>
               )}
             </div>
@@ -1802,7 +1846,7 @@ export default function CotacoesMatrixModal({
               )}
 
               {/* Botão do Perfil LÍDER DE PROJETO (Aprovação em 1 clique) */}
-              {perfilAtivo === "LIDER" && (sol.status === "AGUARDANDO_APROVACAO" || sol.requerReaprovacao) && (
+              {perfilAtivo === "LIDER" && (sol.status === "AGUARDANDO_APROVACAO" || sol.status === "AGUARDANDO_REAPROVACAO" || sol.requerReaprovacao) && (
                 <button
                   type="button"
                   disabled={loading}
@@ -1823,7 +1867,7 @@ export default function CotacoesMatrixModal({
                   }}
                 >
                   <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>thumb_up</span>
-                  Aprovar Logística (1 Clique)
+                  {sol.requerReaprovacao ? `Aprovar Novo Orçamento (${brl(sol.totalContratado)})` : "Aprovar Logística (1 Clique)"}
                 </button>
               )}
 
