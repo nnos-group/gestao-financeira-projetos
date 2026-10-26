@@ -42,6 +42,51 @@ function corStatus(status: string) {
   return { bg: "#e0f2fe", fg: "#0369a1" };
 }
 
+const statusClasse = (status: string | null | undefined): string => {
+  const s = (status || "").toUpperCase();
+  if (s.includes("REALIZ")) return "realizado";
+  if (s.includes("CONFIRM")) return "confirmado";
+  if (s.includes("CANCEL")) return "cancelado";
+  if (s.includes("PREV")) return "previsto";
+  return "confirmado";
+};
+
+const capitalizarAtividade = (str: string | null | undefined): string => {
+  if (!str) return "Atividade Operacional";
+  const minusculas = new Set([
+    "de", "da", "do", "das", "dos", "e", "em", "na", "no", "nas", "nos",
+    "a", "o", "as", "os", "para", "por", "com", "sem", "ou",
+    "en", "del", "la", "las", "el", "los", "y", "con"
+  ]);
+
+  const siglas = new Set([
+    "i", "ii", "iii", "iv", "v", "vi", "vii", "viii", "ix", "x",
+    "cx", "ti", "rh", "ead", "cc", "br", "bra", "latam", "ops", "kpi", "xl", "xls"
+  ]);
+
+  return str
+    .toLowerCase()
+    .split(/\s+/)
+    .map((palavra, index) => {
+      if (!palavra) return "";
+      const limpa = palavra.replace(/^[^\wáàâãéèêíïóôõöúçñ]+|[^\wáàâãéèêíïóôõöúçñ]+$/gi, "");
+      if (siglas.has(limpa.toLowerCase())) {
+        return palavra.toUpperCase();
+      }
+      if (index > 0 && minusculas.has(limpa.toLowerCase())) {
+        return palavra.toLowerCase();
+      }
+      return palavra.charAt(0).toUpperCase() + palavra.slice(1).toLowerCase();
+    })
+    .join(" ");
+};
+
+function calcularDuracao(ini?: string | null, fim?: string | null, horas?: number | null): string {
+  const d = diasEntre(ini, fim);
+  const h = horas ? ` • ${horas}h` : "";
+  return `${d} ${d === 1 ? "dia" : "dias"}${h}`;
+}
+
 export default function ConsultorAgendaPage() {
   const { consultorAtivo, dadosConsultor, carregando } = useConsultor();
   const todas: any[] = dadosConsultor?.lancamentos || [];
@@ -145,6 +190,8 @@ export default function ConsultorAgendaPage() {
       return next;
     });
   };
+
+  const toggleExpand = alternarItem;
 
   const expandirTodos = () => {
     setExpandidos(new Set(filtradas.map((l) => l.id)));
@@ -361,443 +408,474 @@ export default function ConsultorAgendaPage() {
             mesInicial={mes === 0 ? 1 : mes}
           />
         ) : (
-          <section style={{ backgroundColor: "var(--surface-container-lowest)", border: "1px solid var(--border)", borderRadius: "14px", overflow: "hidden" }}>
-          {/* Competência: Ano e Chips de Meses */}
-          <nav className="month-strip" aria-label="Seleção de Competência" style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", padding: "14px 16px", borderBottom: "1px solid var(--border)" }}>
-            <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "var(--primary)" }}>calendar_month</span>
-            <span className="month-label" style={{ fontWeight: 700, margin: 0 }}>COMPETÊNCIA:</span>
-            <ModernDropdown
-              value={ano}
-              onChange={(v) => setAno(Number(v))}
-              options={anosDisponiveis.map((a) => ({ value: a, label: String(a) }))}
-              minWidth={110}
-            />
-            <div className="month-chips" style={{ display: "flex", gap: "4px", flexWrap: "wrap", marginLeft: "8px" }}>
-              <button
-                type="button"
-                onClick={() => setMes(0)}
-                className={`chip-month${mes === 0 ? " active" : ""}`}
-                style={{ padding: "5px 12px", borderRadius: "999px", fontSize: "12px", fontWeight: 700, border: "none", cursor: "pointer", background: mes === 0 ? "var(--primary)" : "transparent", color: mes === 0 ? "#fff" : "var(--on-surface-variant)" }}
-              >
-                Todos
-              </button>
-              {MESES.map((nome, idx) => {
-                const num = idx + 1;
-                const ativo = mes === num;
-                return (
+          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            {/* Bloco Superior: Competência + Filtros (Print 5) */}
+            <div style={{ backgroundColor: "var(--surface-container-lowest)", border: "1px solid var(--border)", borderRadius: "14px", overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.03)" }}>
+              {/* Competência: Ano e Chips de Meses */}
+              <nav className="month-strip" aria-label="Seleção de Competência" style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", padding: "14px 18px", borderBottom: "1px solid var(--border)" }}>
+                <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "var(--primary)" }}>calendar_month</span>
+                <span className="month-label" style={{ fontWeight: 700, margin: 0 }}>COMPETÊNCIA:</span>
+                <ModernDropdown
+                  value={ano}
+                  onChange={(v) => setAno(Number(v))}
+                  options={anosDisponiveis.map((a) => ({ value: a, label: String(a) }))}
+                  minWidth={110}
+                />
+                <div className="month-chips" style={{ display: "flex", gap: "4px", flexWrap: "wrap", marginLeft: "8px" }}>
                   <button
-                    key={nome}
                     type="button"
-                    onClick={() => setMes(num)}
-                    className={`chip-month${ativo ? " active" : ""}`}
-                    style={{ padding: "5px 12px", borderRadius: "999px", fontSize: "12px", fontWeight: 700, border: "none", cursor: "pointer", background: ativo ? "var(--primary)" : "transparent", color: ativo ? "#fff" : "var(--on-surface-variant)" }}
+                    onClick={() => setMes(0)}
+                    className={`chip-month${mes === 0 ? " active" : ""}`}
+                    style={{ padding: "5px 12px", borderRadius: "999px", fontSize: "12px", fontWeight: 700, border: "none", cursor: "pointer", background: mes === 0 ? "var(--primary)" : "transparent", color: mes === 0 ? "#fff" : "var(--on-surface-variant)" }}
                   >
-                    {nome}
+                    Todos
                   </button>
-                );
-              })}
-            </div>
-          </nav>
+                  {MESES.map((nome, idx) => {
+                    const num = idx + 1;
+                    const ativo = mes === num;
+                    return (
+                      <button
+                        key={nome}
+                        type="button"
+                        onClick={() => setMes(num)}
+                        className={`chip-month${ativo ? " active" : ""}`}
+                        style={{ padding: "5px 12px", borderRadius: "999px", fontSize: "12px", fontWeight: 700, border: "none", cursor: "pointer", background: ativo ? "var(--primary)" : "transparent", color: ativo ? "#fff" : "var(--on-surface-variant)" }}
+                      >
+                        {nome}
+                      </button>
+                    );
+                  })}
+                </div>
+              </nav>
 
-          {/* Barra de Filtros com Atalhos de Expandir/Recolher (Print 3) */}
-          <div style={{ display: "flex", gap: "10px", padding: "12px 16px", alignItems: "center", flexWrap: "wrap", borderBottom: "1px solid var(--border)", backgroundColor: "var(--surface-container-low)" }}>
-            <div style={{ flex: 1, minWidth: "240px", display: "flex", alignItems: "center", gap: "8px", background: "var(--surface-container-lowest)", border: "1px solid var(--border)", borderRadius: "8px", padding: "6px 12px" }}>
-              <span className="material-symbols-outlined" style={{ fontSize: "18px", color: "var(--on-surface-variant)" }}>search</span>
-              <input
-                type="text"
-                placeholder="Filtrar por CC, Projeto, Atividade, Concessionária ou Cidade..."
-                value={busca}
-                onChange={(e) => setBusca(e.target.value)}
-                style={{ border: "none", outline: "none", background: "transparent", fontSize: "12px", width: "100%", color: "var(--on-surface)" }}
-              />
-            </div>
+              {/* Barra de Filtros */}
+              <div style={{ display: "flex", gap: "10px", padding: "12px 18px", alignItems: "center", flexWrap: "wrap", backgroundColor: "var(--surface-container-low)" }}>
+                <div style={{ flex: 1, minWidth: "240px", display: "flex", alignItems: "center", gap: "8px", background: "var(--surface-container-lowest)", border: "1px solid var(--border)", borderRadius: "8px", padding: "6px 12px" }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: "18px", color: "var(--on-surface-variant)" }}>search</span>
+                  <input
+                    type="text"
+                    placeholder="Filtrar por CC, Projeto, Atividade, Concessionária ou Cidade..."
+                    value={busca}
+                    onChange={(e) => setBusca(e.target.value)}
+                    style={{ border: "none", outline: "none", background: "transparent", fontSize: "12px", width: "100%", color: "var(--on-surface)" }}
+                  />
+                </div>
 
-            <ModernDropdown value={cidade} onChange={(v) => setCidade(String(v))} options={[{ value: "todas", label: "Todas as Cidades" }, ...cidades.map((c) => ({ value: c, label: c }))]} />
-            <ModernDropdown value={modalidade} onChange={(v) => setModalidade(String(v))} options={[{ value: "todas", label: "Modalidade" }, ...modalidades.map((c) => ({ value: c, label: c }))]} />
-            <ModernDropdown value={status} onChange={(v) => setStatus(String(v))} options={[{ value: "todos", label: "Status da Atividade" }, ...statusLista.map((c) => ({ value: c, label: c }))]} />
+                <ModernDropdown value={cidade} onChange={(v) => setCidade(String(v))} options={[{ value: "todas", label: "Todas as Cidades" }, ...cidades.map((c) => ({ value: c, label: c }))]} />
+                <ModernDropdown value={modalidade} onChange={(v) => setModalidade(String(v))} options={[{ value: "todas", label: "Modalidade" }, ...modalidades.map((c) => ({ value: c, label: c }))]} />
+                <ModernDropdown value={status} onChange={(v) => setStatus(String(v))} options={[{ value: "todos", label: "Status da Atividade" }, ...statusLista.map((c) => ({ value: c, label: c }))]} />
 
-            {/* Botões de Expandir e Recolher Todos (Print 3) */}
-            <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-              <button
-                type="button"
-                onClick={expandirTodos}
-                title="Expandir todas as atividades"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  width: "34px",
-                  height: "34px",
-                  borderRadius: "8px",
-                  border: "1px solid var(--border)",
-                  backgroundColor: "var(--surface-container-lowest)",
-                  color: "var(--primary)",
-                  cursor: "pointer",
-                }}
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>unfold_more</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={recolherTodos}
-                title="Recolher todas as atividades"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  width: "34px",
-                  height: "34px",
-                  borderRadius: "8px",
-                  border: "1px solid var(--border)",
-                  backgroundColor: "var(--surface-container-lowest)",
-                  color: "var(--primary)",
-                  cursor: "pointer",
-                }}
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>unfold_less</span>
-              </button>
-            </div>
-
-            <button type="button" onClick={limpar} className="btn-secondary" style={{ padding: "8px 14px", fontSize: "12px" }}>
-              <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>restart_alt</span>
-              <span>Limpar</span>
-            </button>
-          </div>
-
-          {/* Guia de Colunas Oficial (Idêntico ao Print 4) */}
-          <div
-            className="table-labels-guide"
-            style={{
-              display: "grid",
-              gridTemplateColumns: "3.2fr 1.8fr 1.8fr 1.8fr 1.2fr",
-              padding: "10px 20px",
-              gap: "14px",
-              alignItems: "center",
-              fontSize: "11px",
-              fontWeight: 700,
-              textTransform: "uppercase",
-              letterSpacing: "0.04em",
-              color: "var(--on-surface-variant)",
-            }}
-          >
-            <div>Projeto &amp; Atividade</div>
-            <div>Local / Concessionária</div>
-            <div>Período &amp; Horas</div>
-            <div>Instrutor / Perfil</div>
-            <div style={{ textAlign: "right" }}>Consultor</div>
-          </div>
-
-          {/* Pilha de Cards Suspensos Flutuantes (Idêntico ao Print 4) */}
-          <div className="cards-stack" style={{ display: "flex", flexDirection: "column", gap: "10px", padding: "4px 0" }}>
-            {carregando ? (
-              <div style={{ padding: "48px 24px", textAlign: "center", backgroundColor: "var(--surface-container-lowest)", borderRadius: "12px", border: "1px dashed var(--border)", color: "var(--on-surface-variant)" }}>
-                Carregando agenda...
-              </div>
-            ) : filtradas.length === 0 ? (
-              <div
-                style={{
-                  padding: "48px 24px",
-                  textAlign: "center",
-                  backgroundColor: "var(--surface-container-lowest)",
-                  borderRadius: "12px",
-                  border: "1px dashed var(--border)",
-                  color: "var(--on-surface-variant)",
-                }}
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: "36px", color: "var(--outline)", marginBottom: "8px" }}>
-                  search_off
-                </span>
-                <p style={{ fontWeight: 600, fontSize: "13px", margin: 0 }}>Nenhuma atividade encontrada para a competência e filtros selecionados.</p>
-              </div>
-            ) : (
-              filtradas.map((l) => {
-                const cor = corStatus(l.status);
-                const dias = diasEntre(l.data_inicial, l.data_final);
-                const aberto = expandidos.has(l.id);
-                const remoto = (l.modalidade || "").toLowerCase().match(/remot|online|ead|virtual/);
-                const cc = l.projetos?.centros_custo;
-                const v = Array.isArray(l.viagens) ? l.viagens[0] : l.viagens;
-                const infoPrazo = calcularPrazoPrestacaoContas(l.precisa_logistica, l.data_final, v?.custo_5, l.status);
-
-                const custo1 = Number(v?.custo_1 || 0);
-                const custo2 = Number(v?.custo_2 || 0);
-                const custo3 = Number(v?.custo_3 || 0);
-                const custo4 = Number(v?.custo_4 || 0);
-                const custo5 = Number(v?.custo_5 || 0);
-                const custoTotalViagem = Number(v?.total || (custo1 + custo2 + custo3 + custo4 + custo5));
-
-                return (
-                  <div
-                    key={l.id}
-                    className={`floating-card-row ${aberto ? "expanded" : ""}`}
+                {/* Botões de Expandir e Recolher Todos */}
+                <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                  <button
+                    type="button"
+                    onClick={expandirTodos}
+                    title="Expandir todas as atividades"
                     style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: "34px",
+                      height: "34px",
+                      borderRadius: "8px",
+                      border: "1px solid var(--border)",
                       backgroundColor: "var(--surface-container-lowest)",
-                      borderRadius: "12px",
-                      border: aberto ? "1.5px solid var(--primary-container, #bae6fd)" : "1px solid var(--border)",
-                      boxShadow: aberto ? "0 4px 14px rgba(0,0,0,0.06)" : "0 1px 3px rgba(0,0,0,0.03)",
-                      transition: "all 0.18s ease",
-                      overflow: "hidden",
+                      color: "var(--primary)",
+                      cursor: "pointer",
                     }}
                   >
-                    {/* Linha Principal da Atividade (Card Main Bar) */}
+                    <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>unfold_more</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={recolherTodos}
+                    title="Recolher todas as atividades"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: "34px",
+                      height: "34px",
+                      borderRadius: "8px",
+                      border: "1px solid var(--border)",
+                      backgroundColor: "var(--surface-container-lowest)",
+                      color: "var(--primary)",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>unfold_less</span>
+                  </button>
+                </div>
+
+                <button type="button" onClick={limpar} className="btn-secondary" style={{ padding: "8px 14px", fontSize: "12px" }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>restart_alt</span>
+                  <span>Limpar</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Guia de Colunas Oficial Suspenso (Idêntico ao Print 5) */}
+            <div
+              className="table-labels-guide"
+              style={{
+                display: "grid",
+                gridTemplateColumns: "3.4fr 2fr 2fr 2fr 1.4fr",
+                padding: "8px 20px",
+                gap: "14px",
+                alignItems: "center",
+                fontSize: "11px",
+                fontWeight: 700,
+                textTransform: "uppercase",
+                letterSpacing: "0.04em",
+                color: "var(--on-surface-variant)",
+              }}
+            >
+              <div>PROJETO &amp; ATIVIDADE</div>
+              <div>LOCAL / CONCESSIONÁRIA</div>
+              <div>PERÍODO &amp; HORAS</div>
+              <div>INSTRUTOR / PERFIL</div>
+              <div style={{ textAlign: "right" }}>CONSULTOR</div>
+            </div>
+
+            {/* Pilha de Cards Flutuantes Suspensos Independentes (Idêntico ao Print 5) */}
+            <div className="cards-stack" style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              {carregando ? (
+                <div style={{ padding: "48px 24px", textAlign: "center", backgroundColor: "var(--surface-container-lowest)", borderRadius: "12px", border: "1px dashed var(--border)", color: "var(--on-surface-variant)" }}>
+                  Carregando agenda...
+                </div>
+              ) : filtradas.length === 0 ? (
+                <div
+                  style={{
+                    padding: "48px 24px",
+                    textAlign: "center",
+                    backgroundColor: "var(--surface-container-lowest)",
+                    borderRadius: "12px",
+                    border: "1px dashed var(--border)",
+                    color: "var(--on-surface-variant)",
+                  }}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: "36px", color: "var(--outline)", display: "block", marginBottom: "8px" }}>
+                    event_busy
+                  </span>
+                  Nenhuma atividade encontrada com os filtros selecionados.
+                </div>
+              ) : (
+                filtradas.map((l) => {
+                  const aberto = expandidos.has(l.id);
+                  const v = Array.isArray(l.viagens) ? l.viagens[0] : l.viagens;
+                  const cc = l.projetos?.centros_custo;
+
+                  // Valores de logística
+                  const custo1 = Number(v?.custo_1 || 0);
+                  const custo2 = Number(v?.custo_2 || 0);
+                  const custo3 = Number(v?.custo_3 || 0);
+                  const custo4 = Number(v?.custo_4 || 0);
+                  const custo5 = Number(v?.custo_5 || 0);
+                  const custoTotalViagem = Number(v?.total || (custo1 + custo2 + custo3 + custo4 + custo5));
+
+                  // Regra de Negócio: Prazo de Prestação de Contas (até 5 dias após término)
+                  const infoPrazo = calcularPrazoPrestacaoContas(l.precisa_logistica, l.data_final, v?.custo_5, l.status);
+
+                  return (
                     <div
-                      className="card-main-bar"
+                      key={l.id}
+                      className={`floating-card-row ${aberto ? "expanded" : ""}`}
                       style={{
-                        padding: "14px 20px",
-                        display: "grid",
-                        gridTemplateColumns: "3.2fr 1.8fr 1.8fr 1.8fr 1.2fr",
-                        alignItems: "center",
-                        gap: "14px",
+                        backgroundColor: "var(--surface-container-lowest, #ffffff)",
+                        borderRadius: "12px",
+                        border: aberto ? "1px solid var(--primary, #00152f)" : "1px solid var(--border)",
+                        boxShadow: aberto ? "0 4px 16px rgba(0, 21, 47, 0.08)" : "0 1px 3px rgba(0, 0, 0, 0.04)",
+                        overflow: "hidden",
+                        transition: "all 0.18s ease",
                       }}
                     >
-                      {/* Col 1: Toggle + Projeto & Atividade + Status */}
-                      <div style={{ display: "flex", alignItems: "center", gap: "12px", minWidth: 0 }}>
-                        <button
-                          type="button"
-                          onClick={() => alternarItem(l.id)}
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            width: "28px",
-                            height: "28px",
-                            borderRadius: "6px",
-                            border: "none",
-                            backgroundColor: aberto ? "var(--primary)" : "#e0f2fe",
-                            color: aberto ? "#ffffff" : "#0369a1",
-                            cursor: "pointer",
-                            transition: "all 0.15s ease",
-                            flexShrink: 0,
-                          }}
-                          title={aberto ? "Recolher detalhes logísticos" : "Expandir detalhes logísticos"}
-                        >
-                          <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
-                            {aberto ? "expand_less" : "expand_more"}
-                          </span>
-                        </button>
-                        <div style={{ display: "flex", flexDirection: "column", overflow: "hidden", minWidth: 0 }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-                            <strong style={{ color: "var(--primary)", textTransform: "uppercase", fontSize: "13px" }}>
-                              {l.projetos?.nome || "Projeto"}
-                            </strong>
-                            {l.status && (
-                              <span style={{ fontSize: "10px", fontWeight: 700, padding: "2px 7px", borderRadius: "4px", background: cor.bg, color: cor.fg, textTransform: "uppercase" }}>
-                                {l.status}
-                              </span>
-                            )}
-                          </div>
-                          <span style={{ fontSize: "12px", color: "#b45309", marginTop: "2px", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={l.atividade}>
-                            {l.atividade || "—"}
-                          </span>
-                        </div>
-                      </div>
+                      {/* Barra Principal do Card (Idêntico ao Print 5) */}
+                      <div
+                        className="card-main-bar"
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: "3.4fr 2fr 2fr 2fr 1.4fr",
+                          padding: "14px 20px",
+                          gap: "14px",
+                          alignItems: "center",
+                          cursor: "pointer",
+                        }}
+                        onClick={() => toggleExpand(l.id)}
+                      >
+                        {/* Col 1: PROJETO & ATIVIDADE com Botão Toggle Escuro/Claro */}
+                        <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleExpand(l.id);
+                            }}
+                            style={{
+                              width: "32px",
+                              height: "32px",
+                              borderRadius: "8px",
+                              backgroundColor: aberto ? "#00152f" : "#f1f5f9",
+                              color: aberto ? "#ffffff" : "var(--primary)",
+                              border: "none",
+                              cursor: "pointer",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              flexShrink: 0,
+                              marginTop: "2px",
+                              transition: "all 0.15s ease",
+                            }}
+                            title={aberto ? "Recolher Detalhes" : "Expandir Detalhes Logísticos"}
+                          >
+                            <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>
+                              {aberto ? "expand_less" : "expand_more"}
+                            </span>
+                          </button>
 
-                      {/* Col 2: Local / Concessionária */}
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                        <div
-                          style={{
-                            width: "32px",
-                            height: "32px",
-                            borderRadius: "8px",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            backgroundColor: remoto ? "rgba(14, 165, 233, 0.12)" : "rgba(15, 42, 74, 0.08)",
-                            color: remoto ? "#0284c7" : "var(--primary)",
-                            flexShrink: 0,
-                          }}
-                        >
-                          <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
-                            {remoto ? "laptop_chromebook" : "apartment"}
-                          </span>
-                        </div>
-                        <div style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}>
-                          <strong style={{ fontSize: "12px", color: "var(--on-surface)", textTransform: "uppercase", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={l.local || "—"}>
-                            {l.local || (remoto ? "Virtual / Online" : "Presencial")}
-                          </strong>
-                          <span style={{ fontSize: "11px", color: "var(--on-surface-variant)" }}>Região {l.regiao || "BRA"}</span>
-                        </div>
-                      </div>
-
-                      {/* Col 3: Período e Duração */}
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                        <div
-                          style={{
-                            width: "32px",
-                            height: "32px",
-                            borderRadius: "8px",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            backgroundColor: "var(--surface-container)",
-                            color: "var(--on-surface-variant)",
-                            flexShrink: 0,
-                          }}
-                        >
-                          <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
-                            date_range
-                          </span>
-                        </div>
-                        <div style={{ display: "flex", flexDirection: "column" }}>
-                          <strong style={{ fontSize: "12px", color: "var(--on-surface)", whiteSpace: "nowrap" }}>
-                            {formatarDataBR(l.data_inicial)}{l.data_final && l.data_final !== l.data_inicial ? ` a ${formatarDataBR(l.data_final)}` : ""}
-                          </strong>
-                          <span style={{ fontSize: "11px", color: "var(--on-surface-variant)" }}>
-                            {dias} {dias === 1 ? "dia" : "dias"} · {Number(l.horas || 0)}h
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Col 4: Instrutor / Perfil */}
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                        <div
-                          style={{
-                            width: "30px",
-                            height: "30px",
-                            borderRadius: "50%",
-                            backgroundColor: "#e0f2fe",
-                            color: "#0369a1",
-                            fontWeight: 700,
-                            fontSize: "11px",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            flexShrink: 0,
-                          }}
-                        >
-                          {iniciais(consultorAtivo?.nome || "")}
-                        </div>
-                        <div style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}>
-                          <strong style={{ fontSize: "12px", color: "var(--on-surface)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                            {consultorAtivo?.nome}
-                          </strong>
-                          <span style={{ fontSize: "11px", color: "var(--on-surface-variant)" }}>
-                            Perfil {l.perfil || consultorAtivo?.perfil || "SÊNIOR"}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Col 5: Consultor (Valor a Receber) */}
-                      <div style={{ textAlign: "right" }}>
-                        <strong style={{ fontSize: "13px", color: "var(--on-surface)" }}>
-                          {brl(l.custo_consultor)}
-                        </strong>
-                      </div>
-                    </div>
-
-                    {/* Subpainel Expandido de Detalhamento Logístico (Print 4) */}
-                    {aberto && (
-                      <div style={{ padding: "0 20px 20px 20px", backgroundColor: "var(--surface-container-lowest)" }}>
-                        <div style={{ border: "1px solid var(--border)", borderRadius: "12px", padding: "16px 20px", backgroundColor: "#f8fafc" }}>
-                          {/* Header do Detalhamento Logístico */}
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px", flexWrap: "wrap", gap: "8px" }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                              <span className="material-symbols-outlined" style={{ color: "var(--secondary, #00a896)", fontSize: "18px" }}>
-                                flight
-                              </span>
-                              <strong style={{ fontSize: "12px", textTransform: "uppercase", letterSpacing: "0.04em", color: "var(--primary)" }}>
-                                Detalhamento Logístico &amp; Despesas de Viagem
+                          <div style={{ display: "flex", flexDirection: "column", gap: "4px", minWidth: 0 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                              <strong style={{ fontSize: "13px", fontWeight: 800, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.02em" }}>
+                                {l.projetos?.nome || "Projeto"}
                               </strong>
-                            </div>
-
-                            {/* Card de Prazo de Prestação de Contas Conforme Regra de Negócio Oficial */}
-                            <div
-                              style={{
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: "6px",
-                                padding: "4px 10px",
-                                borderRadius: "8px",
-                                backgroundColor: infoPrazo.corBg,
-                                color: infoPrazo.corTexto,
-                                border: `1px solid ${infoPrazo.corTexto}33`,
-                                fontSize: "11px",
-                                fontWeight: 700,
-                              }}
-                              title="Prazo oficial: até 5 dias após o término da viagem para prestação de contas"
-                            >
-                              <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>
-                                {infoPrazo.icone}
-                              </span>
-                              <span>Prazo Prestação: {infoPrazo.badgeTexto}</span>
-                              {infoPrazo.status === "EM_ATRASO" && (
-                                <span style={{ fontWeight: 800 }}>({infoPrazo.diasAtraso}d de atraso)</span>
-                              )}
-                              {infoPrazo.status === "DENTRO_DO_PRAZO" && infoPrazo.diasRestantes !== undefined && infoPrazo.diasRestantes > 0 && (
-                                <span style={{ fontWeight: 600 }}>({infoPrazo.diasRestantes}d restantes)</span>
+                              {l.status && (
+                                <span className={`tag-status-atividade ${statusClasse(l.status)}`}>
+                                  {l.status}
+                                </span>
                               )}
                             </div>
+                            <span style={{ fontSize: "12px", color: "var(--on-surface-variant)", lineHeight: 1.3 }}>
+                              {capitalizarAtividade(l.atividade)}
+                            </span>
                           </div>
+                        </div>
 
-                          {/* 4 Cards de Logística (Passagem, Hotel, Carro, Alimentação/Diária) + Total */}
-                          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "10px", marginBottom: "12px" }}>
-                            <div style={{ padding: "10px", borderRadius: "8px", backgroundColor: "#ffffff", border: "1px solid var(--border)" }}>
-                              <span style={{ fontSize: "10px", color: "var(--on-surface-variant)", textTransform: "uppercase", fontWeight: 700 }}>Passagem Aérea</span>
-                              <div style={{ fontSize: "13px", fontWeight: 800, color: "var(--primary)", marginTop: "2px" }}>{brl(custo1)}</div>
-                              <span style={{ fontSize: "9px", color: "var(--on-surface-variant)" }}>Contratado</span>
-                            </div>
-
-                            <div style={{ padding: "10px", borderRadius: "8px", backgroundColor: "#ffffff", border: "1px solid var(--border)" }}>
-                              <span style={{ fontSize: "10px", color: "var(--on-surface-variant)", textTransform: "uppercase", fontWeight: 700 }}>Hotel / Estadia</span>
-                              <div style={{ fontSize: "13px", fontWeight: 800, color: "var(--primary)", marginTop: "2px" }}>{brl(custo2)}</div>
-                              <span style={{ fontSize: "9px", color: "var(--on-surface-variant)" }}>Contratado</span>
-                            </div>
-
-                            <div style={{ padding: "10px", borderRadius: "8px", backgroundColor: "#ffffff", border: "1px solid var(--border)" }}>
-                              <span style={{ fontSize: "10px", color: "var(--on-surface-variant)", textTransform: "uppercase", fontWeight: 700 }}>Carro / Traslado</span>
-                              <div style={{ fontSize: "13px", fontWeight: 800, color: "var(--primary)", marginTop: "2px" }}>{brl(custo3)}</div>
-                              <span style={{ fontSize: "9px", color: "var(--on-surface-variant)" }}>Sem traslado</span>
-                            </div>
-
-                            <div style={{ padding: "10px", borderRadius: "8px", backgroundColor: "#ffffff", border: "1px solid var(--border)" }}>
-                              <span style={{ fontSize: "10px", color: "var(--on-surface-variant)", textTransform: "uppercase", fontWeight: 700 }}>Seguro / Outros</span>
-                              <div style={{ fontSize: "13px", fontWeight: 800, color: "var(--primary)", marginTop: "2px" }}>{brl(custo4)}</div>
-                              <span style={{ fontSize: "9px", color: "var(--on-surface-variant)" }}>Não aplicável</span>
-                            </div>
-
-                            <div style={{ padding: "10px", borderRadius: "8px", backgroundColor: "#fffbeb", border: "1px solid #fde68a" }}>
-                              <span style={{ fontSize: "10px", color: "#b45309", textTransform: "uppercase", fontWeight: 700 }}>Alimentação / Diária</span>
-                              <div style={{ fontSize: "13px", fontWeight: 800, color: "#d97706", marginTop: "2px" }}>{brl(custo5)}</div>
-                              <span style={{ fontSize: "9px", color: "#b45309" }}>Despesa Financeiro</span>
-                            </div>
-
-                            <div style={{ padding: "10px", borderRadius: "8px", backgroundColor: "#00152f", color: "#ffffff", border: "1px solid #00152f" }}>
-                              <span style={{ fontSize: "10px", color: "#94a3b8", textTransform: "uppercase", fontWeight: 700 }}>Total Viagem</span>
-                              <div style={{ fontSize: "13px", fontWeight: 800, color: "#38bdf8", marginTop: "2px" }}>{brl(custoTotalViagem)}</div>
-                              <span style={{ fontSize: "9px", color: "#94a3b8" }}>100% Sincronizado</span>
-                            </div>
+                        {/* Col 2: LOCAL / CONCESSIONÁRIA */}
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                          <div
+                            style={{
+                              width: "32px",
+                              height: "32px",
+                              borderRadius: "8px",
+                              backgroundColor: "rgba(0, 103, 129, 0.08)",
+                              color: "var(--secondary, #006781)",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              flexShrink: 0,
+                            }}
+                          >
+                            <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
+                              {l.modalidade === "VIRTUAL" ? "devices" : "location_city"}
+                            </span>
                           </div>
+                          <div style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}>
+                            <strong style={{ fontSize: "12px", color: "var(--on-surface)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                              {l.local || "Não informado"}
+                            </strong>
+                            <span style={{ fontSize: "11px", color: "var(--on-surface-variant)" }}>
+                              Região {l.regiao || "BRA"}
+                            </span>
+                          </div>
+                        </div>
 
-                          {/* Observações da Agência & Informações Contratuais */}
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px", paddingTop: "8px", borderTop: "1px dashed var(--border)" }}>
-                            <div style={{ flex: 1, minWidth: "220px", display: "flex", flexDirection: "column" }}>
-                              <span style={{ fontSize: "10px", color: "var(--on-surface-variant)" }}>
-                                Observações Agência de Viagens
-                              </span>
-                              <span style={{ fontSize: "11px", color: "var(--on-surface)", fontStyle: "italic" }}>
-                                {v?.observacao_agencia || "Nenhuma instrução adicional registrada."}
-                              </span>
+                        {/* Col 3: PERÍODO & HORAS */}
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                          <div
+                            style={{
+                              width: "32px",
+                              height: "32px",
+                              borderRadius: "8px",
+                              backgroundColor: "rgba(0, 21, 47, 0.06)",
+                              color: "var(--primary)",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              flexShrink: 0,
+                            }}
+                          >
+                            <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
+                              calendar_today
+                            </span>
+                          </div>
+                          <div style={{ display: "flex", flexDirection: "column" }}>
+                            <strong style={{ fontSize: "12px", color: "var(--on-surface)", whiteSpace: "nowrap" }}>
+                              {formatarPeriodoBR(l.data_inicial, l.data_final)}
+                            </strong>
+                            <span style={{ fontSize: "11px", color: "var(--on-surface-variant)" }}>
+                              {calcularDuracao(l.data_inicial, l.data_final, l.horas)}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Col 4: INSTRUTOR / PERFIL */}
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                          <div
+                            style={{
+                              width: "32px",
+                              height: "32px",
+                              borderRadius: "50%",
+                              backgroundColor: "#e0f2fe",
+                              color: "#0369a1",
+                              fontWeight: 700,
+                              fontSize: "11px",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              flexShrink: 0,
+                            }}
+                          >
+                            {iniciais(consultorAtivo?.nome || "")}
+                          </div>
+                          <div style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}>
+                            <strong style={{ fontSize: "12px", color: "var(--on-surface)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                              {consultorAtivo?.nome}
+                            </strong>
+                            <span style={{ fontSize: "11px", color: "var(--on-surface-variant)" }}>
+                              Perfil {l.perfil || consultorAtivo?.perfil || "SÊNIOR"}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Col 5: CONSULTOR (Valor a Receber) */}
+                        <div style={{ textAlign: "right" }}>
+                          <strong style={{ fontSize: "14px", fontWeight: 800, color: "var(--on-surface)", whiteSpace: "nowrap" }}>
+                            {brl(l.custo_consultor)}
+                          </strong>
+                        </div>
+                      </div>
+
+                      {/* Drawer Expansível de Detalhamento Logístico (Idêntico ao Print 5) */}
+                      {aberto && (
+                        <div style={{ padding: "0 20px 20px 20px", backgroundColor: "transparent" }}>
+                          <div style={{ border: "1px solid var(--border)", borderRadius: "12px", padding: "18px 20px", backgroundColor: "#f8fafc", boxShadow: "inset 0 1px 2px rgba(0,0,0,0.02)" }}>
+                            {/* Header do Detalhamento Logístico */}
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "8px" }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                <span className="material-symbols-outlined" style={{ color: "var(--secondary, #006781)", fontSize: "20px" }}>
+                                  flight
+                                </span>
+                                <strong style={{ fontSize: "13px", textTransform: "uppercase", letterSpacing: "0.04em", color: "var(--primary)" }}>
+                                  Detalhamento Logístico &amp; Despesas de Viagem
+                                </strong>
+                              </div>
+
+                              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                <div style={{ display: "inline-flex", alignItems: "center", gap: "4px", padding: "3px 8px", borderRadius: "6px", backgroundColor: "#e2e8f0", fontSize: "11px", color: "var(--on-surface-variant)" }}>
+                                  <span>Precisa Logística?</span>
+                                  <strong style={{ color: "var(--primary)" }}>{l.precisa_logistica ? "SIM" : "NÃO"}</strong>
+                                </div>
+                                {v?.agencia && (
+                                  <div style={{ padding: "3px 8px", borderRadius: "6px", backgroundColor: "#ffedd5", color: "#c2410c", fontSize: "11px", fontWeight: 700 }}>
+                                    AGÊNCIA: {v.agencia}
+                                  </div>
+                                )}
+                              </div>
                             </div>
 
-                            <div style={{ fontSize: "11px", color: "var(--on-surface-variant)", textAlign: "right" }}>
-                              <span>CC: <strong>{cc?.codigo || "—"}</strong> • Contrato: <strong>{cc?.contrato || "—"}</strong></span>
+                            {/* Matriz dos 6 Mini-Cards de Logística (Idêntico ao Print 5) */}
+                            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "10px", marginBottom: "14px" }}>
+                              {/* Item 1: Aéreo */}
+                              <div style={{ padding: "12px", borderRadius: "8px", backgroundColor: "#ffffff", border: "1px solid var(--border)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                                  <span style={{ fontSize: "11px", color: "var(--on-surface-variant)", textTransform: "uppercase", fontWeight: 700 }}>Passagem Aérea</span>
+                                  <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "var(--secondary)" }}>flight</span>
+                                </div>
+                                <div style={{ fontSize: "14px", fontWeight: 800, color: "var(--primary)" }}>{brl(custo1)}</div>
+                                <span style={{ fontSize: "10px", color: "var(--on-surface-variant)", marginTop: "2px" }}>{custo1 > 0 ? "Emissão e taxas" : "Sem aéreo"}</span>
+                              </div>
+
+                              {/* Item 2: Hotel */}
+                              <div style={{ padding: "12px", borderRadius: "8px", backgroundColor: "#ffffff", border: "1px solid var(--border)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                                  <span style={{ fontSize: "11px", color: "var(--on-surface-variant)", textTransform: "uppercase", fontWeight: 700 }}>Hotel / Estadia</span>
+                                  <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "var(--secondary)" }}>hotel</span>
+                                </div>
+                                <div style={{ fontSize: "14px", fontWeight: 800, color: "var(--primary)" }}>{brl(custo2)}</div>
+                                <span style={{ fontSize: "10px", color: "var(--on-surface-variant)", marginTop: "2px" }}>{custo2 > 0 ? "Hospedagem faturada" : "Sem diárias"}</span>
+                              </div>
+
+                              {/* Item 3: Carro */}
+                              <div style={{ padding: "12px", borderRadius: "8px", backgroundColor: "#ffffff", border: "1px solid var(--border)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                                  <span style={{ fontSize: "11px", color: "var(--on-surface-variant)", textTransform: "uppercase", fontWeight: 700 }}>Carro / Translado</span>
+                                  <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "var(--secondary)" }}>directions_car</span>
+                                </div>
+                                <div style={{ fontSize: "14px", fontWeight: 800, color: "var(--primary)" }}>{brl(custo3)}</div>
+                                <span style={{ fontSize: "10px", color: "var(--on-surface-variant)", marginTop: "2px" }}>{custo3 > 0 ? "Locação / Translado" : "Sem translado"}</span>
+                              </div>
+
+                              {/* Item 4: Seguro */}
+                              <div style={{ padding: "12px", borderRadius: "8px", backgroundColor: "#ffffff", border: "1px solid var(--border)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                                  <span style={{ fontSize: "11px", color: "var(--on-surface-variant)", textTransform: "uppercase", fontWeight: 700 }}>Seguro / Outros</span>
+                                  <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "var(--secondary)" }}>shield</span>
+                                </div>
+                                <div style={{ fontSize: "14px", fontWeight: 800, color: "var(--primary)" }}>{brl(custo4)}</div>
+                                <span style={{ fontSize: "10px", color: "var(--on-surface-variant)", marginTop: "2px" }}>{custo4 > 0 ? "Apólice internacional" : "Não aplicável"}</span>
+                              </div>
+
+                              {/* Item 5: Alimentação */}
+                              <div style={{ padding: "12px", borderRadius: "8px", backgroundColor: "#ffffff", border: "1px solid var(--border)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                                  <span style={{ fontSize: "11px", color: "var(--on-surface-variant)", textTransform: "uppercase", fontWeight: 700 }}>Alimentação / Diária</span>
+                                  <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "var(--secondary)" }}>restaurant</span>
+                                </div>
+                                <div style={{ fontSize: "14px", fontWeight: 800, color: "var(--primary)" }}>{brl(custo5)}</div>
+                                <span style={{ fontSize: "10px", color: "var(--on-surface-variant)", marginTop: "2px" }}>Despesa Consultor</span>
+                              </div>
+
+                              {/* Item 6: Total Viagem em Destaque Marinho (Print 5) */}
+                              <div style={{ padding: "12px", borderRadius: "8px", backgroundColor: "#00152f", color: "#ffffff", border: "1px solid #00152f", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                                  <span style={{ fontSize: "11px", color: "#93c5fd", textTransform: "uppercase", fontWeight: 700 }}>TOTAL VIAGEM</span>
+                                  <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "#38bdf8" }}>receipt_long</span>
+                                </div>
+                                <div style={{ fontSize: "15px", fontWeight: 800, color: "#ffffff" }}>{brl(custoTotalViagem)}</div>
+                                <span style={{ fontSize: "10px", color: "#34d399", fontWeight: 700, marginTop: "2px" }}>Conciliado 100%</span>
+                              </div>
+                            </div>
+
+                            {/* Rodapé do Detalhamento: Prazo Prestação de Contas & Observações Agência */}
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px", paddingTop: "12px", borderTop: "1px dashed var(--border)" }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                                <div style={{ width: "28px", height: "28px", borderRadius: "50%", backgroundColor: infoPrazo.corBg, color: infoPrazo.corTexto, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                  <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>{infoPrazo.icone}</span>
+                                </div>
+                                <div>
+                                  <span style={{ fontSize: "10px", color: "var(--on-surface-variant)", textTransform: "uppercase", fontWeight: 700, display: "block" }}>Prazo Prestação de Contas</span>
+                                  <strong style={{ fontSize: "12px", color: infoPrazo.corTexto }}>
+                                    {infoPrazo.badgeTexto}
+                                    {infoPrazo.status === "EM_ATRASO" ? ` (${infoPrazo.diasAtraso}d em atraso)` : ""}
+                                    {infoPrazo.status === "DENTRO_DO_PRAZO" && infoPrazo.diasRestantes ? ` (${infoPrazo.diasRestantes}d restantes)` : ""}
+                                  </strong>
+                                </div>
+                              </div>
+
+                              <div style={{ flex: 1, minWidth: "220px", display: "flex", flexDirection: "column" }}>
+                                <span style={{ fontSize: "10px", color: "var(--on-surface-variant)", textTransform: "uppercase", fontWeight: 700 }}>
+                                  Observações Agência de Viagens
+                                </span>
+                                <span style={{ fontSize: "11px", color: "var(--on-surface)", fontStyle: "italic" }}>
+                                  {v?.observacao_agencia || "Nenhuma instrução adicional registrada."}
+                                </span>
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })
-            )}
-          </div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
 
-          <div style={{ display: "flex", justifyContent: "space-between", padding: "12px 16px", borderTop: "1px solid var(--border)", fontSize: "12px", color: "var(--on-surface-variant)" }}>
-            <span>Exibindo <strong>{filtradas.length}</strong> de <strong>{todas.length}</strong> atividades cadastradas</span>
-            <span>Total Consultor: <strong style={{ color: "var(--on-surface)" }}>{brl(totalConsultor)}</strong></span>
+            {/* Rodapé da Listagem com Totais */}
+            <div style={{ display: "flex", justifyContent: "space-between", padding: "14px 20px", backgroundColor: "var(--surface-container-lowest)", borderRadius: "12px", border: "1px solid var(--border)", fontSize: "12px", color: "var(--on-surface-variant)", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
+              <span>Exibindo <strong>{filtradas.length}</strong> de <strong>{todas.length}</strong> atividades cadastradas</span>
+              <span>Total Consultor: <strong style={{ color: "var(--primary)", fontSize: "13px" }}>{brl(totalConsultor)}</strong></span>
+            </div>
           </div>
-        </section>
         )}
 
         {/* Modal de Bloqueio de Agenda */}

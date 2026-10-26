@@ -304,12 +304,12 @@ export default function ConsultorPage() {
                           </span>
                         </div>
                         <div style={{ fontSize: "12px", color: "var(--on-surface-variant)", marginTop: "4px" }}>
-                          Referência: {bm.mesReferencia} • {bm.horasTotal ? `${bm.horasTotal}h` : ""}
+                          Referência: {bm.mesReferencia} • {(bm.totalHoras || bm.horasTotal) ? `${bm.totalHoras || bm.horasTotal}h` : ""}
                         </div>
                       </div>
                       <div style={{ textAlign: "right" }}>
                         <div style={{ fontWeight: 700, fontSize: "14px", color: "#059669" }}>
-                          {brl(bm.valorLiquidoTotal)}
+                          {brl(bm.valorTotal ?? bm.valorLiquidoTotal)}
                         </div>
                         <a
                           href={`/consultor/bms`}

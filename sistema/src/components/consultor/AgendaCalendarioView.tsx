@@ -218,10 +218,11 @@ export default function AgendaCalendarioView({
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(7, 1fr)",
+          gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
           borderBottom: "1px solid var(--border)",
           backgroundColor: "#f1f5f9",
           textAlign: "center",
+          width: "100%",
         }}
       >
         {DIAS_SEMANA.map((ds, idx) => (
@@ -234,6 +235,8 @@ export default function AgendaCalendarioView({
               textTransform: "uppercase",
               letterSpacing: "0.5px",
               color: idx === 0 || idx === 6 ? "#94a3b8" : "var(--primary)",
+              minWidth: 0,
+              overflow: "hidden",
             }}
           >
             {ds}
@@ -245,9 +248,10 @@ export default function AgendaCalendarioView({
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(7, 1fr)",
+          gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
           backgroundColor: "var(--border, #e2e8f0)",
           gap: "1px",
+          width: "100%",
         }}
       >
         {diasDoMes.map((celula, idx) => {
@@ -271,6 +275,8 @@ export default function AgendaCalendarioView({
                 flexDirection: "column",
                 gap: "4px",
                 transition: "background-color 0.1s ease",
+                minWidth: 0,
+                overflow: "hidden",
               }}
             >
               {/* Número do Dia */}

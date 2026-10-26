@@ -473,6 +473,44 @@ export async function removerSolicitacaoPorLancamento(lancamentoId: string): Pro
 }
 
 /**
+ * Localiza com segurança uma solicitação por ID ou lancamentoId.
+ * Se não estiver em memória/arquivo, sincroniza a base de lançamentos do Supabase
+ * para garantir que atividades novas criadas sejam instantaneamente reconhecidas.
+ */
+export async function obterSolicitacaoGarantida(
+  solicitacaoId: string
+): Promise<{ sol: ViagemSolicitacao; lista: ViagemSolicitacao[] }> {
+  let lista = carregarSolicitacoesArquivo();
+  let sol = lista.find(
+    (s) =>
+      s.id === solicitacaoId ||
+      s.lancamentoId === solicitacaoId ||
+      s.id.endsWith(solicitacaoId) ||
+      solicitacaoId.endsWith(s.id) ||
+      String(s.lancamentoId) === String(solicitacaoId)
+  );
+
+  if (!sol) {
+    // Sincroniza todas as solicitações a partir do banco de dados
+    lista = await sincronizarSolicitacoesIniciais();
+    sol = lista.find(
+      (s) =>
+        s.id === solicitacaoId ||
+        s.lancamentoId === solicitacaoId ||
+        s.id.endsWith(solicitacaoId) ||
+        solicitacaoId.endsWith(s.id) ||
+        String(s.lancamentoId) === String(solicitacaoId)
+    );
+  }
+
+  if (!sol) {
+    throw new Error(`Solicitação não encontrada (ID: ${solicitacaoId})`);
+  }
+
+  return { sol, lista };
+}
+
+/**
  * Salva ou atualiza cotações enviadas pela Agência de Viagens
  */
 export async function salvarCotacoesAgencia(
@@ -482,9 +520,7 @@ export async function salvarCotacoesAgencia(
   enviarParaAprovacao: boolean,
   usuarioNome: string = "Agência de Viagens"
 ): Promise<ViagemSolicitacao> {
-  const lista = carregarSolicitacoesArquivo();
-  const sol = lista.find((s) => s.id === solicitacaoId);
-  if (!sol) throw new Error("Solicitação não encontrada");
+  const { sol, lista } = await obterSolicitacaoGarantida(solicitacaoId);
 
   const agora = new Date().toISOString();
 
@@ -536,9 +572,7 @@ export async function aprovarLogisticaLider(
   aprovadorNome: string = "Líder de Projeto",
   justificativas?: Record<string, string>
 ): Promise<ViagemSolicitacao> {
-  const lista = carregarSolicitacoesArquivo();
-  const sol = lista.find((s) => s.id === solicitacaoId);
-  if (!sol) throw new Error("Solicitação não encontrada");
+  const { sol, lista } = await obterSolicitacaoGarantida(solicitacaoId);
 
   const agora = new Date().toISOString();
   let somaAprovada = 0;
@@ -604,9 +638,7 @@ export async function registrarCompraAgencia(
     usuarioNome?: string;
   }
 ): Promise<ViagemSolicitacao> {
-  const lista = carregarSolicitacoesArquivo();
-  const sol = lista.find((s) => s.id === solicitacaoId);
-  if (!sol) throw new Error("Solicitação não encontrada");
+  const { sol, lista } = await obterSolicitacaoGarantida(solicitacaoId);
 
   const agora = new Date().toISOString();
   let totalContratado = 0;
@@ -681,9 +713,7 @@ export async function enviarVouchersViajante(
   emailDestinatario?: string,
   usuarioNome: string = "Agência de Viagens"
 ): Promise<{ ok: boolean; mensagem: string; solicitacao: ViagemSolicitacao; emailPreview?: any }> {
-  const lista = carregarSolicitacoesArquivo();
-  const sol = lista.find((s) => s.id === solicitacaoId);
-  if (!sol) throw new Error("Solicitação não encontrada");
+  const { sol, lista } = await obterSolicitacaoGarantida(solicitacaoId);
 
   const agora = new Date().toISOString();
   const destEmail = emailDestinatario || sol.consultorEmail || "leonardo.campos@nnos.com.br";
