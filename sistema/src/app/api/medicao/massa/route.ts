@@ -7,6 +7,26 @@ const FILE_PATH = path.join(process.cwd(), "src/lib/bms-2026.json");
 const CHAVE_CLOUD_BMS = "bms_lista_completa";
 const CHAVE_CLOUD_PESSOAS = "pessoas_base_completa";
 
+const LIDERES_EMAILS_PADRAO: Record<string, string> = {
+  "BEATRIZ PICORELLI": "beatriz.picorelli@nnos.com.br",
+  "CAROLINE AMIEVA": "caroline.amieva@nnos.com.br",
+  "FABIO CANASSA": "fabio.canassa@nnos.com.br",
+  "JEFFERSON SOUZA": "jefferson.souza@nnos.com.br",
+  "JOICE LAGE": "joice.lage@nnos.com.br",
+  "LEONARDO CAMPOS": "leonardo.campos@nnos.com.br",
+  "VINICIUS SOUZA": "vinicius.souza@nnos.com.br",
+  "IGOR PICORELLI": "igor.picorelli@nnos.com.br",
+};
+
+function resolverEmailLider(nome: string): string {
+  const n = (nome || "").toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+  for (const [chave, email] of Object.entries(LIDERES_EMAILS_PADRAO)) {
+    const k = chave.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+    if (n.includes(k) || k.includes(n)) return email;
+  }
+  return "beatriz.picorelli@nnos.com.br";
+}
+
 function lerBms(): any[] {
   try {
     if (fs.existsSync(FILE_PATH)) {
@@ -70,11 +90,12 @@ export async function GET(request: Request) {
     const compAlvo = `${ano}-${String(mesNum).padStart(2, "0")}-01`;
     const { data: lancsCompetencia, error: errLancs } = await db
       .from("lancamentos")
-      .select("id, competencia, atividade, horas, custo_consultor, data_inicial, data_final, status, consultores(id, nome), projetos(nome, centros_custo(codigo, lideres(id, nome, email)))")
+      .select("id, competencia, atividade, horas, custo_consultor, data_inicial, data_final, status, consultores(id, nome), projetos(nome, centros_custo(codigo, lideres(id, nome)))")
       .eq("competencia", compAlvo);
 
     if (errLancs) {
-      return NextResponse.json({ error: errLancs.message }, { status: 500 });
+      console.error("[/api/medicao/massa] Erro ao buscar lançamentos:", errLancs);
+      return NextResponse.json({ ok: false, error: errLancs.message }, { status: 500 });
     }
 
     // Normalizador de texto para matching
@@ -177,7 +198,7 @@ export async function GET(request: Request) {
           if (ehMesIntegral(a)) return false;
           const dFim = extrairDia(a.data_final || a.data_inicial);
           if (isNaN(dFim)) return false;
-          return dFim < diaCorte;
+          return dFim <= diaCorte;
         });
 
         periodoRotulo = `1ª Quinzena (Corte ${dataCorteStr})`;
@@ -223,7 +244,7 @@ export async function GET(request: Request) {
           valorTotal: val,
           rateioInterno: somaTotal > 0 ? `${((val / somaTotal) * 100).toFixed(2).replace(".", ",")}%` : "0,00%",
           liderProjeto: a.projetos?.centros_custo?.lideres?.nome || "Beatriz Picorelli",
-          liderEmail: a.projetos?.centros_custo?.lideres?.email || "beatriz.picorelli@nnos.com.br",
+          liderEmail: resolverEmailLider(a.projetos?.centros_custo?.lideres?.nome),
         };
       });
 

@@ -60,7 +60,11 @@ export default function EnvioMassaBmModal({
       const res = await fetch(url);
       const data = await res.json();
 
-      if (data.ok && Array.isArray(data.candidatos)) {
+      if (!res.ok || !data.ok) {
+        throw new Error(data.error || `HTTP ${res.status}`);
+      }
+
+      if (Array.isArray(data.candidatos)) {
         setCandidatos(data.candidatos);
         // Por padrão, seleciona todos os aptos que NÃO possuem BM já gerado
         const novosSel = new Set<string>();
@@ -74,9 +78,11 @@ export default function EnvioMassaBmModal({
         setCandidatos([]);
         setSelecionadosIds(new Set());
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Erro ao carregar candidatos:", err);
-      showToast("Erro ao carregar candidatos para BM em massa");
+      showToast(`Erro ao carregar candidatos: ${err.message || err}`);
+      setCandidatos([]);
+      setSelecionadosIds(new Set());
     } finally {
       setCarregando(false);
     }
