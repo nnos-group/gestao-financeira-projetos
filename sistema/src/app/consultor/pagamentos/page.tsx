@@ -136,11 +136,27 @@ export default function ConsultorPagamentosPage() {
     return counts;
   }, [pagamentosDoConsultor]);
 
+  // Anos disponíveis dinamicamente baseados nos documentos/pagamentos do consultor
+  const anosDisponiveis = useMemo(() => {
+    const anosSet = new Set<string>();
+    pagamentosDoConsultor.forEach((p) => {
+      const d = p.dataPagto || "";
+      if (d.includes("/")) {
+        const partes = d.split("/");
+        if (partes.length === 3 && partes[2].trim().length === 4) {
+          anosSet.add(partes[2].trim());
+        }
+      }
+    });
+    const lista = Array.from(anosSet).sort().reverse();
+    return lista.length > 0 ? lista : ["2026"];
+  }, [pagamentosDoConsultor]);
+
   // Filtragem completa com competência, categoria, status e busca
   const pagamentosFiltrados = useMemo(() => {
     return pagamentosDoConsultor.filter((p) => {
       // Filtro de ano
-      if (anoSelecionado) {
+      if (anoSelecionado && anoSelecionado !== "TODOS") {
         const anoData = (p.dataPagto || "").split("/")[2];
         if (anoData && anoData !== anoSelecionado) return false;
       }
@@ -250,10 +266,7 @@ export default function ConsultorPagamentosPage() {
               onChange={(val) => setAnoSelecionado(String(val))}
               options={[
                 { value: "TODOS", label: "Todos os Anos" },
-                { value: "2024", label: "2024" },
-                { value: "2025", label: "2025" },
-                { value: "2026", label: "2026" },
-                { value: "2027", label: "2027" },
+                ...anosDisponiveis.map((a) => ({ value: a, label: a })),
               ]}
               icon="calendar_today"
               searchable={false}
@@ -397,21 +410,6 @@ export default function ConsultorPagamentosPage() {
             </div>
 
             <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
-              <ModernDropdown
-                value={filtroTipo}
-                onChange={(val) => setFiltroTipo(String(val))}
-                options={[
-                  { value: "TODOS", label: "Todos os Tipos" },
-                  { value: "PARCEIRO", label: "PARCEIRO" },
-                  { value: "SÓCIO", label: "SÓCIO" },
-                  { value: "FUNCIONÁRIO", label: "FUNCIONÁRIO" },
-                  { value: "FORNECEDOR", label: "FORNECEDOR" },
-                ]}
-                icon="badge"
-                searchable={false}
-                minWidth={170}
-              />
-
               <ModernDropdown
                 value={filtroStatus}
                 onChange={(val) => setFiltroStatus(String(val))}

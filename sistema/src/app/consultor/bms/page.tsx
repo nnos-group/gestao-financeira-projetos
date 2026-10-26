@@ -812,14 +812,14 @@ export default function ConsultorBmsPage() {
                       textTransform: "uppercase",
                     }}
                   >
-                    <th style={{ padding: "12px 18px", width: "90px" }}>Código</th>
-                    <th style={{ padding: "12px 18px" }}>Consultor / Prestador</th>
-                    <th style={{ padding: "12px 18px" }}>Período &amp; Quinzena</th>
-                    <th style={{ padding: "12px 18px", textAlign: "right" }}>Horas</th>
-                    <th style={{ padding: "12px 18px", textAlign: "right" }}>Valor Apurado</th>
-                    <th style={{ padding: "12px 18px" }}>Status do Workflow</th>
-                    <th style={{ padding: "12px 18px" }}>Log de Informações &amp; Assinaturas</th>
-                    <th style={{ padding: "12px 18px", textAlign: "center" }}>Ações</th>
+                    <th style={{ padding: "12px 16px", width: "80px", whiteSpace: "nowrap" }}>Código</th>
+                    <th style={{ padding: "12px 16px", whiteSpace: "nowrap" }}>Consultor / Prestador</th>
+                    <th style={{ padding: "12px 16px", whiteSpace: "nowrap" }}>Período &amp; Quinzena</th>
+                    <th style={{ padding: "12px 16px", textAlign: "right", whiteSpace: "nowrap", width: "90px" }}>Horas</th>
+                    <th style={{ padding: "12px 16px", textAlign: "right", whiteSpace: "nowrap", width: "130px" }}>Valor Apurado</th>
+                    <th style={{ padding: "12px 16px", whiteSpace: "nowrap" }}>Status do Workflow</th>
+                    <th style={{ padding: "12px 16px" }}>Log de Informações &amp; Assinaturas</th>
+                    <th style={{ padding: "12px 16px", textAlign: "center", whiteSpace: "nowrap", width: "120px" }}>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -836,18 +836,18 @@ export default function ConsultorBmsPage() {
 
                       return (
                         <tr key={bm.id || bm.codigo} style={{ borderBottom: "1px solid var(--border)" }}>
-                          <td style={{ padding: "14px 18px", fontWeight: 800, color: "var(--primary)" }}>
+                          <td style={{ padding: "14px 16px", fontWeight: 800, color: "var(--primary)", whiteSpace: "nowrap" }}>
                             {bm.codigo}
                           </td>
-                          <td style={{ padding: "14px 18px" }}>
+                          <td style={{ padding: "14px 16px", whiteSpace: "nowrap" }}>
                             <div style={{ fontWeight: 700, color: "var(--primary)", fontSize: "13px" }}>
                               {bm.consultorNome}
                             </div>
                             <div style={{ fontSize: "11px", color: "var(--on-surface-variant)", marginTop: "2px" }}>
-                              {bm.consultorRazaoSocial || bm.consultorNome} • CNPJ: {bm.consultorCnpj || "Não informado"}
+                              CNPJ: {bm.consultorCnpj || "Não informado"}
                             </div>
                           </td>
-                          <td style={{ padding: "14px 18px" }}>
+                          <td style={{ padding: "14px 16px", whiteSpace: "nowrap" }}>
                             <div style={{ fontWeight: 600, color: "var(--on-surface)" }}>
                               {bm.mesReferencia}
                             </div>
@@ -855,13 +855,13 @@ export default function ConsultorBmsPage() {
                               {bm.periodoTipo || "Integral"} • Corte: {bm.dataCorte || "20/09/2026"}
                             </div>
                           </td>
-                          <td style={{ padding: "14px 18px", textAlign: "right", fontWeight: 600 }}>
-                            {Number(bm.totalHoras || bm.horasTotal || 0).toFixed(1)} h
+                          <td style={{ padding: "14px 16px", textAlign: "right", fontWeight: 700, whiteSpace: "nowrap" }}>
+                            {Number(bm.totalHoras || bm.horasTotal || 0).toFixed(1)}&nbsp;h
                           </td>
-                          <td style={{ padding: "14px 18px", textAlign: "right", fontWeight: 800, color: "#059669", fontSize: "13px" }}>
+                          <td style={{ padding: "14px 16px", textAlign: "right", fontWeight: 800, color: "#059669", fontSize: "13px", whiteSpace: "nowrap" }}>
                             {brl(bm.valorTotal || bm.valorLiquidoTotal)}
                           </td>
-                          <td style={{ padding: "14px 18px" }}>
+                          <td style={{ padding: "14px 16px", whiteSpace: "nowrap" }}>
                             <span
                               style={{
                                 display: "inline-flex",
@@ -881,7 +881,7 @@ export default function ConsultorBmsPage() {
                               {bm.status}
                             </span>
                           </td>
-                          <td style={{ padding: "14px 18px", fontSize: "11px", color: "var(--on-surface-variant)" }}>
+                          <td style={{ padding: "14px 16px", fontSize: "11px", color: "var(--on-surface-variant)" }}>
                             <div style={{ marginBottom: "3px" }}>
                               <span style={{ fontWeight: 600 }}>Envio:</span> {bm.dataEnvio || "20/09/2026 15:59:13"}
                             </div>
@@ -935,55 +935,31 @@ export default function ConsultorBmsPage() {
                               </div>
                             )}
                           </td>
-                          <td style={{ padding: "14px 18px", textAlign: "center" }}>
-                            <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", justifyContent: "center" }}>
-                              <button
-                                type="button"
-                                onClick={() => setBmVisualizando(bm)}
-                                style={{
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  gap: "6px",
-                                  padding: "6px 14px",
-                                  borderRadius: "8px",
-                                  backgroundColor: "#00152f",
-                                  color: "#ffffff",
-                                  fontSize: "12px",
-                                  fontWeight: 700,
-                                  border: "none",
-                                  cursor: "pointer",
-                                  transition: "all 0.15s ease",
-                                }}
-                                title="Visualizar Boletim de Medição completo"
-                              >
-                                <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
-                                  visibility
-                                </span>
-                                <span>Visualizar</span>
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setBmVisualizando(bm)}
-                                style={{
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  width: "32px",
-                                  height: "32px",
-                                  borderRadius: "8px",
-                                  backgroundColor: "#fff1f2",
-                                  border: "1px solid #fecdd3",
-                                  color: "#e11d48",
-                                  cursor: "pointer",
-                                  transition: "all 0.15s ease",
-                                }}
-                                title="Exportar PDF do Boletim de Medição"
-                              >
-                                <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
-                                  picture_as_pdf
-                                </span>
-                              </button>
-                            </div>
+                          <td style={{ padding: "14px 16px", textAlign: "center", whiteSpace: "nowrap" }}>
+                            <button
+                              type="button"
+                              onClick={() => setBmVisualizando(bm)}
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "6px",
+                                padding: "6px 14px",
+                                borderRadius: "8px",
+                                backgroundColor: "#00152f",
+                                color: "#ffffff",
+                                fontSize: "12px",
+                                fontWeight: 700,
+                                border: "none",
+                                cursor: "pointer",
+                                transition: "all 0.15s ease",
+                              }}
+                              title="Visualizar Boletim de Medição completo"
+                            >
+                              <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
+                                visibility
+                              </span>
+                              <span>Visualizar</span>
+                            </button>
                           </td>
                         </tr>
                       );

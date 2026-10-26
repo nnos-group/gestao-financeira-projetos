@@ -110,6 +110,20 @@ export function calcularPrazoPrestacaoContas(
   valorAlimentacao?: number | string | null,
   statusAtividade?: string | null
 ): PrazoPrestacaoContasInfo {
+  // Tratamento defensivo caso os argumentos tenham sido passados invertidos: (dataFinal, precisaLogistica)
+  let argLogistica = precisaLogistica;
+  let argDataFinal = dataFinal;
+
+  if (
+    (typeof argLogistica === "string" && (argLogistica.includes("-") || argLogistica.includes("/"))) &&
+    (typeof argDataFinal === "boolean" ||
+      (typeof argDataFinal === "string" && (argDataFinal.toUpperCase() === "SIM" || argDataFinal.toUpperCase() === "NAO" || argDataFinal === "true" || argDataFinal === "false")))
+  ) {
+    const temp = argLogistica;
+    argLogistica = argDataFinal;
+    argDataFinal = temp;
+  }
+
   // Regra de Negócio: Se o status da atividade for CANCELADO, o prazo é NÃO APLICÁVEL
   const isCancelado = (statusAtividade || "").toUpperCase().includes("CANCEL");
   if (isCancelado) {
@@ -126,10 +140,10 @@ export function calcularPrazoPrestacaoContas(
   }
 
   const isLogistica =
-    precisaLogistica === true ||
-    precisaLogistica === "SIM" ||
-    precisaLogistica === "sim" ||
-    precisaLogistica === "true";
+    argLogistica === true ||
+    argLogistica === "SIM" ||
+    argLogistica === "sim" ||
+    argLogistica === "true";
 
   if (!isLogistica) {
     return {
@@ -161,10 +175,10 @@ export function calcularPrazoPrestacaoContas(
 
   // Parse da data final da viagem
   let dFim: Date | null = null;
-  if (dataFinal instanceof Date) {
-    dFim = new Date(dataFinal.getTime());
-  } else if (typeof dataFinal === "string" && dataFinal.trim()) {
-    const s = dataFinal.trim();
+  if (argDataFinal instanceof Date) {
+    dFim = new Date(argDataFinal.getTime());
+  } else if (typeof argDataFinal === "string" && argDataFinal.trim()) {
+    const s = argDataFinal.trim();
     if (s.includes("/")) {
       const p = s.split("/");
       if (p.length === 3) dFim = new Date(parseInt(p[2], 10), parseInt(p[1], 10) - 1, parseInt(p[0], 10));

@@ -74,6 +74,25 @@ export default function ConsultorViagensPage() {
 
   const viagensOriginais = dadosConsultor?.viagens || [];
 
+  // Anos disponíveis dinamicamente baseados nas viagens reais do consultor
+  const anosDisponiveis = useMemo(() => {
+    const anosSet = new Set<number>();
+    viagensOriginais.forEach((v: any) => {
+      const dStr = v.dataInicial || v.data_inicial;
+      if (dStr) {
+        if (dStr.includes("-")) {
+          const a = parseInt(dStr.split("-")[0], 10);
+          if (!isNaN(a) && a >= 2020) anosSet.add(a);
+        } else if (dStr.includes("/")) {
+          const a = parseInt(dStr.split("/")[2], 10);
+          if (!isNaN(a) && a >= 2020) anosSet.add(a);
+        }
+      }
+    });
+    const lista = Array.from(anosSet).sort((a, b) => b - a);
+    return lista.length > 0 ? lista : [2026];
+  }, [viagensOriginais]);
+
   // Viagens da competência (ano e mês) para cálculo dos KPIs
   const viagensCompetencia = useMemo(() => {
     return viagensOriginais.filter((v: any) => {
@@ -238,12 +257,7 @@ export default function ConsultorViagensPage() {
             <ModernDropdown
               value={anoSelecionado}
               onChange={(val) => setAnoSelecionado(Number(val))}
-              options={[
-                { value: 2024, label: "2024" },
-                { value: 2025, label: "2025" },
-                { value: 2026, label: "2026" },
-                { value: 2027, label: "2027" },
-              ]}
+              options={anosDisponiveis.map((a) => ({ value: a, label: String(a) }))}
               icon="calendar_today"
               searchable={false}
               minWidth={105}

@@ -132,7 +132,7 @@ export default function ConsultorAgendaPage() {
   const prestacoesEmAtraso = useMemo(() => {
     return filtradas.filter((l) => {
       const v = Array.isArray(l.viagens) ? l.viagens[0] : l.viagens;
-      const info = calcularPrazoPrestacaoContas(l.data_final, l.precisa_logistica, v?.custo_5, l.status);
+      const info = calcularPrazoPrestacaoContas(l.precisa_logistica, l.data_final, v?.custo_5, l.status);
       return info.status === "EM_ATRASO";
     }).length;
   }, [filtradas]);
@@ -465,252 +465,332 @@ export default function ConsultorAgendaPage() {
             </button>
           </div>
 
-          {/* Tabela de Atividades */}
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
-              <thead>
-                <tr style={{ background: "var(--surface-container-low)" }}>
-                  <th style={th}>Projeto &amp; Atividade</th>
-                  <th style={th}>Local / Concessionária</th>
-                  <th style={th}>Período &amp; Horas</th>
-                  <th style={th}>Instrutor / Perfil</th>
-                  <th style={{ ...th, textAlign: "right" }}>Consultor</th>
-                </tr>
-              </thead>
-              <tbody>
-                {carregando ? (
-                  <tr><td colSpan={5} style={{ padding: "36px", textAlign: "center", color: "var(--on-surface-variant)" }}>Carregando agenda...</td></tr>
-                ) : filtradas.length === 0 ? (
-                  <tr><td colSpan={5} style={{ padding: "36px", textAlign: "center", color: "var(--on-surface-variant)" }}>Nenhuma atividade encontrada para a competência e filtros selecionados.</td></tr>
-                ) : (
-                  filtradas.map((l) => {
-                    const cor = corStatus(l.status);
-                    const dias = diasEntre(l.data_inicial, l.data_final);
-                    const aberto = expandidos.has(l.id);
-                    const remoto = (l.modalidade || "").toLowerCase().match(/remot|online|ead|virtual/);
-                    const cc = l.projetos?.centros_custo;
-                    const v = Array.isArray(l.viagens) ? l.viagens[0] : l.viagens;
-                    const precisaLog = l.precisa_logistica === true || l.precisa_logistica === "SIM" || l.precisa_logistica === "true";
-                    const infoPrazo = calcularPrazoPrestacaoContas(l.data_final, l.precisa_logistica, v?.custo_5, l.status);
+          {/* Guia de Colunas Oficial (Idêntico ao Print 4) */}
+          <div
+            className="table-labels-guide"
+            style={{
+              display: "grid",
+              gridTemplateColumns: "3.2fr 1.8fr 1.8fr 1.8fr 1.2fr",
+              padding: "10px 20px",
+              gap: "14px",
+              alignItems: "center",
+              fontSize: "11px",
+              fontWeight: 700,
+              textTransform: "uppercase",
+              letterSpacing: "0.04em",
+              color: "var(--on-surface-variant)",
+            }}
+          >
+            <div>Projeto &amp; Atividade</div>
+            <div>Local / Concessionária</div>
+            <div>Período &amp; Horas</div>
+            <div>Instrutor / Perfil</div>
+            <div style={{ textAlign: "right" }}>Consultor</div>
+          </div>
 
-                    const custo1 = Number(v?.custo_1 || 0);
-                    const custo2 = Number(v?.custo_2 || 0);
-                    const custo3 = Number(v?.custo_3 || 0);
-                    const custo4 = Number(v?.custo_4 || 0);
-                    const custo5 = Number(v?.custo_5 || 0);
-                    const custoTotalViagem = Number(v?.total || (custo1 + custo2 + custo3 + custo4 + custo5));
+          {/* Pilha de Cards Suspensos Flutuantes (Idêntico ao Print 4) */}
+          <div className="cards-stack" style={{ display: "flex", flexDirection: "column", gap: "10px", padding: "4px 0" }}>
+            {carregando ? (
+              <div style={{ padding: "48px 24px", textAlign: "center", backgroundColor: "var(--surface-container-lowest)", borderRadius: "12px", border: "1px dashed var(--border)", color: "var(--on-surface-variant)" }}>
+                Carregando agenda...
+              </div>
+            ) : filtradas.length === 0 ? (
+              <div
+                style={{
+                  padding: "48px 24px",
+                  textAlign: "center",
+                  backgroundColor: "var(--surface-container-lowest)",
+                  borderRadius: "12px",
+                  border: "1px dashed var(--border)",
+                  color: "var(--on-surface-variant)",
+                }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: "36px", color: "var(--outline)", marginBottom: "8px" }}>
+                  search_off
+                </span>
+                <p style={{ fontWeight: 600, fontSize: "13px", margin: 0 }}>Nenhuma atividade encontrada para a competência e filtros selecionados.</p>
+              </div>
+            ) : (
+              filtradas.map((l) => {
+                const cor = corStatus(l.status);
+                const dias = diasEntre(l.data_inicial, l.data_final);
+                const aberto = expandidos.has(l.id);
+                const remoto = (l.modalidade || "").toLowerCase().match(/remot|online|ead|virtual/);
+                const cc = l.projetos?.centros_custo;
+                const v = Array.isArray(l.viagens) ? l.viagens[0] : l.viagens;
+                const infoPrazo = calcularPrazoPrestacaoContas(l.precisa_logistica, l.data_final, v?.custo_5, l.status);
 
-                    return (
-                      <React.Fragment key={l.id}>
-                        <tr style={{ borderTop: "1px solid var(--border)" }}>
-                          <td style={{ padding: "14px 16px" }}>
-                            <div style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
-                              <button
-                                type="button"
-                                onClick={() => alternarItem(l.id)}
-                                aria-label="Detalhes"
-                                style={{ border: "none", background: "transparent", cursor: "pointer", color: "var(--on-surface-variant)", padding: 0 }}
-                              >
-                                <span className="material-symbols-outlined" style={{ fontSize: "20px", transform: aberto ? "rotate(180deg)" : "none", transition: "transform .15s" }}>
-                                  expand_more
-                                </span>
-                              </button>
-                              <div>
-                                <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-                                  <strong style={{ color: "var(--primary)", textTransform: "uppercase" }}>{l.projetos?.nome || "Projeto"}</strong>
-                                  <span style={{ fontSize: "10px", fontWeight: 700, padding: "2px 8px", borderRadius: "999px", background: cor.bg, color: cor.fg, textTransform: "uppercase" }}>
-                                    {l.status || "Planejado"}
-                                  </span>
-                                </div>
-                                <div style={{ fontSize: "12px", color: "#b45309", marginTop: "2px" }}>{l.atividade || "—"}</div>
-                              </div>
-                            </div>
-                          </td>
-                          <td style={{ padding: "14px 16px" }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                              <span className="material-symbols-outlined" style={{ fontSize: "18px", color: "#0369a1", background: "#e0f2fe", borderRadius: "6px", padding: "3px" }}>
-                                {remoto ? "laptop_mac" : "apartment"}
+                const custo1 = Number(v?.custo_1 || 0);
+                const custo2 = Number(v?.custo_2 || 0);
+                const custo3 = Number(v?.custo_3 || 0);
+                const custo4 = Number(v?.custo_4 || 0);
+                const custo5 = Number(v?.custo_5 || 0);
+                const custoTotalViagem = Number(v?.total || (custo1 + custo2 + custo3 + custo4 + custo5));
+
+                return (
+                  <div
+                    key={l.id}
+                    className={`floating-card-row ${aberto ? "expanded" : ""}`}
+                    style={{
+                      backgroundColor: "var(--surface-container-lowest)",
+                      borderRadius: "12px",
+                      border: aberto ? "1.5px solid var(--primary-container, #bae6fd)" : "1px solid var(--border)",
+                      boxShadow: aberto ? "0 4px 14px rgba(0,0,0,0.06)" : "0 1px 3px rgba(0,0,0,0.03)",
+                      transition: "all 0.18s ease",
+                      overflow: "hidden",
+                    }}
+                  >
+                    {/* Linha Principal da Atividade (Card Main Bar) */}
+                    <div
+                      className="card-main-bar"
+                      style={{
+                        padding: "14px 20px",
+                        display: "grid",
+                        gridTemplateColumns: "3.2fr 1.8fr 1.8fr 1.8fr 1.2fr",
+                        alignItems: "center",
+                        gap: "14px",
+                      }}
+                    >
+                      {/* Col 1: Toggle + Projeto & Atividade + Status */}
+                      <div style={{ display: "flex", alignItems: "center", gap: "12px", minWidth: 0 }}>
+                        <button
+                          type="button"
+                          onClick={() => alternarItem(l.id)}
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            width: "28px",
+                            height: "28px",
+                            borderRadius: "6px",
+                            border: "none",
+                            backgroundColor: aberto ? "var(--primary)" : "#e0f2fe",
+                            color: aberto ? "#ffffff" : "#0369a1",
+                            cursor: "pointer",
+                            transition: "all 0.15s ease",
+                            flexShrink: 0,
+                          }}
+                          title={aberto ? "Recolher detalhes logísticos" : "Expandir detalhes logísticos"}
+                        >
+                          <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
+                            {aberto ? "expand_less" : "expand_more"}
+                          </span>
+                        </button>
+                        <div style={{ display: "flex", flexDirection: "column", overflow: "hidden", minWidth: 0 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                            <strong style={{ color: "var(--primary)", textTransform: "uppercase", fontSize: "13px" }}>
+                              {l.projetos?.nome || "Projeto"}
+                            </strong>
+                            {l.status && (
+                              <span style={{ fontSize: "10px", fontWeight: 700, padding: "2px 7px", borderRadius: "4px", background: cor.bg, color: cor.fg, textTransform: "uppercase" }}>
+                                {l.status}
                               </span>
-                              <div>
-                                <div style={{ fontWeight: 600, textTransform: "uppercase" }}>{l.local || l.modalidade || "—"}</div>
-                                <div style={{ fontSize: "11px", color: "var(--on-surface-variant)" }}>Região {l.regiao || "—"}</div>
-                              </div>
-                            </div>
-                          </td>
-                          <td style={{ padding: "14px 16px" }}>
+                            )}
+                          </div>
+                          <span style={{ fontSize: "12px", color: "#b45309", marginTop: "2px", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={l.atividade}>
+                            {l.atividade || "—"}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Col 2: Local / Concessionária */}
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                        <div
+                          style={{
+                            width: "32px",
+                            height: "32px",
+                            borderRadius: "8px",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            backgroundColor: remoto ? "rgba(14, 165, 233, 0.12)" : "rgba(15, 42, 74, 0.08)",
+                            color: remoto ? "#0284c7" : "var(--primary)",
+                            flexShrink: 0,
+                          }}
+                        >
+                          <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
+                            {remoto ? "laptop_chromebook" : "apartment"}
+                          </span>
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}>
+                          <strong style={{ fontSize: "12px", color: "var(--on-surface)", textTransform: "uppercase", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={l.local || "—"}>
+                            {l.local || (remoto ? "Virtual / Online" : "Presencial")}
+                          </strong>
+                          <span style={{ fontSize: "11px", color: "var(--on-surface-variant)" }}>Região {l.regiao || "BRA"}</span>
+                        </div>
+                      </div>
+
+                      {/* Col 3: Período e Duração */}
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                        <div
+                          style={{
+                            width: "32px",
+                            height: "32px",
+                            borderRadius: "8px",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            backgroundColor: "var(--surface-container)",
+                            color: "var(--on-surface-variant)",
+                            flexShrink: 0,
+                          }}
+                        >
+                          <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
+                            date_range
+                          </span>
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column" }}>
+                          <strong style={{ fontSize: "12px", color: "var(--on-surface)", whiteSpace: "nowrap" }}>
+                            {formatarDataBR(l.data_inicial)}{l.data_final && l.data_final !== l.data_inicial ? ` a ${formatarDataBR(l.data_final)}` : ""}
+                          </strong>
+                          <span style={{ fontSize: "11px", color: "var(--on-surface-variant)" }}>
+                            {dias} {dias === 1 ? "dia" : "dias"} · {Number(l.horas || 0)}h
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Col 4: Instrutor / Perfil */}
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                        <div
+                          style={{
+                            width: "30px",
+                            height: "30px",
+                            borderRadius: "50%",
+                            backgroundColor: "#e0f2fe",
+                            color: "#0369a1",
+                            fontWeight: 700,
+                            fontSize: "11px",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            flexShrink: 0,
+                          }}
+                        >
+                          {iniciais(consultorAtivo?.nome || "")}
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}>
+                          <strong style={{ fontSize: "12px", color: "var(--on-surface)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {consultorAtivo?.nome}
+                          </strong>
+                          <span style={{ fontSize: "11px", color: "var(--on-surface-variant)" }}>
+                            Perfil {l.perfil || consultorAtivo?.perfil || "SÊNIOR"}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Col 5: Consultor (Valor a Receber) */}
+                      <div style={{ textAlign: "right" }}>
+                        <strong style={{ fontSize: "13px", color: "var(--on-surface)" }}>
+                          {brl(l.custo_consultor)}
+                        </strong>
+                      </div>
+                    </div>
+
+                    {/* Subpainel Expandido de Detalhamento Logístico (Print 4) */}
+                    {aberto && (
+                      <div style={{ padding: "0 20px 20px 20px", backgroundColor: "var(--surface-container-lowest)" }}>
+                        <div style={{ border: "1px solid var(--border)", borderRadius: "12px", padding: "16px 20px", backgroundColor: "#f8fafc" }}>
+                          {/* Header do Detalhamento Logístico */}
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px", flexWrap: "wrap", gap: "8px" }}>
                             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                              <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "var(--on-surface-variant)" }}>calendar_today</span>
-                              <div>
-                                <div style={{ fontWeight: 600 }}>
-                                  {formatarDataBR(l.data_inicial)}{l.data_final && l.data_final !== l.data_inicial ? ` a ${formatarDataBR(l.data_final)}` : ""}
-                                </div>
-                                <div style={{ fontSize: "11px", color: "var(--on-surface-variant)" }}>
-                                  {dias} {dias === 1 ? "dia" : "dias"} · {Number(l.horas || 0)}h
-                                </div>
-                              </div>
-                            </div>
-                          </td>
-                          <td style={{ padding: "14px 16px" }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                              <span style={{ width: "30px", height: "30px", borderRadius: "50%", background: "#e0f2fe", color: "#0369a1", fontWeight: 700, fontSize: "11px", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
-                                {iniciais(consultorAtivo?.nome || "")}
+                              <span className="material-symbols-outlined" style={{ color: "var(--secondary, #00a896)", fontSize: "18px" }}>
+                                flight
                               </span>
-                              <div>
-                                <div style={{ fontWeight: 600 }}>{consultorAtivo?.nome}</div>
-                                <div style={{ fontSize: "11px", color: "var(--on-surface-variant)" }}>Perfil {l.perfil || consultorAtivo?.perfil || "SÊNIOR"}</div>
-                              </div>
+                              <strong style={{ fontSize: "12px", textTransform: "uppercase", letterSpacing: "0.04em", color: "var(--primary)" }}>
+                                Detalhamento Logístico &amp; Despesas de Viagem
+                              </strong>
                             </div>
-                          </td>
-                          <td style={{ padding: "14px 16px", textAlign: "right", fontWeight: 700 }}>{brl(l.custo_consultor)}</td>
-                        </tr>
 
-                        {/* SUBSEÇÃO EXPANDIDA COM DETALHAMENTO LOGÍSTICO COMPLETO (Print 3 - SEM REPASSE) */}
-                        {aberto && (
-                          <tr style={{ background: "var(--surface-container-lowest)", borderBottom: "2px solid var(--border)" }}>
-                            <td colSpan={5} style={{ padding: "16px 24px 20px 24px" }}>
-                              <div style={{ border: "1px solid var(--border)", borderRadius: "12px", padding: "16px 20px", backgroundColor: "#f8fafc" }}>
-                                {/* Header do Detalhamento Logístico */}
-                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px", flexWrap: "wrap", gap: "8px" }}>
-                                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                    <span className="material-symbols-outlined" style={{ color: "var(--secondary, #00a896)", fontSize: "18px" }}>
-                                      flight
-                                    </span>
-                                    <strong style={{ fontSize: "12px", textTransform: "uppercase", letterSpacing: "0.04em", color: "var(--primary)" }}>
-                                      Detalhamento Logístico &amp; Despesas de Viagem
-                                    </strong>
-                                  </div>
+                            {/* Card de Prazo de Prestação de Contas Conforme Regra de Negócio Oficial */}
+                            <div
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "6px",
+                                padding: "4px 10px",
+                                borderRadius: "8px",
+                                backgroundColor: infoPrazo.corBg,
+                                color: infoPrazo.corTexto,
+                                border: `1px solid ${infoPrazo.corTexto}33`,
+                                fontSize: "11px",
+                                fontWeight: 700,
+                              }}
+                              title="Prazo oficial: até 5 dias após o término da viagem para prestação de contas"
+                            >
+                              <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>
+                                {infoPrazo.icone}
+                              </span>
+                              <span>Prazo Prestação: {infoPrazo.badgeTexto}</span>
+                              {infoPrazo.status === "EM_ATRASO" && (
+                                <span style={{ fontWeight: 800 }}>({infoPrazo.diasAtraso}d de atraso)</span>
+                              )}
+                              {infoPrazo.status === "DENTRO_DO_PRAZO" && infoPrazo.diasRestantes !== undefined && infoPrazo.diasRestantes > 0 && (
+                                <span style={{ fontWeight: 600 }}>({infoPrazo.diasRestantes}d restantes)</span>
+                              )}
+                            </div>
+                          </div>
 
-                                  <div style={{ fontSize: "11px", color: "var(--on-surface-variant)" }}>
-                                    Precisa Logística?{" "}
-                                    <strong style={{ color: precisaLog ? "var(--secondary, #00a896)" : "var(--on-surface-variant)" }}>
-                                      {precisaLog ? "SIM" : "NÃO"}
-                                    </strong>
-                                  </div>
-                                </div>
+                          {/* 4 Cards de Logística (Passagem, Hotel, Carro, Alimentação/Diária) + Total */}
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "10px", marginBottom: "12px" }}>
+                            <div style={{ padding: "10px", borderRadius: "8px", backgroundColor: "#ffffff", border: "1px solid var(--border)" }}>
+                              <span style={{ fontSize: "10px", color: "var(--on-surface-variant)", textTransform: "uppercase", fontWeight: 700 }}>Passagem Aérea</span>
+                              <div style={{ fontSize: "13px", fontWeight: 800, color: "var(--primary)", marginTop: "2px" }}>{brl(custo1)}</div>
+                              <span style={{ fontSize: "9px", color: "var(--on-surface-variant)" }}>Contratado</span>
+                            </div>
 
-                                {/* 6 Caixas de Custo de Viagem (Print 3) */}
-                                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "10px", marginBottom: "14px" }}>
-                                  {/* Caixa 1: Aéreo */}
-                                  <div style={{ padding: "10px 12px", borderRadius: "8px", border: "1px solid var(--border)", backgroundColor: "#ffffff" }}>
-                                    <span style={{ fontSize: "10px", color: "var(--on-surface-variant)", textTransform: "uppercase", display: "block" }}>Passagem Aérea</span>
-                                    <div style={{ fontSize: "14px", fontWeight: 800, color: "var(--on-surface)", marginTop: "2px" }}>
-                                      {brl(custo1)}
-                                    </div>
-                                    <span style={{ fontSize: "10px", color: "var(--on-surface-variant)" }}>{custo1 > 0 ? "Contratado" : "Sem aéreo"}</span>
-                                  </div>
+                            <div style={{ padding: "10px", borderRadius: "8px", backgroundColor: "#ffffff", border: "1px solid var(--border)" }}>
+                              <span style={{ fontSize: "10px", color: "var(--on-surface-variant)", textTransform: "uppercase", fontWeight: 700 }}>Hotel / Estadia</span>
+                              <div style={{ fontSize: "13px", fontWeight: 800, color: "var(--primary)", marginTop: "2px" }}>{brl(custo2)}</div>
+                              <span style={{ fontSize: "9px", color: "var(--on-surface-variant)" }}>Contratado</span>
+                            </div>
 
-                                  {/* Caixa 2: Hotel */}
-                                  <div style={{ padding: "10px 12px", borderRadius: "8px", border: "1px solid var(--border)", backgroundColor: "#ffffff" }}>
-                                    <span style={{ fontSize: "10px", color: "var(--on-surface-variant)", textTransform: "uppercase", display: "block" }}>Hotel / Estadia</span>
-                                    <div style={{ fontSize: "14px", fontWeight: 800, color: "var(--on-surface)", marginTop: "2px" }}>
-                                      {brl(custo2)}
-                                    </div>
-                                    <span style={{ fontSize: "10px", color: "var(--on-surface-variant)" }}>{custo2 > 0 ? "Contratado" : "Sem diárias"}</span>
-                                  </div>
+                            <div style={{ padding: "10px", borderRadius: "8px", backgroundColor: "#ffffff", border: "1px solid var(--border)" }}>
+                              <span style={{ fontSize: "10px", color: "var(--on-surface-variant)", textTransform: "uppercase", fontWeight: 700 }}>Carro / Traslado</span>
+                              <div style={{ fontSize: "13px", fontWeight: 800, color: "var(--primary)", marginTop: "2px" }}>{brl(custo3)}</div>
+                              <span style={{ fontSize: "9px", color: "var(--on-surface-variant)" }}>Sem traslado</span>
+                            </div>
 
-                                  {/* Caixa 3: Carro */}
-                                  <div style={{ padding: "10px 12px", borderRadius: "8px", border: "1px solid var(--border)", backgroundColor: "#ffffff" }}>
-                                    <span style={{ fontSize: "10px", color: "var(--on-surface-variant)", textTransform: "uppercase", display: "block" }}>Carro / Traslado</span>
-                                    <div style={{ fontSize: "14px", fontWeight: 800, color: "var(--on-surface)", marginTop: "2px" }}>
-                                      {brl(custo3)}
-                                    </div>
-                                    <span style={{ fontSize: "10px", color: "var(--on-surface-variant)" }}>{custo3 > 0 ? "Contratado" : "Sem traslado"}</span>
-                                  </div>
+                            <div style={{ padding: "10px", borderRadius: "8px", backgroundColor: "#ffffff", border: "1px solid var(--border)" }}>
+                              <span style={{ fontSize: "10px", color: "var(--on-surface-variant)", textTransform: "uppercase", fontWeight: 700 }}>Seguro / Outros</span>
+                              <div style={{ fontSize: "13px", fontWeight: 800, color: "var(--primary)", marginTop: "2px" }}>{brl(custo4)}</div>
+                              <span style={{ fontSize: "9px", color: "var(--on-surface-variant)" }}>Não aplicável</span>
+                            </div>
 
-                                  {/* Caixa 4: Seguro */}
-                                  <div style={{ padding: "10px 12px", borderRadius: "8px", border: "1px solid var(--border)", backgroundColor: "#ffffff" }}>
-                                    <span style={{ fontSize: "10px", color: "var(--on-surface-variant)", textTransform: "uppercase", display: "block" }}>Seguro / Outros</span>
-                                    <div style={{ fontSize: "14px", fontWeight: 800, color: "var(--on-surface)", marginTop: "2px" }}>
-                                      {brl(custo4)}
-                                    </div>
-                                    <span style={{ fontSize: "10px", color: "var(--on-surface-variant)" }}>{custo4 > 0 ? "Apólice internacional" : "Não aplicável"}</span>
-                                  </div>
+                            <div style={{ padding: "10px", borderRadius: "8px", backgroundColor: "#fffbeb", border: "1px solid #fde68a" }}>
+                              <span style={{ fontSize: "10px", color: "#b45309", textTransform: "uppercase", fontWeight: 700 }}>Alimentação / Diária</span>
+                              <div style={{ fontSize: "13px", fontWeight: 800, color: "#d97706", marginTop: "2px" }}>{brl(custo5)}</div>
+                              <span style={{ fontSize: "9px", color: "#b45309" }}>Despesa Financeiro</span>
+                            </div>
 
-                                  {/* Caixa 5: Alimentação / Diária */}
-                                  <div style={{ padding: "10px 12px", borderRadius: "8px", border: "1.5px solid #fed7aa", backgroundColor: "#fffaf5" }}>
-                                    <span style={{ fontSize: "10px", color: "#c2410c", textTransform: "uppercase", display: "block", fontWeight: 700 }}>Alimentação / Diária</span>
-                                    <div style={{ fontSize: "14px", fontWeight: 800, color: "#ea580c", marginTop: "2px" }}>
-                                      {brl(custo5)}
-                                    </div>
-                                    <span style={{ fontSize: "10px", color: "var(--on-surface-variant)" }}>Despesa Consultor</span>
-                                  </div>
+                            <div style={{ padding: "10px", borderRadius: "8px", backgroundColor: "#00152f", color: "#ffffff", border: "1px solid #00152f" }}>
+                              <span style={{ fontSize: "10px", color: "#94a3b8", textTransform: "uppercase", fontWeight: 700 }}>Total Viagem</span>
+                              <div style={{ fontSize: "13px", fontWeight: 800, color: "#38bdf8", marginTop: "2px" }}>{brl(custoTotalViagem)}</div>
+                              <span style={{ fontSize: "9px", color: "#94a3b8" }}>100% Sincronizado</span>
+                            </div>
+                          </div>
 
-                                  {/* Caixa 6: Total Viagem (Destaque Marinho) */}
-                                  <div style={{ padding: "10px 12px", borderRadius: "8px", backgroundColor: "#00152f", color: "#ffffff", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-                                    <span style={{ fontSize: "10px", textTransform: "uppercase", color: "#93c5fd", fontWeight: 700 }}>TOTAL VIAGEM</span>
-                                    <div style={{ fontSize: "14px", fontWeight: 800, color: "#ffffff", marginTop: "2px" }}>
-                                      {brl(custoTotalViagem)}
-                                    </div>
-                                    <span style={{ fontSize: "10px", color: "#93c5fd" }}>Conciliado 100%</span>
-                                  </div>
-                                </div>
+                          {/* Observações da Agência & Informações Contratuais */}
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px", paddingTop: "8px", borderTop: "1px dashed var(--border)" }}>
+                            <div style={{ flex: 1, minWidth: "220px", display: "flex", flexDirection: "column" }}>
+                              <span style={{ fontSize: "10px", color: "var(--on-surface-variant)" }}>
+                                Observações Agência de Viagens
+                              </span>
+                              <span style={{ fontSize: "11px", color: "var(--on-surface)", fontStyle: "italic" }}>
+                                {v?.observacao_agencia || "Nenhuma instrução adicional registrada."}
+                              </span>
+                            </div>
 
-                                {/* Rodapé do Detalhamento: Prazo Prestação de Contas & Observações Agência */}
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    justifyContent: "space-between",
-                                    alignItems: "center",
-                                    flexWrap: "wrap",
-                                    gap: "14px",
-                                    paddingTop: "12px",
-                                    borderTop: "1px solid var(--border)",
-                                    fontSize: "12px",
-                                  }}
-                                >
-                                  {/* Prazo Prestação de Contas */}
-                                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                                    <div
-                                      style={{
-                                        width: "30px",
-                                        height: "30px",
-                                        borderRadius: "50%",
-                                        backgroundColor: infoPrazo.corBg,
-                                        color: infoPrazo.corTexto,
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                      }}
-                                    >
-                                      <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
-                                        {infoPrazo.icone}
-                                      </span>
-                                    </div>
-                                    <div>
-                                      <span style={{ fontSize: "10px", color: "var(--on-surface-variant)", display: "block" }}>
-                                        {infoPrazo.label}
-                                      </span>
-                                      <strong style={{ color: infoPrazo.corTexto, fontSize: "11px" }}>
-                                        {infoPrazo.badgeTexto}
-                                      </strong>
-                                    </div>
-                                  </div>
-
-                                  {/* Observações Agência de Viagens */}
-                                  <div style={{ flex: 1, minWidth: "220px", display: "flex", flexDirection: "column" }}>
-                                    <span style={{ fontSize: "10px", color: "var(--on-surface-variant)" }}>
-                                      Observações Agência de Viagens
-                                    </span>
-                                    <span style={{ fontSize: "11px", color: "var(--on-surface)", fontStyle: "italic" }}>
-                                      {v?.observacao_agencia || "Nenhuma instrução adicional registrada."}
-                                    </span>
-                                  </div>
-
-                                  {/* Dados Contratuais Complementares */}
-                                  <div style={{ fontSize: "11px", color: "var(--on-surface-variant)", textAlign: "right" }}>
-                                    <span>CC: <strong>{cc?.codigo || "—"}</strong> • Contrato: <strong>{cc?.contrato || "—"}</strong></span>
-                                  </div>
-                                </div>
-                              </div>
-                            </td>
-                          </tr>
-                        )}
-                      </React.Fragment>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
+                            <div style={{ fontSize: "11px", color: "var(--on-surface-variant)", textAlign: "right" }}>
+                              <span>CC: <strong>{cc?.codigo || "—"}</strong> • Contrato: <strong>{cc?.contrato || "—"}</strong></span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            )}
           </div>
 
           <div style={{ display: "flex", justifyContent: "space-between", padding: "12px 16px", borderTop: "1px solid var(--border)", fontSize: "12px", color: "var(--on-surface-variant)" }}>
