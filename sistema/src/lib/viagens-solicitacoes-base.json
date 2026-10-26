@@ -9166,7 +9166,7 @@
     "destino": "IMPORTADORES",
     "dataInicial": "2026-03-19",
     "dataFinal": "2026-03-20",
-    "status": "CONCLUIDO",
+    "status": "AGUARDANDO_PRESTACAO_CONTAS",
     "agenciaNome": "FÁTIMA",
     "necessidades": {
       "aereo": false,
@@ -9248,10 +9248,20 @@
         "usuarioNome": "Sistema NNÓS",
         "acao": "SOLICITACAO_CRIADA",
         "detalhes": "Solicitação logística gerada automaticamente a partir da atividade"
+      },
+      {
+        "id": "aud-1792791526227",
+        "dataHora": "2026-10-23T21:38:46.227Z",
+        "perfilUsuario": "CONSULTOR",
+        "usuarioNome": "ALEJANDRO LAPUENTE",
+        "acao": "VOUCHERS_RECEBIMENTO_APROVADO",
+        "detalhes": "Consultor confirmou e aprovou o recebimento dos vouchers e das reservas no sistema."
       }
     ],
     "criadoEm": "2026-10-21T20:17:27.801Z",
-    "atualizadoEm": "2026-10-21T20:17:27.801Z"
+    "atualizadoEm": "2026-10-23T21:38:46.227Z",
+    "vouchersRecebidosAprovadosEm": "2026-10-23T21:38:46.227Z",
+    "vouchersRecebidosAprovadosPor": "ALEJANDRO LAPUENTE"
   },
   {
     "id": "sol-349fb3f5-9b3f-459f-b308-70cc6fd9b747",

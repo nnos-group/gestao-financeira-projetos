@@ -4,8 +4,9 @@ import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import DocumentPreviewModal from "./viagens/DocumentPreviewModal";
 import { ViagemSolicitacao, AnexoDocumento } from "@/lib/viagens-types";
-import { calcularPrazoPrestacaoContas } from "@/lib/date-utils";
+import { calcularPrazoPrestacaoContas, formatarPeriodoBR } from "@/lib/date-utils";
 import { calcularValoresAtividade, verificarEhSocio, verificarEhComissao } from "@/lib/tabela-precos-calculator";
+import { AgendaBloqueio, verificarConflitoBloqueio } from "@/lib/agenda-bloqueios";
 
 export type ViagemItem = {
   id: string;
@@ -497,6 +498,22 @@ export default function FloatingCardsList({
   const [modalPerfilSelecionado, setModalPerfilSelecionado] = useState("");
   const [modalAtividadeTexto, setModalAtividadeTexto] = useState("");
   const [modalLocalTexto, setModalLocalTexto] = useState("");
+  const [modalDataInicial, setModalDataInicial] = useState("");
+  const [modalDataFinal, setModalDataFinal] = useState("");
+
+  // Bloqueios de Agenda dos Consultores
+  const [bloqueiosAgenda, setBloqueiosAgenda] = useState<AgendaBloqueio[]>([]);
+
+  useEffect(() => {
+    fetch("/api/consultor/bloqueios")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.ok && Array.isArray(data.bloqueios)) {
+          setBloqueiosAgenda(data.bloqueios);
+        }
+      })
+      .catch((err) => console.error("Erro ao carregar bloqueios de agenda:", err));
+  }, []);
 
   const [excluindoId, setExcluindoId] = useState<string | null>(null);
   const [dadosDuplicacao, setDadosDuplicacao] = useState<{
@@ -568,6 +585,8 @@ export default function FloatingCardsList({
       setModalPerfilSelecionado(modalItem.perfil || cons?.perfil || "");
       setModalAtividadeTexto(modalItem.atividade || "");
       setModalLocalTexto(modalItem.local || "");
+      setModalDataInicial(modalItem.data_inicial || "");
+      setModalDataFinal(modalItem.data_final || "");
       setModalHoras(modalItem.horas != null ? String(modalItem.horas) : "");
       setModalRegiao((modalItem.regiao as "BRA" | "LATAM") || "BRA");
       setModalCustoConsultor(formatarMoedaValor(modalItem.custo_consultor));
@@ -614,6 +633,30 @@ export default function FloatingCardsList({
         (c.nome_completo || "").toLowerCase().includes(term)
     );
   }, [consultoresLista, consultorBusca]);
+
+  // Checagem de Conflito de Bloqueio de Agenda para Nova Atividade
+  const conflitoBloqueioNovo = useMemo(() => {
+    const nome = consultorSelecionado?.nome;
+    if (!nome || !novaDataInicial) return null;
+    return verificarConflitoBloqueio(
+      bloqueiosAgenda,
+      nome,
+      novaDataInicial,
+      novaDataFinal || novaDataInicial
+    );
+  }, [bloqueiosAgenda, consultorSelecionado, novaDataInicial, novaDataFinal]);
+
+  // Checagem de Conflito de Bloqueio de Agenda para Edição de Atividade
+  const conflitoBloqueioModal = useMemo(() => {
+    const nome = modalConsultorSelecionado?.nome || modalItem?.consultores?.nome;
+    if (!nome || !modalDataInicial) return null;
+    return verificarConflitoBloqueio(
+      bloqueiosAgenda,
+      nome,
+      modalDataInicial,
+      modalDataFinal || modalDataInicial
+    );
+  }, [bloqueiosAgenda, modalConsultorSelecionado, modalItem, modalDataInicial, modalDataFinal]);
 
   // Cálculos Automáticos de Tabela de Preços e Custo Consultor (+6% Sócios exceto Comissão)
   const anoAtividadeNovo = useMemo(() => {
@@ -984,6 +1027,17 @@ export default function FloatingCardsList({
       return;
     }
 
+    // Alerta de Bloqueio de Agenda do Consultor
+    if (conflitoBloqueioModal) {
+      const confirma = window.confirm(
+        `⚠️ ATENÇÃO: O período selecionado (${formatarPeriodoBR(conflitoBloqueioModal.dataInicial, conflitoBloqueioModal.dataFinal)}) está BLOQUEADO pelo consultor ${conflitoBloqueioModal.consultorNome} para: "${conflitoBloqueioModal.motivo}".\n\nDeseja realmente continuar e salvar esta atividade mesmo com a indisponibilidade informada?`
+      );
+      if (!confirma) {
+        setSalvandoModal(false);
+        return;
+      }
+    }
+
     let observacaoAgenciaModal: string | null = null;
     if (modalDemandaLogistica) {
       const blocos: string[] = [];
@@ -1168,6 +1222,17 @@ export default function FloatingCardsList({
       );
       setSalvandoNovo(false);
       return;
+    }
+
+    // Alerta de Bloqueio de Agenda do Consultor
+    if (conflitoBloqueioNovo) {
+      const confirma = window.confirm(
+        `⚠️ ATENÇÃO: O período selecionado (${formatarPeriodoBR(conflitoBloqueioNovo.dataInicial, conflitoBloqueioNovo.dataFinal)}) está BLOQUEADO pelo consultor ${conflitoBloqueioNovo.consultorNome} para: "${conflitoBloqueioNovo.motivo}".\n\nDeseja realmente continuar e agendar esta atividade mesmo com a indisponibilidade informada?`
+      );
+      if (!confirma) {
+        setSalvandoNovo(false);
+        return;
+      }
     }
 
     // Constrói a competência correspondente à data inicial para garantir visibilidade correta
@@ -2501,7 +2566,8 @@ export default function FloatingCardsList({
                     <input
                       type="date"
                       name="data_inicial"
-                      defaultValue={modalItem.data_inicial || ""}
+                      value={modalDataInicial}
+                      onChange={(e) => setModalDataInicial(e.target.value)}
                     />
                   </div>
                   <div className="form-field">
@@ -2509,7 +2575,8 @@ export default function FloatingCardsList({
                     <input
                       type="date"
                       name="data_final"
-                      defaultValue={modalItem.data_final || ""}
+                      value={modalDataFinal}
+                      onChange={(e) => setModalDataFinal(e.target.value)}
                     />
                   </div>
                   <div className="form-field">
@@ -2524,6 +2591,42 @@ export default function FloatingCardsList({
                     />
                   </div>
                 </div>
+
+                {/* Banner de Aviso de Período Bloqueado pelo Consultor */}
+                {conflitoBloqueioModal && (
+                  <div
+                    style={{
+                      marginTop: "-4px",
+                      marginBottom: "12px",
+                      padding: "10px 14px",
+                      borderRadius: "8px",
+                      backgroundColor: "#fffbeb",
+                      border: "1px solid #f59e0b",
+                      color: "#92400e",
+                      fontSize: "12px",
+                      display: "flex",
+                      alignItems: "flex-start",
+                      gap: "10px",
+                    }}
+                  >
+                    <span className="material-symbols-outlined" style={{ color: "#d97706", fontSize: "20px", flexShrink: 0 }}>
+                      event_busy
+                    </span>
+                    <div style={{ flex: 1 }}>
+                      <strong style={{ display: "block", color: "#b45309", marginBottom: "2px" }}>
+                        ⚠️ Período Bloqueado pelo Consultor
+                      </strong>
+                      <span>
+                        Este período ({formatarPeriodoBR(conflitoBloqueioModal.dataInicial, conflitoBloqueioModal.dataFinal)}) está bloqueado pelo consultor <strong>{conflitoBloqueioModal.consultorNome}</strong> para <strong>{conflitoBloqueioModal.motivo}</strong> ou momento off.
+                      </span>
+                      {conflitoBloqueioModal.observacoes && (
+                        <span style={{ display: "block", fontSize: "11px", fontStyle: "italic", marginTop: "4px", color: "#78350f" }}>
+                          Obs: {conflitoBloqueioModal.observacoes}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {/* Card Assistente de Tabela de Preços e Custo Consultor */}
                 <div
@@ -3371,6 +3474,42 @@ export default function FloatingCardsList({
                     />
                   </div>
                 </div>
+
+                {/* Banner de Aviso de Período Bloqueado pelo Consultor */}
+                {conflitoBloqueioNovo && (
+                  <div
+                    style={{
+                      marginTop: "-4px",
+                      marginBottom: "12px",
+                      padding: "10px 14px",
+                      borderRadius: "8px",
+                      backgroundColor: "#fffbeb",
+                      border: "1px solid #f59e0b",
+                      color: "#92400e",
+                      fontSize: "12px",
+                      display: "flex",
+                      alignItems: "flex-start",
+                      gap: "10px",
+                    }}
+                  >
+                    <span className="material-symbols-outlined" style={{ color: "#d97706", fontSize: "20px", flexShrink: 0 }}>
+                      event_busy
+                    </span>
+                    <div style={{ flex: 1 }}>
+                      <strong style={{ display: "block", color: "#b45309", marginBottom: "2px" }}>
+                        ⚠️ Período Bloqueado pelo Consultor
+                      </strong>
+                      <span>
+                        Este período ({formatarPeriodoBR(conflitoBloqueioNovo.dataInicial, conflitoBloqueioNovo.dataFinal)}) está bloqueado pelo consultor <strong>{conflitoBloqueioNovo.consultorNome}</strong> para <strong>{conflitoBloqueioNovo.motivo}</strong> ou momento off.
+                      </span>
+                      {conflitoBloqueioNovo.observacoes && (
+                        <span style={{ display: "block", fontSize: "11px", fontStyle: "italic", marginTop: "4px", color: "#78350f" }}>
+                          Obs: {conflitoBloqueioNovo.observacoes}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {/* Card Assistente de Tabela de Preços e Custo Consultor */}
                 <div

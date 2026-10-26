@@ -26,35 +26,44 @@ export interface PagamentoItem {
 const CATEGORIAS_DOCUMENTO = [
   "NF",
   "RDV",
-  "NNÓS MONEY",
-  "PRÓ-LABORE",
-  "AJUDA DE CUSTO",
-  "APORTE",
 ] as const;
 
 const ESTILOS_CATEGORIA_DOC: Record<
   string,
-  { bg: string; text: string; border: string; chipActiveBg: string }
+  { bg: string; text: string; border: string; chipActiveBg: string; chipActiveText: string; chipInactiveBg: string; chipInactiveText: string; chipInactiveBorder: string; badgeBg: string; badgeText: string; badgeBorder: string; }
 > = {
-  "NF": { bg: "#e0f2fe", text: "#0369a1", border: "#bae6fd", chipActiveBg: "#0284c7" },
-  "RDV": { bg: "#fef3c7", text: "#92400e", border: "#fde68a", chipActiveBg: "#d97706" },
-  "NNÓS MONEY": { bg: "#d1fae5", text: "#065f46", border: "#a7f3d0", chipActiveBg: "#059669" },
-  "PRÓ-LABORE": { bg: "#ede9fe", text: "#5b21b6", border: "#ddd6fe", chipActiveBg: "#7c3aed" },
-  "AJUDA DE CUSTO": { bg: "#cffafe", text: "#155e75", border: "#a5f3fc", chipActiveBg: "#0891b2" },
-  "APORTE": { bg: "#ffe4e6", text: "#9f1239", border: "#fecdd3", chipActiveBg: "#e11d48" },
+  "NF": {
+    bg: "#e0f2fe",
+    text: "#0369a1",
+    border: "#bae6fd",
+    chipActiveBg: "#0284c7",
+    chipActiveText: "#ffffff",
+    chipInactiveBg: "#f0f9ff",
+    chipInactiveText: "#0369a1",
+    chipInactiveBorder: "#bae6fd",
+    badgeBg: "#e0f2fe",
+    badgeText: "#0369a1",
+    badgeBorder: "#bae6fd",
+  },
+  "RDV": {
+    bg: "#fef3c7",
+    text: "#92400e",
+    border: "#fde68a",
+    chipActiveBg: "#d97706",
+    chipActiveText: "#ffffff",
+    chipInactiveBg: "#fffbeb",
+    chipInactiveText: "#92400e",
+    chipInactiveBorder: "#fde68a",
+    badgeBg: "#fef3c7",
+    badgeText: "#92400e",
+    badgeBorder: "#fde68a",
+  },
 };
 
-function classificarCategoriaDocumento(p: { numeroNota?: string; tipoDespesa?: string; categoriaDoc?: string }): string {
-  if (p.categoriaDoc && (CATEGORIAS_DOCUMENTO as readonly string[]).includes(p.categoriaDoc)) {
-    return p.categoriaDoc;
-  }
+function classificarCategoriaDocumento(p: { numeroNota?: string; tipoDespesa?: string; categoriaDoc?: string }): "NF" | "RDV" {
+  if (p.categoriaDoc === "RDV") return "RDV";
   const nota = String(p.numeroNota || "").trim().toUpperCase();
   const despesa = String(p.tipoDespesa || "").trim().toUpperCase();
-
-  if (nota.includes("NNÓS MONEY") || nota.includes("NNOS MONEY")) return "NNÓS MONEY";
-  if (nota.includes("PRÓ-LABORE") || nota.includes("PRO-LABORE") || nota.includes("PRÓ LABORE") || nota.includes("PRO LABORE")) return "PRÓ-LABORE";
-  if (nota.includes("AJUDA DE CUSTO") || despesa.includes("AJUDA DE CUSTO")) return "AJUDA DE CUSTO";
-  if (nota.includes("APORTE") || despesa.includes("APORTE")) return "APORTE";
   if (nota.includes("RDV") || despesa.includes("RDV") || despesa.includes("RELATÓRIO DE VIAGEM")) return "RDV";
   return "NF";
 }
@@ -113,16 +122,12 @@ export default function ConsultorPagamentosPage() {
     });
   }, [todosPagamentos, consultorAtivo]);
 
-  // Contagem dinâmica por categoria para os chips
+  // Contagem dinâmica por categoria para os chips (Apenas NF e RDV)
   const contagemCategorias = useMemo(() => {
     const counts: Record<string, number> = {
       "TODAS": pagamentosDoConsultor.length,
       "NF": 0,
       "RDV": 0,
-      "NNÓS MONEY": 0,
-      "PRÓ-LABORE": 0,
-      "AJUDA DE CUSTO": 0,
-      "APORTE": 0,
     };
     pagamentosDoConsultor.forEach((p) => {
       const cat = classificarCategoriaDocumento(p);
@@ -361,274 +366,472 @@ export default function ConsultorPagamentosPage() {
         </div>
 
         {/* 4 Cards de Indicadores Financeiros (KPIs Idênticos ao Oficial) */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "14px" }}>
-          {/* Card 1: Total Geral */}
-          <div style={{ padding: "18px 20px", borderRadius: "14px", backgroundColor: "var(--surface-container-lowest)", border: "1px solid var(--border)", boxShadow: "0 1px 3px rgba(0,0,0,0.02)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div>
-              <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--on-surface-variant)" }}>TOTAL GERAL</span>
-              <div style={{ fontSize: "22px", fontWeight: 800, color: "var(--primary)", marginTop: "4px" }}>
-                {brl(kpis.totalValor)}
-              </div>
-              <span style={{ fontSize: "11px", color: "var(--on-surface-variant)" }}>
-                {kpis.countTotal} lançamentos
-              </span>
+        {/* 3 Cards de Indicadores Financeiros (Idêntico ao Print 1 - Sem Cartão Corporativo) */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "14px" }}>
+          {/* Card 1: Total Lançamentos */}
+          <div style={{ padding: "18px 20px", borderRadius: "14px", backgroundColor: "var(--surface-container-lowest)", border: "1px solid var(--border)", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
+            <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--on-surface-variant)", letterSpacing: "0.04em" }}>
+              TOTAL LANÇAMENTOS
+            </span>
+            <div style={{ fontSize: "22px", fontWeight: 800, color: "var(--primary)", marginTop: "4px" }}>
+              {brl(kpis.totalValor)}
             </div>
-            <div style={{ width: "40px", height: "40px", borderRadius: "10px", backgroundColor: "rgba(0,21,47,0.06)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--primary)" }}>
-              <span className="material-symbols-outlined" style={{ fontSize: "22px" }}>account_balance_wallet</span>
-            </div>
+            <span style={{ fontSize: "11px", color: "var(--on-surface-variant)" }}>
+              {kpis.countTotal} registros no filtro
+            </span>
           </div>
 
-          {/* Card 2: Pago */}
-          <div style={{ padding: "18px 20px", borderRadius: "14px", backgroundColor: "var(--surface-container-lowest)", border: "1px solid var(--border)", boxShadow: "0 1px 3px rgba(0,0,0,0.02)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div>
-              <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "#16a34a" }}>PAGO</span>
-              <div style={{ fontSize: "22px", fontWeight: 800, color: "#16a34a", marginTop: "4px" }}>
-                {brl(kpis.totalPago)}
-              </div>
-              <span style={{ fontSize: "11px", color: "var(--on-surface-variant)" }}>
-                {kpis.countPago} liquidados
-              </span>
+          {/* Card 2: Efetivamente Pago */}
+          <div style={{ padding: "18px 20px", borderRadius: "14px", backgroundColor: "var(--surface-container-lowest)", border: "1px solid var(--border)", boxShadow: "0 1px 3px rgba(0,0,0,0.02)", position: "relative" }}>
+            <span style={{ position: "absolute", top: "18px", right: "20px", width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#16a34a" }} />
+            <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "#16a34a", letterSpacing: "0.04em" }}>
+              EFETIVAMENTE PAGO
+            </span>
+            <div style={{ fontSize: "22px", fontWeight: 800, color: "#16a34a", marginTop: "4px" }}>
+              {brl(kpis.totalPago)}
             </div>
-            <div style={{ width: "40px", height: "40px", borderRadius: "10px", backgroundColor: "#dcfce7", display: "flex", alignItems: "center", justifyContent: "center", color: "#16a34a" }}>
-              <span className="material-symbols-outlined" style={{ fontSize: "22px" }}>check_circle</span>
-            </div>
+            <span style={{ fontSize: "11px", color: "var(--on-surface-variant)" }}>
+              Liquidado em conta corrente
+            </span>
           </div>
 
           {/* Card 3: A Pagar */}
-          <div style={{ padding: "18px 20px", borderRadius: "14px", backgroundColor: "var(--surface-container-lowest)", border: "1px solid var(--border)", boxShadow: "0 1px 3px rgba(0,0,0,0.02)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div>
-              <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "#ea580c" }}>A PAGAR</span>
-              <div style={{ fontSize: "22px", fontWeight: 800, color: "#ea580c", marginTop: "4px" }}>
-                {brl(kpis.totalAPagar)}
-              </div>
-              <span style={{ fontSize: "11px", color: "var(--on-surface-variant)" }}>
-                {kpis.countAPagar} pendentes
-              </span>
+          <div style={{ padding: "18px 20px", borderRadius: "14px", backgroundColor: "var(--surface-container-lowest)", border: "1px solid var(--border)", boxShadow: "0 1px 3px rgba(0,0,0,0.02)", position: "relative" }}>
+            <span style={{ position: "absolute", top: "18px", right: "20px", width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#ea580c" }} />
+            <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "#ea580c", letterSpacing: "0.04em" }}>
+              A PAGAR
+            </span>
+            <div style={{ fontSize: "22px", fontWeight: 800, color: "#ea580c", marginTop: "4px" }}>
+              {brl(kpis.totalAPagar)}
             </div>
-            <div style={{ width: "40px", height: "40px", borderRadius: "10px", backgroundColor: "#ffedd5", display: "flex", alignItems: "center", justifyContent: "center", color: "#ea580c" }}>
-              <span className="material-symbols-outlined" style={{ fontSize: "22px" }}>schedule</span>
-            </div>
-          </div>
-
-          {/* Card 4: Cartão Corporativo */}
-          <div style={{ padding: "18px 20px", borderRadius: "14px", backgroundColor: "var(--surface-container-lowest)", border: "1px solid var(--border)", boxShadow: "0 1px 3px rgba(0,0,0,0.02)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div>
-              <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--secondary)" }}>CARTÃO CORPORATIVO</span>
-              <div style={{ fontSize: "22px", fontWeight: 800, color: "var(--secondary)", marginTop: "4px" }}>
-                {brl(kpis.totalCartao)}
-              </div>
-              <span style={{ fontSize: "11px", color: "var(--on-surface-variant)" }}>
-                {kpis.countCartao} faturados
-              </span>
-            </div>
-            <div style={{ width: "40px", height: "40px", borderRadius: "10px", backgroundColor: "rgba(0,103,129,0.08)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--secondary)" }}>
-              <span className="material-symbols-outlined" style={{ fontSize: "22px" }}>credit_card</span>
-            </div>
+            <span style={{ fontSize: "11px", color: "var(--on-surface-variant)" }}>
+              BMs e despesas em fluxo
+            </span>
           </div>
         </div>
 
-        {/* Barra de Busca e Filtros Dropdowns (Idêntico ao Oficial) */}
+        {/* Barra de Busca e Filtros Dropdowns (Idêntico ao Print 1) */}
         <div
           style={{
             backgroundColor: "var(--surface-container-lowest)",
-            padding: "12px 18px",
-            borderRadius: "12px",
+            padding: "16px 20px",
+            borderRadius: "14px",
             border: "1px solid var(--border)",
             display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            flexWrap: "wrap",
-            gap: "12px",
+            flexDirection: "column",
+            gap: "14px",
             boxShadow: "0 1px 3px rgba(0,0,0,0.02)",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", flex: 1, minWidth: "280px" }}>
-            <span className="material-symbols-outlined" style={{ color: "var(--on-surface-variant)", fontSize: "18px" }}>
-              search
-            </span>
-            <input
-              type="text"
-              placeholder="Buscar por projeto, nota/recibo, despesa ou BM..."
-              value={busca}
-              onChange={(e) => setBusca(e.target.value)}
-              style={{
-                width: "100%",
-                border: "none",
-                outline: "none",
-                fontSize: "13px",
-                background: "transparent",
-                color: "var(--on-surface)",
-              }}
-            />
+          {/* Linha 1: Input de Busca + Dropdowns */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", flex: 1, minWidth: "260px", backgroundColor: "var(--surface)", border: "1px solid var(--border)", borderRadius: "8px", padding: "6px 12px" }}>
+              <span className="material-symbols-outlined" style={{ color: "var(--on-surface-variant)", fontSize: "18px" }}>
+                search
+              </span>
+              <input
+                type="text"
+                placeholder="Buscar por projeto, nota/recibo, despesa ou BM..."
+                value={busca}
+                onChange={(e) => setBusca(e.target.value)}
+                style={{
+                  width: "100%",
+                  border: "none",
+                  outline: "none",
+                  fontSize: "13px",
+                  background: "transparent",
+                  color: "var(--on-surface)",
+                }}
+              />
+              {busca && (
+                <button
+                  type="button"
+                  onClick={() => setBusca("")}
+                  style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--on-surface-variant)", padding: 0 }}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>close</span>
+                </button>
+              )}
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+              <ModernDropdown
+                value={filtroTipo}
+                onChange={(val) => setFiltroTipo(String(val))}
+                options={[
+                  { value: "TODOS", label: "Todos os Tipos" },
+                  { value: "PARCEIRO", label: "PARCEIRO" },
+                  { value: "SÓCIO", label: "SÓCIO" },
+                  { value: "FUNCIONÁRIO", label: "FUNCIONÁRIO" },
+                  { value: "FORNECEDOR", label: "FORNECEDOR" },
+                ]}
+                icon="badge"
+                searchable={false}
+                minWidth={170}
+              />
+
+              <ModernDropdown
+                value={filtroStatus}
+                onChange={(val) => setFiltroStatus(String(val))}
+                options={[
+                  { value: "TODOS", label: "Todos os Status" },
+                  { value: "Pago", label: "Pago" },
+                  { value: "A Pagar", label: "A Pagar" },
+                ]}
+                icon="filter_list"
+                searchable={false}
+                minWidth={170}
+              />
+            </div>
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
-            <ModernDropdown
-              value={filtroStatus}
-              onChange={(val) => setFiltroStatus(String(val))}
-              options={[
-                { value: "TODOS", label: "Todos os Status" },
-                { value: "Pago", label: "Pago" },
-                { value: "A Pagar", label: "A Pagar" },
-                { value: "Cartão Corporativo", label: "Cartão Corporativo" },
-              ]}
-              icon="filter_list"
-              searchable={false}
-              minWidth={170}
-            />
+          {/* Linha 2: Chips de Documentos (Apenas NF e RDV conforme solicitado) */}
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+            <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--on-surface-variant)", letterSpacing: "0.04em" }}>
+              DOCUMENTO:
+            </span>
+            <button
+              type="button"
+              onClick={() => setFiltroCategoria("TODAS")}
+              style={{
+                padding: "4px 12px",
+                borderRadius: "20px",
+                fontSize: "11px",
+                fontWeight: 700,
+                cursor: "pointer",
+                border: "1px solid var(--border)",
+                backgroundColor: filtroCategoria === "TODAS" ? "#002b49" : "var(--surface-container-low, #f8fafc)",
+                color: filtroCategoria === "TODAS" ? "#ffffff" : "var(--on-surface)",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+              }}
+            >
+              <span>TODOS</span>
+              <span style={{ fontSize: "10px", padding: "1px 6px", borderRadius: "10px", backgroundColor: filtroCategoria === "TODAS" ? "rgba(255,255,255,0.25)" : "var(--surface-container)" }}>
+                {contagemCategorias["TODAS"]}
+              </span>
+            </button>
 
-            <ModernDropdown
-              value={filtroTipo}
-              onChange={(val) => setFiltroTipo(String(val))}
-              options={[
-                { value: "TODOS", label: "Todos os Tipos" },
-                { value: "PARCEIRO", label: "PARCEIRO" },
-                { value: "SÓCIO", label: "SÓCIO" },
-                { value: "FUNCIONÁRIO", label: "FUNCIONÁRIO" },
-                { value: "FORNECEDOR", label: "FORNECEDOR" },
-              ]}
-              icon="badge"
-              searchable={false}
-              minWidth={160}
-            />
+            {CATEGORIAS_DOCUMENTO.map((cat) => {
+              const estilo = ESTILOS_CATEGORIA_DOC[cat];
+              const isAtiva = filtroCategoria === cat;
+              const count = contagemCategorias[cat] || 0;
+
+              return (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => setFiltroCategoria(cat)}
+                  style={{
+                    padding: "4px 12px",
+                    borderRadius: "20px",
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    border: isAtiva ? `1px solid ${estilo.chipActiveBg}` : `1px solid ${estilo.chipInactiveBorder}`,
+                    backgroundColor: isAtiva ? estilo.chipActiveBg : estilo.chipInactiveBg,
+                    color: isAtiva ? estilo.chipActiveText : estilo.chipInactiveText,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    transition: "all 0.15s ease",
+                  }}
+                >
+                  <span>{cat}</span>
+                  <span
+                    style={{
+                      fontSize: "10px",
+                      padding: "1px 6px",
+                      borderRadius: "10px",
+                      backgroundColor: isAtiva ? "rgba(255,255,255,0.25)" : estilo.bg,
+                      color: isAtiva ? "#ffffff" : estilo.text,
+                      fontWeight: 800,
+                    }}
+                  >
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Linha 3: Barra de Competência (Ano e Meses) */}
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap", paddingTop: "4px", borderTop: "1px solid var(--border)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", fontWeight: 700, color: "var(--on-surface)" }}>
+              <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "var(--primary)" }}>calendar_today</span>
+              <span>Competência: {anoSelecionado}</span>
+            </div>
+
+            <div style={{ height: "18px", width: "1px", backgroundColor: "var(--border)" }} />
+
+            <div style={{ display: "flex", gap: "2px", flexWrap: "wrap" }}>
+              <button
+                type="button"
+                onClick={() => setMesSelecionado(null)}
+                style={{
+                  padding: "4px 10px",
+                  borderRadius: "6px",
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  border: "none",
+                  cursor: "pointer",
+                  backgroundColor: mesSelecionado === null ? "#002b49" : "transparent",
+                  color: mesSelecionado === null ? "#ffffff" : "var(--on-surface-variant)",
+                }}
+              >
+                Todos
+              </button>
+              {mesesChips.map((m) => {
+                const isAtivo = mesSelecionado === m.num;
+                return (
+                  <button
+                    key={m.num}
+                    type="button"
+                    onClick={() => setMesSelecionado(m.num)}
+                    style={{
+                      padding: "4px 8px",
+                      borderRadius: "6px",
+                      fontSize: "11px",
+                      fontWeight: isAtivo ? 800 : 500,
+                      border: "none",
+                      cursor: "pointer",
+                      backgroundColor: isAtivo ? "#002b49" : "transparent",
+                      color: isAtivo ? "#ffffff" : "var(--on-surface-variant)",
+                      transition: "all 0.15s ease",
+                    }}
+                  >
+                    {m.rotulo}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 
-        {/* Tabela Completa de Pagamentos (Layout Idêntico a /pagamentos) */}
+        {/* Tabela de Pagamentos (Layout Idêntico ao Print 1) */}
         <div
           style={{
             backgroundColor: "var(--surface-container-lowest)",
-            borderRadius: "14px",
+            borderRadius: "12px",
             border: "1px solid var(--border)",
             overflow: "hidden",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.03)",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.02)",
             width: "100%",
           }}
         >
+          {/* Header Superior da Tabela Turquesa (Idêntico ao Print 1) */}
+          <div
+            style={{
+              padding: "12px 18px",
+              backgroundColor: "#00a3ad",
+              color: "#ffffff",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              fontSize: "12px",
+              fontWeight: 700,
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>table_chart</span>
+              <span style={{ letterSpacing: "0.5px", textTransform: "uppercase" }}>PAGAMENTOS &amp; REPASSES OPERACIONAIS</span>
+            </div>
+            <span style={{ fontSize: "11px", backgroundColor: "rgba(255,255,255,0.2)", padding: "3px 10px", borderRadius: "999px", fontWeight: 700 }}>
+              {pagamentosFiltrados.length} Lançamentos Registrados
+            </span>
+          </div>
+
           <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "12px" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "11.5px", textAlign: "left" }}>
               <thead>
                 <tr
                   style={{
-                    backgroundColor: "var(--surface-container-low)",
-                    borderBottom: "1px solid var(--border)",
-                    color: "var(--on-surface-variant)",
-                    fontSize: "11px",
+                    backgroundColor: "#f8fafc",
+                    borderBottom: "1px solid #e2e8f0",
+                    color: "#475569",
                     textTransform: "uppercase",
+                    fontSize: "10px",
+                    fontWeight: 700,
+                    letterSpacing: "0.04em",
+                    whiteSpace: "nowrap",
                   }}
                 >
-                  <th style={{ padding: "12px 16px" }}>Realizado</th>
-                  <th style={{ padding: "12px 16px" }}>Data Pagto</th>
-                  <th style={{ padding: "12px 16px" }}>Favorecido / Consultor</th>
-                  <th style={{ padding: "12px 16px" }}>Projeto / Centro de Custo</th>
-                  <th style={{ padding: "12px 16px" }}>Número da Nota / Doc</th>
-                  <th style={{ padding: "12px 16px" }}>Categoria</th>
-                  <th style={{ padding: "12px 16px" }}>Tipo de Despesa</th>
-                  <th style={{ padding: "12px 16px", textAlign: "right" }}>Valor (R$)</th>
-                  <th style={{ padding: "12px 16px", textAlign: "center" }}>Status</th>
+                  <th style={{ padding: "10px 14px", width: "85px" }}>Realizado</th>
+                  <th style={{ padding: "10px 12px", width: "90px" }}>Data Pgto</th>
+                  <th style={{ padding: "10px 14px", minWidth: "160px" }}>Consultor / Beneficiário</th>
+                  <th style={{ padding: "10px 12px", width: "100px", textAlign: "center" }}>Tipo</th>
+                  <th style={{ padding: "10px 14px", minWidth: "180px" }}>Projeto</th>
+                  <th style={{ padding: "10px 12px", width: "135px", textAlign: "center" }}>Nº Nota / RDV</th>
+                  <th style={{ padding: "10px 14px", textAlign: "right", width: "110px" }}>Valor</th>
+                  <th style={{ padding: "10px 12px", width: "105px" }}>Status</th>
+                  <th style={{ padding: "10px 10px", textAlign: "center", width: "65px" }}>BM</th>
+                  <th style={{ padding: "10px 14px", minWidth: "100px" }}>Obs.</th>
+                  <th style={{ padding: "10px 12px", textAlign: "center", width: "60px" }}>Ações</th>
                 </tr>
               </thead>
               <tbody>
                 {pagamentosFiltrados.length === 0 ? (
                   <tr>
-                    <td colSpan={9} style={{ padding: "36px", textAlign: "center", color: "var(--on-surface-variant)" }}>
+                    <td colSpan={11} style={{ padding: "36px", textAlign: "center", color: "var(--on-surface-variant)" }}>
                       Nenhum registro de pagamento encontrado para os filtros selecionados.
                     </td>
                   </tr>
                 ) : (
-                  pagamentosFiltrados.map((p, idx) => {
-                    const catDoc = classificarCategoriaDocumento(p);
-                    const estiloCat = ESTILOS_CATEGORIA_DOC[catDoc] || ESTILOS_CATEGORIA_DOC["NF"];
-                    const isPago = p.status === "Pago";
-                    const isCartao = p.status === "Cartão Corporativo";
+                  pagamentosFiltrados.map((item, idx) => {
+                    const rawNota = (item.numeroNota || "").trim();
+                    const isNFBM = rawNota.toUpperCase().startsWith("NF BM") || rawNota.toUpperCase().startsWith("NF-BM");
+                    const notaLimpa = (!rawNota || isNFBM || rawNota === "—") ? "—" : rawNota;
+                    const isVazio = notaLimpa === "—";
+                    const catDoc = classificarCategoriaDocumento(item);
+                    const estilo = ESTILOS_CATEGORIA_DOC[catDoc] || ESTILOS_CATEGORIA_DOC["NF"];
+                    const isPago = item.status === "Pago";
 
                     return (
                       <tr
-                        key={p.id || idx}
+                        key={item.id || idx}
                         style={{
-                          borderBottom: "1px solid var(--border)",
-                          backgroundColor: idx % 2 === 1 ? "var(--surface-container-low)" : "transparent",
+                          borderBottom: "1px solid #f1f5f9",
+                          backgroundColor: idx % 2 === 0 ? "#ffffff" : "#fcfcfd",
+                          transition: "background-color 0.15s ease",
                         }}
+                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f8fafc")}
+                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = idx % 2 === 0 ? "#ffffff" : "#fcfcfd")}
                       >
-                        <td style={{ padding: "12px 16px", fontWeight: 700, color: "var(--primary)" }}>
-                          {p.realizado}
+                        {/* Realizado */}
+                        <td style={{ padding: "10px 14px", fontWeight: 700, color: "#64748b", fontSize: "11px", whiteSpace: "nowrap" }}>
+                          {item.realizado}
                         </td>
-                        <td style={{ padding: "12px 16px", color: "var(--on-surface)" }}>
-                          {p.dataPagto}
+
+                        {/* Data Pgto */}
+                        <td style={{ padding: "10px 12px", fontWeight: 600, color: "#0f172a", whiteSpace: "nowrap" }}>
+                          {item.dataPagto}
                         </td>
-                        <td style={{ padding: "12px 16px" }}>
-                          <div style={{ fontWeight: 700, color: "var(--primary)" }}>{p.consultor}</div>
+
+                        {/* Consultor / Beneficiário */}
+                        <td style={{ padding: "10px 14px", fontWeight: 700, color: "#0f2a4a", whiteSpace: "nowrap" }}>
+                          {item.consultor}
+                        </td>
+
+                        {/* Tipo (Centralizado) */}
+                        <td style={{ padding: "10px 12px", textAlign: "center", whiteSpace: "nowrap" }}>
                           <span
                             style={{
+                              display: "inline-block",
+                              textAlign: "center",
+                              padding: "2px 8px",
+                              borderRadius: "4px",
                               fontSize: "10px",
                               fontWeight: 700,
-                              padding: "1px 6px",
-                              borderRadius: "4px",
-                              backgroundColor: "var(--surface-container)",
-                              color: "var(--on-surface-variant)",
-                              display: "inline-block",
-                              marginTop: "2px",
+                              backgroundColor:
+                                item.tipo === "SÓCIO"
+                                  ? "#f3e8ff"
+                                  : item.tipo === "FUNCIONÁRIO"
+                                  ? "#dcfce7"
+                                  : "#e0f2fe",
+                              color:
+                                item.tipo === "SÓCIO"
+                                  ? "#6b21a8"
+                                  : item.tipo === "FUNCIONÁRIO"
+                                  ? "#166534"
+                                  : "#0369a1",
                             }}
                           >
-                            {p.tipo || "PARCEIRO"}
+                            {item.tipo || "PARCEIRO"}
                           </span>
                         </td>
-                        <td style={{ padding: "12px 16px" }}>
-                          <div style={{ fontWeight: 600, color: "var(--on-surface)" }}>{p.projeto}</div>
-                          {p.centroCusto && (
-                            <div style={{ fontSize: "11px", color: "var(--on-surface-variant)", marginTop: "2px" }}>
-                              CC: {p.centroCusto}
-                            </div>
-                          )}
+
+                        {/* Projeto */}
+                        <td style={{ padding: "10px 14px", fontWeight: 600, color: "#1e293b", whiteSpace: "nowrap" }}>
+                          {item.projeto}
                         </td>
-                        <td style={{ padding: "12px 16px", fontFamily: "monospace", fontSize: "12px", color: "var(--on-surface)" }}>
-                          {p.numeroNota}
-                          {p.bm && (
-                            <span style={{ display: "block", fontSize: "10px", color: "var(--secondary)", fontWeight: 700 }}>
-                              BM {p.bm}
-                            </span>
-                          )}
-                        </td>
-                        <td style={{ padding: "12px 16px" }}>
+
+                        {/* Nº Nota / RDV com Cor Correspondente ao Tipo */}
+                        <td style={{ padding: "10px 12px", textAlign: "center", whiteSpace: "nowrap" }}>
                           <span
+                            title={`Documento: ${catDoc} - ${notaLimpa}`}
                             style={{
-                              fontSize: "10px",
-                              fontWeight: 800,
-                              padding: "2px 8px",
-                              borderRadius: "999px",
-                              backgroundColor: estiloCat.bg,
-                              color: estiloCat.text,
-                              border: `1px solid ${estiloCat.border}`,
                               display: "inline-block",
-                            }}
-                          >
-                            {catDoc}
-                          </span>
-                        </td>
-                        <td style={{ padding: "12px 16px", color: "var(--on-surface-variant)" }}>
-                          {p.tipoDespesa}
-                        </td>
-                        <td style={{ padding: "12px 16px", textAlign: "right", fontWeight: 800, color: isPago ? "#059669" : "var(--primary)", fontSize: "13px" }}>
-                          {brl(p.valor)}
-                        </td>
-                        <td style={{ padding: "12px 16px", textAlign: "center" }}>
-                          <span
-                            style={{
-                              display: "inline-flex",
-                              alignItems: "center",
-                              gap: "4px",
+                              minWidth: "75px",
+                              maxWidth: "140px",
+                              textAlign: "center",
                               padding: "3px 10px",
-                              borderRadius: "999px",
+                              borderRadius: "6px",
                               fontSize: "11px",
                               fontWeight: 700,
-                              backgroundColor: isPago ? "#dcfce7" : isCartao ? "#e0f2fe" : "#ffedd5",
-                              color: isPago ? "#15803d" : isCartao ? "#0369a1" : "#c2410c",
+                              backgroundColor: isVazio ? "transparent" : estilo.badgeBg,
+                              color: isVazio ? "#94a3b8" : estilo.badgeText,
+                              border: isVazio ? "1px dashed #cbd5e1" : `1px solid ${estilo.badgeBorder}`,
+                              whiteSpace: "nowrap",
+                              textOverflow: "ellipsis",
+                              overflow: "hidden",
                             }}
                           >
-                            <span className="material-symbols-outlined" style={{ fontSize: "13px" }}>
-                              {isPago ? "check_circle" : isCartao ? "credit_card" : "pending"}
+                            {notaLimpa}
+                          </span>
+                        </td>
+
+                        {/* Valor */}
+                        <td style={{ padding: "10px 14px", textAlign: "right", fontWeight: 800, color: "#0f172a", whiteSpace: "nowrap", fontSize: "12px" }}>
+                          R$ {Number(item.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                        </td>
+
+                        {/* Status */}
+                        <td style={{ padding: "10px 12px", whiteSpace: "nowrap" }}>
+                          <span
+                            style={{
+                              padding: "3px 8px",
+                              borderRadius: "4px",
+                              fontSize: "10.5px",
+                              fontWeight: 700,
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "3px",
+                              backgroundColor: isPago ? "#dcfce7" : "#fee2e2",
+                              color: isPago ? "#166534" : "#991b1b",
+                            }}
+                          >
+                            <span className="material-symbols-outlined" style={{ fontSize: "12px" }}>
+                              {isPago ? "check_circle" : "pending"}
                             </span>
-                            {p.status}
+                            {item.status}
+                          </span>
+                        </td>
+
+                        {/* BM */}
+                        <td style={{ padding: "10px 10px", textAlign: "center", whiteSpace: "nowrap" }}>
+                          {item.bm ? (
+                            <span
+                              style={{
+                                display: "inline-block",
+                                backgroundColor: "#00152f",
+                                color: "#ffffff",
+                                padding: "2px 8px",
+                                borderRadius: "4px",
+                                fontWeight: 800,
+                                fontSize: "10.5px",
+                              }}
+                            >
+                              {item.bm}
+                            </span>
+                          ) : (
+                            <span style={{ color: "#94a3b8" }}>—</span>
+                          )}
+                        </td>
+
+                        {/* Obs */}
+                        <td style={{ padding: "10px 14px", color: "#64748b", fontSize: "11px", whiteSpace: "nowrap" }}>
+                          {item.observacoes || "—"}
+                        </td>
+
+                        {/* Ações */}
+                        <td style={{ padding: "10px 12px", textAlign: "center", whiteSpace: "nowrap" }}>
+                          <span
+                            className="material-symbols-outlined"
+                            style={{ fontSize: "17px", color: "var(--primary)", cursor: "pointer" }}
+                            title="Visualizar Detalhes"
+                          >
+                            visibility
                           </span>
                         </td>
                       </tr>

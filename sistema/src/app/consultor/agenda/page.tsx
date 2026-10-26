@@ -3,6 +3,9 @@
 import React, { useEffect, useMemo, useState } from "react";
 import ConsultorHeader from "@/components/ConsultorHeader";
 import ModernDropdown from "@/components/ModernDropdown";
+import AgendaCalendarioView from "@/components/consultor/AgendaCalendarioView";
+import BloquearAgendaModal from "@/components/consultor/BloquearAgendaModal";
+import { AgendaBloqueio } from "@/lib/agenda-bloqueios";
 import { useConsultor } from "@/contexts/ConsultorContext";
 import { formatarDataBR, formatarPeriodoBR, calcularPrazoPrestacaoContas } from "@/lib/date-utils";
 
@@ -61,6 +64,34 @@ export default function ConsultorAgendaPage() {
   const [modalidade, setModalidade] = useState("todas");
   const [status, setStatus] = useState("todos");
   const [expandidos, setExpandidos] = useState<Set<string>>(new Set());
+
+  // Visualização e Bloqueios de Agenda
+  const [modoVisualizacao, setModoVisualizacao] = useState<"lista" | "calendario">("lista");
+  const [modalBloqueioAberto, setModalBloqueioAberto] = useState(false);
+  const [bloqueios, setBloqueios] = useState<AgendaBloqueio[]>([]);
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+
+  const showToast = (msg: string) => {
+    setToastMsg(msg);
+    setTimeout(() => setToastMsg(null), 3500);
+  };
+
+  const carregarBloqueios = async () => {
+    if (!consultorAtivo?.nome) return;
+    try {
+      const res = await fetch(`/api/consultor/bloqueios?consultor=${encodeURIComponent(consultorAtivo.nome)}`);
+      const data = await res.json();
+      if (data.ok) {
+        setBloqueios(data.bloqueios || []);
+      }
+    } catch (err) {
+      console.error("Erro ao carregar bloqueios de agenda:", err);
+    }
+  };
+
+  useEffect(() => {
+    carregarBloqueios();
+  }, [consultorAtivo?.nome]);
 
   useEffect(() => {
     if (!anosDisponiveis.includes(ano)) setAno(anosDisponiveis[anosDisponiveis.length - 1]);
@@ -152,6 +183,87 @@ export default function ConsultorAgendaPage() {
               Ciclo {ano} · {mes === 0 ? "Ano Todo (Consolidado)" : MESES_NOMES[mes - 1]}
             </span>
           </h1>
+
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+            {/* Seletor de Modo: Lista vs Calendário */}
+            <div
+              style={{
+                display: "inline-flex",
+                background: "var(--surface-container-high)",
+                borderRadius: "10px",
+                padding: "3px",
+                border: "1px solid var(--border)",
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setModoVisualizacao("lista")}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  padding: "6px 14px",
+                  borderRadius: "8px",
+                  border: "none",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  backgroundColor: modoVisualizacao === "lista" ? "var(--primary)" : "transparent",
+                  color: modoVisualizacao === "lista" ? "#fff" : "var(--on-surface-variant)",
+                  transition: "all 0.15s ease",
+                }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>view_list</span>
+                Lista
+              </button>
+              <button
+                type="button"
+                onClick={() => setModoVisualizacao("calendario")}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  padding: "6px 14px",
+                  borderRadius: "8px",
+                  border: "none",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  backgroundColor: modoVisualizacao === "calendario" ? "var(--primary)" : "transparent",
+                  color: modoVisualizacao === "calendario" ? "#fff" : "var(--on-surface-variant)",
+                  transition: "all 0.15s ease",
+                }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>calendar_month</span>
+                Calendário
+              </button>
+            </div>
+
+            {/* Botão Bloquear Agenda */}
+            <button
+              type="button"
+              onClick={() => setModalBloqueioAberto(true)}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "7px 16px",
+                borderRadius: "10px",
+                border: "1px solid #f59e0b",
+                backgroundColor: "#fffbeb",
+                color: "#b45309",
+                fontSize: "12px",
+                fontWeight: 700,
+                cursor: "pointer",
+                boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+                transition: "all 0.15s ease",
+              }}
+              title="Bloquear período para Momento OFF, Férias ou outra atividade"
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>event_busy</span>
+              Bloquear Agenda {bloqueios.length > 0 && `(${bloqueios.length})`}
+            </button>
+          </div>
         </div>
 
         {/* 5 Cards de KPIs Operacionais (com Prestações em Atraso) */}
@@ -241,7 +353,15 @@ export default function ConsultorAgendaPage() {
           </div>
         </section>
 
-        <section style={{ backgroundColor: "var(--surface-container-lowest)", border: "1px solid var(--border)", borderRadius: "14px", overflow: "hidden" }}>
+        {modoVisualizacao === "calendario" ? (
+          <AgendaCalendarioView
+            atividades={todas}
+            bloqueios={bloqueios}
+            anoInicial={ano}
+            mesInicial={mes === 0 ? 1 : mes}
+          />
+        ) : (
+          <section style={{ backgroundColor: "var(--surface-container-lowest)", border: "1px solid var(--border)", borderRadius: "14px", overflow: "hidden" }}>
           {/* Competência: Ano e Chips de Meses */}
           <nav className="month-strip" aria-label="Seleção de Competência" style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", padding: "14px 16px", borderBottom: "1px solid var(--border)" }}>
             <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "var(--primary)" }}>calendar_month</span>
@@ -598,6 +718,43 @@ export default function ConsultorAgendaPage() {
             <span>Total Consultor: <strong style={{ color: "var(--on-surface)" }}>{brl(totalConsultor)}</strong></span>
           </div>
         </section>
+        )}
+
+        {/* Modal de Bloqueio de Agenda */}
+        {modalBloqueioAberto && (
+          <BloquearAgendaModal
+            consultorNome={consultorAtivo?.nome || ""}
+            consultorId={consultorAtivo?.id}
+            bloqueios={bloqueios}
+            onClose={() => setModalBloqueioAberto(false)}
+            onAtualizar={carregarBloqueios}
+            showToast={showToast}
+          />
+        )}
+
+        {/* Toast Notificação */}
+        {toastMsg && (
+          <div
+            style={{
+              position: "fixed",
+              bottom: "24px",
+              right: "24px",
+              zIndex: 9999,
+              backgroundColor: "#1e293b",
+              color: "#ffffff",
+              padding: "12px 20px",
+              borderRadius: "10px",
+              boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
+              fontSize: "13px",
+              fontWeight: 500,
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+            }}
+          >
+            <span>{toastMsg}</span>
+          </div>
+        )}
       </main>
     </>
   );
