@@ -135,7 +135,7 @@ export default function ConsultorViagensPage() {
       nome: "NNÓS Consultoria (Geral)",
       desc: "Oficial / Regra Geral",
       arquivo: "/politicas/politica-nnos.pdf",
-      img: "/politicas/politica-nnos.jpg",
+      img: "/politicas/politica-nnos-header.jpg",
       tipo: "Regra Padrão",
       badgeCor: "#e0f2fe",
       badgeTexto: "#0369a1",
@@ -144,7 +144,7 @@ export default function ConsultorViagensPage() {
       nome: "CNH Training",
       desc: "Cliente Específico",
       arquivo: "/politicas/politica-cnh.pdf",
-      img: "/politicas/politica-cnh.jpg",
+      img: "/politicas/politica-cnh-header.jpg",
       tipo: "Específica",
       badgeCor: "#fef3c7",
       badgeTexto: "#92400e",
@@ -153,7 +153,7 @@ export default function ConsultorViagensPage() {
       nome: "Iveco Group",
       desc: "Cliente Específico",
       arquivo: "/politicas/politica-iveco.pdf",
-      img: "/politicas/politica-iveco.jpg",
+      img: "/politicas/politica-iveco-header.jpg",
       tipo: "Específica",
       badgeCor: "#fef3c7",
       badgeTexto: "#92400e",
@@ -162,7 +162,7 @@ export default function ConsultorViagensPage() {
       nome: "Reembolso Vexpenses",
       desc: "Prestação de Contas",
       arquivo: "/politicas/politica-reembolso-nnos.pdf",
-      img: "/politicas/politica-reembolso-nnos.jpg",
+      img: "/politicas/politica-reembolso-nnos-header.jpg",
       tipo: "Prestação Contas",
       badgeCor: "#dcfce7",
       badgeTexto: "#15803d",
@@ -373,11 +373,11 @@ export default function ConsultorViagensPage() {
                 onMouseEnter={(e) => (e.currentTarget.style.transform = "translateY(-2px)")}
                 onMouseLeave={(e) => (e.currentTarget.style.transform = "translateY(0)")}
               >
-                <div style={{ height: "90px", width: "100%", overflow: "hidden", position: "relative" }}>
+                <div style={{ height: "105px", width: "100%", overflow: "hidden", position: "relative" }}>
                   <img
                     src={pol.img}
                     alt={pol.nome}
-                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "top center" }}
                     onError={(e) => {
                       (e.target as HTMLElement).style.display = "none";
                     }}
@@ -488,7 +488,32 @@ export default function ConsultorViagensPage() {
             viagensFiltradas.map((v: any, idx: number) => {
               const cardId = String(v.id || idx);
               const isExpandido = cardsExpandidos.has(cardId);
-              const totalViagem = Number(v.totalViagem || v.custoTotal || v.totalContratado || v.totalAprovado || 0);
+
+              // Custo por categoria (compatível com ViagemSolicitacao e com lançamentos do Supabase)
+              const getCatValor = (catNome: string) => {
+                const cat = v.categorias?.find((c: any) => c.categoria === catNome);
+                if (!cat) return 0;
+                const alt =
+                  cat.alternativas?.find((a: any) => a.id === cat.alternativaAprovadaId) ||
+                  cat.alternativas?.find((a: any) => a.selecionada) ||
+                  cat.alternativas?.[0];
+                return alt ? (alt.valorContratado ?? alt.valor ?? 0) : 0;
+              };
+
+              const vAereo = getCatValor("AEREO") || Number(v.custo_1 || v.custoAereo || v.aereo || 0);
+              const vHotel = getCatValor("HOTEL") || Number(v.custo_2 || v.custoHotel || v.hotel || 0);
+              const vCarro = getCatValor("CARRO") || Number(v.custo_3 || v.custoCarro || v.carro || 0);
+              const vSeguro = getCatValor("SEGURO") || Number(v.custo_4 || v.custoOutros || v.seguro || 0);
+              const vDiaria = Number(v.custoAlimentacaoDiaria ?? (v.custo_5 || v.custoAlimentacao || v.alimentacao || v.diaria || 0));
+              const totalViagem = Number(
+                v.totalRealizado ||
+                v.totalContratado ||
+                v.totalAprovado ||
+                (vAereo + vHotel + vCarro + vSeguro + vDiaria) ||
+                v.totalViagem ||
+                v.custoTotal ||
+                0
+              );
 
               const statusStr = String(v.status || "CONCLUIDO").toUpperCase();
               const isConcluido = statusStr.includes("CONCLU");
@@ -636,10 +661,10 @@ export default function ConsultorViagensPage() {
                       <div style={{ padding: "12px", borderRadius: "10px", border: "1px solid var(--border)", backgroundColor: "var(--surface-container-low)" }}>
                         <span style={{ fontSize: "10px", fontWeight: 700, color: "var(--on-surface-variant)", textTransform: "uppercase" }}>Passagem Aérea</span>
                         <div style={{ fontSize: "14px", fontWeight: 800, color: "var(--on-surface)", marginTop: "4px" }}>
-                          {brl(v.custoAereo || v.aereo || 0)}
+                          {brl(vAereo)}
                         </div>
                         <span style={{ fontSize: "10px", color: "var(--on-surface-variant)" }}>
-                          {(v.custoAereo || v.aereo) ? "Contratado" : "Não aplicável"}
+                          {vAereo > 0 ? "Contratado" : "Não aplicável"}
                         </span>
                       </div>
 
@@ -647,10 +672,10 @@ export default function ConsultorViagensPage() {
                       <div style={{ padding: "12px", borderRadius: "10px", border: "1px solid var(--border)", backgroundColor: "var(--surface-container-low)" }}>
                         <span style={{ fontSize: "10px", fontWeight: 700, color: "var(--on-surface-variant)", textTransform: "uppercase" }}>Hotel / Estadia</span>
                         <div style={{ fontSize: "14px", fontWeight: 800, color: "var(--on-surface)", marginTop: "4px" }}>
-                          {brl(v.custoHotel || v.hotel || 0)}
+                          {brl(vHotel)}
                         </div>
                         <span style={{ fontSize: "10px", color: "var(--on-surface-variant)" }}>
-                          {(v.custoHotel || v.hotel) ? "Contratado" : "Sem estadia"}
+                          {vHotel > 0 ? "Contratado" : "Sem estadia"}
                         </span>
                       </div>
 
@@ -658,10 +683,10 @@ export default function ConsultorViagensPage() {
                       <div style={{ padding: "12px", borderRadius: "10px", border: "1px solid var(--border)", backgroundColor: "var(--surface-container-low)" }}>
                         <span style={{ fontSize: "10px", fontWeight: 700, color: "var(--on-surface-variant)", textTransform: "uppercase" }}>Carro / Traslado</span>
                         <div style={{ fontSize: "14px", fontWeight: 800, color: "var(--on-surface)", marginTop: "4px" }}>
-                          {brl(v.custoCarro || v.carro || 0)}
+                          {brl(vCarro)}
                         </div>
                         <span style={{ fontSize: "10px", color: "var(--on-surface-variant)" }}>
-                          {(v.custoCarro || v.carro) ? "Contratado" : "Não aplicável"}
+                          {vCarro > 0 ? "Contratado" : "Sem translado"}
                         </span>
                       </div>
 
@@ -669,10 +694,10 @@ export default function ConsultorViagensPage() {
                       <div style={{ padding: "12px", borderRadius: "10px", border: "1px solid var(--border)", backgroundColor: "var(--surface-container-low)" }}>
                         <span style={{ fontSize: "10px", fontWeight: 700, color: "var(--on-surface-variant)", textTransform: "uppercase" }}>Seguro / Outros</span>
                         <div style={{ fontSize: "14px", fontWeight: 800, color: "var(--on-surface)", marginTop: "4px" }}>
-                          {brl(v.custoOutros || v.seguro || 0)}
+                          {brl(vSeguro)}
                         </div>
                         <span style={{ fontSize: "10px", color: "var(--on-surface-variant)" }}>
-                          {(v.custoOutros || v.seguro) ? "Contratado" : "Não aplicável"}
+                          {vSeguro > 0 ? "Apólice ativa" : "Não aplicável"}
                         </span>
                       </div>
 
@@ -680,7 +705,7 @@ export default function ConsultorViagensPage() {
                       <div style={{ padding: "12px", borderRadius: "10px", border: "1.5px solid #fed7aa", backgroundColor: "#fffaf5" }}>
                         <span style={{ fontSize: "10px", fontWeight: 700, color: "#c2410c", textTransform: "uppercase" }}>Alimentação / Diária</span>
                         <div style={{ fontSize: "14px", fontWeight: 800, color: "#ea580c", marginTop: "4px" }}>
-                          {brl(v.custoAlimentacao || v.alimentacao || v.diaria || 0)}
+                          {brl(vDiaria)}
                         </div>
                         <span style={{ fontSize: "10px", color: "var(--on-surface-variant)" }}>
                           Despesa Financeiro

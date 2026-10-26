@@ -883,28 +883,28 @@ export async function enviarVouchersViajante(
               <tr>
                 <td style="width: 25%; padding: 4px; vertical-align: top; text-align: center;">
                   <a href="/politicas/politica-nnos.pdf" target="_blank" style="text-decoration: none; color: inherit; display: block; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px;">
-                    <img src="/politicas/politica-nnos.jpg" alt="Política NNÓS" style="width: 100%; height: 110px; object-fit: cover; border-radius: 4px; display: block; margin-bottom: 6px;" />
+                    <img src="/politicas/politica-nnos-header.jpg" alt="Política NNÓS" style="width: 100%; height: 110px; object-fit: cover; object-position: top; border-radius: 4px; display: block; margin-bottom: 6px;" />
                     <span style="display: block; font-size: 10px; font-weight: 800; color: #0d9488;">NNÓS (Padrão)</span>
                     <span style="display: inline-block; font-size: 10px; color: #2563eb; font-weight: 700; margin-top: 2px;">Abrir PDF &rarr;</span>
                   </a>
                 </td>
                 <td style="width: 25%; padding: 4px; vertical-align: top; text-align: center;">
                   <a href="/politicas/politica-cnh.pdf" target="_blank" style="text-decoration: none; color: inherit; display: block; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px;">
-                    <img src="/politicas/politica-cnh.jpg" alt="Política CNH" style="width: 100%; height: 110px; object-fit: cover; border-radius: 4px; display: block; margin-bottom: 6px;" />
+                    <img src="/politicas/politica-cnh-header.jpg" alt="Política CNH" style="width: 100%; height: 110px; object-fit: cover; object-position: top; border-radius: 4px; display: block; margin-bottom: 6px;" />
                     <span style="display: block; font-size: 10px; font-weight: 800; color: #1e3a8a;">CNH Training</span>
                     <span style="display: inline-block; font-size: 10px; color: #2563eb; font-weight: 700; margin-top: 2px;">Abrir PDF &rarr;</span>
                   </a>
                 </td>
                 <td style="width: 25%; padding: 4px; vertical-align: top; text-align: center;">
                   <a href="/politicas/politica-iveco.pdf" target="_blank" style="text-decoration: none; color: inherit; display: block; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px;">
-                    <img src="/politicas/politica-iveco.jpg" alt="Política Iveco" style="width: 100%; height: 110px; object-fit: cover; border-radius: 4px; display: block; margin-bottom: 6px;" />
+                    <img src="/politicas/politica-iveco-header.jpg" alt="Política Iveco" style="width: 100%; height: 110px; object-fit: cover; object-position: top; border-radius: 4px; display: block; margin-bottom: 6px;" />
                     <span style="display: block; font-size: 10px; font-weight: 800; color: #0284c7;">Iveco Group</span>
                     <span style="display: inline-block; font-size: 10px; color: #2563eb; font-weight: 700; margin-top: 2px;">Abrir PDF &rarr;</span>
                   </a>
                 </td>
                 <td style="width: 25%; padding: 4px; vertical-align: top; text-align: center;">
                   <a href="/politicas/politica-reembolso-nnos.pdf" target="_blank" style="text-decoration: none; color: inherit; display: block; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px;">
-                    <img src="/politicas/politica-reembolso-nnos.jpg" alt="Reembolso Vexpenses" style="width: 100%; height: 110px; object-fit: cover; border-radius: 4px; display: block; margin-bottom: 6px;" />
+                    <img src="/politicas/politica-reembolso-nnos-header.jpg" alt="Reembolso Vexpenses" style="width: 100%; height: 110px; object-fit: cover; object-position: top; border-radius: 4px; display: block; margin-bottom: 6px;" />
                     <span style="display: block; font-size: 10px; font-weight: 800; color: #059669;">Vexpenses (App)</span>
                     <span style="display: inline-block; font-size: 10px; color: #2563eb; font-weight: 700; margin-top: 2px;">Abrir PDF &rarr;</span>
                   </a>
