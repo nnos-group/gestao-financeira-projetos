@@ -42,6 +42,8 @@ export function salvarSolicitacoesArquivo(lista: ViagemSolicitacao[]): void {
   }
 }
 
+export { formatarObservacoesAgenciaCard } from "./viagem-formatters";
+
 /**
  * Inicializa ou sincroniza solicitações a partir dos lançamentos do Supabase
  */
@@ -136,6 +138,8 @@ export async function sincronizarSolicitacoesIniciais(competencia?: string): Pro
 
       const precisaAereo = !isLancamentoCancelado && custoDiaria === 0 && (custoAereo > 0 || (temDemandaAgencia && custoTotalContratado === 0));
       const precisaHotel = !isLancamentoCancelado && custoDiaria === 0 && (custoHotel > 0 || (temDemandaAgencia && custoTotalContratado === 0));
+      const temDemandaCarro = obsAgencia.toUpperCase().includes("VEÍCULO") || obsAgencia.toUpperCase().includes("VEICULO") || obsAgencia.toUpperCase().includes("CARRO");
+      const precisaCarro = !isLancamentoCancelado && custoDiaria === 0 && (custoCarro > 0 || (temDemandaAgencia && temDemandaCarro));
 
       const categorias: CategoriaCotacoes[] = [
         {
@@ -182,8 +186,8 @@ export async function sincronizarSolicitacoesIniciais(competencia?: string): Pro
           categoria: "CARRO",
           nomeExibicao: "Carro / Translado",
           icone: "directions_car",
-          necessaria: !apenasAlimentacao && custoCarro > 0,
-          alternativas: custoCarro > 0 ? [
+          necessaria: precisaCarro,
+          alternativas: (custoCarro > 0 || precisaCarro) ? [
             {
               id: `alt-carro-${l.id}-1`,
               alternativaNumero: 1,
@@ -196,7 +200,7 @@ export async function sincronizarSolicitacoesIniciais(competencia?: string): Pro
               anexos: [],
             }
           ] : [],
-          alternativaAprovadaId: custoCarro > 0 ? `alt-carro-${l.id}-1` : undefined,
+          alternativaAprovadaId: (custoCarro > 0 || precisaCarro) ? `alt-carro-${l.id}-1` : undefined,
         },
         {
           categoria: "SEGURO",
@@ -644,21 +648,53 @@ export async function registrarCompraAgencia(
   let totalContratado = 0;
 
   dadosContratacao.compras.forEach((c) => {
-    const cat = sol.categorias.find((x) => x.categoria === c.categoria);
-    if (cat) {
-      const alt = cat.alternativas.find((a) => a.id === c.alternativaId) || cat.alternativas.find((a) => a.selecionada);
-      if (alt) {
-        alt.valorContratado = Number(c.valorContratado) || alt.valor;
-        alt.localizadorOuReserva = c.localizadorOuReserva || alt.localizadorOuReserva;
-        alt.observacoesContratacao = c.observacoes || alt.observacoesContratacao;
-        if (c.vouchers !== undefined) {
-          alt.vouchersDefinitivos = c.vouchers;
-          // Anexos gerais contêm apenas cotações/propostas; vouchers ficam isolados em vouchersDefinitivos
-          alt.anexos = (alt.anexos || []).filter((a) => a.tipo !== "VOUCHER");
-        }
-        totalContratado += alt.valorContratado;
+    let cat = sol.categorias.find((x) => x.categoria === c.categoria);
+    if (!cat) {
+      const nomes: Record<string, string> = {
+        AEREO: "Passagem Aérea",
+        HOTEL: "Hotel / Estadia",
+        CARRO: "Carro / Translado",
+        SEGURO: "Seguro / Outros",
+      };
+      cat = {
+        categoria: c.categoria,
+        nomeExibicao: nomes[c.categoria] || c.categoria,
+        icone: c.categoria === "CARRO" ? "directions_car" : "category",
+        necessaria: true,
+        alternativas: [],
+      };
+      sol.categorias.push(cat);
+    }
+
+    let alt = cat.alternativas.find((a) => a.id === c.alternativaId) || cat.alternativas.find((a) => a.selecionada) || cat.alternativas[0];
+    if (!alt) {
+      alt = {
+        id: c.alternativaId || `alt-${c.categoria.toLowerCase()}-${sol.id}-${Date.now()}`,
+        alternativaNumero: 1,
+        fornecedor: c.categoria === "CARRO" ? "Locadora de Veículos" : "Agência de Viagens",
+        descricao: `Reserva de ${cat.nomeExibicao}`,
+        valor: Number(c.valorContratado) || 0,
+        valorContratado: Number(c.valorContratado) || 0,
+        dataCotacao: agora.split("T")[0],
+        selecionada: true,
+        localizadorOuReserva: c.localizadorOuReserva || "",
+        vouchersDefinitivos: c.vouchers || [],
+        anexos: [],
+      };
+      cat.alternativas.push(alt);
+      cat.necessaria = true;
+      cat.alternativaAprovadaId = alt.id;
+    } else {
+      alt.valorContratado = Number(c.valorContratado) ?? alt.valor;
+      alt.localizadorOuReserva = c.localizadorOuReserva ?? alt.localizadorOuReserva;
+      alt.observacoesContratacao = c.observacoes || alt.observacoesContratacao;
+      if (c.vouchers !== undefined) {
+        alt.vouchersDefinitivos = c.vouchers;
+        // Anexos gerais contêm apenas cotações/propostas; vouchers ficam isolados em vouchersDefinitivos
+        alt.anexos = (alt.anexos || []).filter((a) => a.tipo !== "VOUCHER");
       }
     }
+    totalContratado += alt.valorContratado || 0;
   });
 
   sol.totalContratado = Math.round(totalContratado * 100) / 100;
@@ -882,6 +918,26 @@ export async function enviarVouchersViajante(
           <div style="font-size: 12.5px; color: #475569; padding-left: 10px; border-left: 2px solid #e2e8f0; margin-top: 6px;">
             <p style="margin: 0; font-weight: 600; color: #334155;">${emailPreview.hotel.detalhes}</p>
             <p style="margin: 4px 0 0 0; font-size: 11.5px; color: #64748b;">Diárias confirmadas. Check-in a partir das 14h / Check-out até 12h.</p>
+          </div>
+        </div>
+        ` : ""}
+
+        ${emailPreview.carro ? `
+        <!-- Veículo / Translado -->
+        <div style="border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; margin-bottom: 14px; background-color: #ffffff;">
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 6px;">
+            <tr>
+              <td style="font-size: 14px; font-weight: 700; color: #0f2a4a;">🚗 Veículo / Locação (${emailPreview.carro.locadora})</td>
+              <td style="text-align: right;">
+                <span style="font-size: 12px; color: #047857; font-weight: 800; background-color: #ecfdf5; border: 1px solid #a7f3d0; padding: 3px 8px; border-radius: 6px;">
+                  Reserva: ${emailPreview.carro.localizador}
+                </span>
+              </td>
+            </tr>
+          </table>
+          <div style="font-size: 12.5px; color: #475569; padding-left: 10px; border-left: 2px solid #e2e8f0; margin-top: 6px;">
+            <p style="margin: 0; font-weight: 600; color: #334155;">${emailPreview.carro.detalhes}</p>
+            <p style="margin: 4px 0 0 0; font-size: 11.5px; color: #64748b;">Reserva confirmada. Apresente CNH válida e cartão de crédito do condutor no momento da retirada.</p>
           </div>
         </div>
         ` : ""}

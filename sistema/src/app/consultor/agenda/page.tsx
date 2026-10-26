@@ -8,6 +8,7 @@ import BloquearAgendaModal from "@/components/consultor/BloquearAgendaModal";
 import { AgendaBloqueio } from "@/lib/agenda-bloqueios";
 import { useConsultor } from "@/contexts/ConsultorContext";
 import { formatarDataBR, formatarPeriodoBR, calcularPrazoPrestacaoContas } from "@/lib/date-utils";
+import { formatarObservacoesAgenciaCard } from "@/lib/viagem-formatters";
 
 const MESES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 const MESES_NOMES = [
@@ -857,7 +858,7 @@ export default function ConsultorAgendaPage() {
                                   Observações Agência de Viagens
                                 </span>
                                 <span style={{ fontSize: "11px", color: "var(--on-surface)", fontStyle: "italic" }}>
-                                  {v?.observacao_agencia || "Nenhuma instrução adicional registrada."}
+                                  {formatarObservacoesAgenciaCard(v?.observacao_agencia)}
                                 </span>
                               </div>
                             </div>

@@ -164,12 +164,12 @@ export default function CotacoesMatrixModal({
     // Se a solicitação já estiver em fase de compra ou vouchers, persiste a remoção no servidor
     try {
       const comprasPayload = novasCategorias
-        .filter((c) => c.necessaria)
+        .filter((c) => c.necessaria || (c.alternativas && c.alternativas.length > 0) || Boolean(localizadores[c.categoria]?.trim()) || Number(valoresContratados[c.categoria]) > 0)
         .map((c) => {
           const altAprov = c.alternativas.find((a) => a.id === c.alternativaAprovadaId) || c.alternativas.find((a) => a.selecionada) || c.alternativas[0];
           return {
             categoria: c.categoria,
-            alternativaId: altAprov?.id || "",
+            alternativaId: altAprov?.id || `alt-${c.categoria.toLowerCase()}-${sol.id}-1`,
             valorContratado: valoresContratados[c.categoria] ?? altAprov?.valorContratado ?? altAprov?.valor ?? 0,
             localizadorOuReserva: localizadores[c.categoria] ?? altAprov?.localizadorOuReserva ?? "",
             vouchers: altAprov?.vouchersDefinitivos || [],
@@ -193,10 +193,13 @@ export default function CotacoesMatrixModal({
 
   const abrirPreviewEmail = () => {
     const aereoCat = sol.categorias.find((c) => c.categoria === "AEREO");
-    const aereoAlt = aereoCat?.alternativas.find((a) => a.id === aereoCat.alternativaAprovadaId) || aereoCat?.alternativas.find((a) => a.selecionada);
+    const aereoAlt = aereoCat?.alternativas.find((a) => a.id === aereoCat.alternativaAprovadaId) || aereoCat?.alternativas.find((a) => a.selecionada) || aereoCat?.alternativas[0];
 
     const hotelCat = sol.categorias.find((c) => c.categoria === "HOTEL");
-    const hotelAlt = hotelCat?.alternativas.find((a) => a.id === hotelCat.alternativaAprovadaId) || hotelCat?.alternativas.find((a) => a.selecionada);
+    const hotelAlt = hotelCat?.alternativas.find((a) => a.id === hotelCat.alternativaAprovadaId) || hotelCat?.alternativas.find((a) => a.selecionada) || hotelCat?.alternativas[0];
+
+    const carroCat = sol.categorias.find((c) => c.categoria === "CARRO");
+    const carroAlt = carroCat?.alternativas.find((a) => a.id === carroCat.alternativaAprovadaId) || carroCat?.alternativas.find((a) => a.selecionada) || carroCat?.alternativas[0];
 
     const todosAnexos: { id?: string; nome: string; categoria: string; url?: string; mimeType?: string }[] = [];
     categoriasState.forEach((c) => {
@@ -243,7 +246,15 @@ export default function CotacoesMatrixModal({
             valor: valoresContratados["HOTEL"] ?? hotelAlt.valor,
           }
         : null,
-      totalViagem: (valoresContratados["AEREO"] || 0) + (valoresContratados["HOTEL"] || 0) + (sol.custoAlimentacaoDiaria || 0),
+      carro: (carroAlt || localizadores["CARRO"])
+        ? {
+            locadora: carroAlt?.fornecedor || "Locadora",
+            detalhes: carroAlt?.descricao || "Veículo alugado / Translado",
+            localizador: localizadores["CARRO"] || carroAlt?.localizadorOuReserva || "Confirmado",
+            valor: valoresContratados["CARRO"] ?? carroAlt?.valorContratado ?? carroAlt?.valor ?? 0,
+          }
+        : null,
+      totalViagem: (valoresContratados["AEREO"] || 0) + (valoresContratados["HOTEL"] || 0) + (valoresContratados["CARRO"] || 0) + (sol.custoAlimentacaoDiaria || 0),
       anexos: todosAnexos,
       observacoes: sol.observacoesSolicitante || "Seguir orientações da agência e NNÓS.",
     });
@@ -340,20 +351,48 @@ export default function CotacoesMatrixModal({
 
       const novasCategorias = categoriasState.map((cat) => {
         if (cat.categoria === categoria) {
+          let achouAlt = false;
+          const novasAlts = cat.alternativas.map((alt) => {
+            if (alt.id === altId) {
+              achouAlt = true;
+              if (tipo === "VOUCHER") {
+                return {
+                  ...alt,
+                  vouchersDefinitivos: [...(alt.vouchersDefinitivos || []), novoAnexo],
+                };
+              }
+              return { ...alt, anexos: [...(alt.anexos || []), novoAnexo] };
+            }
+            return alt;
+          });
+
+          if (!achouAlt) {
+            const novaAlt: AlternativaCotacao = {
+              id: altId || `alt-${categoria.toLowerCase()}-${sol.id}-${Date.now()}`,
+              alternativaNumero: 1,
+              fornecedor: categoria === "CARRO" ? "Locadora de Veículos" : "Agência de Viagens",
+              descricao: `Reserva de ${cat.nomeExibicao}`,
+              valor: valoresContratados[categoria] || 0,
+              valorContratado: valoresContratados[categoria] || 0,
+              dataCotacao: new Date().toISOString().split("T")[0],
+              selecionada: true,
+              localizadorOuReserva: localizadores[categoria] || "",
+              vouchersDefinitivos: tipo === "VOUCHER" ? [novoAnexo] : [],
+              anexos: tipo === "ORCAMENTO" ? [novoAnexo] : [],
+            };
+            novasAlts.push(novaAlt);
+            return {
+              ...cat,
+              necessaria: true,
+              alternativaAprovadaId: novaAlt.id,
+              alternativas: novasAlts,
+            };
+          }
+
           return {
             ...cat,
-            alternativas: cat.alternativas.map((alt) => {
-              if (alt.id === altId) {
-                if (tipo === "VOUCHER") {
-                  return {
-                    ...alt,
-                    vouchersDefinitivos: [...(alt.vouchersDefinitivos || []), novoAnexo],
-                  };
-                }
-                return { ...alt, anexos: [...(alt.anexos || []), novoAnexo] };
-              }
-              return alt;
-            }),
+            necessaria: true,
+            alternativas: novasAlts,
           };
         }
         return cat;
@@ -364,16 +403,15 @@ export default function CotacoesMatrixModal({
 
       showToast(`Documento "${file.name}" anexado com sucesso!`);
 
-
       if (tipo === "VOUCHER") {
         try {
           const comprasPayload = novasCategorias
-            .filter((c) => c.necessaria)
+            .filter((c) => c.necessaria || (c.alternativas && c.alternativas.length > 0) || Boolean(localizadores[c.categoria]?.trim()) || Number(valoresContratados[c.categoria]) > 0)
             .map((c) => {
               const altAprov = c.alternativas.find((a) => a.id === c.alternativaAprovadaId) || c.alternativas.find((a) => a.selecionada) || c.alternativas[0];
               return {
                 categoria: c.categoria,
-                alternativaId: altAprov?.id || "",
+                alternativaId: altAprov?.id || `alt-${c.categoria.toLowerCase()}-${sol.id}-1`,
                 valorContratado: valoresContratados[c.categoria] ?? altAprov?.valorContratado ?? altAprov?.valor ?? 0,
                 localizadorOuReserva: localizadores[c.categoria] ?? altAprov?.localizadorOuReserva ?? "",
                 vouchers: altAprov?.vouchersDefinitivos || [],
@@ -477,12 +515,12 @@ export default function CotacoesMatrixModal({
     setLoading(true);
     try {
       const comprasPayload = categoriasState
-        .filter((c) => c.necessaria)
+        .filter((c) => c.necessaria || (c.alternativas && c.alternativas.length > 0) || Boolean(localizadores[c.categoria]?.trim()) || Number(valoresContratados[c.categoria]) > 0)
         .map((c) => {
           const altAprov = c.alternativas.find((a) => a.id === c.alternativaAprovadaId) || c.alternativas.find((a) => a.selecionada) || c.alternativas[0];
           return {
             categoria: c.categoria,
-            alternativaId: altAprov?.id || "",
+            alternativaId: altAprov?.id || `alt-${c.categoria.toLowerCase()}-${sol.id}-1`,
             valorContratado: valoresContratados[c.categoria] ?? altAprov?.valorContratado ?? altAprov?.valor ?? 0,
             localizadorOuReserva: localizadores[c.categoria] ?? altAprov?.localizadorOuReserva ?? "",
             vouchers: altAprov?.vouchersDefinitivos || [],
@@ -521,12 +559,12 @@ export default function CotacoesMatrixModal({
     try {
       // 1. Salva valores contratados e localizadores caso tenham sofrido alteração
       const comprasPayload = categoriasState
-        .filter((c) => c.necessaria)
+        .filter((c) => c.necessaria || (c.alternativas && c.alternativas.length > 0) || Boolean(localizadores[c.categoria]?.trim()) || Number(valoresContratados[c.categoria]) > 0)
         .map((c) => {
           const altAprov = c.alternativas.find((a) => a.id === c.alternativaAprovadaId) || c.alternativas.find((a) => a.selecionada) || c.alternativas[0];
           return {
             categoria: c.categoria,
-            alternativaId: altAprov?.id || "",
+            alternativaId: altAprov?.id || `alt-${c.categoria.toLowerCase()}-${sol.id}-1`,
             valorContratado: valoresContratados[c.categoria] ?? altAprov?.valorContratado ?? altAprov?.valor ?? 0,
             localizadorOuReserva: localizadores[c.categoria] ?? altAprov?.localizadorOuReserva ?? "",
             vouchers: altAprov?.vouchersDefinitivos || [],
@@ -1242,7 +1280,7 @@ export default function CotacoesMatrixModal({
                         return null;
                       }
 
-                      const altAprov = cat.alternativas.find((a) => a.id === cat.alternativaAprovadaId) || cat.alternativas.find((a) => a.selecionada);
+                      const altAprov = cat.alternativas.find((a) => a.id === cat.alternativaAprovadaId) || cat.alternativas.find((a) => a.selecionada) || cat.alternativas[0];
                       const mapaVouchers = new Map<string, AnexoDocumento>();
                       (altAprov?.vouchersDefinitivos || []).forEach((v) => {
                         const chave = v.id || v.nome;
@@ -1425,8 +1463,11 @@ export default function CotacoesMatrixModal({
                                     accept="application/pdf,image/*"
                                     style={{ display: "none" }}
                                     onChange={(e) => {
-                                      const altId = cat.alternativaAprovadaId || cat.alternativas.find((a) => a.selecionada)?.id || cat.alternativas[0]?.id;
-                                      if (altId) handleUploadAnexo(e, cat.categoria, altId, "VOUCHER");
+                                      let altId = cat.alternativaAprovadaId || cat.alternativas.find((a) => a.selecionada)?.id || cat.alternativas[0]?.id;
+                                      if (!altId) {
+                                        altId = `alt-${cat.categoria.toLowerCase()}-${sol.id}-${Date.now()}`;
+                                      }
+                                      handleUploadAnexo(e, cat.categoria, altId, "VOUCHER");
                                     }}
                                   />
                                 </label>

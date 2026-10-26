@@ -57,6 +57,34 @@ export default function ConsultorViagensPage() {
   const brl = (val: number | null | undefined) =>
     (val || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
+  const abrirDocumentoVoucher = (url: string, nome?: string) => {
+    if (!url) return;
+    if (url.startsWith("data:")) {
+      try {
+        const parts = url.split(",");
+        const mime = parts[0].match(/:(.*?);/)?.[1] || "application/pdf";
+        const binStr = atob(parts[1]);
+        const len = binStr.length;
+        const u8arr = new Uint8Array(len);
+        for (let i = 0; i < len; i++) u8arr[i] = binStr.charCodeAt(i);
+        const blob = new Blob([u8arr], { type: mime });
+        const blobUrl = URL.createObjectURL(blob);
+        const win = window.open(blobUrl, "_blank");
+        if (!win) {
+          const a = document.createElement("a");
+          a.href = blobUrl;
+          a.download = nome || "voucher";
+          a.click();
+        }
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+        return;
+      } catch (err) {
+        console.warn("Erro ao converter base64 para Blob:", err);
+      }
+    }
+    window.open(url, "_blank");
+  };
+
   const mesesChips = [
     { num: 1, rotulo: "Jan" },
     { num: 2, rotulo: "Fev" },
@@ -879,7 +907,7 @@ export default function ConsultorViagensPage() {
                                   <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>verified</span>
                                   <span>Recebimento Aprovado em {formatarDataHoraBR(v.vouchersRecebidosAprovadosEm)}</span>
                                 </div>
-                              ) : (
+                              ) : (v.status === "VOUCHERS_ENVIADOS" || v.status === "AGUARDANDO_PRESTACAO_CONTAS" || v.status === "CONCLUIDO" || v.vouchersEnviadosEm) && temVouchers ? (
                                 <button
                                   type="button"
                                   disabled={aprovandoId === v.id}
@@ -905,6 +933,10 @@ export default function ConsultorViagensPage() {
                                   <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>check_circle</span>
                                   <span>{aprovandoId === v.id ? "Aprovando..." : "Aprovar Recebimento dos Vouchers"}</span>
                                 </button>
+                              ) : (
+                                <span style={{ fontSize: "11px", color: "var(--on-surface-variant)", fontStyle: "italic", padding: "4px 8px" }}>
+                                  Disponível após envio dos vouchers pela agência
+                                </span>
                               )}
                             </div>
 
@@ -939,7 +971,7 @@ export default function ConsultorViagensPage() {
                                         type="button"
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          window.open(doc.url, "_blank");
+                                          abrirDocumentoVoucher(doc.url, doc.nome);
                                         }}
                                         style={{
                                           background: "transparent",
