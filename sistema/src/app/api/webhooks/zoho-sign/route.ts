@@ -76,13 +76,36 @@ export async function POST(req: NextRequest) {
         return !isView;
       });
 
+      // Buscar trilha de auditoria oficial do Zoho Sign para obter timestamp individual de cada signatário
+      let auditActivities: any[] = [];
+      if (requestId) {
+        try {
+          const { getZohoAccessToken } = await import("@/lib/zoho-sign");
+          const token = await getZohoAccessToken();
+          const auditRes = await fetch(`https://sign.zoho.com/api/v1/requests/${requestId}/audit`, {
+            headers: { Authorization: `Zoho-oauthtoken ${token}` },
+          });
+          if (auditRes.ok) {
+            const auditJson = await auditRes.json();
+            auditActivities = auditJson.account_activity_report || auditJson.activities || auditJson.reports || [];
+          }
+        } catch (aErr: any) {
+          console.warn("Aviso ao buscar audit trail no webhook:", aErr.message);
+        }
+      }
+
       // Mapear cada signatário para o seu papel corporativo oficial e data/hora individual
       logsFinais = signActions.map((act: any) => {
+        const auditEvent = auditActivities.find((ev: any) =>
+          (ev.operation_type === "RequestSigningSuccess" || ev.operation_type === "RequestApproved" || (ev.activity && (ev.activity.toLowerCase().includes("assinado") || ev.activity.toLowerCase().includes("aprovado")))) &&
+          (String(ev.action_id) === String(act.action_id) || (act.recipient_name && ev.performed_by_name && ev.performed_by_name.toUpperCase() === act.recipient_name.toUpperCase()))
+        );
+
         const statusAcao = String(act.action_status || act.status || "").toUpperCase();
         const isAssinado = ["SIGNED", "COMPLETED", "APPROVED", "APPROVE"].includes(statusAcao);
-        const ts = act.signed_time || act.action_time || act.approval_time || act.time || requestData.action_time || Date.now();
-        const dataHoraStr = isAssinado ? formatarDataHoraBrasil(ts) : "";
-        const ip = act.ip_address || act.sign_ip || act.action_ip || act.ip || payload?.ip_address || "191.187.11.168";
+        const ts = auditEvent?.performed_at || act.action_time || act.signed_time || (isAssinado ? Date.now() : null);
+        const dataHoraStr = isAssinado && ts ? formatarDataHoraBrasil(ts) : "";
+        const ip = auditEvent?.ip_address || act.ip_address || act.sign_ip || act.action_ip || act.ip || payload?.ip_address || "191.187.11.168";
         const docId = requestData.zsdocumentid || requestData.document_id || requestId;
 
         let papel = "Prestador de Serviços";

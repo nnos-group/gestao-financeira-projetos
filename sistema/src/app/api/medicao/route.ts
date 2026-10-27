@@ -95,7 +95,7 @@ export async function GET() {
                 });
                 if (auditRes.ok) {
                   const auditJson = await auditRes.json();
-                  auditActivities = auditJson.activities || [];
+                  auditActivities = auditJson.account_activity_report || auditJson.activities || auditJson.reports || [];
                 }
               } catch (aErr: any) {
                 console.warn("Aviso ao buscar auditoria do Zoho:", aErr.message);
@@ -107,16 +107,16 @@ export async function GET() {
                   return !isView;
                 })
                 .map((act: any) => {
-                  // Localizar evento de assinatura concluída no audit trail
+                  // Localizar evento de assinatura concluída no audit trail oficial
                   const auditEvent = auditActivities.find((ev: any) =>
-                    (ev.operation_type === "RequestSigningSuccess" || ev.operation_type === "RequestApproved" || (ev.activity && (ev.activity.includes("assinado") || ev.activity.includes("aprovado")))) &&
-                    (String(ev.action_id) === String(act.action_id) || ev.performed_by_name?.toUpperCase() === act.recipient_name?.toUpperCase())
+                    (ev.operation_type === "RequestSigningSuccess" || ev.operation_type === "RequestApproved" || (ev.activity && (ev.activity.toLowerCase().includes("assinado") || ev.activity.toLowerCase().includes("aprovado")))) &&
+                    (String(ev.action_id) === String(act.action_id) || (act.recipient_name && ev.performed_by_name && ev.performed_by_name.toUpperCase() === act.recipient_name.toUpperCase()))
                   );
 
                   const statusAcao = String(act.action_status || act.status || "").toUpperCase();
                   const isConcluido = ["SIGNED", "COMPLETED", "APPROVED", "APPROVE"].includes(statusAcao);
 
-                  const timestamp = auditEvent?.performed_at || act.signed_time || act.action_time || act.approval_time || (isConcluido ? Date.now() : null);
+                  const timestamp = auditEvent?.performed_at || act.action_time || act.signed_time;
                   let dataFmt = "";
                   if (timestamp) {
                     const dt = new Date(Number(timestamp) || timestamp);
