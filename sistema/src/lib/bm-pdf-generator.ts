@@ -418,7 +418,7 @@ export async function gerarPdfOficialBm(dados: BmPdfDados): Promise<Uint8Array> 
     color: cMuted,
   });
 
-  // Bloco Monospace / Destaque de Código
+  // Bloco de Identificação e Destaque de Código do BM
   const codeBoxH = 44;
   const codeBoxY = y - 36 - codeBoxH;
   page.drawRectangle({

@@ -61,7 +61,7 @@ export async function GET(request: Request) {
     } catch {}
 
     const codigosNum = bmsLista.map((b: any) => parseInt(b.codigo, 10)).filter((n: number) => !isNaN(n));
-    const proximoCodigoNum = codigosNum.length > 0 ? Math.max(...codigosNum) + 1 : 900;
+    const proximoCodigoNum = codigosNum.length > 0 ? Math.max(...codigosNum, 907) + 1 : 908;
 
     // 2. Carregar lista de Pessoas da base cadastral
     let pessoasLista: any[] = [];

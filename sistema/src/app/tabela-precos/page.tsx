@@ -1552,7 +1552,7 @@ export default function TabelaPrecosPage() {
                       placeholder="Ex: 01.06.005.028, 01.06.005.030, 01.06.005.031"
                       value={novosCentrosCusto}
                       onChange={(e) => setNovosCentrosCusto(e.target.value)}
-                      style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: "1px solid var(--border)", background: "var(--surface-container-lowest)", fontFamily: "monospace", fontSize: "12px" }}
+                      style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: "1px solid var(--border)", background: "var(--surface-container-lowest)", fontFamily: "inherit", fontSize: "12px" }}
                     />
                     <span style={{ fontSize: "11px", color: "var(--on-surface-variant)", marginTop: "3px", display: "block" }}>
                       💡 Toda atividade vinculada a esses CCs buscará automaticamente os preços desta tabela.

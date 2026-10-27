@@ -236,21 +236,43 @@ export async function enviarBmParaZohoSign(params: EnviarBmZohoParams) {
   let submitMsg = "";
   let avisoCreditos = false;
 
-  // Fallback: Tentativa via endpoint direto do Zoho Sign caso Flow não tenha disparado
+  // Disparo dos e-mails via API oficial do Zoho Sign (transiciona de draft para inprogress)
   if (requestId && !submitSucesso) {
     try {
-      const submitRes = await fetch(`${apiUrl}/requests/${requestId}/submit`, {
+      const submitParams = new URLSearchParams();
+      submitParams.append("data", JSON.stringify({
+        requests: {
+          request_status: "inprogress",
+        },
+      }));
+
+      let submitRes = await fetch(`${apiUrl}/requests/${requestId}/submit`, {
         method: "POST",
         headers: {
           Authorization: `Zoho-oauthtoken ${accessToken}`,
           "Content-Type": "application/x-www-form-urlencoded",
         },
-        body: "",
+        body: submitParams.toString(),
       });
+
+      // Se não aceitar com inprogress, tenta com requests vazio
+      if (!submitRes.ok && submitRes.status === 400) {
+        const fallbackParams = new URLSearchParams();
+        fallbackParams.append("data", JSON.stringify({ requests: {} }));
+        submitRes = await fetch(`${apiUrl}/requests/${requestId}/submit`, {
+          method: "POST",
+          headers: {
+            Authorization: `Zoho-oauthtoken ${accessToken}`,
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: fallbackParams.toString(),
+        });
+      }
 
       if (submitRes.ok) {
         submitSucesso = true;
         submitMsg = "E-mails de assinatura enviados aos signatários via Zoho Sign!";
+        console.log(`🚀 [Zoho Sign API] BM ${params.codigoBm} submetido com sucesso! Status: inprogress`);
       } else {
         const submitErrText = await submitRes.text();
         console.warn("Aviso no submit do Zoho Sign:", submitRes.status, submitErrText);
