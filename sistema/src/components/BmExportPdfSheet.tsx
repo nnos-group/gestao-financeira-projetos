@@ -417,50 +417,93 @@ export default function BmExportPdfSheet({ bm }: BmExportPdfSheetProps) {
 
                 <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                   {/* Item Quinzena 1 */}
-                  <div style={{ padding: "4px 6px", borderRadius: "6px", border: "1px solid #e2e8f0", backgroundColor: "rgba(248,250,252,0.6)", display: "flex", alignItems: "flex-start", gap: "6px" }}>
-                    <div style={{ padding: "1px 5px", borderRadius: "4px", backgroundColor: "#e2e8f0", fontWeight: 700, fontSize: "8px", color: "#334155" }}>1ª</div>
-                    <div style={{ fontSize: "8px", flex: 1 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                        <span style={{ fontWeight: 700, color: "#1e293b" }}>Atividades da 1ª Quinzena</span>
-                        <span style={{ fontSize: "7px", backgroundColor: "#e2e8f0", padding: "0 3px", borderRadius: "3px", color: "#475569", fontWeight: 600 }}>Opção A</span>
-                      </div>
-                      <p style={{ color: "#64748b", margin: "1px 0" }}>Envio da nota fiscal até o <strong style={{ color: "#334155" }}>dia 25 do mês vigente</strong>.</p>
-                      <p style={{ color: "#047857", fontWeight: 600, display: "flex", alignItems: "center", gap: "3px", fontSize: "7.5px", margin: 0 }}>
-                        <svg style={{ width: "9px", height: "9px" }} fill="currentColor" viewBox="0 0 20 20"><path clipRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" fillRule="evenodd"></path></svg>
-                        Pagamento creditado no dia 10 subsequente
-                      </p>
-                    </div>
-                  </div>
+                  {(() => {
+                    const isQuinzena1 = (bm.periodoTipo || "").includes("1ª");
+                    const mesesNomes = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+                    let mesNum = 10;
+                    let anoNum = 2026;
+                    const mesMatch = (bm.mesReferencia || "").match(/(\d{4})/);
+                    if (mesMatch) anoNum = Number(mesMatch[1]);
+                    mesesNomes.forEach((m, idx) => {
+                      if ((bm.mesReferencia || "").toLowerCase().includes(m.toLowerCase())) mesNum = idx + 1;
+                    });
+                    const mesStr = String(mesNum).padStart(2, "0");
+                    const proxMesNum = mesNum === 12 ? 1 : mesNum + 1;
+                    const proxAnoNum = mesNum === 12 ? anoNum + 1 : anoNum;
+                    const proxMesStr = String(proxMesNum).padStart(2, "0");
 
-                  {/* Item Mês Cheio */}
-                  <div style={{ padding: "4px 6px", borderRadius: "6px", border: "1px solid #bfdbfe", backgroundColor: "rgba(239,246,255,0.4)", display: "flex", alignItems: "flex-start", gap: "6px" }}>
-                    <div style={{ padding: "1px 5px", borderRadius: "4px", backgroundColor: "#0f2a4a", fontWeight: 700, fontSize: "8px", color: "#ffffff" }}>2ª</div>
-                    <div style={{ fontSize: "8px", flex: 1 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                        <span style={{ fontWeight: 700, color: "#0f172a" }}>Totalidade das Atividades / Mês Cheio</span>
-                        <span style={{ fontSize: "7px", backgroundColor: "#d1fae5", color: "#065f46", padding: "0 3px", borderRadius: "3px", fontWeight: 700 }}>Recomendado BM {bm.codigo}</span>
-                      </div>
-                      <p style={{ color: "#475569", margin: "1px 0" }}>Envio da nota fiscal até o <strong style={{ color: "#1e293b" }}>dia 10 após recebimento do BM</strong>.</p>
-                      <p style={{ color: "#047857", fontWeight: 600, display: "flex", alignItems: "center", gap: "3px", fontSize: "7.5px", margin: 0 }}>
-                        <svg style={{ width: "9px", height: "9px" }} fill="currentColor" viewBox="0 0 20 20"><path clipRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" fillRule="evenodd"></path></svg>
-                        Previsão de Liquidação: Dia 25 de Outubro de 2026
-                      </p>
-                    </div>
-                  </div>
+                    const dataBmTimeline = isQuinzena1 ? `18/${mesStr}` : `01/${proxMesStr}`;
+                    const dataPrazoTimeline = isQuinzena1 ? `25/${mesStr}` : `10/${proxMesStr}`;
+                    const dataCreditoTimeline = isQuinzena1 ? `10/${proxMesStr}/${proxAnoNum}` : `25/${proxMesStr}/${proxAnoNum}`;
+
+                    return (
+                      <>
+                        <div style={{ padding: "4px 6px", borderRadius: "6px", border: isQuinzena1 ? "1px solid #bfdbfe" : "1px solid #e2e8f0", backgroundColor: isQuinzena1 ? "rgba(239,246,255,0.6)" : "rgba(248,250,252,0.6)", display: "flex", alignItems: "flex-start", gap: "6px" }}>
+                          <div style={{ padding: "1px 5px", borderRadius: "4px", backgroundColor: isQuinzena1 ? "#0f2a4a" : "#e2e8f0", fontWeight: 700, fontSize: "8px", color: isQuinzena1 ? "#ffffff" : "#334155" }}>1ª</div>
+                          <div style={{ fontSize: "8px", flex: 1 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                              <span style={{ fontWeight: 700, color: "#1e293b" }}>Atividades da 1ª Quinzena</span>
+                            </div>
+                            <p style={{ color: "#64748b", margin: "1px 0" }}>Envio da nota fiscal até o <strong style={{ color: "#334155" }}>dia 25 do mês vigente</strong>.</p>
+                            <p style={{ color: "#047857", fontWeight: 600, display: "flex", alignItems: "center", gap: "3px", fontSize: "7.5px", margin: 0 }}>
+                              <svg style={{ width: "9px", height: "9px" }} fill="currentColor" viewBox="0 0 20 20"><path clipRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" fillRule="evenodd"></path></svg>
+                              Pagamento creditado no dia 10 subsequente
+                            </p>
+                          </div>
+                        </div>
+
+                        <div style={{ padding: "4px 6px", borderRadius: "6px", border: !isQuinzena1 ? "1px solid #bfdbfe" : "1px solid #e2e8f0", backgroundColor: !isQuinzena1 ? "rgba(239,246,255,0.6)" : "rgba(248,250,252,0.6)", display: "flex", alignItems: "flex-start", gap: "6px" }}>
+                          <div style={{ padding: "1px 5px", borderRadius: "4px", backgroundColor: !isQuinzena1 ? "#0f2a4a" : "#e2e8f0", fontWeight: 700, fontSize: "8px", color: !isQuinzena1 ? "#ffffff" : "#334155" }}>2ª</div>
+                          <div style={{ fontSize: "8px", flex: 1 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                              <span style={{ fontWeight: 700, color: "#0f172a" }}>Atividades da 2ª Quinzena/Integral</span>
+                            </div>
+                            <p style={{ color: "#475569", margin: "1px 0" }}>Envio da nota fiscal até o <strong style={{ color: "#1e293b" }}>dia 10 após recebimento do BM</strong>.</p>
+                            <p style={{ color: "#047857", fontWeight: 600, display: "flex", alignItems: "center", gap: "3px", fontSize: "7.5px", margin: 0 }}>
+                              <svg style={{ width: "9px", height: "9px" }} fill="currentColor" viewBox="0 0 20 20"><path clipRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" fillRule="evenodd"></path></svg>
+                              Previsão de Liquidação: Dia 25 de {bm.mesReferencia || "Outubro de 2026"}
+                            </p>
+                          </div>
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
 
               {/* Timeline */}
-              <div style={{ marginTop: "5px", paddingTop: "4px", borderTop: "1px solid #f1f5f9", display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "7.8px", color: "#64748b" }}>
-                <span style={{ display: "flex", alignItems: "center", gap: "3px", fontWeight: 600, color: "#334155" }}>
-                  <span style={{ width: "5px", height: "5px", borderRadius: "50%", backgroundColor: "#10b981" }}></span>
-                  BM: 01/10
-                </span>
-                <span style={{ color: "#cbd5e1" }}>→</span>
-                <span style={{ fontWeight: 600, color: "#334155" }}>Prazo NF: 10/10</span>
-                <span style={{ color: "#cbd5e1" }}>→</span>
-                <span style={{ fontWeight: 700, color: "#047857" }}>Crédito: 25/10/2026</span>
-              </div>
+              {(() => {
+                const isQuinzena1 = (bm.periodoTipo || "").includes("1ª");
+                const mesesNomes = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+                let mesNum = 10;
+                let anoNum = 2026;
+                const mesMatch = (bm.mesReferencia || "").match(/(\d{4})/);
+                if (mesMatch) anoNum = Number(mesMatch[1]);
+                mesesNomes.forEach((m, idx) => {
+                  if ((bm.mesReferencia || "").toLowerCase().includes(m.toLowerCase())) mesNum = idx + 1;
+                });
+                const mesStr = String(mesNum).padStart(2, "0");
+                const proxMesNum = mesNum === 12 ? 1 : mesNum + 1;
+                const proxAnoNum = mesNum === 12 ? anoNum + 1 : anoNum;
+                const proxMesStr = String(proxMesNum).padStart(2, "0");
+
+                const dataBmTimeline = isQuinzena1 ? `18/${mesStr}` : `01/${proxMesStr}`;
+                const dataPrazoTimeline = isQuinzena1 ? `25/${mesStr}` : `10/${proxMesStr}`;
+                const dataCreditoTimeline = isQuinzena1 ? `10/${proxMesStr}/${proxAnoNum}` : `25/${proxMesStr}/${proxAnoNum}`;
+
+                return (
+                  <div style={{ marginTop: "5px", paddingTop: "4px", borderTop: "1px solid #f1f5f9", display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "7.8px", color: "#64748b" }}>
+                    <span style={{ display: "flex", alignItems: "center", gap: "3px", fontWeight: 600, color: "#334155" }}>
+                      <span style={{ width: "5px", height: "5px", borderRadius: "50%", backgroundColor: "#10b981" }}></span>
+                      BM: {dataBmTimeline}
+                    </span>
+                    <span style={{ color: "#cbd5e1" }}>→</span>
+                    <span style={{ fontWeight: 600, color: "#334155" }}>Prazo NF: {dataPrazoTimeline}</span>
+                    <span style={{ color: "#cbd5e1" }}>→</span>
+                    <span style={{ fontWeight: 700, color: "#047857" }}>Crédito: {dataCreditoTimeline}</span>
+                  </div>
+                );
+              })()}
             </div>
           </section>
           {/* END: InvoicingRulesSection */}

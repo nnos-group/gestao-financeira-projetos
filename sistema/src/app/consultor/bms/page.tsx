@@ -523,49 +523,109 @@ export default function ConsultorBmsPage() {
                     </div>
                   </div>
 
-                  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                    <div style={{ padding: "12px", borderRadius: "10px", backgroundColor: "var(--surface-container-low)", display: "flex", gap: "12px", alignItems: "flex-start" }}>
-                      <div style={{ width: "32px", height: "32px", borderRadius: "8px", backgroundColor: "var(--surface-container)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, color: "var(--primary)", fontSize: "13px" }}>
-                        1ª
-                      </div>
-                      <div style={{ display: "flex", flexDirection: "column", gap: "2px", fontSize: "12px" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                          <strong style={{ color: "var(--primary)" }}>Atividades da 1ª Quinzena</strong>
-                          <span style={{ fontSize: "9px", padding: "1px 6px", borderRadius: "4px", backgroundColor: "rgba(0,103,129,0.1)", color: "var(--secondary)", fontWeight: 700 }}>Opção A</span>
-                        </div>
-                        <span style={{ color: "var(--on-surface-variant)" }}>Envio da nota fiscal até o <strong>dia 25 do mês vigente</strong>.</span>
-                        <div style={{ display: "flex", alignItems: "center", gap: "4px", color: "var(--secondary)", fontWeight: 700, fontSize: "11px", marginTop: "4px" }}>
-                          <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>event_available</span>
-                          <span>Pagamento creditado no dia 10 subsequente</span>
-                        </div>
-                      </div>
-                    </div>
+                  {(() => {
+                    const isQuinzena1 = (bmVisualizando.periodoTipo || "").includes("1ª");
+                    const mesesNomes = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+                    let mesNum = 10;
+                    let anoNum = 2026;
+                    const mesMatch = (bmVisualizando.mesReferencia || "").match(/(\d{4})/);
+                    if (mesMatch) anoNum = Number(mesMatch[1]);
+                    mesesNomes.forEach((m, idx) => {
+                      if ((bmVisualizando.mesReferencia || "").toLowerCase().includes(m.toLowerCase())) mesNum = idx + 1;
+                    });
+                    const mesStr = String(mesNum).padStart(2, "0");
+                    const proxMesNum = mesNum === 12 ? 1 : mesNum + 1;
+                    const proxAnoNum = mesNum === 12 ? anoNum + 1 : anoNum;
+                    const proxMesStr = String(proxMesNum).padStart(2, "0");
 
-                    <div style={{ padding: "12px", borderRadius: "10px", backgroundColor: "rgba(0,21,47,0.04)", border: "1px solid rgba(0,21,47,0.15)", display: "flex", gap: "12px", alignItems: "flex-start" }}>
-                      <div style={{ width: "32px", height: "32px", borderRadius: "8px", backgroundColor: "var(--primary)", color: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: "13px" }}>
-                        2ª
-                      </div>
-                      <div style={{ display: "flex", flexDirection: "column", gap: "2px", fontSize: "12px" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                          <strong style={{ color: "var(--primary)" }}>Totalidade das Atividades / Mês Cheio</strong>
-                          <span style={{ fontSize: "9px", padding: "1px 6px", borderRadius: "4px", backgroundColor: "#d1fae5", color: "#065f46", fontWeight: 700 }}>Recomendado BM {bmVisualizando.codigo}</span>
-                        </div>
-                        <span style={{ color: "var(--on-surface-variant)" }}>Envio da nota fiscal até o <strong>dia 10 após recebimento do BM</strong>.</span>
-                        <div style={{ display: "flex", alignItems: "center", gap: "4px", color: "#059669", fontWeight: 800, fontSize: "11px", marginTop: "4px" }}>
-                          <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>payments</span>
-                          <span>Previsão de Liquidação: Dia 25 de Outubro de 2026</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                    const dataBmTimeline = isQuinzena1 ? `18/${mesStr}` : `01/${proxMesStr}`;
+                    const dataPrazoTimeline = isQuinzena1 ? `25/${mesStr}` : `10/${proxMesStr}`;
+                    const dataCreditoTimeline = isQuinzena1 ? `10/${proxMesStr}/${proxAnoNum}` : `25/${proxMesStr}/${proxAnoNum}`;
 
-                <div style={{ marginTop: "14px", padding: "10px 14px", backgroundColor: "var(--surface-container-low)", borderRadius: "8px", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "11px" }}>
-                  <span><span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#10b981", display: "inline-block", marginRight: "4px" }}></span>BM: <strong>01/10</strong></span>
-                  <span style={{ color: "var(--outline)" }}>→</span>
-                  <span><span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "var(--secondary)" }}></span>Prazo NF: <strong>10/10</strong></span>
-                  <span style={{ color: "var(--outline)" }}>→</span>
-                  <span style={{ color: "#059669", fontWeight: 700 }}><span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "var(--primary)", display: "inline-block", marginRight: "4px" }}></span>Crédito: <strong>25/10/2026</strong></span>
+                    return (
+                      <>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                          <div style={{
+                            padding: "12px",
+                            borderRadius: "10px",
+                            backgroundColor: isQuinzena1 ? "rgba(0,103,129,0.06)" : "var(--surface-container-low)",
+                            border: isQuinzena1 ? "1.5px solid var(--secondary)" : "1px solid var(--border)",
+                            display: "flex",
+                            gap: "12px",
+                            alignItems: "flex-start"
+                          }}>
+                            <div style={{
+                              width: "32px",
+                              height: "32px",
+                              borderRadius: "8px",
+                              backgroundColor: isQuinzena1 ? "var(--primary)" : "var(--surface-container)",
+                              color: isQuinzena1 ? "#ffffff" : "var(--primary)",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontWeight: 800,
+                              fontSize: "13px"
+                            }}>
+                              1ª
+                            </div>
+                            <div style={{ display: "flex", flexDirection: "column", gap: "2px", fontSize: "12px" }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                <strong style={{ color: "var(--primary)" }}>Atividades da 1ª Quinzena</strong>
+                              </div>
+                              <span style={{ color: "var(--on-surface-variant)" }}>Envio da nota fiscal até o <strong>dia 25 do mês vigente</strong>.</span>
+                              <div style={{ display: "flex", alignItems: "center", gap: "4px", color: "var(--secondary)", fontWeight: 700, fontSize: "11px", marginTop: "4px" }}>
+                                <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>event_available</span>
+                                <span>Pagamento creditado no dia 10 subsequente</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div style={{
+                            padding: "12px",
+                            borderRadius: "10px",
+                            backgroundColor: !isQuinzena1 ? "rgba(0,21,47,0.06)" : "rgba(0,21,47,0.02)",
+                            border: !isQuinzena1 ? "1.5px solid var(--primary)" : "1px solid var(--border)",
+                            display: "flex",
+                            gap: "12px",
+                            alignItems: "flex-start"
+                          }}>
+                            <div style={{
+                              width: "32px",
+                              height: "32px",
+                              borderRadius: "8px",
+                              backgroundColor: !isQuinzena1 ? "var(--primary)" : "var(--surface-container)",
+                              color: !isQuinzena1 ? "#ffffff" : "var(--primary)",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontWeight: 800,
+                              fontSize: "13px"
+                            }}>
+                              2ª
+                            </div>
+                            <div style={{ display: "flex", flexDirection: "column", gap: "2px", fontSize: "12px" }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                <strong style={{ color: "var(--primary)" }}>Atividades da 2ª Quinzena/Integral</strong>
+                              </div>
+                              <span style={{ color: "var(--on-surface-variant)" }}>Envio da nota fiscal até o <strong>dia 10 após recebimento do BM</strong>.</span>
+                              <div style={{ display: "flex", alignItems: "center", gap: "4px", color: "#059669", fontWeight: 800, fontSize: "11px", marginTop: "4px" }}>
+                                <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>payments</span>
+                                <span>Previsão de Liquidação: Dia 25 de {bmVisualizando.mesReferencia || "Outubro de 2026"}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div style={{ marginTop: "14px", padding: "10px 14px", backgroundColor: "var(--surface-container-low)", borderRadius: "8px", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "11px" }}>
+                          <span><span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#10b981", display: "inline-block", marginRight: "4px" }}></span>BM: <strong>{dataBmTimeline}</strong></span>
+                          <span style={{ color: "var(--outline)" }}>→</span>
+                          <span><span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "var(--secondary)", display: "inline-block", marginRight: "4px" }}></span>Prazo NF: <strong>{dataPrazoTimeline}</strong></span>
+                          <span style={{ color: "var(--outline)" }}>→</span>
+                          <span style={{ color: "#059669", fontWeight: 700 }}><span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "var(--primary)", display: "inline-block", marginRight: "4px" }}></span>Crédito: <strong>{dataCreditoTimeline}</strong></span>
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
             </div>

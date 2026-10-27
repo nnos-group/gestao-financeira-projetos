@@ -74,142 +74,185 @@ export async function GET() {
       try {
         const { getZohoAccessToken } = await import("@/lib/zoho-sign");
         const token = await getZohoAccessToken();
-        const zohoRes = await fetch("https://sign.zoho.com/api/v1/requests", {
-          headers: { Authorization: `Zoho-oauthtoken ${token}` },
-        });
+        let alterouZoho = false;
 
-        if (zohoRes.ok) {
-          const zohoData = await zohoRes.json();
-          const requests = zohoData.requests || [];
-          let alterouZoho = false;
+        // A) Listar requests recentes ordenados por created_time DESC para capturar BMs recentes
+        let requests: any[] = [];
+        try {
+          const queryPayload = {
+            page_context: {
+              row_count: 50,
+              start_index: 1,
+              sort_column: "created_time",
+              sort_order: "DESC",
+            },
+          };
+          const zohoRes = await fetch(`https://sign.zoho.com/api/v1/requests?data=${encodeURIComponent(JSON.stringify(queryPayload))}`, {
+            headers: { Authorization: `Zoho-oauthtoken ${token}` },
+          });
 
-          for (const req of requests) {
-            const docName = req.request_name || "";
-            const match = docName.match(/(?:BM[\s-_]?)?(\d{3,5})/i);
-            const cod = match ? match[1] : null;
+          if (zohoRes.ok) {
+            const zohoData = await zohoRes.json();
+            requests = zohoData.requests || [];
+          }
+        } catch (lErr: any) {
+          console.warn("Aviso ao listar requests do Zoho:", lErr.message);
+        }
 
-            if (cod && (req.request_status === "completed" || req.request_status === "inprogress" || req.request_status === "in_progress")) {
-              alterouZoho = true;
-
-              // Buscar trilha de auditoria oficial do Zoho Sign para obter IP real e Data/Hora exata de cada assinatura
-              let auditActivities: any[] = [];
-              try {
-                const auditRes = await fetch(`https://sign.zoho.com/api/v1/requests/${req.request_id}/audit`, {
-                  headers: { Authorization: `Zoho-oauthtoken ${token}` },
-                });
-                if (auditRes.ok) {
-                  const auditJson = await auditRes.json();
-                  auditActivities = auditJson.account_activity_report || auditJson.activities || auditJson.reports || [];
-                }
-              } catch (aErr: any) {
-                console.warn("Aviso ao buscar auditoria do Zoho:", aErr.message);
-              }
-
-              const logsAtualizados = (req.actions || [])
-                .filter((act: any) => {
-                  const isView = act.action_type === "VIEW" || (act.recipient_name && act.recipient_name.toLowerCase().includes("auditoria"));
-                  return !isView;
-                })
-                .map((act: any) => {
-                  // Localizar evento de assinatura concluída no audit trail oficial
-                  const auditEvent = auditActivities.find((ev: any) =>
-                    (ev.operation_type === "RequestSigningSuccess" || ev.operation_type === "RequestApproved" || (ev.activity && (ev.activity.toLowerCase().includes("assinado") || ev.activity.toLowerCase().includes("aprovado")))) &&
-                    (String(ev.action_id) === String(act.action_id) || (act.recipient_name && ev.performed_by_name && ev.performed_by_name.toUpperCase() === act.recipient_name.toUpperCase()))
-                  );
-
-                  const statusAcao = String(act.action_status || act.status || "").toUpperCase();
-                  const isConcluido = ["SIGNED", "COMPLETED", "APPROVED", "APPROVE"].includes(statusAcao);
-
-                  const timestamp = auditEvent?.performed_at || act.action_time || act.signed_time;
-                  let dataFmt = "";
-                  if (timestamp) {
-                    const dt = new Date(Number(timestamp) || timestamp);
-                    if (!isNaN(dt.getTime())) {
-                      dataFmt = dt.toLocaleString("pt-BR", {
-                        timeZone: "America/Sao_Paulo",
-                        day: "2-digit",
-                        month: "2-digit",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        second: "2-digit",
-                      });
-                    }
-                  }
-
-                  const ipReal = auditEvent?.ip_address || act.ip_address || "191.187.11.168";
-                  const docIdReal = auditEvent?.document_id || req.zsdocumentid || req.document_id || "2EEBEA08-B5P3HI3SGTH9S3DTW24ZYKXM-EG74VXMYB4CASUAB8G";
-
-                  let papelNome = "Prestador de Serviços";
-                  if (act.signing_order === 1 || act.action_type === "APPROVE" || act.action_type === "APPROVER" || (act.role && act.role.toLowerCase().includes("lider"))) {
-                    papelNome = "Aprovador (Líder de Projeto)";
-                  } else if (act.signing_order === 2) {
-                    papelNome = "Prestador de Serviços";
-                  } else if (act.signing_order === 3 || (act.role && act.role.toLowerCase().includes("valida")) || (act.role && act.role.toLowerCase().includes("coord"))) {
-                    papelNome = "Responsável NNÓS (Coordenação Geral)";
-                  }
-
-                  return {
-                    signatario: act.recipient_name,
-                    papel: papelNome,
-                    email: act.recipient_email,
-                    status: isConcluido ? (papelNome.includes("Líder") ? "Aprovado" : "Assinado") : "Pendente",
-                    dataHora: dataFmt,
-                    detalhe: `IP: ${ipReal} • Zoho Doc ID: ${docIdReal}`,
-                  };
-                });
-
-              // Ordenar por ordem corporativa padrão: 1º Prestador, 2º Líder, 3º Coordenação
-              const ordemDesejada: Record<string, number> = {
-                "Prestador de Serviços": 1,
-                "Aprovador (Líder de Projeto)": 2,
-                "Responsável NNÓS (Coordenação Geral)": 3,
-              };
-              logsAtualizados.sort((a: any, b: any) => (ordemDesejada[a.papel] || 9) - (ordemDesejada[b.papel] || 9));
-
-              const todosConcluidos = logsAtualizados.length > 0 && logsAtualizados.every((l: any) => l.status === "Assinado" || l.status === "Aprovado");
-              const prestadorAssinou = logsAtualizados.find((l: any) => l.papel === "Prestador de Serviços")?.status === "Assinado";
-              const liderAssinou = ["Assinado", "Aprovado"].includes(logsAtualizados.find((l: any) => l.papel.includes("Líder"))?.status);
-              const coordAssinou = ["Assinado", "Aprovado"].includes(logsAtualizados.find((l: any) => l.papel.includes("Coordenação") || l.papel.includes("Responsável"))?.status);
-
-              let statusCalculado = "Pendente de Assinatura";
-              if (todosConcluidos || (liderAssinou && prestadorAssinou && coordAssinou) || req.request_status === "completed") {
-                statusCalculado = "Aprovado & Pronto p/ Faturamento";
-              } else if (prestadorAssinou) {
-                statusCalculado = "Assinado pelo Prestador";
-              } else if (liderAssinou) {
-                statusCalculado = "Aprovado pelo Líder";
-              }
-
-              mapaStatus[cod] = {
-                status: statusCalculado,
-                zohoRequestId: req.request_id,
-                logs: logsAtualizados,
-                atualizadoEm: new Date().toISOString(),
-              };
-
-              bms = bms.map((bm: any) => {
-                if (String(bm.codigo) === cod) {
-                  return {
-                    ...bm,
-                    status: statusCalculado,
-                    zohoRequestId: req.request_id,
-                    logs: logsAtualizados,
-                  };
-                }
-                return bm;
+        // B) Também buscar requests individuais por zohoRequestId para BMs pendentes que já possuem requestId mapeado
+        const idsProcessados = new Set(requests.map((r: any) => String(r.request_id)));
+        for (const bm of bms) {
+          const cod = String(bm.codigo);
+          const reqId = bm.zohoRequestId || mapaStatus[cod]?.zohoRequestId;
+          if (reqId && !idsProcessados.has(String(reqId))) {
+            try {
+              const indivRes = await fetch(`https://sign.zoho.com/api/v1/requests/${reqId}`, {
+                headers: { Authorization: `Zoho-oauthtoken ${token}` },
               });
+              if (indivRes.ok) {
+                const indivData = await indivRes.json();
+                const singleReq = indivData.requests || indivData;
+                if (singleReq && singleReq.request_id) {
+                  requests.push(singleReq);
+                  idsProcessados.add(String(singleReq.request_id));
+                }
+              }
+            } catch (iErr: any) {
+              console.warn(`Aviso ao consultar request individual ${reqId}:`, iErr.message);
             }
           }
+        }
 
-          if (alterouZoho) {
-            await sb.from("configuracoes").upsert({
-              chave: "bms_assinaturas_status",
-              valor: Object.keys(mapaStatus).length,
-              descricao: JSON.stringify(mapaStatus),
+        for (const req of requests) {
+          const docName = req.request_name || "";
+          const match = docName.match(/(?:BM[\s-_]?)?(\d{3,5})/i);
+          const cod = match ? match[1] : null;
+
+          if (cod && (req.request_status === "completed" || req.request_status === "inprogress" || req.request_status === "in_progress")) {
+            // Buscar trilha de auditoria oficial do Zoho Sign para obter IP real e Data/Hora exata de cada assinatura
+            let auditActivities: any[] = [];
+            try {
+              const auditRes = await fetch(`https://sign.zoho.com/api/v1/requests/${req.request_id}/audit`, {
+                headers: { Authorization: `Zoho-oauthtoken ${token}` },
+              });
+              if (auditRes.ok) {
+                const auditJson = await auditRes.json();
+                auditActivities = auditJson.account_activity_report || auditJson.activities || auditJson.reports || [];
+              }
+            } catch (aErr: any) {
+              console.warn("Aviso ao buscar auditoria do Zoho:", aErr.message);
+            }
+
+            const logsAtualizados = (req.actions || [])
+              .filter((act: any) => {
+                const isView = act.action_type === "VIEW" || (act.recipient_name && act.recipient_name.toLowerCase().includes("auditoria"));
+                return !isView;
+              })
+              .map((act: any) => {
+                // Localizar evento de assinatura concluída no audit trail oficial
+                const auditEvent = auditActivities.find((ev: any) =>
+                  (ev.operation_type === "RequestSigningSuccess" || ev.operation_type === "RequestApproved" || (ev.activity && (ev.activity.toLowerCase().includes("assinado") || ev.activity.toLowerCase().includes("aprovado")))) &&
+                  (String(ev.action_id) === String(act.action_id) || (act.recipient_name && ev.performed_by_name && ev.performed_by_name.toUpperCase() === act.recipient_name.toUpperCase()))
+                );
+
+                const statusAcao = String(act.action_status || act.status || "").toUpperCase();
+                const isConcluido = ["SIGNED", "COMPLETED", "APPROVED", "APPROVE"].includes(statusAcao) || !!auditEvent;
+
+                const timestamp = auditEvent?.performed_at || act.action_time || act.signed_time;
+                let dataFmt = "";
+                if (timestamp && isConcluido) {
+                  const dt = new Date(Number(timestamp) || timestamp);
+                  if (!isNaN(dt.getTime())) {
+                    dataFmt = dt.toLocaleString("pt-BR", {
+                      timeZone: "America/Sao_Paulo",
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      second: "2-digit",
+                    });
+                  }
+                }
+
+                const ipReal = auditEvent?.ip_address || act.ip_address || "191.187.11.168";
+                const docIdReal = auditEvent?.document_id || req.zsdocumentid || req.document_id || "2EEBEA08-B5P3HI3SGTH9S3DTW24ZYKXM-EG74VXMYB4CASUAB8G";
+
+                let papelNome = "Prestador de Serviços";
+                if (act.signing_order === 1 || act.action_type === "APPROVE" || act.action_type === "APPROVER" || (act.role && act.role.toLowerCase().includes("lider"))) {
+                  papelNome = "Aprovador (Líder de Projeto)";
+                } else if (act.signing_order === 2) {
+                  papelNome = "Prestador de Serviços";
+                } else if (act.signing_order === 3 || (act.role && act.role.toLowerCase().includes("valida")) || (act.role && act.role.toLowerCase().includes("coord"))) {
+                  papelNome = "Responsável NNÓS (Coordenação Geral)";
+                }
+
+                return {
+                  signatario: act.recipient_name,
+                  papel: papelNome,
+                  email: act.recipient_email,
+                  status: isConcluido ? (papelNome.includes("Líder") ? "Aprovado" : "Assinado") : "Pendente",
+                  dataHora: isConcluido ? dataFmt : "",
+                  detalhe: `IP: ${ipReal} • Zoho Doc ID: ${docIdReal}`,
+                };
+              });
+
+            // Ordenar por ordem corporativa padrão: 1º Prestador, 2º Líder, 3º Coordenação
+            const ordemDesejada: Record<string, number> = {
+              "Prestador de Serviços": 1,
+              "Aprovador (Líder de Projeto)": 2,
+              "Responsável NNÓS (Coordenação Geral)": 3,
+            };
+            logsAtualizados.sort((a: any, b: any) => (ordemDesejada[a.papel] || 9) - (ordemDesejada[b.papel] || 9));
+
+            const todosConcluidos = logsAtualizados.length > 0 && logsAtualizados.every((l: any) => l.status === "Assinado" || l.status === "Aprovado");
+            const prestadorAssinou = logsAtualizados.find((l: any) => l.papel === "Prestador de Serviços")?.status === "Assinado";
+            const liderAssinou = ["Assinado", "Aprovado"].includes(logsAtualizados.find((l: any) => l.papel.includes("Líder"))?.status);
+            const coordAssinou = ["Assinado", "Aprovado"].includes(logsAtualizados.find((l: any) => l.papel.includes("Coordenação") || l.papel.includes("Responsável"))?.status);
+
+            let statusCalculado = "Pendente de Assinatura";
+            if (todosConcluidos || (liderAssinou && prestadorAssinou && coordAssinou) || req.request_status === "completed") {
+              statusCalculado = "Aprovado & Pronto p/ Faturamento";
+            } else if (prestadorAssinou) {
+              statusCalculado = "Assinado pelo Prestador";
+            } else if (liderAssinou) {
+              statusCalculado = "Aprovado pelo Líder";
+            }
+
+            mapaStatus[cod] = {
+              status: statusCalculado,
+              zohoRequestId: req.request_id,
+              logs: logsAtualizados,
+              atualizadoEm: new Date().toISOString(),
+            };
+
+            bms = bms.map((bm: any) => {
+              if (String(bm.codigo) === cod) {
+                return {
+                  ...bm,
+                  status: statusCalculado,
+                  zohoRequestId: req.request_id,
+                  logs: logsAtualizados,
+                };
+              }
+              return bm;
             });
-            console.log("☁️ [API Medição] Assinaturas ativas do Zoho Sign sincronizadas com sucesso no Supabase!");
+            alterouZoho = true;
           }
+        }
+
+        if (alterouZoho) {
+          await sb.from("configuracoes").upsert({
+            chave: "bms_assinaturas_status",
+            valor: Object.keys(mapaStatus).length,
+            descricao: JSON.stringify(mapaStatus),
+          });
+          await sb.from("configuracoes").upsert({
+            chave: "bms_lista_completa",
+            valor: bms.length,
+            descricao: JSON.stringify(bms),
+          });
+          console.log("☁️ [API Medição] Assinaturas ativas do Zoho Sign sincronizadas com sucesso no Supabase!");
         }
       } catch (zohoErr: any) {
         console.warn("Aviso na sincronização ativa com Zoho Sign:", zohoErr.message);

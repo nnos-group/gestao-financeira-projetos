@@ -22,6 +22,7 @@ export interface BmPdfDados {
   contrato?: string;
   mesReferencia: string;
   periodoStr: string;
+  periodoTipo?: string;
   totalHoras: number;
   mediaHora: number;
   valorTotal: number;
@@ -401,40 +402,25 @@ export async function gerarPdfOficialBm(dados: BmPdfDados): Promise<Uint8Array> 
   page.drawText("DADOS OBRIGATÓRIOS PARA EMISSÃO", { x: marginX + 8, y: y - 10, size: 5.5, font: fontBold, color: cPrimary });
   page.drawText("Discriminação dos Serviços na Nota Fiscal", { x: marginX + 8, y: y - 19, size: 7.5, font: fontBold, color: cDark });
 
-  // Botão estilizado no canto superior direito: Copiar Discriminação
-  const btnW = 76;
-  const btnH = 12;
-  const btnX = marginX + partyW - btnW - 8;
-  const btnY = y - 20;
-  page.drawRectangle({
-    x: btnX,
-    y: btnY,
-    width: btnW,
-    height: btnH,
-    color: rgb(0, 0.08, 0.18),
-    borderColor: rgb(0, 0.08, 0.18),
-    borderWidth: 1,
-  });
-  page.drawText("Copiar Discriminação", {
-    x: btnX + 7,
-    y: btnY + 3.5,
-    size: 5.2,
-    font: fontBold,
-    color: cWhite,
-  });
-
-  // Instrução
-  page.drawText('Copie exatamente o bloco textual abaixo e cole no campo "Descrição dos Serviços / Dados Adicionais" do seu emissor de Nota Fiscal:', {
+  // Instrução com quebra adequada para não estourar a margem
+  page.drawText('Copie o bloco textual abaixo e cole no campo "Descrição dos Serviços / Dados Adicionais"', {
     x: marginX + 8,
-    y: y - 28,
+    y: y - 27,
+    size: 5.2,
+    font: fontRegular,
+    color: cMuted,
+  });
+  page.drawText('do seu emissor de Nota Fiscal:', {
+    x: marginX + 8,
+    y: y - 33,
     size: 5.2,
     font: fontRegular,
     color: cMuted,
   });
 
   // Bloco Monospace / Destaque de Código
-  const codeBoxH = 46;
-  const codeBoxY = y - 31 - codeBoxH;
+  const codeBoxH = 44;
+  const codeBoxY = y - 36 - codeBoxH;
   page.drawRectangle({
     x: marginX + 6,
     y: codeBoxY,
@@ -445,7 +431,7 @@ export async function gerarPdfOficialBm(dados: BmPdfDados): Promise<Uint8Array> 
     borderWidth: 0.5,
   });
 
-  let curCodeY = y - 38;
+  let curCodeY = y - 43;
   page.drawText(`BM: ${dados.codigoBm}  |  CONTRATO: ${contratoLimpo}`, {
     x: marginX + 10,
     y: curCodeY,
@@ -536,6 +522,8 @@ export async function gerarPdfOficialBm(dados: BmPdfDados): Promise<Uint8Array> 
   page.drawText("FLUXO DE CAIXA & REGRAS", { x: p2X + 8, y: y - 10, size: 5.5, font: fontBold, color: cPrimary });
   page.drawText("Cronograma de Envio e Pagamento", { x: p2X + 8, y: y - 19, size: 7.5, font: fontBold, color: cDark });
 
+  const isQuinzena1 = (dados.periodoTipo || dados.periodoStr || "").includes("1ª");
+
   // Sub-card 1: 1ª Quinzena
   const subH = 26;
   const sub1Y = y - 24 - subH;
@@ -544,9 +532,9 @@ export async function gerarPdfOficialBm(dados: BmPdfDados): Promise<Uint8Array> 
     y: sub1Y,
     width: partyW - 12,
     height: subH,
-    color: rgb(0.97, 0.98, 0.99),
-    borderColor: rgb(0.88, 0.91, 0.94),
-    borderWidth: 0.5,
+    color: isQuinzena1 ? rgb(0.95, 0.97, 1) : rgb(0.97, 0.98, 0.99),
+    borderColor: isQuinzena1 ? rgb(0.65, 0.8, 0.98) : rgb(0.88, 0.91, 0.94),
+    borderWidth: isQuinzena1 ? 1 : 0.5,
   });
 
   // Ícone/Quadrado "1ª"
@@ -555,29 +543,25 @@ export async function gerarPdfOficialBm(dados: BmPdfDados): Promise<Uint8Array> 
     y: sub1Y + 5,
     width: 16,
     height: 16,
-    color: rgb(0.88, 0.91, 0.94),
+    color: isQuinzena1 ? rgb(0, 0.08, 0.18) : rgb(0.88, 0.91, 0.94),
     borderWidth: 0,
   });
-  page.drawText("1ª", { x: p2X + 13.5, y: sub1Y + 9.5, size: 6.5, font: fontBold, color: cPrimary });
+  page.drawText("1ª", { x: p2X + 13.5, y: sub1Y + 9.5, size: 6.5, font: fontBold, color: isQuinzena1 ? cWhite : cPrimary });
 
   page.drawText("Atividades da 1ª Quinzena", { x: p2X + 30, y: sub1Y + 16, size: 6, font: fontBold, color: cPrimary });
-  // Tag Opção A
-  page.drawRectangle({ x: p2X + 105, y: sub1Y + 15, width: 28, height: 7.5, color: rgb(0.88, 0.95, 1), borderWidth: 0 });
-  page.drawText("Opção A", { x: p2X + 108, y: sub1Y + 17, size: 4.8, font: fontBold, color: rgb(0.01, 0.4, 0.6) });
-
   page.drawText("Envio da nota fiscal até o dia 25 do mês vigente.", { x: p2X + 30, y: sub1Y + 9, size: 5.2, font: fontRegular, color: cText });
   page.drawText("Pagamento creditado no dia 10 subsequente", { x: p2X + 30, y: sub1Y + 2.5, size: 5.2, font: fontBold, color: cSuccess });
 
-  // Sub-card 2: Totalidade / Mês Cheio
+  // Sub-card 2: Atividades da 2ª Quinzena/Integral
   const sub2Y = sub1Y - subH - 3;
   page.drawRectangle({
     x: p2X + 6,
     y: sub2Y,
     width: partyW - 12,
     height: subH,
-    color: rgb(0.96, 0.97, 0.99),
-    borderColor: rgb(0.82, 0.86, 0.92),
-    borderWidth: 0.5,
+    color: !isQuinzena1 ? rgb(0.95, 0.97, 1) : rgb(0.96, 0.97, 0.99),
+    borderColor: !isQuinzena1 ? rgb(0.65, 0.8, 0.98) : rgb(0.82, 0.86, 0.92),
+    borderWidth: !isQuinzena1 ? 1 : 0.5,
   });
 
   // Ícone/Quadrado "2ª"
@@ -586,20 +570,16 @@ export async function gerarPdfOficialBm(dados: BmPdfDados): Promise<Uint8Array> 
     y: sub2Y + 5,
     width: 16,
     height: 16,
-    color: rgb(0, 0.08, 0.18),
+    color: !isQuinzena1 ? rgb(0, 0.08, 0.18) : rgb(0.88, 0.91, 0.94),
     borderWidth: 0,
   });
-  page.drawText("2ª", { x: p2X + 13.5, y: sub2Y + 9.5, size: 6.5, font: fontBold, color: cWhite });
+  page.drawText("2ª", { x: p2X + 13.5, y: sub2Y + 9.5, size: 6.5, font: fontBold, color: !isQuinzena1 ? cWhite : cPrimary });
 
-  page.drawText("Totalidade das Atividades / Mês Cheio", { x: p2X + 30, y: sub2Y + 16, size: 6, font: fontBold, color: cPrimary });
-  // Tag Recomendado BM ...
-  page.drawRectangle({ x: p2X + 135, y: sub2Y + 15, width: 54, height: 7.5, color: rgb(0.82, 0.98, 0.9), borderWidth: 0 });
-  page.drawText(`Recomendado BM ${dados.codigoBm}`, { x: p2X + 138, y: sub2Y + 17, size: 4.8, font: fontBold, color: rgb(0.02, 0.4, 0.25) });
-
+  page.drawText("Atividades da 2ª Quinzena/Integral", { x: p2X + 30, y: sub2Y + 16, size: 6, font: fontBold, color: cPrimary });
   page.drawText("Envio da nota fiscal até o dia 10 após recebimento do BM.", { x: p2X + 30, y: sub2Y + 9, size: 5.2, font: fontRegular, color: cText });
-  page.drawText(`Previsão de Liquidação: Dia 25 de ${dados.mesReferencia}`, { x: p2X + 30, y: sub2Y + 2.5, size: 5.2, font: fontBold, color: cSuccess });
+  page.drawText(`Previsão de Liquidação: Dia 25 de ${dados.mesReferencia || "Outubro / 2026"}`, { x: p2X + 30, y: sub2Y + 2.5, size: 5.2, font: fontBold, color: cSuccess });
 
-  // Barra Horizontal / Timeline no Rodapé
+  // Barra Horizontal / Timeline no Rodapé calculada de acordo com a medição do BM
   const timeBarY = y - rulesH + 4;
   page.drawRectangle({
     x: p2X + 6,
@@ -610,11 +590,37 @@ export async function gerarPdfOficialBm(dados: BmPdfDados): Promise<Uint8Array> 
     borderColor: rgb(0.9, 0.92, 0.95),
     borderWidth: 0.5,
   });
-  page.drawText("• BM: 01/10", { x: p2X + 12, y: timeBarY + 2.5, size: 5.2, font: fontBold, color: cDark });
+
+  // Extrair mês e ano para exibição precisa
+  const mesesNomes = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+  let mesNum = 10;
+  let anoNum = 2026;
+  const mesMatch = (dados.mesReferencia || "").match(/(\d{4})/);
+  if (mesMatch) anoNum = Number(mesMatch[1]);
+  mesesNomes.forEach((m, idx) => {
+    if ((dados.mesReferencia || "").toLowerCase().includes(m.toLowerCase())) mesNum = idx + 1;
+  });
+
+  const mesStr = String(mesNum).padStart(2, "0");
+  const proxMesNum = mesNum === 12 ? 1 : mesNum + 1;
+  const proxAnoNum = mesNum === 12 ? anoNum + 1 : anoNum;
+  const proxMesStr = String(proxMesNum).padStart(2, "0");
+
+  let tBm = `• BM: 18/${mesStr}`;
+  let tPrazo = `Prazo NF: 25/${mesStr}`;
+  let tCredito = `• Crédito: 10/${proxMesStr}/${proxAnoNum}`;
+
+  if (!isQuinzena1) {
+    tBm = `• BM: 01/${proxMesStr}`;
+    tPrazo = `Prazo NF: 10/${proxMesStr}`;
+    tCredito = `• Crédito: 25/${proxMesStr}/${proxAnoNum}`;
+  }
+
+  page.drawText(tBm, { x: p2X + 12, y: timeBarY + 2.5, size: 5.2, font: fontBold, color: cDark });
   page.drawText("------>", { x: p2X + 68, y: timeBarY + 2.5, size: 5, font: fontRegular, color: cMuted });
-  page.drawText("Prazo NF: 10/10", { x: p2X + 100, y: timeBarY + 2.5, size: 5.2, font: fontBold, color: cPrimary });
-  page.drawText("------>", { x: p2X + 160, y: timeBarY + 2.5, size: 5, font: fontRegular, color: cMuted });
-  page.drawText("• Crédito: 25/10/2026", { x: p2X + 190, y: timeBarY + 2.5, size: 5.2, font: fontBold, color: cSuccess });
+  page.drawText(tPrazo, { x: p2X + 96, y: timeBarY + 2.5, size: 5.2, font: fontBold, color: cPrimary });
+  page.drawText("------>", { x: p2X + 155, y: timeBarY + 2.5, size: 5, font: fontRegular, color: cMuted });
+  page.drawText(tCredito, { x: p2X + 185, y: timeBarY + 2.5, size: 5.2, font: fontBold, color: cSuccess });
 
   y -= (rulesH + 6);
 
