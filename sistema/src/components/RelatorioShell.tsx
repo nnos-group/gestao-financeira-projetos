@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import ThemeToggle from "@/components/ThemeToggle";
 
 const MENU = [
@@ -36,10 +37,10 @@ export default function RelatorioShell({
           </div>
           <nav className="sidebar-nav">
             {MENU.map((m) => (
-              <a key={m.href} href={m.href} className={`nav-item${m.href === "/relatorios" ? " active" : ""}`}>
+              <Link key={m.href} href={m.href} className={`nav-item${m.href === "/relatorios" ? " active" : ""}`}>
                 <span className="material-symbols-outlined">{m.icon}</span>
                 <span>{m.label}</span>
-              </a>
+              </Link>
             ))}
           </nav>
         </div>
@@ -53,7 +54,7 @@ export default function RelatorioShell({
       <div className="main-wrapper">
         <header className="top-header">
           <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-            <a
+            <Link
               href="/relatorios"
               style={{
                 display: "inline-flex",
@@ -72,11 +73,11 @@ export default function RelatorioShell({
             >
               <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>arrow_back</span>
               <span>Voltar</span>
-            </a>
+            </Link>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <a href="/relatorios" className="font-label-sm" style={{ color: "var(--on-surface-variant)", letterSpacing: "0.04em", textTransform: "uppercase", fontWeight: 600, textDecoration: "none" }}>
+              <Link href="/relatorios" className="font-label-sm" style={{ color: "var(--on-surface-variant)", letterSpacing: "0.04em", textTransform: "uppercase", fontWeight: 600, textDecoration: "none" }}>
                 Central de Relatórios
-              </a>
+              </Link>
               <span style={{ color: "var(--outline-variant)" }}>/</span>
               <span className="font-label-sm" style={{ color: "var(--primary)", fontWeight: 700 }}>{titulo}</span>
             </div>

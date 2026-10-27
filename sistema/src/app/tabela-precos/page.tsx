@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 
 import React, { useState, useEffect, useMemo } from "react";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -316,43 +317,43 @@ export default function TabelaPrecosPage() {
           </div>
 
           <nav className="sidebar-nav">
-            <a href="/projetos" className="nav-item">
+            <Link href="/projetos" className="nav-item">
               <span className="material-symbols-outlined">assignment</span>
               <span>Projetos & Atividades</span>
-            </a>
-            <a href="/medicao" className="nav-item">
+            </Link>
+            <Link href="/medicao" className="nav-item">
               <span className="material-symbols-outlined">receipt_long</span>
               <span>BM - Boletim de Medição</span>
-            </a>
-            <a href="/viagens" className="nav-item">
+            </Link>
+            <Link href="/viagens" className="nav-item">
               <span className="material-symbols-outlined">flight</span>
               <span>Viagens & Logística</span>
-            </a>
-            <a href="/centro-de-custo" className="nav-item">
+            </Link>
+            <Link href="/centro-de-custo" className="nav-item">
               <span className="material-symbols-outlined">account_tree</span>
               <span>Centro de Custo</span>
-            </a>
-            <a href="/tabela-precos" className="nav-item active">
+            </Link>
+            <Link href="/tabela-precos" className="nav-item active">
               <span className="material-symbols-outlined">request_quote</span>
               <span>Tabela de Preços</span>
-            </a>
-            <a href="/pessoas" className="nav-item">
+            </Link>
+            <Link href="/pessoas" className="nav-item">
               <span className="material-symbols-outlined">group</span>
               <span>Pessoas</span>
-            </a>
-            <a href="/faturamento" className="nav-item">
+            </Link>
+            <Link href="/faturamento" className="nav-item">
               <span className="material-symbols-outlined">receipt</span>
               <span>Faturamento</span>
-            </a>
-            <a href="/pagamentos" className="nav-item">
+            </Link>
+            <Link href="/pagamentos" className="nav-item">
               <span className="material-symbols-outlined">payments</span>
               <span>Pagamentos</span>
-            </a>
-            <a href="/relatorios" className="nav-item">
+            </Link>
+            <Link href="/relatorios" className="nav-item">
               <span className="material-symbols-outlined">monitoring</span>
               <span>Relatórios</span>
-            </a>
-            <a href="/consultor" className="nav-item"><span className="material-symbols-outlined">support_agent</span><span>Consultor</span></a>
+            </Link>
+            <Link href="/consultor" className="nav-item"><span className="material-symbols-outlined">support_agent</span><span>Consultor</span></Link>
           </nav>
         </div>
 
@@ -407,14 +408,14 @@ export default function TabelaPrecosPage() {
 
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             <ThemeToggle />
-            <a
+            <Link
               href="/centro-de-custo"
               className="btn-secondary"
               style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "12px", padding: "6px 12px" }}
             >
               <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>account_tree</span>
               <span>Matriz de Centro de Custo</span>
-            </a>
+            </Link>
           </div>
         </header>
 
@@ -1204,14 +1205,14 @@ export default function TabelaPrecosPage() {
                     Ao selecionar qualquer um destes Centros de Custo no lançamento de uma atividade, a Tabela de Preços do <strong>{contratoAtual.nome}</strong> será aplicada automaticamente.
                   </p>
                 </div>
-                <a
+                <Link
                   href="/centro-de-custo"
                   className="btn-primary"
                   style={{ textDecoration: "none", fontSize: "12px", padding: "6px 14px", display: "inline-flex", alignItems: "center", gap: "6px", background: "var(--primary)", color: "#fff", borderRadius: "8px" }}
                 >
                   <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>edit</span>
                   <span>Gerenciar Matriz de Centros de Custo</span>
-                </a>
+                </Link>
               </div>
 
               <div style={{ padding: "18px" }}>

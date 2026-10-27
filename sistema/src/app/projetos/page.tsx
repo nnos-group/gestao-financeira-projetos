@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { supabaseAdmin } from "@/lib/supabase-server";
 import ThemeToggle from "@/components/ThemeToggle";
 import FloatingCardsList, { LancamentoItem } from "@/components/FloatingCardsList";
@@ -48,19 +49,26 @@ export default async function ProjetosPage({
   const sp = await searchParams;
   const db = supabaseAdmin();
 
-  // Buscar apenas os anos que possuem lançamentos de atividades
-  const { data: compGeral } = await db
-    .from("lancamentos")
-    .select("competencia")
-    .limit(3000);
+  // Em paralelo: faixa de anos (menor/maior competência, apenas 1 linha cada), projetos e consultores.
+  // Antes: baixava até 3000 linhas só para calcular os anos e consultava tudo em cascata.
+  const [minCompRes, maxCompRes, projetosRes, consultoresRes] = await Promise.all([
+    db.from("lancamentos").select("competencia").not("competencia", "is", null).order("competencia", { ascending: true }).limit(1),
+    db.from("lancamentos").select("competencia").not("competencia", "is", null).order("competencia", { ascending: false }).limit(1),
+    db.from("projetos").select("id, nome, centros_custo(codigo, contrato)").order("nome"),
+    db.from("consultores").select("id, nome, tipo").order("nome"),
+  ]);
 
-  const anosDisponiveis = Array.from(
-    new Set(
-      (compGeral || [])
-        .map((l) => (l.competencia ? Number(l.competencia.split("-")[0]) : null))
-        .filter((a): a is number => typeof a === "number" && !isNaN(a) && a >= 2020)
-    )
-  ).sort((a, b) => a - b);
+  const anoDe = (r: { data: { competencia: string | null }[] | null }) => {
+    const c = r.data?.[0]?.competencia;
+    return c ? Number(c.split("-")[0]) : NaN;
+  };
+  const anoMin = Math.max(2020, anoDe(minCompRes));
+  const anoMax = anoDe(maxCompRes);
+
+  const anosDisponiveis: number[] = [];
+  if (!isNaN(anoMin) && !isNaN(anoMax)) {
+    for (let a = anoMin; a <= anoMax; a++) anosDisponiveis.push(a);
+  }
 
   if (anosDisponiveis.length === 0) {
     anosDisponiveis.push(2026);
@@ -122,10 +130,6 @@ export default async function ProjetosPage({
     if (chunk) lancamentosData = chunk;
   }
 
-  const [projetosRes, consultoresRes] = await Promise.all([
-    db.from("projetos").select("id, nome, centros_custo(codigo, contrato)").order("nome"),
-    db.from("consultores").select("id, nome, tipo").order("nome"),
-  ]);
 
   const data = lancamentosData;
 
@@ -270,43 +274,43 @@ export default async function ProjetosPage({
           </div>
 
           <nav className="sidebar-nav">
-            <a href="/projetos" className="nav-item active">
+            <Link href="/projetos" className="nav-item active">
               <span className="material-symbols-outlined">assignment</span>
               <span>Projetos & Atividades</span>
-            </a>
-            <a href="/medicao" className="nav-item">
+            </Link>
+            <Link href="/medicao" className="nav-item">
               <span className="material-symbols-outlined">receipt_long</span>
               <span>BM - Boletim de Medição</span>
-            </a>
-            <a href="/viagens" className="nav-item">
+            </Link>
+            <Link href="/viagens" className="nav-item">
               <span className="material-symbols-outlined">flight</span>
               <span>Viagens & Logística</span>
-            </a>
-            <a href="/centro-de-custo" className="nav-item">
+            </Link>
+            <Link href="/centro-de-custo" className="nav-item">
               <span className="material-symbols-outlined">account_tree</span>
               <span>Centro de Custo</span>
-            </a>
-            <a href="/tabela-precos" className="nav-item">
+            </Link>
+            <Link href="/tabela-precos" className="nav-item">
               <span className="material-symbols-outlined">request_quote</span>
               <span>Tabela de Preços</span>
-            </a>
-            <a href="/pessoas" className="nav-item">
+            </Link>
+            <Link href="/pessoas" className="nav-item">
               <span className="material-symbols-outlined">group</span>
               <span>Pessoas</span>
-            </a>
-            <a href="/faturamento" className="nav-item">
+            </Link>
+            <Link href="/faturamento" className="nav-item">
               <span className="material-symbols-outlined">receipt</span>
               <span>Faturamento</span>
-            </a>
-            <a href="/pagamentos" className="nav-item">
+            </Link>
+            <Link href="/pagamentos" className="nav-item">
               <span className="material-symbols-outlined">payments</span>
               <span>Pagamentos</span>
-            </a>
-            <a href="/relatorios" className="nav-item">
+            </Link>
+            <Link href="/relatorios" className="nav-item">
               <span className="material-symbols-outlined">monitoring</span>
               <span>Relatórios</span>
-            </a>
-            <a href="/consultor" className="nav-item"><span className="material-symbols-outlined">support_agent</span><span>Consultor</span></a>
+            </Link>
+            <Link href="/consultor" className="nav-item"><span className="material-symbols-outlined">support_agent</span><span>Consultor</span></Link>
           </nav>
         </div>
 
@@ -546,23 +550,23 @@ export default async function ProjetosPage({
                     />
                   </div>
                   <div style={{ display: "inline-flex", gap: "4px", flexWrap: "wrap", alignItems: "center" }}>
-                    <a
+                    <Link
                       href={`/projetos?ano=${anoSelecionado}&mes=todos`}
                       className={`month-chip ${isTodosMeses ? "active" : ""}`}
                     >
                       Todos
-                    </a>
+                    </Link>
                     {MESES.map((nome, idx) => {
                       const numMes = idx + 1;
                       const ativo = !isTodosMeses && numMes === mes;
                       return (
-                        <a
+                        <Link
                           key={nome}
                           href={ativo ? `/projetos?ano=${anoSelecionado}&mes=todos` : `/projetos?ano=${anoSelecionado}&mes=${numMes}`}
                           className={`month-chip ${ativo ? "active" : ""}`}
                         >
                           {nome}
-                        </a>
+                        </Link>
                       );
                     })}
                   </div>

@@ -46,22 +46,26 @@ export async function GET(request: Request) {
       }
     }
 
-    // 2. Anos disponíveis na base geral
-    const { data: compGeral } = await db
-      .from("lancamentos")
-      .select("competencia")
-      .limit(2000);
+    // 2. Anos disponíveis na base geral (menor/maior competência, 1 linha cada, em paralelo)
+    const [minCompRes, maxCompRes] = await Promise.all([
+      db.from("lancamentos").select("competencia").not("competencia", "is", null).order("competencia", { ascending: true }).limit(1),
+      db.from("lancamentos").select("competencia").not("competencia", "is", null).order("competencia", { ascending: false }).limit(1),
+    ]);
+    const anoDe = (r: { data: { competencia: string | null }[] | null }) => {
+      const c = r.data?.[0]?.competencia;
+      return c ? Number(c.split("-")[0]) : NaN;
+    };
+    const anoMin = anoDe(minCompRes);
+    const anoMax = anoDe(maxCompRes);
 
-    const todosAnos = Array.from(
-      new Set(
-        (compGeral || [])
-          .map((l) => (l.competencia ? Number(l.competencia.split("-")[0]) : 2026))
-          .filter((a) => !isNaN(a))
-      )
-    ).sort();
+    const todosAnos: number[] = [];
+    if (!isNaN(anoMin) && !isNaN(anoMax)) {
+      for (let a = anoMin; a <= anoMax; a++) todosAnos.push(a);
+    }
 
     if (!todosAnos.includes(2026)) todosAnos.push(2026);
     if (!todosAnos.includes(2027)) todosAnos.push(2027);
+    todosAnos.sort((a, b) => a - b);
 
     if (!matchedConsultor) {
       return NextResponse.json({
@@ -72,11 +76,16 @@ export async function GET(request: Request) {
       });
     }
 
-    // 3. Buscar todas as competências que possuem lançamentos para este consultor
-    const { data: todasCompDoConsultor } = await db
-      .from("lancamentos")
-      .select("competencia")
-      .eq("consultor_id", matchedConsultor.id);
+    // 3 e 4. Em paralelo: todas as competências do consultor + lançamentos da competência solicitada
+    const compAlvo = `${ano}-${String(mesNum).padStart(2, "0")}-01`;
+    const [{ data: todasCompDoConsultor }, { data: lancsCompetencia, error: errLancs }] = await Promise.all([
+      db.from("lancamentos").select("competencia").eq("consultor_id", matchedConsultor.id),
+      db
+        .from("lancamentos")
+        .select("id, competencia, atividade, horas, custo_consultor, repasse, data_inicial, data_final, status, projetos(nome, centros_custo(codigo, lideres(id, nome)))")
+        .eq("consultor_id", matchedConsultor.id)
+        .eq("competencia", compAlvo),
+    ]);
 
     const prefixoAno = `${ano}-`;
     const mesesComLancamentos = Array.from(
@@ -87,14 +96,6 @@ export async function GET(request: Request) {
           .filter((m) => !isNaN(m))
       )
     ).sort((a, b) => a - b);
-
-    // 4. Buscar lançamentos específicos da competência solicitada
-    const compAlvo = `${ano}-${String(mesNum).padStart(2, "0")}-01`;
-    const { data: lancsCompetencia, error: errLancs } = await db
-      .from("lancamentos")
-      .select("id, competencia, atividade, horas, custo_consultor, repasse, data_inicial, data_final, status, projetos(nome, centros_custo(codigo, lideres(id, nome)))")
-      .eq("consultor_id", matchedConsultor.id)
-      .eq("competencia", compAlvo);
 
     if (errLancs) {
       return NextResponse.json({ error: errLancs.message }, { status: 500 });

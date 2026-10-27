@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 
 import React, { useMemo, useState } from "react";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -157,16 +158,16 @@ export default function RelatoriosPage() {
             </div>
           </div>
           <nav className="sidebar-nav">
-            <a href="/projetos" className="nav-item"><span className="material-symbols-outlined">assignment</span><span>Projetos &amp; Atividades</span></a>
-            <a href="/medicao" className="nav-item"><span className="material-symbols-outlined">receipt_long</span><span>BM - Boletim de Medição</span></a>
-            <a href="/viagens" className="nav-item"><span className="material-symbols-outlined">flight</span><span>Viagens &amp; Logística</span></a>
-            <a href="/centro-de-custo" className="nav-item"><span className="material-symbols-outlined">account_tree</span><span>Centro de Custo</span></a>
-            <a href="/tabela-precos" className="nav-item"><span className="material-symbols-outlined">request_quote</span><span>Tabela de Preços</span></a>
-            <a href="/pessoas" className="nav-item"><span className="material-symbols-outlined">group</span><span>Pessoas</span></a>
-            <a href="/faturamento" className="nav-item"><span className="material-symbols-outlined">receipt</span><span>Faturamento</span></a>
-            <a href="/pagamentos" className="nav-item"><span className="material-symbols-outlined">payments</span><span>Pagamentos</span></a>
-            <a href="/relatorios" className="nav-item active"><span className="material-symbols-outlined">monitoring</span><span>Relatórios</span></a>
-            <a href="/consultor" className="nav-item"><span className="material-symbols-outlined">support_agent</span><span>Consultor</span></a>
+            <Link href="/projetos" className="nav-item"><span className="material-symbols-outlined">assignment</span><span>Projetos &amp; Atividades</span></Link>
+            <Link href="/medicao" className="nav-item"><span className="material-symbols-outlined">receipt_long</span><span>BM - Boletim de Medição</span></Link>
+            <Link href="/viagens" className="nav-item"><span className="material-symbols-outlined">flight</span><span>Viagens &amp; Logística</span></Link>
+            <Link href="/centro-de-custo" className="nav-item"><span className="material-symbols-outlined">account_tree</span><span>Centro de Custo</span></Link>
+            <Link href="/tabela-precos" className="nav-item"><span className="material-symbols-outlined">request_quote</span><span>Tabela de Preços</span></Link>
+            <Link href="/pessoas" className="nav-item"><span className="material-symbols-outlined">group</span><span>Pessoas</span></Link>
+            <Link href="/faturamento" className="nav-item"><span className="material-symbols-outlined">receipt</span><span>Faturamento</span></Link>
+            <Link href="/pagamentos" className="nav-item"><span className="material-symbols-outlined">payments</span><span>Pagamentos</span></Link>
+            <Link href="/relatorios" className="nav-item active"><span className="material-symbols-outlined">monitoring</span><span>Relatórios</span></Link>
+            <Link href="/consultor" className="nav-item"><span className="material-symbols-outlined">support_agent</span><span>Consultor</span></Link>
           </nav>
         </div>
         <div className="sidebar-footer">
@@ -382,7 +383,7 @@ export default function RelatoriosPage() {
 
                   {/* Ações / Botão Principal */}
                   <div style={{ marginTop: "16px", display: "flex", flexDirection: "column", gap: "8px" }}>
-                    <a
+                    <Link
                       href={r.href}
                       style={{
                         display: "flex",
@@ -401,10 +402,10 @@ export default function RelatoriosPage() {
                       }}
                     >
                       <span>{r.btnTexto}</span>
-                    </a>
+                    </Link>
 
                     {r.altHref && (
-                      <a
+                      <Link
                         href={r.altHref}
                         style={{
                           display: "flex",
@@ -423,7 +424,7 @@ export default function RelatoriosPage() {
                         }}
                       >
                         <span>{r.altTexto}</span>
-                      </a>
+                      </Link>
                     )}
                   </div>
                 </div>

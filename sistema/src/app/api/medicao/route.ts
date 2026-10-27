@@ -5,7 +5,13 @@ import { supabaseAdmin } from "@/lib/supabase-server";
 
 const FILE_PATH = path.join(process.cwd(), "src/lib/bms-2026.json");
 
-export async function GET() {
+// Throttle da sincronização ativa com o Zoho Sign: evita dezenas de chamadas HTTP a cada abertura de tela.
+// O resultado da última sincronização já fica persistido no Supabase (lido logo acima).
+const ZOHO_SYNC_TTL_MS = 30_000;
+let ultimaSyncZoho = 0;
+
+export async function GET(request: Request) {
+  const forcarSync = new URL(request.url).searchParams.get("sync") === "1";
   try {
     let bms: any[] = [];
 
@@ -72,6 +78,11 @@ export async function GET() {
 
       // 3. Sincronização Ativa Direta com a API do Zoho Sign (independente de webhook externo)
       try {
+        if (!forcarSync && Date.now() - ultimaSyncZoho < ZOHO_SYNC_TTL_MS) {
+          return NextResponse.json(bms);
+        }
+        ultimaSyncZoho = Date.now();
+
         const { getZohoAccessToken } = await import("@/lib/zoho-sign");
         const token = await getZohoAccessToken();
         let alterouZoho = false;
@@ -101,47 +112,68 @@ export async function GET() {
 
         // B) Também buscar requests individuais por zohoRequestId para BMs pendentes que já possuem requestId mapeado
         const idsProcessados = new Set(requests.map((r: any) => String(r.request_id)));
+        const idsPendentes = new Set<string>();
         for (const bm of bms) {
           const cod = String(bm.codigo);
           const reqId = bm.zohoRequestId || mapaStatus[cod]?.zohoRequestId;
-          if (reqId && !idsProcessados.has(String(reqId))) {
+          if (reqId && !idsProcessados.has(String(reqId))) idsPendentes.add(String(reqId));
+        }
+
+        // Consultas individuais em paralelo (antes eram sequenciais)
+        const individuais = await Promise.all(
+          Array.from(idsPendentes).map(async (reqId) => {
             try {
               const indivRes = await fetch(`https://sign.zoho.com/api/v1/requests/${reqId}`, {
                 headers: { Authorization: `Zoho-oauthtoken ${token}` },
               });
-              if (indivRes.ok) {
-                const indivData = await indivRes.json();
-                const singleReq = indivData.requests || indivData;
-                if (singleReq && singleReq.request_id) {
-                  requests.push(singleReq);
-                  idsProcessados.add(String(singleReq.request_id));
-                }
-              }
+              if (!indivRes.ok) return null;
+              const indivData = await indivRes.json();
+              const singleReq = indivData.requests || indivData;
+              return singleReq && singleReq.request_id ? singleReq : null;
             } catch (iErr: any) {
               console.warn(`Aviso ao consultar request individual ${reqId}:`, iErr.message);
+              return null;
             }
+          })
+        );
+        for (const singleReq of individuais) {
+          if (singleReq && !idsProcessados.has(String(singleReq.request_id))) {
+            requests.push(singleReq);
+            idsProcessados.add(String(singleReq.request_id));
           }
         }
+
+        // Trilhas de auditoria oficiais (IP real e data/hora exata de cada assinatura) em paralelo
+        const statusElegiveis = ["completed", "inprogress", "in_progress"];
+        const auditoriaPorRequest = new Map<string, any[]>();
+        await Promise.all(
+          requests
+            .filter((r: any) => statusElegiveis.includes(r.request_status))
+            .map(async (r: any) => {
+              try {
+                const auditRes = await fetch(`https://sign.zoho.com/api/v1/requests/${r.request_id}/audit`, {
+                  headers: { Authorization: `Zoho-oauthtoken ${token}` },
+                });
+                if (auditRes.ok) {
+                  const auditJson = await auditRes.json();
+                  auditoriaPorRequest.set(
+                    String(r.request_id),
+                    auditJson.account_activity_report || auditJson.activities || auditJson.reports || []
+                  );
+                }
+              } catch (aErr: any) {
+                console.warn("Aviso ao buscar auditoria do Zoho:", aErr.message);
+              }
+            })
+        );
 
         for (const req of requests) {
           const docName = req.request_name || "";
           const match = docName.match(/(?:BM[\s-_]?)?(\d{3,5})/i);
           const cod = match ? match[1] : null;
 
-          if (cod && (req.request_status === "completed" || req.request_status === "inprogress" || req.request_status === "in_progress")) {
-            // Buscar trilha de auditoria oficial do Zoho Sign para obter IP real e Data/Hora exata de cada assinatura
-            let auditActivities: any[] = [];
-            try {
-              const auditRes = await fetch(`https://sign.zoho.com/api/v1/requests/${req.request_id}/audit`, {
-                headers: { Authorization: `Zoho-oauthtoken ${token}` },
-              });
-              if (auditRes.ok) {
-                const auditJson = await auditRes.json();
-                auditActivities = auditJson.account_activity_report || auditJson.activities || auditJson.reports || [];
-              }
-            } catch (aErr: any) {
-              console.warn("Aviso ao buscar auditoria do Zoho:", aErr.message);
-            }
+          if (cod && statusElegiveis.includes(req.request_status)) {
+            const auditActivities: any[] = auditoriaPorRequest.get(String(req.request_id)) || [];
 
             const logsAtualizados = (req.actions || [])
               .filter((act: any) => {
