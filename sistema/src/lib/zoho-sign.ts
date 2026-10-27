@@ -150,16 +150,19 @@ export async function enviarBmParaZohoSign(params: EnviarBmZohoParams) {
     },
   ];
 
-  // Adicionar destinatários de cópia (visualizadores)
+  // Adicionar destinatários de cópia (visualizadores) apenas se não forem já signatários
   if (params.emailsCopia) {
     const copias = params.emailsCopia.split(";").map((e) => e.trim()).filter(Boolean);
     copias.forEach((email) => {
-      actions.push({
-        recipient_name: "Cópia Financeiro",
-        recipient_email: email,
-        action_type: "VIEW",
-        signing_order: 4,
-      });
+      const jaExiste = actions.some((a) => a.recipient_email.toLowerCase() === email.toLowerCase());
+      if (!jaExiste) {
+        actions.push({
+          recipient_name: "Cópia Financeiro",
+          recipient_email: email,
+          action_type: "VIEW",
+          signing_order: actions.length + 1,
+        });
+      }
     });
   }
 

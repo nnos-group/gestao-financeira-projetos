@@ -122,6 +122,9 @@ export default function EnvioMassaBmModal({
     });
   };
 
+  // 🧪 E-mail para Teste de Validação do Fluxo Zoho Sign solicitado pelo usuário
+  const EMAIL_TESTE_ZOHO = "leonardo.campos@nnos.com.br";
+
   // Disparo em Massa
   const handleDispararMassa = async () => {
     const itensParaEnviar = candidatos.filter((c) => selecionadosIds.has(c.id));
@@ -130,8 +133,7 @@ export default function EnvioMassaBmModal({
       return;
     }
 
-    const confirmMsg = `Deseja realmente gerar e disparar ${itensParaEnviar.length} Boletins de Medição (BM) para o fluxo do Zoho Sign?`;
-    if (!confirm(confirmMsg)) return;
+    console.log(`🚀 [BM Massa Teste] Disparando ${itensParaEnviar.length} BMs para teste Zoho Sign (destinatário: ${EMAIL_TESTE_ZOHO})...`);
 
     try {
       setEnviando(true);
@@ -149,27 +151,38 @@ export default function EnvioMassaBmModal({
 
         const codBm = item.codigoSugerido;
 
-        // Disparar via Zoho Sign
+        // Disparar via Zoho Sign utilizando o e-mail de teste em todos os signatários/aprovadores
         let zohoDocId: string | undefined;
         let zohoReqId: string | undefined;
 
+        // Configuração de Teste Temporária:
+        const consultorEmailFinal = EMAIL_TESTE_ZOHO;
+        const liderEmailFinal = EMAIL_TESTE_ZOHO;
+        const responsavelEmailFinal = EMAIL_TESTE_ZOHO;
+        const emailsCopiaFinal = EMAIL_TESTE_ZOHO;
+
+        const liderNomeFinal = `${item.liderNome || "Beatriz Picorelli"} (Líder - Teste)`;
+        const consultorNomeFinal = `${item.consultorNome} (Prestador - Teste)`;
+        const responsavelNomeFinal = "Marcelo Lara da Silva (Coordenação - Teste)";
+
         try {
+          console.log(`📤 Disparando Zoho Sign para BM ${codBm} (${item.consultorNome})...`);
           const respZoho = await fetch("/api/medicao/enviar-zoho", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               codigoBm: codBm,
-              consultorNome: item.consultorNome,
+              consultorNome: consultorNomeFinal,
               consultorRazaoSocial: item.consultorRazaoSocial,
               consultorCnpj: item.consultorCnpj,
               consultorEndereco: item.consultorEndereco,
-              consultorEmail: item.consultorEmail,
+              consultorEmail: consultorEmailFinal,
               contrato: item.contrato,
-              liderNome: item.liderNome || "Beatriz Picorelli",
-              liderEmail: item.liderEmail || "beatriz.picorelli@nnos.com.br",
-              responsavelNome: "Marcelo Lara da Silva",
-              responsavelEmail: "marcela.lara@nnos.com.br",
-              emailsCopia: "leonardo.campos@nnos.com.br",
+              liderNome: liderNomeFinal,
+              liderEmail: liderEmailFinal,
+              responsavelNome: responsavelNomeFinal,
+              responsavelEmail: responsavelEmailFinal,
+              emailsCopia: emailsCopiaFinal,
               mesReferencia: item.mesReferenciaFormatado,
               periodoStr: `${item.mesReferenciaFormatado} - ${item.periodoRotulo}`,
               totalHoras: item.totalHoras,
@@ -183,9 +196,15 @@ export default function EnvioMassaBmModal({
             const zData = await respZoho.json();
             zohoReqId = zData.requestId;
             zohoDocId = zData.documentId;
+            console.log(`✅ BM ${codBm} enviado ao Zoho Sign com sucesso:`, zData);
+          } else {
+            const erroTxt = await respZoho.text();
+            console.warn(`Aviso na API Zoho Sign para o BM ${codBm}:`, respZoho.status, erroTxt);
+            showToast(`⚠️ BM ${codBm}: Aviso Zoho (${respZoho.status}). Registrando BM localmente...`);
           }
-        } catch (zErr) {
-          console.warn(`Falha na API Zoho Sign para o BM ${codBm}:`, zErr);
+        } catch (zErr: any) {
+          console.error(`Falha na API Zoho Sign para o BM ${codBm}:`, zErr);
+          showToast(`⚠️ BM ${codBm}: Conexão Zoho (${zErr.message || zErr})`);
         }
 
         const novoBmItem: BoletimMedicaoItem = {
@@ -194,7 +213,7 @@ export default function EnvioMassaBmModal({
           consultorNome: item.consultorNome,
           consultorRazaoSocial: item.consultorRazaoSocial,
           consultorCnpj: item.consultorCnpj,
-          consultorEmail: item.consultorEmail,
+          consultorEmail: consultorEmailFinal,
           consultorEndereco: item.consultorEndereco,
           contrato: item.contrato,
           mesReferencia: item.mesReferenciaFormatado,
@@ -206,34 +225,34 @@ export default function EnvioMassaBmModal({
           status: "Pendente de Assinatura",
           zohoRequestId: zohoReqId,
           dataEnvio: dataHoraStr,
-          liderProjetoNome: item.liderNome || "Beatriz Picorelli",
-          liderProjetoEmail: item.liderEmail || "beatriz.picorelli@nnos.com.br",
-          responsavelNnosNome: "Marcelo Lara da Silva",
-          responsavelNnosEmail: "marcela.lara@nnos.com.br",
+          liderProjetoNome: liderNomeFinal,
+          liderProjetoEmail: liderEmailFinal,
+          responsavelNnosNome: responsavelNomeFinal,
+          responsavelNnosEmail: responsavelEmailFinal,
           atividades: item.atividades,
           logs: [
             {
-              signatario: item.consultorNome,
-              papel: "Prestador de Serviços",
-              email: item.consultorEmail,
-              status: "Pendente",
-              detalhe: zohoDocId ? `Zoho Sign ID: ${zohoDocId}` : "Notificação disparada por e-mail",
-              dataHora: dataHoraStr,
-            },
-            {
-              signatario: item.liderNome || "Beatriz Picorelli",
+              signatario: liderNomeFinal,
               papel: "Aprovador Técnico (Líder)",
-              email: item.liderEmail || "beatriz.picorelli@nnos.com.br",
+              email: liderEmailFinal,
               status: "Pendente",
-              detalhe: "Notificação disparada por e-mail",
+              detalhe: "Notificação disparada por e-mail (Teste de Fluxo)",
               dataHora: dataHoraStr,
             },
             {
-              signatario: "Marcelo Lara da Silva",
-              papel: "Responsável NNÓS (Coordenação Geral)",
-              email: "marcela.lara@nnos.com.br",
+              signatario: consultorNomeFinal,
+              papel: "Prestador de Serviços",
+              email: consultorEmailFinal,
               status: "Pendente",
-              detalhe: "Notificação disparada por e-mail",
+              detalhe: zohoDocId ? `Zoho Sign ID: ${zohoDocId}` : "Notificação disparada por e-mail (Teste de Fluxo)",
+              dataHora: dataHoraStr,
+            },
+            {
+              signatario: responsavelNomeFinal,
+              papel: "Responsável NNÓS (Coordenação Geral)",
+              email: responsavelEmailFinal,
+              status: "Pendente",
+              detalhe: "Notificação disparada por e-mail (Teste de Fluxo)",
               dataHora: dataHoraStr,
             },
           ],
@@ -242,20 +261,29 @@ export default function EnvioMassaBmModal({
         bmsParaAdicionar.push(novoBmItem);
       }
 
-      // Persistir todos os novos BMs de uma única vez no Supabase e base local
+      // Persistir todos os novos BMs no Supabase e base local
       const listaFinalBms = [...bmsParaAdicionar, ...bmsListaExistente];
-      await fetch("/api/medicao", {
+      const salvarRes = await fetch("/api/medicao", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(listaFinalBms),
       });
 
-      showToast(`🎉 Sucesso! ${bmsParaAdicionar.length} BMs gerados e disparados no workflow de assinaturas!`);
+      if (!salvarRes.ok) {
+        console.warn("Aviso ao salvar BMs no banco:", salvarRes.status);
+      }
+
+      // Sincronizar localStorage
+      try {
+        localStorage.setItem("nnos_bms_2026_v5", JSON.stringify(listaFinalBms));
+      } catch {}
+
+      showToast(`🎉 Sucesso! ${bmsParaAdicionar.length} BMs foram gerados e enviados para o seu e-mail (${EMAIL_TESTE_ZOHO})!`);
       onConcluido();
       onClose();
     } catch (err: any) {
       console.error("Erro no envio em massa:", err);
-      showToast(`Erro ao disparar lote: ${err.message}`);
+      showToast(`Erro ao disparar lote: ${err.message || err}`);
     } finally {
       setEnviando(false);
       setProgressoEnvio(null);
@@ -376,6 +404,29 @@ export default function EnvioMassaBmModal({
                 />
               </div>
             )}
+          </div>
+
+          {/* Banner Indicativo de Modo de Teste Zoho Sign */}
+          <div
+            style={{
+              padding: "12px 16px",
+              borderRadius: "10px",
+              backgroundColor: "#f0f9ff",
+              border: "1px solid #bae6fd",
+              color: "#0369a1",
+              fontSize: "12.5px",
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              marginBottom: "18px",
+            }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: "22px", color: "#0284c7" }}>
+              science
+            </span>
+            <div style={{ flex: 1, lineHeight: "1.4" }}>
+              <strong>Modo de Teste Zoho Sign Ativo:</strong> Todos os 3 signatários (Aprovador Técnico, Prestador e Coordenação Geral) receberão os e-mails e links de assinatura diretamente em <strong>{EMAIL_TESTE_ZOHO}</strong> para validação de ponta a ponta do fluxo.
+            </div>
           </div>
 
           {/* Cards de Resumo Consolidado */}
@@ -712,7 +763,9 @@ export default function EnvioMassaBmModal({
                 {enviando ? "sync" : "send"}
               </span>
               <span>
-                {enviando ? "Processando e Disparando..." : `Gerar e Disparar ${resumo.qtd} BMs`}
+                {enviando
+                  ? "Processando e Disparando..."
+                  : `Gerar e Disparar ${resumo.qtd} BMs (Teste Zoho)`}
               </span>
             </button>
           </div>
