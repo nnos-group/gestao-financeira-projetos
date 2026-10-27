@@ -1,5 +1,4 @@
 "use client";
-import Link from "next/link";
 
 import React, { useState, useMemo } from "react";
 import Image from "next/image";
@@ -7,8 +6,7 @@ import ThemeToggle from "@/components/ThemeToggle";
 import AnoSelector from "@/components/AnoSelector";
 import { ViagemSolicitacao, StatusViagem } from "@/lib/viagens-types";
 import ViagensRoleSelector, { ViagensPerfil } from "./ViagensRoleSelector";
-import dynamic from "next/dynamic";
-const CotacoesMatrixModal = dynamic(() => import("./CotacoesMatrixModal"));
+import CotacoesMatrixModal from "./CotacoesMatrixModal";
 import { formatarDataBR, formatarPeriodoBR } from "@/lib/date-utils";
 
 interface ViagensDashboardClientProps {
@@ -197,39 +195,39 @@ export default function ViagensDashboardClient({
           </div>
 
           <nav className="sidebar-nav">
-            <Link href="/projetos" className="nav-item">
+            <a href="/projetos" className="nav-item">
               <span className="material-symbols-outlined">assignment</span>
               <span>Projetos & Atividades</span>
-            </Link>
-            <Link href="/medicao" className="nav-item">
+            </a>
+            <a href="/medicao" className="nav-item">
               <span className="material-symbols-outlined">receipt_long</span>
               <span>BM - Boletim de Medição</span>
-            </Link>
-            <Link href="/viagens" className="nav-item active">
+            </a>
+            <a href="/viagens" className="nav-item active">
               <span className="material-symbols-outlined">flight</span>
               <span>Viagens & Logística</span>
-            </Link>
-            <Link href="/centro-de-custo" className="nav-item">
+            </a>
+            <a href="/centro-de-custo" className="nav-item">
               <span className="material-symbols-outlined">account_tree</span>
               <span>Centro de Custo</span>
-            </Link>
-            <Link href="/pessoas" className="nav-item">
+            </a>
+            <a href="/pessoas" className="nav-item">
               <span className="material-symbols-outlined">group</span>
               <span>Pessoas</span>
-            </Link>
-            <Link href="/faturamento" className="nav-item">
+            </a>
+            <a href="/faturamento" className="nav-item">
               <span className="material-symbols-outlined">receipt</span>
               <span>Faturamento</span>
-            </Link>
-            <Link href="/pagamentos" className="nav-item">
+            </a>
+            <a href="/pagamentos" className="nav-item">
               <span className="material-symbols-outlined">payments</span>
               <span>Pagamentos</span>
-            </Link>
-            <Link href="/relatorios" className="nav-item">
+            </a>
+            <a href="/relatorios" className="nav-item">
               <span className="material-symbols-outlined">monitoring</span>
               <span>Relatórios</span>
-            </Link>
-            <Link href="/consultor" className="nav-item"><span className="material-symbols-outlined">support_agent</span><span>Consultor</span></Link>
+            </a>
+            <a href="/consultor" className="nav-item"><span className="material-symbols-outlined">support_agent</span><span>Consultor</span></a>
           </nav>
         </div>
 
@@ -302,7 +300,7 @@ export default function ViagensDashboardClient({
                     ? `/viagens?ano=${anoSelecionado}`
                     : `/viagens?ano=${anoSelecionado}&mes=${num}`;
                   return (
-                    <Link
+                    <a
                       key={num}
                       href={href}
                       style={{
@@ -319,7 +317,7 @@ export default function ViagensDashboardClient({
                       title={isSelected ? `Mês ${nome} ativo. Clique para desmarcar e ver todas as viagens de ${anoSelecionado}` : `Filtrar por ${nome}/${anoSelecionado}`}
                     >
                       {nome.substring(0, 3)}
-                    </Link>
+                    </a>
                   );
                 })}
               </div>

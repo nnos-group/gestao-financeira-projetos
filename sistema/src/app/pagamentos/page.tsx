@@ -1,5 +1,4 @@
 "use client";
-import Link from "next/link";
 
 import React, { useState, useMemo, useEffect } from "react";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -620,43 +619,43 @@ export default function PagamentosPage() {
           </div>
 
           <nav className="sidebar-nav">
-            <Link href="/projetos" className="nav-item">
+            <a href="/projetos" className="nav-item">
               <span className="material-symbols-outlined">assignment</span>
               <span>Projetos & Atividades</span>
-            </Link>
-            <Link href="/medicao" className="nav-item">
+            </a>
+            <a href="/medicao" className="nav-item">
               <span className="material-symbols-outlined">receipt_long</span>
               <span>BM - Boletim de Medição</span>
-            </Link>
-            <Link href="/viagens" className="nav-item">
+            </a>
+            <a href="/viagens" className="nav-item">
               <span className="material-symbols-outlined">flight</span>
               <span>Viagens & Logística</span>
-            </Link>
-            <Link href="/centro-de-custo" className="nav-item">
+            </a>
+            <a href="/centro-de-custo" className="nav-item">
               <span className="material-symbols-outlined">account_tree</span>
               <span>Centro de Custo</span>
-            </Link>
-            <Link href="/tabela-precos" className="nav-item">
+            </a>
+            <a href="/tabela-precos" className="nav-item">
               <span className="material-symbols-outlined">request_quote</span>
               <span>Tabela de Preços</span>
-            </Link>
-            <Link href="/pessoas" className="nav-item">
+            </a>
+            <a href="/pessoas" className="nav-item">
               <span className="material-symbols-outlined">group</span>
               <span>Pessoas</span>
-            </Link>
-            <Link href="/faturamento" className="nav-item">
+            </a>
+            <a href="/faturamento" className="nav-item">
               <span className="material-symbols-outlined">receipt</span>
               <span>Faturamento</span>
-            </Link>
-            <Link href="/pagamentos" className="nav-item active">
+            </a>
+            <a href="/pagamentos" className="nav-item active">
               <span className="material-symbols-outlined">payments</span>
               <span>Pagamentos</span>
-            </Link>
-            <Link href="/relatorios" className="nav-item">
+            </a>
+            <a href="/relatorios" className="nav-item">
               <span className="material-symbols-outlined">monitoring</span>
               <span>Relatórios</span>
-            </Link>
-            <Link href="/consultor" className="nav-item"><span className="material-symbols-outlined">support_agent</span><span>Consultor</span></Link>
+            </a>
+            <a href="/consultor" className="nav-item"><span className="material-symbols-outlined">support_agent</span><span>Consultor</span></a>
           </nav>
         </div>
 

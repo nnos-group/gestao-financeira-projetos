@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
 import ConsultorHeader from "@/components/ConsultorHeader";
 import { useConsultor } from "@/contexts/ConsultorContext";
 import { formatarPeriodoBR, formatarDataBR } from "@/lib/date-utils";
@@ -183,9 +182,9 @@ export default function ConsultorPage() {
                   Próximas Atividades na Agenda
                 </h3>
               </div>
-              <Link href="/consultor/agenda" style={{ fontSize: "12px", color: "var(--primary)", fontWeight: 700, textDecoration: "none" }}>
+              <a href="/consultor/agenda" style={{ fontSize: "12px", color: "var(--primary)", fontWeight: 700, textDecoration: "none" }}>
                 Ver Agenda Completa →
-              </Link>
+              </a>
             </div>
 
             {proximasAtividades.length === 0 ? (
@@ -260,9 +259,9 @@ export default function ConsultorPage() {
                   Meus Boletins de Medição (BMs)
                 </h3>
               </div>
-              <Link href="/consultor/bms" style={{ fontSize: "12px", color: "var(--primary)", fontWeight: 700, textDecoration: "none" }}>
+              <a href="/consultor/bms" style={{ fontSize: "12px", color: "var(--primary)", fontWeight: 700, textDecoration: "none" }}>
                 Ver Todos os BMs →
-              </Link>
+              </a>
             </div>
 
             {ultimosBms.length === 0 ? (
@@ -312,7 +311,7 @@ export default function ConsultorPage() {
                         <div style={{ fontWeight: 700, fontSize: "14px", color: "#059669" }}>
                           {brl(bm.valorTotal ?? bm.valorLiquidoTotal)}
                         </div>
-                        <Link
+                        <a
                           href={`/consultor/bms`}
                           style={{
                             fontSize: "11px",
@@ -324,7 +323,7 @@ export default function ConsultorPage() {
                           }}
                         >
                           Visualizar BM
-                        </Link>
+                        </a>
                       </div>
                     </div>
                   );

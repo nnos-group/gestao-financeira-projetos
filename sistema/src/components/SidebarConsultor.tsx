@@ -1,5 +1,4 @@
 "use client";
-import Link from "next/link";
 
 import React from "react";
 import { usePathname } from "next/navigation";
@@ -45,15 +44,15 @@ export function SidebarConsultor() {
       </div>
 
       <nav className="sidebar-nav">
-        <Link href="/medicao" className="nav-item">
+        <a href="/medicao" className="nav-item">
           <span className="material-symbols-outlined">arrow_back</span>
           <span>Voltar ao Sistema</span>
-        </Link>
+        </a>
 
         {itens.map((i) => {
           const isActive = pathname === i.href;
           return (
-            <Link
+            <a
               key={i.href}
               href={i.href}
               className={`nav-item${isActive ? " active" : ""}`}
@@ -77,7 +76,7 @@ export function SidebarConsultor() {
                   {i.badge}
                 </span>
               )}
-            </Link>
+            </a>
           );
         })}
       </nav>
