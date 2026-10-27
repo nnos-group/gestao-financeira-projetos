@@ -54,6 +54,10 @@ export async function GET() {
             const cod = String(bm.codigo);
             if (mapaStatus[cod]) {
               const att = mapaStatus[cod];
+              // Não herdar status caso o BM tenha um request ID diferente do gravado no mapa
+              if (att.zohoRequestId && bm.zohoRequestId && att.zohoRequestId !== bm.zohoRequestId) {
+                return bm;
+              }
               return {
                 ...bm,
                 status: att.status || bm.status,
@@ -239,6 +243,30 @@ export async function POST(req: Request) {
           valor: body.length,
           descricao: JSON.stringify(body),
         });
+
+        // Expurgar do mapa de status do Supabase qualquer BM que tenha sido excluído da lista
+        const codigosAtivos = new Set(body.map((b: any) => String(b.codigo)));
+        const { data: statusAtual } = await sb.from("configuracoes").select("descricao").eq("chave", "bms_assinaturas_status").maybeSingle();
+        if (statusAtual?.descricao) {
+          try {
+            const mapa = JSON.parse(statusAtual.descricao);
+            let alterou = false;
+            Object.keys(mapa).forEach((cod) => {
+              if (!codigosAtivos.has(cod)) {
+                delete mapa[cod];
+                alterou = true;
+              }
+            });
+            if (alterou) {
+              await sb.from("configuracoes").upsert({
+                chave: "bms_assinaturas_status",
+                valor: Object.keys(mapa).length,
+                descricao: JSON.stringify(mapa),
+              });
+              console.log("☁️ [API Medição] BMs excluídos foram expurgados de bms_assinaturas_status com sucesso!");
+            }
+          } catch {}
+        }
       } catch (sbErr: any) {
         console.warn("Aviso ao persistir lista no Supabase:", sbErr.message);
       }
