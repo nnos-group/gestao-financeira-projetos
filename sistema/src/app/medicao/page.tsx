@@ -324,12 +324,12 @@ export default function BoletimMedicaoPage() {
     }, 3500);
   };
 
-  // Código sequencial com 4 dígitos (sem #), garantindo mínimo sequencial 0908
+  // Código sequencial com 4 dígitos (sem #), garantindo mínimo sequencial 0909
   const proximoCodigo = useMemo(() => {
     const codigosNum = bmsLista
       .map((b) => parseInt(b.codigo, 10))
       .filter((n) => !isNaN(n));
-    const max = codigosNum.length > 0 ? Math.max(...codigosNum, 907) : 907;
+    const max = codigosNum.length > 0 ? Math.max(...codigosNum, 908) : 908;
     return String(max + 1).padStart(4, "0");
   }, [bmsLista]);
 
