@@ -1208,7 +1208,7 @@ ${linhasProjetos.join("\n")}`;
                         Copie exatamente o bloco textual abaixo e cole no campo <strong>&quot;Descrição dos Serviços / Dados Adicionais&quot;</strong> do seu emissor de Nota Fiscal:
                       </p>
 
-                      <div style={{ backgroundColor: "var(--surface-container-low)", padding: "14px", borderRadius: "10px", border: "1px solid var(--border)", fontFamily: "monospace", fontSize: "12px", lineHeight: "1.6", color: "var(--on-surface)" }}>
+                      <div style={{ backgroundColor: "var(--surface-container-low)", padding: "14px", borderRadius: "10px", border: "1px solid var(--border)", fontFamily: "inherit", fontSize: "12px", lineHeight: "1.6", color: "var(--on-surface)" }}>
                         <div style={{ fontWeight: 700, color: "var(--primary)" }}>BM: {bmVisualizando.codigo} | CONTRATO: {bmVisualizando.contrato.replace(/•\s*NNÓS/g, "").trim()}</div>
                         {Array.from(new Set(bmVisualizando.atividades.map((a) => a.projeto))).map((proj) => {
                           const subtotal = bmVisualizando.atividades
