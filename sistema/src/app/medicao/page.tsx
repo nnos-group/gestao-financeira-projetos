@@ -25,7 +25,7 @@ interface LogSignatario {
   signatario: string;
   papel: string;
   email: string;
-  status: "Pendente" | "Assinado";
+  status: "Pendente" | "Assinado" | "Aprovado" | string;
   dataHora?: string;
   detalhe?: string;
 }
@@ -1880,7 +1880,8 @@ ${linhasProjetos.join("\n")}`;
                                       .trim()
                                   : "";
 
-                                if (l.status !== "Assinado") {
+                                const isConcluido = l.status === "Assinado" || l.status === "Aprovado";
+                                if (!isConcluido) {
                                   dataLimpa = "";
                                 }
 
@@ -1892,9 +1893,9 @@ ${linhasProjetos.join("\n")}`;
 
                                 return (
                                   <div key={idx} style={{ fontSize: "10.5px", marginTop: "3px", display: "flex", alignItems: "center", gap: "4px", flexWrap: "wrap" }}>
-                                    <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: l.status === "Assinado" ? "#10b981" : "#f59e0b", display: "inline-block", flexShrink: 0 }}></span>
+                                    <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: isConcluido ? "#10b981" : "#f59e0b", display: "inline-block", flexShrink: 0 }}></span>
                                     <span style={{ fontWeight: 600, color: "var(--on-surface)" }}>{papelExibicao}:</span>
-                                    <span style={{ color: l.status === "Assinado" ? "#059669" : "#d97706", fontWeight: 700 }}>{l.status}</span>
+                                    <span style={{ color: isConcluido ? "#059669" : "#d97706", fontWeight: 700 }}>{l.status}</span>
                                     {dataLimpa && (
                                       <span style={{ color: "var(--on-surface-variant)", fontSize: "9.5px", opacity: 0.85 }}>• {dataLimpa}</span>
                                     )}

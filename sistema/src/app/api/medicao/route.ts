@@ -84,7 +84,7 @@ export async function GET() {
             const match = docName.match(/(?:BM[\s-_]?)?(\d{3,5})/i);
             const cod = match ? match[1] : null;
 
-            if (cod && req.request_status === "completed") {
+            if (cod && (req.request_status === "completed" || req.request_status === "inprogress" || req.request_status === "in_progress")) {
               alterouZoho = true;
 
               // Buscar trilha de auditoria oficial do Zoho Sign para obter IP real e Data/Hora exata de cada assinatura
@@ -113,7 +113,10 @@ export async function GET() {
                     (String(ev.action_id) === String(act.action_id) || ev.performed_by_name?.toUpperCase() === act.recipient_name?.toUpperCase())
                   );
 
-                  const timestamp = auditEvent?.performed_at || act.signed_time || act.action_time;
+                  const statusAcao = String(act.action_status || act.status || "").toUpperCase();
+                  const isConcluido = ["SIGNED", "COMPLETED", "APPROVED", "APPROVE"].includes(statusAcao);
+
+                  const timestamp = auditEvent?.performed_at || act.signed_time || act.action_time || act.approval_time || (isConcluido ? Date.now() : null);
                   let dataFmt = "";
                   if (timestamp) {
                     const dt = new Date(Number(timestamp) || timestamp);
@@ -134,16 +137,13 @@ export async function GET() {
                   const docIdReal = auditEvent?.document_id || req.zsdocumentid || req.document_id || "2EEBEA08-B5P3HI3SGTH9S3DTW24ZYKXM-EG74VXMYB4CASUAB8G";
 
                   let papelNome = "Prestador de Serviços";
-                  if (act.signing_order === 1 || act.action_type === "APPROVE" || (act.role && act.role.toLowerCase().includes("lider"))) {
+                  if (act.signing_order === 1 || act.action_type === "APPROVE" || act.action_type === "APPROVER" || (act.role && act.role.toLowerCase().includes("lider"))) {
                     papelNome = "Aprovador (Líder de Projeto)";
                   } else if (act.signing_order === 2) {
                     papelNome = "Prestador de Serviços";
                   } else if (act.signing_order === 3 || (act.role && act.role.toLowerCase().includes("valida")) || (act.role && act.role.toLowerCase().includes("coord"))) {
                     papelNome = "Responsável NNÓS (Coordenação Geral)";
                   }
-
-                  const statusAcao = String(act.action_status || act.status || "").toUpperCase();
-                  const isConcluido = ["SIGNED", "COMPLETED", "APPROVED", "APPROVE"].includes(statusAcao);
 
                   return {
                     signatario: act.recipient_name,
@@ -163,8 +163,22 @@ export async function GET() {
               };
               logsAtualizados.sort((a: any, b: any) => (ordemDesejada[a.papel] || 9) - (ordemDesejada[b.papel] || 9));
 
+              const todosConcluidos = logsAtualizados.length > 0 && logsAtualizados.every((l: any) => l.status === "Assinado" || l.status === "Aprovado");
+              const prestadorAssinou = logsAtualizados.find((l: any) => l.papel === "Prestador de Serviços")?.status === "Assinado";
+              const liderAssinou = ["Assinado", "Aprovado"].includes(logsAtualizados.find((l: any) => l.papel.includes("Líder"))?.status);
+              const coordAssinou = ["Assinado", "Aprovado"].includes(logsAtualizados.find((l: any) => l.papel.includes("Coordenação") || l.papel.includes("Responsável"))?.status);
+
+              let statusCalculado = "Pendente de Assinatura";
+              if (todosConcluidos || (liderAssinou && prestadorAssinou && coordAssinou) || req.request_status === "completed") {
+                statusCalculado = "Aprovado & Pronto p/ Faturamento";
+              } else if (prestadorAssinou) {
+                statusCalculado = "Assinado pelo Prestador";
+              } else if (liderAssinou) {
+                statusCalculado = "Aprovado pelo Líder";
+              }
+
               mapaStatus[cod] = {
-                status: "Aprovado & Pronto p/ Faturamento",
+                status: statusCalculado,
                 zohoRequestId: req.request_id,
                 logs: logsAtualizados,
                 atualizadoEm: new Date().toISOString(),
@@ -174,7 +188,7 @@ export async function GET() {
                 if (String(bm.codigo) === cod) {
                   return {
                     ...bm,
-                    status: "Aprovado & Pronto p/ Faturamento",
+                    status: statusCalculado,
                     zohoRequestId: req.request_id,
                     logs: logsAtualizados,
                   };

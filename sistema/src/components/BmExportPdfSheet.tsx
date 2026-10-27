@@ -18,7 +18,7 @@ export interface LogSignatario {
   signatario: string;
   papel: string;
   email: string;
-  status: "Pendente" | "Assinado";
+  status: "Pendente" | "Assinado" | "Aprovado" | string;
   dataHora?: string;
   detalhe?: string;
 }

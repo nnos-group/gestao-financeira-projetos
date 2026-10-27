@@ -80,12 +80,13 @@ export async function POST(req: NextRequest) {
       logsFinais = signActions.map((act: any) => {
         const statusAcao = String(act.action_status || act.status || "").toUpperCase();
         const isAssinado = ["SIGNED", "COMPLETED", "APPROVED", "APPROVE"].includes(statusAcao);
-        const dataHoraStr = isAssinado ? formatarDataHoraBrasil(act.signed_time || act.action_time || act.approval_time || Date.now()) : "";
+        const ts = act.signed_time || act.action_time || act.approval_time || act.time || requestData.action_time || Date.now();
+        const dataHoraStr = isAssinado ? formatarDataHoraBrasil(ts) : "";
         const ip = act.ip_address || act.sign_ip || act.action_ip || act.ip || payload?.ip_address || "191.187.11.168";
         const docId = requestData.zsdocumentid || requestData.document_id || requestId;
 
         let papel = "Prestador de Serviços";
-        if (act.signing_order === 1 || act.action_type === "APPROVE" || String(act.role || "").toLowerCase().includes("lider")) {
+        if (act.signing_order === 1 || act.action_type === "APPROVE" || act.action_type === "APPROVER" || String(act.role || "").toLowerCase().includes("lider")) {
           papel = "Aprovador (Líder de Projeto)";
         } else if (act.signing_order === 2) {
           papel = "Prestador de Serviços";
@@ -114,13 +115,17 @@ export async function POST(req: NextRequest) {
       const todosConcluidos = logsFinais.length > 0 && logsFinais.every((l: any) => l.status === "Assinado" || l.status === "Aprovado");
       const prestadorAssinou = logsFinais.find((l: any) => l.papel === "Prestador de Serviços")?.status === "Assinado";
       const liderAssinou = ["Assinado", "Aprovado"].includes(logsFinais.find((l: any) => l.papel.includes("Líder"))?.status);
+      const coordAssinou = ["Assinado", "Aprovado"].includes(logsFinais.find((l: any) => l.papel.includes("Coordenação") || l.papel.includes("Responsável"))?.status);
 
-      if (todosConcluidos) {
+      if (todosConcluidos || (liderAssinou && prestadorAssinou && coordAssinou)) {
         statusFinal = "Aprovado & Pronto p/ Faturamento";
-      } else if (liderAssinou && prestadorAssinou) {
-        statusFinal = "Aprovado pelo Líder";
       } else if (prestadorAssinou) {
+        // Na sequência: 1º Líder aprova -> 2º Prestador assina -> status avança para Assinado pelo Prestador (aguardando Coordenação Geral)
         statusFinal = "Assinado pelo Prestador";
+      } else if (liderAssinou) {
+        statusFinal = "Aprovado pelo Líder";
+      } else {
+        statusFinal = "Pendente de Assinatura";
       }
 
       // 1. Tentar atualizar base local bms-2026.json (quando em ambiente com disco gravável)

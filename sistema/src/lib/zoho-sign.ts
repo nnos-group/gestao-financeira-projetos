@@ -101,6 +101,10 @@ export async function enviarBmParaZohoSign(params: EnviarBmZohoParams) {
           periodo: params.periodoStr,
           valor_total: params.valorTotal,
           link_sistema: "https://gestao-financeira-projetos.vercel.app/medicao",
+          remetente_organizacao: "NNÓS Consultoria e Treinamento",
+          departamento: "NNÓS Consultoria e Treinamento",
+          mensagem_email: `Prezado(a), Segue para validação e assinatura digital o Boletim de Medição de Serviços (BM ${params.codigoBm}) referente aos serviços prestados à NNÓS Consultoria e Treinamento. Por favor, revise os apontamentos e realize a assinatura eletrônica através do botão abaixo.\n\nAtenciosamente,\nNNÓS Consultoria e Treinamento`,
+          notes: `Prezado(a), Segue para validação e assinatura digital o Boletim de Medição de Serviços (BM ${params.codigoBm}) referente aos serviços prestados à NNÓS Consultoria e Treinamento. Por favor, revise os apontamentos e realize a assinatura eletrônica através do botão abaixo.\n\nAtenciosamente,\nNNÓS Consultoria e Treinamento`,
         }),
       });
 
