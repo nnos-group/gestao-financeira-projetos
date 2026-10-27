@@ -34,6 +34,23 @@ export function ConsultorProvider({ children }: { children: React.ReactNode }) {
   const [dadosConsultor, setDadosConsultor] = useState<any>(null);
   const [carregando, setCarregando] = useState(true);
 
+  // Inicialização imediata do consultor ativo salvo no localStorage (elimina delay percebido)
+  useEffect(() => {
+    try {
+      const savedObjStr = localStorage.getItem("nnos_consultor_simulado_obj");
+      if (savedObjStr) {
+        const parsed = JSON.parse(savedObjStr);
+        if (parsed && parsed.nome) {
+          setConsultorAtivoState(parsed);
+        }
+      }
+    } catch {}
+
+    const savedId = localStorage.getItem("nnos_consultor_simulado_id") || undefined;
+    const savedNome = localStorage.getItem("nnos_consultor_simulado_nome") || undefined;
+    carregarDados(savedId, savedNome);
+  }, []);
+
   const carregarDados = async (consultorId?: string, consultorNome?: string) => {
     try {
       setCarregando(true);
@@ -60,6 +77,7 @@ export function ConsultorProvider({ children }: { children: React.ReactNode }) {
       if (data.consultorAtivo?.id) {
         localStorage.setItem("nnos_consultor_simulado_id", data.consultorAtivo.id);
         localStorage.setItem("nnos_consultor_simulado_nome", data.consultorAtivo.nome);
+        localStorage.setItem("nnos_consultor_simulado_obj", JSON.stringify(data.consultorAtivo));
       }
     } catch (err) {
       console.error("Erro no ConsultorProvider:", err);
@@ -68,16 +86,11 @@ export function ConsultorProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  useEffect(() => {
-    const savedId = localStorage.getItem("nnos_consultor_simulado_id") || undefined;
-    const savedNome = localStorage.getItem("nnos_consultor_simulado_nome") || undefined;
-    carregarDados(savedId, savedNome);
-  }, []);
-
   const setConsultorAtivo = (c: PessoaItem) => {
     setConsultorAtivoState(c);
     localStorage.setItem("nnos_consultor_simulado_id", c.id);
     localStorage.setItem("nnos_consultor_simulado_nome", c.nome);
+    localStorage.setItem("nnos_consultor_simulado_obj", JSON.stringify(c));
     carregarDados(c.id, c.nome);
   };
 

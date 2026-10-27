@@ -4,7 +4,6 @@ import React, { useState, useMemo, useEffect } from "react";
 import ConsultorHeader from "@/components/ConsultorHeader";
 import { useConsultor } from "@/contexts/ConsultorContext";
 import ModernDropdown from "@/components/ModernDropdown";
-import pagamentosBase from "@/lib/pagamentos-base.json";
 
 export interface PagamentoItem {
   id: string;
@@ -69,9 +68,11 @@ function classificarCategoriaDocumento(p: { numeroNota?: string; tipoDespesa?: s
 }
 
 export default function ConsultorPagamentosPage() {
-  const { consultorAtivo } = useConsultor();
+  const { consultorAtivo, carregando } = useConsultor();
 
-  const [todosPagamentos, setTodosPagamentos] = useState<PagamentoItem[]>(pagamentosBase as any[]);
+  // Segurança OWASP: nunca inicializar com a base de dados de todos os consultores
+  const [todosPagamentos, setTodosPagamentos] = useState<PagamentoItem[]>([]);
+  const [carregandoPagamentos, setCarregandoPagamentos] = useState(true);
   const [busca, setBusca] = useState("");
   const [filtroStatus, setFiltroStatus] = useState("TODOS");
   const [filtroTipo, setFiltroTipo] = useState("TODOS");
@@ -79,17 +80,38 @@ export default function ConsultorPagamentosPage() {
   const [anoSelecionado, setAnoSelecionado] = useState("2026");
   const [mesSelecionado, setMesSelecionado] = useState<string | null>(null);
 
-  // Carregar dados frescos da API caso disponível
+  // Carregar estritamente os dados do consultor selecionado via backend seguro
   useEffect(() => {
-    fetch("/api/pagamentos")
+    if (!consultorAtivo?.nome) {
+      setTodosPagamentos([]);
+      setCarregandoPagamentos(false);
+      return;
+    }
+
+    let ativo = true;
+    setCarregandoPagamentos(true);
+    fetch(`/api/pagamentos?consultor=${encodeURIComponent(consultorAtivo.nome)}`)
       .then((res) => res.json())
       .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
+        if (!ativo) return;
+        if (Array.isArray(data)) {
           setTodosPagamentos(data);
+        } else {
+          setTodosPagamentos([]);
         }
       })
-      .catch((e) => console.warn("Aviso ao carregar /api/pagamentos:", e));
-  }, []);
+      .catch((e) => {
+        console.warn("Aviso ao carregar /api/pagamentos:", e);
+        if (ativo) setTodosPagamentos([]);
+      })
+      .finally(() => {
+        if (ativo) setCarregandoPagamentos(false);
+      });
+
+    return () => {
+      ativo = false;
+    };
+  }, [consultorAtivo?.nome]);
 
   const brl = (val: number | null | undefined) =>
     (val || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -109,11 +131,13 @@ export default function ConsultorPagamentosPage() {
     { num: "12", rotulo: "Dez", nomeMes: "DEZEMBRO" },
   ];
 
-  // Filtro do consultor logado
+  // Filtro estrito do consultor logado (Blindagem Zero-Trust: se não tiver consultor ativo, retorna vazio [])
   const pagamentosDoConsultor = useMemo(() => {
-    const nomeAtivo = (consultorAtivo?.nome || "").trim().toUpperCase();
+    if (!consultorAtivo?.nome) return [];
+    const nomeAtivo = (consultorAtivo.nome || "").trim().toUpperCase();
     const clean = (s: string) => (s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toUpperCase();
     const nomeLimpo = clean(nomeAtivo);
+    if (!nomeLimpo || nomeLimpo.length < 2) return [];
 
     return todosPagamentos.filter((p) => {
       const c = clean(p.consultor);
@@ -320,14 +344,52 @@ export default function ConsultorPagamentosPage() {
           </div>
         </div>
 
-        {/* 4 Cards de Indicadores Financeiros (KPIs Idênticos ao Oficial) */}
-        {/* 3 Cards de Indicadores Financeiros (Idêntico ao Print 1 - Sem Cartão Corporativo) */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "14px" }}>
-          {/* Card 1: Total Lançamentos */}
-          <div style={{ padding: "18px 20px", borderRadius: "14px", backgroundColor: "var(--surface-container-lowest)", border: "1px solid var(--border)", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
-            <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--on-surface-variant)", letterSpacing: "0.04em" }}>
-              TOTAL LANÇAMENTOS
-            </span>
+        {/* Blindagem de Segurança OWASP: Se o consultor estiver carregando ou não selecionado, nunca renderizar métricas ou tabela */}
+        {(!consultorAtivo || carregando || carregandoPagamentos) ? (
+          <div
+            style={{
+              padding: "60px 24px",
+              textAlign: "center",
+              backgroundColor: "var(--surface-container-lowest)",
+              borderRadius: "16px",
+              border: "1px solid var(--border)",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "16px",
+              minHeight: "360px",
+            }}
+          >
+            <div
+              style={{
+                width: "36px",
+                height: "36px",
+                borderRadius: "50%",
+                border: "3px solid var(--border)",
+                borderTopColor: "var(--primary)",
+                animation: "spin 0.8s linear infinite",
+              }}
+            />
+            <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+            <div>
+              <h3 style={{ margin: "0 0 6px 0", fontSize: "16px", fontWeight: 700, color: "var(--primary)" }}>
+                {consultorAtivo?.nome ? `Carregando extrato de ${consultorAtivo.nome}...` : "Identificando consultor..."}
+              </h3>
+              <p style={{ margin: 0, fontSize: "12px", color: "var(--on-surface-variant)" }}>
+                Ambiente seguro • Os dados exibidos são estritamente individuais e confidenciais.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* 3 Cards de Indicadores Financeiros */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "14px" }}>
+              {/* Card 1: Total Lançamentos */}
+              <div style={{ padding: "18px 20px", borderRadius: "14px", backgroundColor: "var(--surface-container-lowest)", border: "1px solid var(--border)", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
+                <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--on-surface-variant)", letterSpacing: "0.04em" }}>
+                  TOTAL LANÇAMENTOS
+                </span>
             <div style={{ fontSize: "22px", fontWeight: 800, color: "var(--primary)", marginTop: "4px" }}>
               {brl(kpis.totalValor)}
             </div>
@@ -718,7 +780,9 @@ export default function ConsultorPagamentosPage() {
             </table>
           </div>
         </div>
-      </main>
+      </>
+    )}
+  </main>
     </>
   );
 }

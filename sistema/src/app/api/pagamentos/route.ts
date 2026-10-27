@@ -4,13 +4,30 @@ import path from "path";
 
 const DATA_FILE = path.join(process.cwd(), "src/lib/pagamentos-base.json");
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     if (!fs.existsSync(DATA_FILE)) {
       return NextResponse.json([]);
     }
     const content = fs.readFileSync(DATA_FILE, "utf8");
-    const json = JSON.parse(content);
+    let json = JSON.parse(content);
+
+    // Suporte a filtro seguro por consultor para evitar vazamento de dados de terceiros
+    const { searchParams } = new URL(req.url);
+    const consultorParam = searchParams.get("consultor");
+    if (consultorParam) {
+      const clean = (s: string) => (s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toUpperCase();
+      const filtro = clean(consultorParam);
+      if (filtro.length >= 2) {
+        json = json.filter((p: any) => {
+          const c = clean(p.consultor);
+          return c === filtro || c.includes(filtro) || filtro.includes(c);
+        });
+      } else {
+        json = [];
+      }
+    }
+
     return NextResponse.json(json);
   } catch (err: any) {
     console.error("Erro ao ler pagamentos:", err);
