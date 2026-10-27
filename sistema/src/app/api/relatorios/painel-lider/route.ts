@@ -364,14 +364,20 @@ export async function GET(req: Request) {
     let totalReceitaGeral = 0;
     let totalCustosGeral = 0;
     let totalImpostosGeral = 0;
+    let totalLogisticaLiquidaGeral = 0;
     let totalMargemGeral = 0;
 
     const lideresFinais = Object.values(lideresMap)
-      .filter((l) => l.receita > 0 || l.custosConsolidados > 0)
+      .filter((l) => l.nome !== "Sem Líder" && (l.receita > 0 || l.custosConsultores > 0))
       .map((lider) => {
-        lider.custosConsolidados = lider.custosConsultores + lider.custosLogistica + lider.repasse;
+        // Custos operacionais diretos de consultores / contratações executadas (Card 2)
+        lider.custosConsolidados = lider.custosConsultores;
+        
+        // Logística líquida: despesa de viagem abatida de eventuais repasses/reembolsos faturados
+        const logisticaLiquida = Math.max(0, lider.custosLogistica - lider.repasse);
+
         lider.impostos = (lider.receita * impostoPct) / 100;
-        lider.margem = lider.receita - lider.impostos - lider.custosConsolidados;
+        lider.margem = lider.receita - lider.impostos - lider.custosConsolidados - logisticaLiquida;
         lider.margemPct = lider.receita > 0 ? (lider.margem / lider.receita) * 100 : 0;
         lider.custosPct = lider.receita > 0 ? (lider.custosConsolidados / lider.receita) * 100 : 0;
 
@@ -382,12 +388,14 @@ export async function GET(req: Request) {
         totalReceitaGeral += lider.receita;
         totalCustosGeral += lider.custosConsolidados;
         totalImpostosGeral += lider.impostos;
+        totalLogisticaLiquidaGeral += logisticaLiquida;
         totalMargemGeral += lider.margem;
 
         const projetosList = Object.values(lider.projetosMap).map((p: any) => {
-          p.custoTotal = p.custoConsultor + p.custoLogistica + p.repasse;
+          p.custoTotal = p.custoConsultor;
+          const projLogLiquida = Math.max(0, p.custoLogistica - p.repasse);
           p.impostos = (p.receita * impostoPct) / 100;
-          p.margem = p.receita - p.impostos - p.custoTotal;
+          p.margem = p.receita - p.impostos - p.custoTotal - projLogLiquida;
           p.margemPct = p.receita > 0 ? (p.margem / p.receita) * 100 : 0;
 
           const baseRec = p.receita > 0 ? p.receita : 1;
@@ -498,7 +506,13 @@ export async function GET(req: Request) {
       totaisGerais: {
         receitaTotal: totalReceitaGeral,
         custosTotais: totalCustosGeral,
+        custosPctTotal: totalReceitaGeral > 0 ? (totalCustosGeral / totalReceitaGeral) * 100 : 0,
         impostosTotais: totalImpostosGeral,
+        impostosPctTotal: impostoPct,
+        logisticaTotal: totalLogisticaLiquidaGeral,
+        logisticaPctTotal: totalReceitaGeral > 0 ? (totalLogisticaLiquidaGeral / totalReceitaGeral) * 100 : 0,
+        impostosLogisticaTotal: totalImpostosGeral + totalLogisticaLiquidaGeral,
+        impostosLogisticaPctTotal: totalReceitaGeral > 0 ? ((totalImpostosGeral + totalLogisticaLiquidaGeral) / totalReceitaGeral) * 100 : 0,
         margemTotal: totalMargemGeral,
         margemPctTotal: totalReceitaGeral > 0 ? (totalMargemGeral / totalReceitaGeral) * 100 : 0,
         totalProjetos: projetosTotais.length,

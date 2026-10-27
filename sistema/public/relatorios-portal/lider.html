@@ -6300,6 +6300,36 @@
             cards[1].textContent = formatBRL(t.custosTotais);
             cards[2].textContent = formatBRL(t.margemTotal);
           }
+          if (cards.length >= 4 && typeof t.impostosLogisticaTotal === 'number') {
+            cards[3].textContent = formatBRL(t.impostosLogisticaTotal);
+          }
+
+          // Atualizar badges percentuais
+          const badgeCustos = cards[1]?.nextElementSibling;
+          if (badgeCustos && typeof t.custosPctTotal === 'number') {
+            badgeCustos.textContent = `${t.custosPctTotal.toFixed(2).replace('.', ',')}%`;
+          }
+
+          const badgeMargem = cards[2]?.nextElementSibling;
+          if (badgeMargem && typeof t.margemPctTotal === 'number') {
+            badgeMargem.textContent = `${t.margemPctTotal.toFixed(2).replace('.', ',')}%`;
+            if (t.margemTotal < 0) {
+              cards[2].className = 'text-2xl font-bold tracking-tight text-rose-600 dark:text-rose-400 tabular-nums';
+              badgeMargem.className = 'text-xs font-bold text-rose-800 dark:text-rose-300 bg-rose-100 dark:bg-rose-500/20 px-2 py-0.5 rounded-full border border-rose-300 dark:border-rose-500/30 tabular-nums';
+            } else {
+              cards[2].className = 'text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400 tabular-nums';
+              badgeMargem.className = 'text-xs font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-500/20 px-2 py-0.5 rounded-full border border-emerald-300 dark:border-emerald-500/30 tabular-nums';
+            }
+          }
+
+          const badgeImpLog = cards[3]?.nextElementSibling;
+          if (badgeImpLog && typeof t.impostosLogisticaPctTotal === 'number') {
+            badgeImpLog.textContent = `${t.impostosLogisticaPctTotal.toFixed(2).replace('.', ',')}%`;
+          }
+          const subImpLog = cards[3]?.parentElement?.nextElementSibling;
+          if (subImpLog && typeof t.impostosPctTotal === 'number' && typeof t.logisticaPctTotal === 'number') {
+            subImpLog.textContent = `Impostos: ${t.impostosPctTotal.toFixed(2).replace('.', ',')}% | Logística: ${t.logisticaPctTotal.toFixed(2).replace('.', ',')}%`;
+          }
         }
       }
 
