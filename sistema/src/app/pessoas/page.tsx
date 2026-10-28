@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import React, { useState, useMemo, useEffect } from "react";
 import ThemeToggle from "@/components/ThemeToggle";
 import { PESSOAS_INICIAIS, PessoaItem } from "@/lib/pessoas-data";
@@ -343,43 +344,43 @@ export default function PessoasPage() {
           </div>
 
           <nav className="sidebar-nav">
-            <a href="/projetos" className="nav-item">
+            <Link href="/projetos" className="nav-item">
               <span className="material-symbols-outlined">assignment</span>
               <span>Projetos & Atividades</span>
-            </a>
-            <a href="/medicao" className="nav-item">
+            </Link>
+            <Link href="/medicao" className="nav-item">
               <span className="material-symbols-outlined">receipt_long</span>
               <span>BM - Boletim de Medição</span>
-            </a>
-            <a href="/viagens" className="nav-item">
+            </Link>
+            <Link href="/viagens" className="nav-item">
               <span className="material-symbols-outlined">flight</span>
               <span>Viagens & Logística</span>
-            </a>
-            <a href="/centro-de-custo" className="nav-item">
+            </Link>
+            <Link href="/centro-de-custo" className="nav-item">
               <span className="material-symbols-outlined">account_tree</span>
               <span>Centro de Custo</span>
-            </a>
-            <a href="/tabela-precos" className="nav-item">
+            </Link>
+            <Link href="/tabela-precos" className="nav-item">
               <span className="material-symbols-outlined">request_quote</span>
               <span>Tabela de Preços</span>
-            </a>
-            <a href="/pessoas" className="nav-item active">
+            </Link>
+            <Link href="/pessoas" className="nav-item active">
               <span className="material-symbols-outlined">group</span>
               <span>Pessoas</span>
-            </a>
-            <a href="/faturamento" className="nav-item">
+            </Link>
+            <Link href="/faturamento" className="nav-item">
               <span className="material-symbols-outlined">receipt</span>
               <span>Faturamento</span>
-            </a>
-            <a href="/pagamentos" className="nav-item">
+            </Link>
+            <Link href="/pagamentos" className="nav-item">
               <span className="material-symbols-outlined">payments</span>
               <span>Pagamentos</span>
-            </a>
-            <a href="/relatorios" className="nav-item">
+            </Link>
+            <Link href="/relatorios" className="nav-item">
               <span className="material-symbols-outlined">monitoring</span>
               <span>Relatórios</span>
-            </a>
-            <a href="/consultor" className="nav-item"><span className="material-symbols-outlined">support_agent</span><span>Consultor</span></a>
+            </Link>
+            <Link href="/consultor" className="nav-item"><span className="material-symbols-outlined">support_agent</span><span>Consultor</span></Link>
           </nav>
         </div>
 
@@ -965,7 +966,7 @@ export default function PessoasPage() {
                     }}
                   >
                     <th style={{ padding: "14px 18px", fontWeight: 700 }}>Nome / Integrante</th>
-                    <th style={{ padding: "14px 16px", fontWeight: 700 }}>Vínculo</th>
+                    <th style={{ padding: "14px 16px", fontWeight: 700, textAlign: "center" }}>Vínculo</th>
                     <th style={{ padding: "14px 16px", fontWeight: 700 }}>Perfil</th>
                     <th style={{ padding: "14px 16px", fontWeight: 700 }}>Logística / Viagem (CPF & Base)</th>
                     <th style={{ padding: "14px 16px", fontWeight: 700 }}>Empresa PJ / Fiscal (CNPJ)</th>
@@ -1045,24 +1046,36 @@ export default function PessoasPage() {
                           </td>
 
                           {/* Vínculo & Medição */}
-                          <td style={{ padding: "14px 16px" }}>
-                            <div style={{ display: "flex", flexDirection: "column", gap: "6px", alignItems: "flex-start" }}>
+                          <td style={{ padding: "14px 16px", textAlign: "center" }}>
+                            <div style={{ display: "flex", flexDirection: "column", gap: "6px", alignItems: "center", justifyContent: "center" }}>
                               {renderBadgeTipo(p.tipo)}
                               {p.tipo !== "funcionario" && (
                                 <span
                                   style={{
-                                    fontSize: "10px",
-                                    fontWeight: 800,
-                                    padding: "2px 7px",
+                                    fontSize: "11px",
+                                    fontWeight: 500,
+                                    padding: "1px 6px",
                                     borderRadius: "4px",
-                                    backgroundColor: p.tipo_medicao === "QUINZENAL" ? "#e0f2fe" : "#f3e8ff",
-                                    color: p.tipo_medicao === "QUINZENAL" ? "#0369a1" : "#7e22ce",
-                                    border: p.tipo_medicao === "QUINZENAL" ? "1px solid #bae6fd" : "1px solid #d8b4fe",
-                                    textTransform: "uppercase",
-                                    letterSpacing: "0.4px",
+                                    backgroundColor: "var(--surface-container-low)",
+                                    color: "var(--on-surface-variant)",
+                                    border: "1px solid var(--border)",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "4px",
+                                    lineHeight: "1.4",
                                   }}
                                   title={`Regra de Medição BM: ${p.tipo_medicao === "QUINZENAL" ? "Quinzenal (1ª e 2ª Quinzena)" : "Integral (Mês Cheio)"}`}
                                 >
+                                  <span
+                                    style={{
+                                      width: "5px",
+                                      height: "5px",
+                                      borderRadius: "50%",
+                                      backgroundColor: p.tipo_medicao === "QUINZENAL" ? "#0284c7" : "#9333ea",
+                                      opacity: 0.8,
+                                      flexShrink: 0,
+                                    }}
+                                  />
                                   {p.tipo_medicao === "QUINZENAL" ? "Quinzenal" : "Integral"}
                                 </span>
                               )}

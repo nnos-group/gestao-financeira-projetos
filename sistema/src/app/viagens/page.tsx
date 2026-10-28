@@ -17,19 +17,22 @@ export default async function ViagensPage({
   const sp = await searchParams;
   const db = supabaseAdmin();
 
-  // Buscar anos disponíveis que possuem lançamentos de atividades
-  const { data: compGeral } = await db
-    .from("lancamentos")
-    .select("competencia")
-    .limit(3000);
+  // Anos disponíveis: menor e maior competência (1 linha cada, em paralelo) em vez de baixar 3000 linhas
+  const [minCompRes, maxCompRes] = await Promise.all([
+    db.from("lancamentos").select("competencia").not("competencia", "is", null).order("competencia", { ascending: true }).limit(1),
+    db.from("lancamentos").select("competencia").not("competencia", "is", null).order("competencia", { ascending: false }).limit(1),
+  ]);
+  const anoDe = (r: { data: { competencia: string | null }[] | null }) => {
+    const c = r.data?.[0]?.competencia;
+    return c ? Number(c.split("-")[0]) : NaN;
+  };
+  const anoMin = Math.max(2020, anoDe(minCompRes));
+  const anoMax = anoDe(maxCompRes);
 
-  const anosDisponiveis = Array.from(
-    new Set(
-      (compGeral || [])
-        .map((l) => (l.competencia ? Number(l.competencia.split("-")[0]) : null))
-        .filter((a): a is number => typeof a === "number" && !isNaN(a) && a >= 2020)
-    )
-  ).sort((a, b) => a - b);
+  const anosDisponiveis: number[] = [];
+  if (!isNaN(anoMin) && !isNaN(anoMax)) {
+    for (let a = anoMin; a <= anoMax; a++) anosDisponiveis.push(a);
+  }
 
   if (anosDisponiveis.length === 0) {
     anosDisponiveis.push(2025, 2026, 2027);

@@ -281,64 +281,105 @@
 
   <!-- ──────── MACRO METRICS OVERVIEW ──────── -->
   <section id="resumo" class="scroll-mt-28 space-y-4">
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3.5">
       <!-- Métrica 1: Receita Bruta -->
-      <div class="bg-white dark:bg-slate-900/90 border border-slate-200/90 dark:border-white/10 rounded-2xl p-5 shadow-sm dark:shadow-lg relative overflow-hidden group">
-        <div class="flex items-center justify-between text-slate-500 dark:text-gray-400 mb-2">
-          <span class="text-xs font-bold uppercase tracking-wider">Receita Bruta Consolidada</span>
-          <div class="w-8 h-8 rounded-lg bg-sky-50 dark:bg-sky-500/20 text-sky-600 dark:text-sky-400 flex items-center justify-center font-bold text-sm">$</div>
+      <div class="bg-white dark:bg-slate-900/90 border border-slate-200/90 dark:border-white/10 rounded-2xl p-4 xl:p-4 2xl:p-5 shadow-sm dark:shadow-lg relative overflow-hidden group flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between text-slate-500 dark:text-gray-400 mb-2">
+            <span class="text-xs font-bold uppercase tracking-wider">Receita Bruta Consolidada</span>
+            <div class="w-8 h-8 rounded-lg bg-sky-50 dark:bg-sky-500/20 text-sky-600 dark:text-sky-400 flex items-center justify-center font-bold text-sm">$</div>
+          </div>
+          <div class="flex items-baseline justify-between gap-1 flex-nowrap min-w-0">
+            <span id="metric-receita-val" class="text-lg xl:text-[19px] 2xl:text-xl font-bold tracking-tight text-slate-900 dark:text-white tabular-nums whitespace-nowrap">
+              R$ 10.552.168,40
+            </span>
+          </div>
         </div>
-        <div class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white tabular-nums">
-          R$ 10.644.159,85
-        </div>
-        <p class="text-xs text-slate-400 dark:text-gray-400 mt-1.5">Soma de todos os 44 contratos sob gestão</p>
+        <p class="text-xs text-slate-400 dark:text-gray-400 mt-2 truncate">Soma de todos os 44 contratos sob gestão</p>
         <div class="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-sky-500 to-transparent"></div>
       </div>
 
       <!-- Métrica 2: Custos Operacionais -->
-      <div class="bg-white dark:bg-slate-900/90 border border-slate-200/90 dark:border-white/10 rounded-2xl p-5 shadow-sm dark:shadow-lg relative overflow-hidden group">
-        <div class="flex items-center justify-between text-slate-500 dark:text-gray-400 mb-2">
-          <span class="text-xs font-bold uppercase tracking-wider">Custos Operacionais</span>
-          <div class="w-8 h-8 rounded-lg bg-rose-50 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold text-sm">
-            <span class="material-symbols-outlined text-base">trending_down</span>
+      <div class="bg-white dark:bg-slate-900/90 border border-slate-200/90 dark:border-white/10 rounded-2xl p-4 xl:p-4 2xl:p-5 shadow-sm dark:shadow-lg relative overflow-hidden group flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between text-slate-500 dark:text-gray-400 mb-2">
+            <span class="text-xs font-bold uppercase tracking-wider">Custos Operacionais</span>
+            <div class="w-8 h-8 rounded-lg bg-rose-50 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold text-sm">
+              <span class="material-symbols-outlined text-base">trending_down</span>
+            </div>
+          </div>
+          <div class="flex items-baseline justify-between gap-1 flex-nowrap min-w-0">
+            <span id="metric-custos-val" class="text-lg xl:text-[19px] 2xl:text-xl font-bold tracking-tight text-slate-900 dark:text-white tabular-nums whitespace-nowrap">R$ 7.671.796,58</span>
+            <span id="metric-custos-pct" class="text-[11px] font-bold text-rose-600 dark:text-rose-400 tabular-nums whitespace-nowrap flex-shrink-0">72,70%</span>
           </div>
         </div>
-        <div class="flex items-baseline gap-2">
-          <span class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white tabular-nums">R$ 7.656.976,19</span>
-          <span class="text-xs font-bold text-rose-600 dark:text-rose-400 tabular-nums">71,94%</span>
-        </div>
-        <p class="text-xs text-slate-400 dark:text-gray-400 mt-1.5">Custos diretos e contratações executadas</p>
+        <p class="text-xs text-slate-400 dark:text-gray-400 mt-2 truncate">Custos diretos e contratações executadas</p>
         <div class="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-rose-500 to-transparent"></div>
       </div>
 
       <!-- Métrica 3: Margem Líquida Realizada -->
-      <div class="bg-white dark:bg-slate-900/90 border border-slate-200/90 dark:border-white/10 rounded-2xl p-5 shadow-sm dark:shadow-lg relative overflow-hidden group">
-        <div class="flex items-center justify-between text-slate-500 dark:text-gray-400 mb-2">
-          <span class="text-xs font-bold uppercase tracking-wider">Margem Líquida Realizada</span>
-          <div class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-sm">%</div>
+      <div class="bg-white dark:bg-slate-900/90 border border-slate-200/90 dark:border-white/10 rounded-2xl p-4 xl:p-4 2xl:p-5 shadow-sm dark:shadow-lg relative overflow-hidden group flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between text-slate-500 dark:text-gray-400 mb-2">
+            <span class="text-xs font-bold uppercase tracking-wider">Margem Líquida Realizada</span>
+            <div class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-sm">%</div>
+          </div>
+          <div class="flex items-baseline justify-between gap-1 flex-nowrap min-w-0">
+            <span id="metric-margem-val" class="text-lg xl:text-[19px] 2xl:text-xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400 tabular-nums whitespace-nowrap">R$ 1.464.068,55</span>
+            <span id="metric-margem-pct" class="text-[11px] font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-500/20 px-1.5 py-0.5 rounded-full border border-emerald-300 dark:border-emerald-500/30 tabular-nums whitespace-nowrap flex-shrink-0">13,87%</span>
+          </div>
         </div>
-        <div class="flex items-baseline gap-2">
-          <span class="text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400 tabular-nums">R$ 1.600.058,39</span>
-          <span class="text-xs font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-500/20 px-2 py-0.5 rounded-full border border-emerald-300 dark:border-emerald-500/30 tabular-nums">15,03%</span>
-        </div>
-        <p class="text-xs text-slate-400 dark:text-gray-400 mt-1.5">Resultado operacional livre após despesas e impostos</p>
+        <p class="text-xs text-slate-400 dark:text-gray-400 mt-2 truncate">Resultado livre após despesas e impostos</p>
         <div class="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-emerald-500 to-transparent"></div>
       </div>
 
-      <!-- Métrica 4: Impostos & Logística -->
-      <div class="bg-white dark:bg-slate-900/90 border border-slate-200/90 dark:border-white/10 rounded-2xl p-5 shadow-sm dark:shadow-lg relative overflow-hidden group">
-        <div class="flex items-center justify-between text-slate-500 dark:text-gray-400 mb-2">
-          <span class="text-xs font-bold uppercase tracking-wider">Impostos &amp; Logística</span>
-          <div class="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-sm">
-            <span class="material-symbols-outlined text-base">receipt_long</span>
+      <!-- Métrica 4: Impostos Tributários -->
+      <div class="bg-white dark:bg-slate-900/90 border border-slate-200/90 dark:border-white/10 rounded-2xl p-4 xl:p-4 2xl:p-5 shadow-sm dark:shadow-lg relative overflow-hidden group flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between text-slate-500 dark:text-gray-400 mb-2">
+            <span class="text-xs font-bold uppercase tracking-wider">Impostos Tributários</span>
+            <div class="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-sm">
+              <span class="material-symbols-outlined text-base">receipt_long</span>
+            </div>
+          </div>
+          <div class="flex items-baseline justify-between gap-1 flex-nowrap min-w-0">
+            <span id="metric-impostos-val" class="text-lg xl:text-[19px] 2xl:text-xl font-bold tracking-tight text-slate-900 dark:text-white tabular-nums whitespace-nowrap">R$ 1.292.640,63</span>
+            <span id="metric-impostos-pct" class="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 tabular-nums whitespace-nowrap flex-shrink-0">12,25%</span>
           </div>
         </div>
-        <div class="flex items-baseline gap-2">
-          <span class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white tabular-nums">R$ 2.100.361,78</span>
-          <span class="text-xs font-bold text-slate-500 dark:text-gray-400 tabular-nums">19,73%</span>
-        </div>
-        <p class="text-xs text-slate-400 dark:text-gray-400 mt-1.5">Impostos: 12,25% | Logística: 7,48%</p>
+        <p id="metric-impostos-desc" class="text-xs text-slate-400 dark:text-gray-400 mt-2 truncate">Alíquota estimada de 12,25% s/ faturamento</p>
         <div class="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-indigo-500 to-transparent"></div>
+      </div>
+
+      <!-- Métrica 5: Logística & Viagens -->
+      <div class="bg-white dark:bg-slate-900/90 border border-slate-200/90 dark:border-white/10 rounded-2xl p-4 xl:p-4 2xl:p-5 shadow-sm dark:shadow-lg relative overflow-hidden group flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between text-slate-500 dark:text-gray-400 mb-2">
+            <span class="text-xs font-bold uppercase tracking-wider">Logística &amp; Viagens</span>
+            <div class="w-8 h-8 rounded-lg bg-cyan-50 dark:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 flex items-center justify-center font-bold text-sm">
+              <span class="material-symbols-outlined text-base">flight_takeoff</span>
+            </div>
+          </div>
+          <div class="flex items-baseline justify-between gap-1 flex-nowrap min-w-0">
+            <span id="metric-logistica-val" class="text-lg xl:text-[19px] 2xl:text-xl font-bold tracking-tight text-slate-900 dark:text-white tabular-nums whitespace-nowrap">R$ 865.107,79</span>
+            <span id="metric-logistica-pct" class="text-[11px] font-bold text-cyan-600 dark:text-cyan-400 tabular-nums whitespace-nowrap flex-shrink-0">8,20%</span>
+          </div>
+        </div>
+        <div class="mt-2.5 pt-2 border-t border-slate-100 dark:border-white/5 space-y-1 text-xs">
+          <div class="flex items-center justify-between gap-1">
+            <span class="text-slate-500 dark:text-gray-400 flex items-center gap-1.5 truncate text-[11px] xl:text-xs">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0"></span> Repassado:
+            </span>
+            <span id="metric-logistica-repassado" class="font-bold text-emerald-600 dark:text-emerald-400 tabular-nums whitespace-nowrap text-[11px] xl:text-xs">R$ 741.445,15</span>
+          </div>
+          <div class="flex items-center justify-between gap-1">
+            <span class="text-slate-500 dark:text-gray-400 flex items-center gap-1.5 truncate text-[11px] xl:text-xs">
+              <span class="w-1.5 h-1.5 rounded-full bg-purple-500 flex-shrink-0"></span> Prospecção:
+            </span>
+            <span id="metric-logistica-prospeccao" class="font-bold text-purple-600 dark:text-purple-400 tabular-nums whitespace-nowrap text-[11px] xl:text-xs">R$ 162.878,45</span>
+          </div>
+        </div>
+        <div class="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-cyan-500 via-emerald-500 to-purple-500"></div>
       </div>
     </div>
   </section>
@@ -6289,47 +6330,66 @@
       const data = await res.json();
       if (!data) return;
 
-      // 1. Atualizar Macro Métricas do Resumo Geral
+      // 1. Atualizar Macro Métricas do Resumo Geral (5 Cards)
       if (data.totaisGerais) {
         const t = data.totaisGerais;
-        const resEl = document.getElementById('resumo');
-        if (resEl) {
-          const cards = resEl.querySelectorAll('.text-2xl');
-          if (cards.length >= 3) {
-            cards[0].textContent = formatBRL(t.receitaTotal);
-            cards[1].textContent = formatBRL(t.custosTotais);
-            cards[2].textContent = formatBRL(t.margemTotal);
-          }
-          if (cards.length >= 4 && typeof t.impostosLogisticaTotal === 'number') {
-            cards[3].textContent = formatBRL(t.impostosLogisticaTotal);
-          }
+        
+        // Card 1: Receita
+        const elRec = document.getElementById('metric-receita-val');
+        if (elRec && typeof t.receitaTotal === 'number') elRec.textContent = formatBRL(t.receitaTotal);
 
-          // Atualizar badges percentuais
-          const badgeCustos = cards[1]?.nextElementSibling;
-          if (badgeCustos && typeof t.custosPctTotal === 'number') {
-            badgeCustos.textContent = `${t.custosPctTotal.toFixed(2).replace('.', ',')}%`;
-          }
+        // Card 2: Custos
+        const elCustos = document.getElementById('metric-custos-val');
+        if (elCustos && typeof t.custosTotais === 'number') elCustos.textContent = formatBRL(t.custosTotais);
+        const elCustosPct = document.getElementById('metric-custos-pct');
+        if (elCustosPct && typeof t.custosPctTotal === 'number') {
+          elCustosPct.textContent = `${t.custosPctTotal.toFixed(2).replace('.', ',')}%`;
+        }
 
-          const badgeMargem = cards[2]?.nextElementSibling;
-          if (badgeMargem && typeof t.margemPctTotal === 'number') {
-            badgeMargem.textContent = `${t.margemPctTotal.toFixed(2).replace('.', ',')}%`;
+        // Card 3: Margem
+        const elMargem = document.getElementById('metric-margem-val');
+        const elMargemPct = document.getElementById('metric-margem-pct');
+        if (elMargem && typeof t.margemTotal === 'number') {
+          elMargem.textContent = formatBRL(t.margemTotal);
+          if (elMargemPct && typeof t.margemPctTotal === 'number') {
+            elMargemPct.textContent = `${t.margemPctTotal.toFixed(2).replace('.', ',')}%`;
+            const fontClasses = 'text-lg xl:text-[19px] 2xl:text-xl font-bold tracking-tight tabular-nums whitespace-nowrap';
             if (t.margemTotal < 0) {
-              cards[2].className = 'text-2xl font-bold tracking-tight text-rose-600 dark:text-rose-400 tabular-nums';
-              badgeMargem.className = 'text-xs font-bold text-rose-800 dark:text-rose-300 bg-rose-100 dark:bg-rose-500/20 px-2 py-0.5 rounded-full border border-rose-300 dark:border-rose-500/30 tabular-nums';
+              elMargem.className = `${fontClasses} text-rose-600 dark:text-rose-400`;
+              elMargemPct.className = 'text-[11px] font-bold text-rose-800 dark:text-rose-300 bg-rose-100 dark:bg-rose-500/20 px-1.5 py-0.5 rounded-full border border-rose-300 dark:border-rose-500/30 tabular-nums whitespace-nowrap flex-shrink-0';
             } else {
-              cards[2].className = 'text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400 tabular-nums';
-              badgeMargem.className = 'text-xs font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-500/20 px-2 py-0.5 rounded-full border border-emerald-300 dark:border-emerald-500/30 tabular-nums';
+              elMargem.className = `${fontClasses} text-emerald-600 dark:text-emerald-400`;
+              elMargemPct.className = 'text-[11px] font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-500/20 px-1.5 py-0.5 rounded-full border border-emerald-300 dark:border-emerald-500/30 tabular-nums whitespace-nowrap flex-shrink-0';
             }
           }
+        }
 
-          const badgeImpLog = cards[3]?.nextElementSibling;
-          if (badgeImpLog && typeof t.impostosLogisticaPctTotal === 'number') {
-            badgeImpLog.textContent = `${t.impostosLogisticaPctTotal.toFixed(2).replace('.', ',')}%`;
-          }
-          const subImpLog = cards[3]?.parentElement?.nextElementSibling;
-          if (subImpLog && typeof t.impostosPctTotal === 'number' && typeof t.logisticaPctTotal === 'number') {
-            subImpLog.textContent = `Impostos: ${t.impostosPctTotal.toFixed(2).replace('.', ',')}% | Logística: ${t.logisticaPctTotal.toFixed(2).replace('.', ',')}%`;
-          }
+        // Card 4: Impostos Tributários
+        const elImp = document.getElementById('metric-impostos-val');
+        if (elImp && typeof t.impostosTotais === 'number') elImp.textContent = formatBRL(t.impostosTotais);
+        const elImpPct = document.getElementById('metric-impostos-pct');
+        if (elImpPct && typeof t.impostosPctTotal === 'number') {
+          elImpPct.textContent = `${t.impostosPctTotal.toFixed(2).replace('.', ',')}%`;
+        }
+        const elImpDesc = document.getElementById('metric-impostos-desc');
+        if (elImpDesc && typeof t.impostosPctTotal === 'number') {
+          elImpDesc.textContent = `Alíquota estimada de ${t.impostosPctTotal.toFixed(2).replace('.', ',')}% s/ faturamento bruto`;
+        }
+
+        // Card 5: Logística & Viagens
+        const elLog = document.getElementById('metric-logistica-val');
+        if (elLog && typeof t.logisticaTotal === 'number') elLog.textContent = formatBRL(t.logisticaTotal);
+        const elLogPct = document.getElementById('metric-logistica-pct');
+        if (elLogPct && typeof t.logisticaPctTotal === 'number') {
+          elLogPct.textContent = `${t.logisticaPctTotal.toFixed(2).replace('.', ',')}%`;
+        }
+        const elRepasse = document.getElementById('metric-logistica-repassado');
+        if (elRepasse && typeof t.repasseTotal === 'number') {
+          elRepasse.textContent = formatBRL(t.repasseTotal);
+        }
+        const elProsp = document.getElementById('metric-logistica-prospeccao');
+        if (elProsp && typeof t.prospeccaoTotal === 'number') {
+          elProsp.textContent = formatBRL(t.prospeccaoTotal);
         }
       }
 

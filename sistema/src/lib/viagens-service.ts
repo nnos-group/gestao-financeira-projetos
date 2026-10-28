@@ -34,8 +34,20 @@ export function carregarSolicitacoesArquivo(): ViagemSolicitacao[] {
   return [];
 }
 
+interface CacheEntry {
+  data: ViagemSolicitacao[];
+  timestamp: number;
+}
+const cacheSincronizacao = new Map<string, CacheEntry>();
+const CACHE_TTL_MS = 60 * 1000; // 60 segundos de cache para navegação instantânea ("on click")
+
+export function invalidarCacheViagens() {
+  cacheSincronizacao.clear();
+}
+
 export function salvarSolicitacoesArquivo(lista: ViagemSolicitacao[]): void {
   try {
+    invalidarCacheViagens();
     fs.writeFileSync(DATA_FILE, JSON.stringify(lista, null, 2), "utf8");
   } catch (err) {
     console.error("Erro ao salvar viagens-solicitacoes-base.json:", err);
@@ -48,6 +60,13 @@ export { formatarObservacoesAgenciaCard } from "./viagem-formatters";
  * Inicializa ou sincroniza solicitações a partir dos lançamentos do Supabase
  */
 export async function sincronizarSolicitacoesIniciais(competencia?: string): Promise<ViagemSolicitacao[]> {
+  const cacheKey = competencia || "todas";
+  const emCache = cacheSincronizacao.get(cacheKey);
+  const agora = Date.now();
+  if (emCache && agora - emCache.timestamp < CACHE_TTL_MS) {
+    return emCache.data;
+  }
+
   const db = getSupabase();
   const todosLancs: any[] = [];
   let pagina = 0;
@@ -87,7 +106,9 @@ export async function sincronizarSolicitacoesIniciais(competencia?: string): Pro
 
   const lancs = todosLancs;
   if (lancs.length === 0) {
-    return carregarSolicitacoesArquivo();
+    const fallback = carregarSolicitacoesArquivo();
+    cacheSincronizacao.set(cacheKey, { data: fallback, timestamp: Date.now() });
+    return fallback;
   }
 
   const existentes = carregarSolicitacoesArquivo();
@@ -378,6 +399,7 @@ export async function sincronizarSolicitacoesIniciais(competencia?: string): Pro
   if (houveMudanca) {
     salvarSolicitacoesArquivo(listaFinal);
   }
+  cacheSincronizacao.set(cacheKey, { data: listaFinal, timestamp: Date.now() });
   return listaFinal;
 }
 

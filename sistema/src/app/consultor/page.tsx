@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import ConsultorHeader from "@/components/ConsultorHeader";
 import { useConsultor } from "@/contexts/ConsultorContext";
 import { formatarPeriodoBR, formatarDataBR } from "@/lib/date-utils";
@@ -182,9 +183,9 @@ export default function ConsultorPage() {
                   Próximas Atividades na Agenda
                 </h3>
               </div>
-              <a href="/consultor/agenda" style={{ fontSize: "12px", color: "var(--primary)", fontWeight: 700, textDecoration: "none" }}>
+              <Link href="/consultor/agenda" style={{ fontSize: "12px", color: "var(--primary)", fontWeight: 700, textDecoration: "none" }}>
                 Ver Agenda Completa →
-              </a>
+              </Link>
             </div>
 
             {proximasAtividades.length === 0 ? (
@@ -259,9 +260,9 @@ export default function ConsultorPage() {
                   Meus Boletins de Medição (BMs)
                 </h3>
               </div>
-              <a href="/consultor/bms" style={{ fontSize: "12px", color: "var(--primary)", fontWeight: 700, textDecoration: "none" }}>
+              <Link href="/consultor/bms" style={{ fontSize: "12px", color: "var(--primary)", fontWeight: 700, textDecoration: "none" }}>
                 Ver Todos os BMs →
-              </a>
+              </Link>
             </div>
 
             {ultimosBms.length === 0 ? (
