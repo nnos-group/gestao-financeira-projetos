@@ -59,7 +59,7 @@ export async function gerarPdfOficialBm(dados: BmPdfDados): Promise<Uint8Array> 
     const possiblePaths = [
       path.join(process.cwd(), "public/logo-coruja.png"),
       path.join(process.cwd(), "sistema/public/logo-coruja.png"),
-      path.resolve(__dirname, "../../public/logo-coruja.png"),
+      path.join(process.cwd(), "sistema/public/relatorios-portal/logo-coruja.png"),
     ];
     const foundPath = possiblePaths.find((p) => fs.existsSync(p));
     if (foundPath) {
@@ -627,7 +627,7 @@ export async function gerarPdfOficialBm(dados: BmPdfDados): Promise<Uint8Array> 
   // ==========================================
   // 6. DECLARAÇÃO DE ACEITE & ASSINATURAS DIGITAIS
   // ==========================================
-  const signSecH = 86;
+  const signSecH = 102;
   page.drawRectangle({
     x: marginX,
     y: y - signSecH,
@@ -653,7 +653,7 @@ export async function gerarPdfOficialBm(dados: BmPdfDados): Promise<Uint8Array> 
   page.drawText("Declaração de Concordância e Aceite Operacional", {
     x: marginX + 12,
     y: y - 13,
-    size: 7,
+    size: 7.2,
     font: fontBold,
     color: rgb(0.04, 0.38, 0.25),
   });
@@ -666,10 +666,10 @@ export async function gerarPdfOficialBm(dados: BmPdfDados): Promise<Uint8Array> 
   });
 
   const signBoxW = (contentWidth - 20) / 2;
-  const signBoxH = 54;
+  const signBoxH = 66;
   const sY = y - declH - 8;
 
-  // Caixa de Assinatura 1: Prestador de Serviços (Recipient1)
+  // Caixa de Assinatura 1: Prestador de Serviços (Recipient2)
   const sb1X = marginX + 6;
   page.drawRectangle({
     x: sb1X,
@@ -681,17 +681,17 @@ export async function gerarPdfOficialBm(dados: BmPdfDados): Promise<Uint8Array> 
     borderWidth: 1,
   });
 
-  page.drawText("ASSINATURA DO PRESTADOR", { x: sb1X + 8, y: sY - 10, size: 6.8, font: fontBold, color: cNavyHeader });
+  page.drawText("ASSINATURA DO PRESTADOR", { x: sb1X + 10, y: sY - 11, size: 6.8, font: fontBold, color: cNavyHeader });
 
   // Text Tags Zoho Sign em branco para Prestador (Recipient2)
-  page.drawText("{{Signature:Recipient2*}}", { x: sb1X + 20, y: sY - 22, size: 9, font: fontRegular, color: cWhite });
-  page.drawText("{{Signdate:Recipient2*}}", { x: sb1X + 150, y: sY - 22, size: 9, font: fontRegular, color: cWhite });
+  page.drawText("{{Signature:Recipient2*}}", { x: sb1X + 20, y: sY - 24, size: 8, font: fontRegular, color: cWhite });
+  page.drawText("{{Signdate:Recipient2*}}", { x: sb1X + 150, y: sY - 24, size: 8, font: fontRegular, color: cWhite });
 
-  page.drawLine({ start: { x: sb1X + 8, y: sY - 36 }, end: { x: sb1X + signBoxW - 8, y: sY - 36 }, color: cBorder, thickness: 0.5 });
-  page.drawText(dados.consultorNome, { x: sb1X + 8, y: sY - 45, size: 7.5, font: fontBold, color: cDark });
-  page.drawText(`Razão Social: ${razaoSocial} - CNPJ: ${cnpj}`, { x: sb1X + 8, y: sY - 55, size: 6.5, font: fontRegular, color: cMuted });
+  page.drawLine({ start: { x: sb1X + 10, y: sY - 37 }, end: { x: sb1X + signBoxW - 10, y: sY - 37 }, color: cBorder, thickness: 0.5 });
+  page.drawText(dados.consultorNome, { x: sb1X + 10, y: sY - 47, size: 7.4, font: fontBold, color: cDark });
+  page.drawText(`Razão Social: ${razaoSocial} • CNPJ: ${cnpj}`, { x: sb1X + 10, y: sY - 57, size: 6.2, font: fontRegular, color: cMuted });
 
-  // Caixa de Assinatura 2: Validação da Coordenação / Líder (Recipient1 e Recipient3)
+  // Caixa de Assinatura 2: Validação da Coordenação & Líder (Recipient1 e Recipient3)
   const sb2X = marginX + 14 + signBoxW;
   page.drawRectangle({
     x: sb2X,
@@ -703,19 +703,19 @@ export async function gerarPdfOficialBm(dados: BmPdfDados): Promise<Uint8Array> 
     borderWidth: 1,
   });
 
-  page.drawText("VALIDAÇÃO DA COORDENAÇÃO & LÍDER", { x: sb2X + 8, y: sY - 10, size: 6.8, font: fontBold, color: cNavyHeader });
+  page.drawText("VALIDAÇÃO DA COORDENAÇÃO & LÍDER", { x: sb2X + 10, y: sY - 11, size: 6.8, font: fontBold, color: cNavyHeader });
 
   // Text Tags Zoho Sign em branco para Líder (Recipient1) na linha superior
-  page.drawText("{{Signature:Recipient1*}}", { x: sb2X + 14, y: sY - 18, size: 8, font: fontRegular, color: cWhite });
-  page.drawText("{{Signdate:Recipient1*}}", { x: sb2X + 140, y: sY - 18, size: 8, font: fontRegular, color: cWhite });
+  page.drawText("{{Signature:Recipient1*}}", { x: sb2X + 14, y: sY - 20, size: 8, font: fontRegular, color: cWhite });
+  page.drawText("{{Signdate:Recipient1*}}", { x: sb2X + 140, y: sY - 20, size: 8, font: fontRegular, color: cWhite });
 
   // Text Tags Zoho Sign em branco para Coordenação / Responsável (Recipient3) na linha inferior
-  page.drawText("{{Signature:Recipient3*}}", { x: sb2X + 14, y: sY - 28, size: 8, font: fontRegular, color: cWhite });
-  page.drawText("{{Signdate:Recipient3*}}", { x: sb2X + 140, y: sY - 28, size: 8, font: fontRegular, color: cWhite });
+  page.drawText("{{Signature:Recipient3*}}", { x: sb2X + 14, y: sY - 29, size: 8, font: fontRegular, color: cWhite });
+  page.drawText("{{Signdate:Recipient3*}}", { x: sb2X + 140, y: sY - 29, size: 8, font: fontRegular, color: cWhite });
 
-  page.drawLine({ start: { x: sb2X + 8, y: sY - 36 }, end: { x: sb2X + signBoxW - 8, y: sY - 36 }, color: cBorder, thickness: 0.5 });
-  page.drawText(dados.responsavelNome || "Marcelo Lara da Silva", { x: sb2X + 8, y: sY - 45, size: 7.5, font: fontBold, color: cDark });
-  page.drawText("Coordenação Operacional & Projetos - NNÓS Consultoria", { x: sb2X + 8, y: sY - 55, size: 6.5, font: fontRegular, color: cMuted });
+  page.drawLine({ start: { x: sb2X + 10, y: sY - 37 }, end: { x: sb2X + signBoxW - 10, y: sY - 37 }, color: cBorder, thickness: 0.5 });
+  page.drawText(dados.responsavelNome || "Marcelo Lara da Silva", { x: sb2X + 10, y: sY - 47, size: 7.4, font: fontBold, color: cDark });
+  page.drawText("Coordenação Operacional & Projetos • NNÓS Consultoria", { x: sb2X + 10, y: sY - 57, size: 6.2, font: fontRegular, color: cMuted });
 
   // ==========================================
   // 7. RODAPÉ INSTITUCIONAL COM VALIDADE JURÍDICA

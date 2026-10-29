@@ -1,11 +1,11 @@
 {
-  "dataAtualizacao": "2026-10-27T16:27:26.193Z",
+  "dataAtualizacao": "2026-10-29T17:23:47.598Z",
   "resumo": {
-    "totalNDsFaturamento": 260,
-    "ndsConciliadasSucesso": 236,
+    "totalNDsFaturamento": 266,
+    "ndsConciliadasSucesso": 242,
     "despesasAlmocoDesconsideradas": 22,
     "pendenciasReaisFaturamento": 2,
-    "atividadesAguardandoEmissaoND": 41
+    "atividadesAguardandoEmissaoND": 39
   },
   "pendenciasFaturamentoReais": [
     {
@@ -23,7 +23,7 @@
       "motivo": "Refere-se a ND 0832.1 (valor da logística alterado para R$ 3.122,01 em averiguação pela equipe)"
     },
     {
-      "id": "fat-637",
+      "id": "fat-639",
       "numeroNotaOriginal": "0867.1",
       "numeroNota": "0867.1",
       "projeto": "TREINAMENTO COMERCIAL",
@@ -318,7 +318,7 @@
       "motivo": "Reembolso de Almoço / Alimentação CNH sem atividade operacional atrelada"
     },
     {
-      "id": "fat-572",
+      "id": "fat-574",
       "numeroNotaOriginal": "0847",
       "numeroNota": "0847",
       "projeto": "INSTRUTORES CNH",
@@ -332,7 +332,7 @@
       "motivo": "Reembolso de Almoço / Alimentação CNH sem atividade operacional atrelada"
     },
     {
-      "id": "fat-622",
+      "id": "fat-624",
       "numeroNotaOriginal": "0858",
       "numeroNota": "0858",
       "projeto": "INSTRUTORES CNH",
@@ -348,7 +348,7 @@
   ],
   "atividadesAguardandoND": [
     {
-      "id": "f0f62d87-6e10-4067-b1d2-c2cac23270c5",
+      "id": "be6e1a61-10d7-4ca2-827f-bc802344142e",
       "projeto": "BACKOFFICE CNHI",
       "atividade": "BACK OFFICE BI ÁREA MANUTENÇÃO",
       "consultor": "ERIC LAIA",
@@ -360,7 +360,7 @@
       "repasseAtual": 0
     },
     {
-      "id": "8bb8c289-2118-413c-b786-939d9e9292d1",
+      "id": "efa4a0cd-a171-4513-ac35-a0243b9e5482",
       "projeto": "CENTRAL IRRIGAÇÃO",
       "atividade": "TOKENS DESENVOLVIMENTO DE PLATAFORMAS",
       "consultor": "TIAGO ANGELO",
@@ -372,7 +372,7 @@
       "repasseAtual": 0
     },
     {
-      "id": "c2404be8-aefd-464c-8dbf-249f280a0949",
+      "id": "9746a605-16e6-4698-8b46-3bd7e8fdcd22",
       "projeto": "CENTRAL IRRIGAÇÃO",
       "atividade": "PROPOSTA CENTRAL IRRIGAÇÃO",
       "consultor": "PEDRO LAGE",
@@ -384,7 +384,7 @@
       "repasseAtual": 0
     },
     {
-      "id": "862efc5d-7bd7-46d2-b9ba-2a5f84103f31",
+      "id": "59fe5b51-f021-494e-9b6a-689dca81a264",
       "projeto": "CENTRAL IRRIGAÇÃO",
       "atividade": "PROPOSTA CENTRAL IRRIGAÇÃO",
       "consultor": "TIAGO ANGELO",
@@ -396,7 +396,7 @@
       "repasseAtual": 0
     },
     {
-      "id": "cd534cd2-c2ca-4c94-a2e9-e6154614555a",
+      "id": "317eb0cb-c52c-4a7f-b9b4-421681b4bffc",
       "projeto": "BACKOFFICE CNHI",
       "atividade": "ATENDIMENTO ÁREA MANUTENÇÃO",
       "consultor": "ERIC LAIA",
@@ -408,7 +408,7 @@
       "repasseAtual": 0
     },
     {
-      "id": "921ac650-f162-4a2f-a480-3a4cb69e1eb6",
+      "id": "ff03e011-fe53-4ead-9d74-7b3996a16e20",
       "projeto": "TAPE RUVICHA",
       "atividade": "TAPE",
       "consultor": "TIAGO ANGELO",
@@ -420,7 +420,7 @@
       "repasseAtual": 0
     },
     {
-      "id": "3a60beaf-6445-46e6-9b61-91185fcb5edc",
+      "id": "0cb03601-64ef-4da0-8b79-466c515ccb9c",
       "projeto": "SERVIÇOS CNH",
       "atividade": "SERVICE GAME",
       "consultor": "MARCELO LARA",
@@ -432,7 +432,7 @@
       "repasseAtual": 0
     },
     {
-      "id": "f878f7d8-fc13-49ce-8c7d-3e2b7575a04c",
+      "id": "24a24a68-5931-4750-931f-d984a7f2d207",
       "projeto": "INSTRUTORES PORSCHE",
       "atividade": "HOSPEDAGEM SP - CURSO INTRODUÇÃO À LIDERANÇA",
       "consultor": "FÁBIO CANASSA",
@@ -444,7 +444,7 @@
       "repasseAtual": 0
     },
     {
-      "id": "4fd7a92b-af08-45fb-90b0-6e9b02b79301",
+      "id": "c7726ce5-ee2e-4c13-b27b-8c377acbd82d",
       "projeto": "CONSULTORIA PÓS-VENDAS (POE) PORSCHE",
       "atividade": "REUNIÃO ALINHAMENTO",
       "consultor": "FELIPE MARTINS",
@@ -456,7 +456,7 @@
       "repasseAtual": 0
     },
     {
-      "id": "80f32c08-350b-4e5f-8c5f-89ed2d691e5f",
+      "id": "6e0cf77e-b612-4409-9598-63e59588c078",
       "projeto": "CONSULTORIA PÓS-VENDAS (POE) PORSCHE",
       "atividade": "VISITA PC BEXP OESTE",
       "consultor": "FELIPE MARTINS",
@@ -468,7 +468,7 @@
       "repasseAtual": 0
     },
     {
-      "id": "f9ca9d09-0834-4bfa-ba76-daad835e077e",
+      "id": "c740b74d-0e31-484a-aeb5-c24b5bbe0d11",
       "projeto": "CONSULTORIA PÓS-VENDAS (POE) PORSCHE",
       "atividade": "REUNIÃO PORSCHE",
       "consultor": "RODRIGO KAIRALLA",
@@ -480,7 +480,7 @@
       "repasseAtual": 0
     },
     {
-      "id": "e1e3236f-11a5-44ad-90fa-a780a3d0d361",
+      "id": "d7a0e633-f18b-4ca3-b384-a6a70689fece",
       "projeto": "CONSULTORIA PÓS-VENDAS (POE) PORSCHE",
       "atividade": "REUNIÃO PORSCHE",
       "consultor": "RODRIGO KAIRALLA",
@@ -492,7 +492,7 @@
       "repasseAtual": 0
     },
     {
-      "id": "8eebb4d9-d1a4-4697-9a62-1ed563b56a87",
+      "id": "8b035290-3ce1-43db-94ae-86d206934ae9",
       "projeto": "BACKOFFICE CNHI",
       "atividade": "BACK OFFICE BI ÁREA MANUTENÇÃO",
       "consultor": "ERIC LAIA",
@@ -504,7 +504,7 @@
       "repasseAtual": 0
     },
     {
-      "id": "98c28340-6612-4b40-ade9-40105a147f92",
+      "id": "6fe2161d-db75-4153-8cf5-a3e4040250e1",
       "projeto": "CRM IVECO",
       "atividade": "MISSÃO CHINA IMERSÃO",
       "consultor": "PEDRO LAGE",
@@ -516,7 +516,7 @@
       "repasseAtual": 0
     },
     {
-      "id": "4f796793-fa95-47aa-a873-dfbfe4fd5b0b",
+      "id": "cb04d6d1-c709-4142-a775-9cfb0d979f94",
       "projeto": "CASE COMERCIAL CONSTRUCTION",
       "atividade": "DINÂMICA ROLE PLAY CNH CONSTRUCTION",
       "consultor": "PEDRO LAGE",
@@ -528,7 +528,7 @@
       "repasseAtual": 0
     },
     {
-      "id": "8baaeb6d-3eac-4d2e-9b09-2f5f836dc044",
+      "id": "83b35dd8-42c5-447d-9521-7fdaa3d4e520",
       "projeto": "CASE COMERCIAL CONSTRUCTION",
       "atividade": "DINÂMICA ROLE PLAY CNH CONSTRUCTION",
       "consultor": "FÁBIO MORENO",
@@ -540,7 +540,7 @@
       "repasseAtual": 0
     },
     {
-      "id": "85f37519-9fc2-461d-9a50-a106c2d59401",
+      "id": "3151ff03-eea8-4f9d-95f0-0ea6c1d61f2b",
       "projeto": "CASE COMERCIAL CONSTRUCTION",
       "atividade": "DINÂMICA ROLE PLAY CNH CONSTRUCTION",
       "consultor": "BEATRIZ PICORELLI",
@@ -552,7 +552,7 @@
       "repasseAtual": 0
     },
     {
-      "id": "9b9283b0-d19f-4d35-81aa-ba43a46ad1df",
+      "id": "90d430fe-bcdc-4a4a-8a69-530ad190a06e",
       "projeto": "INSTRUTORES PORSCHE",
       "atividade": "TREINAMENTO PÓS-VENDAS",
       "consultor": "IGOR PICORELLI",
@@ -564,7 +564,7 @@
       "repasseAtual": 0
     },
     {
-      "id": "4d682ee4-a70e-44a7-8de6-75f49741a530",
+      "id": "073673db-48b1-450f-ae9e-f4bf00476e67",
       "projeto": "CONSULTORIA PÓS-VENDAS (POE) PORSCHE",
       "atividade": "TREINAMENTO DE CONSULTORES",
       "consultor": "FELIPE MARTINS",
@@ -576,7 +576,7 @@
       "repasseAtual": 0
     },
     {
-      "id": "b2ba8286-5628-4509-a68d-3a6cfa1b559b",
+      "id": "a8134959-3b2b-4e59-b6c0-ef2d997b1a4d",
       "projeto": "CONSULTORIA PÓS-VENDAS (POE) PORSCHE",
       "atividade": "TREINAMENTO PÓS-VENDAS",
       "consultor": "RODRIGO KAIRALLA",
@@ -588,7 +588,7 @@
       "repasseAtual": 0
     },
     {
-      "id": "23c9c495-91a6-4ec2-9f2b-845e2f2651be",
+      "id": "691be014-0439-4da6-968e-7c89e23251e0",
       "projeto": "CONSULTORIA PÓS-VENDAS (POE) PORSCHE",
       "atividade": "INTEGRAÇÃO PBR",
       "consultor": "FELIPE MARTINS",
@@ -600,7 +600,7 @@
       "repasseAtual": 0
     },
     {
-      "id": "2ac5a0b3-7c38-43e1-90d6-8b29d79afc27",
+      "id": "d125ea1f-4366-4c52-98fe-0f212acddb2d",
       "projeto": "BACKOFFICE CNHI",
       "atividade": "BACK OFFICE BI ÁREA MANUTENÇÃO",
       "consultor": "ERIC LAIA",
@@ -612,7 +612,7 @@
       "repasseAtual": 0
     },
     {
-      "id": "8942fcf9-b0d4-4500-a394-ab97c7e7d4b4",
+      "id": "9d8e24a3-38e3-4e7f-857e-bf42410c0ba0",
       "projeto": "CONSULTORIA PÓS-VENDAS (POE) PORSCHE",
       "atividade": "AÇÃO PCSS",
       "consultor": "FELIPE MARTINS",
@@ -624,7 +624,7 @@
       "repasseAtual": 0
     },
     {
-      "id": "2032fed3-c2f9-42f1-8ce8-e682007b446e",
+      "id": "3b90aa06-7824-4d76-97f7-c603093b1432",
       "projeto": "DDN - BUSINESS ASSESSMENT",
       "atividade": "ATIVIDADE - BUSINESS ASSESSMENT NNÓS | CNH",
       "consultor": "PEDRO COLARES",
@@ -636,7 +636,7 @@
       "repasseAtual": 0
     },
     {
-      "id": "b160f112-cae4-440b-adba-0d73c27d8c1e",
+      "id": "c6adc264-a969-466e-8c4e-e98fc8e5d31a",
       "projeto": "DDN - BUSINESS ASSESSMENT",
       "atividade": "BUSINESS ASSESSMENT NNÓS | CNH",
       "consultor": "MARCELO LARA",
@@ -648,7 +648,7 @@
       "repasseAtual": 0
     },
     {
-      "id": "49428b3c-a52d-44e6-90fe-4b85c17036e8",
+      "id": "189cbde7-2ae5-4a8f-ba0e-220745743646",
       "projeto": "INSTRUTORES PORSCHE",
       "atividade": "APLICAÇÃO FLORIANÓPOLIS/BLUMENAU",
       "consultor": "FÁBIO CANASSA",
@@ -660,7 +660,7 @@
       "repasseAtual": 0
     },
     {
-      "id": "88d20d87-4417-40eb-9e73-54370b0d9a4c",
+      "id": "4c850cdc-c9e8-42b2-8bfa-473efe9de53a",
       "projeto": "INSTRUTORES PORSCHE",
       "atividade": "TREINAMENTO PÓS-VENDAS",
       "consultor": "IGOR PICORELLI",
@@ -672,7 +672,7 @@
       "repasseAtual": 0
     },
     {
-      "id": "8dcfd206-4927-4ff6-bb4b-9ca83769aa18",
+      "id": "c6e80370-f3f0-4e41-8ebd-f892675f8e5f",
       "projeto": "CONSULTORIA PÓS-VENDAS (POE) PORSCHE",
       "atividade": "LÍDER DE PROJETOS DEDICADO",
       "consultor": "RODRIGO KAIRALLA",
@@ -684,7 +684,7 @@
       "repasseAtual": 0
     },
     {
-      "id": "1254444a-aa02-4482-8b4d-f5e27b46417d",
+      "id": "20422ae8-05f1-40ad-9c87-521d4edbb3d9",
       "projeto": "BACKOFFICE CNHI",
       "atividade": "TREINAMENTO INTERNO",
       "consultor": "ERIC LAIA",
@@ -696,7 +696,7 @@
       "repasseAtual": 0
     },
     {
-      "id": "afd903f5-ae8b-4d00-a714-75e3941caa82",
+      "id": "d2e645af-a148-4f8a-99dd-9f6481692e8c",
       "projeto": "VIAMONDO | PRODUTIVIDADE OFICINA",
       "atividade": "VIAMONDO",
       "consultor": "MARCELO LARA",
@@ -708,7 +708,7 @@
       "repasseAtual": 0
     },
     {
-      "id": "5ac4814b-d5ed-4867-a153-31dbb45f45f6",
+      "id": "44947e5e-dd4e-4d93-af26-98d570939058",
       "projeto": "DDN - BUSINESS ASSESSMENT",
       "atividade": "BUSINESS ASSESSMENT NNÓS | CNH",
       "consultor": "PEDRO COLARES",
@@ -720,19 +720,7 @@
       "repasseAtual": 0
     },
     {
-      "id": "7a611ab4-aa46-4b36-abc0-c50d332471e9",
-      "projeto": "INSTRUTORES CNH",
-      "atividade": "TREINAMENTO AP SOLUÇÕES AFTER MKT NH",
-      "consultor": "ACÁCIO FERREIRA",
-      "competencia": "2026-10-01",
-      "data_inicial": "2026-10-18",
-      "custoAgencia": 6627.79,
-      "custoConsultor": 0,
-      "custoTotal": 6627.79,
-      "repasseAtual": 0
-    },
-    {
-      "id": "5933a663-d102-4889-92d9-df7d0fbfae04",
+      "id": "dff01e35-e5b9-49c2-8e41-4b978589a7d9",
       "projeto": "INSTRUTORES CNH",
       "atividade": "TREINAMENTO AV. HID. E ELET. TC E TX",
       "consultor": "LOURIVAL JORDÃO",
@@ -744,7 +732,7 @@
       "repasseAtual": 0
     },
     {
-      "id": "8f0ed8a7-f6c0-4e3d-b07d-2b451cd99315",
+      "id": "fe1d5cb1-0a96-4c73-a46f-f22a1df79078",
       "projeto": "BACKOFFICE CRM CASE",
       "atividade": "BUSINESS ASSESSEMENT",
       "consultor": "RENAN NOGUEIRA",
@@ -756,7 +744,7 @@
       "repasseAtual": 0
     },
     {
-      "id": "5275e95f-d3d4-4c67-821b-073f0eb602f6",
+      "id": "0d0c0c11-0c4f-42dc-8b3d-7f514364dc20",
       "projeto": "SERVIÇOS CNH",
       "atividade": "WORKSHOP INSIGHT SALES LAI",
       "consultor": "BEATRIZ PICORELLI",
@@ -768,7 +756,7 @@
       "repasseAtual": 0
     },
     {
-      "id": "91b25d20-42e4-42ec-b459-b77d3d7cd06c",
+      "id": "90400e33-8fbc-486d-a335-c5f6783be455",
       "projeto": "IVECO ACADEMY",
       "atividade": "WORKSHOP GARANTIA E NEGOCIAÇÃO DE CONFLITOS",
       "consultor": "PEDRO LAGE",
@@ -780,7 +768,7 @@
       "repasseAtual": 0
     },
     {
-      "id": "4a0c7002-c5f3-4936-a533-b2299fe86037",
+      "id": "a4e75b3c-b9f8-446c-918c-07fe754d48ba",
       "projeto": "DDN - BUSINESS ASSESSMENT",
       "atividade": "BUSINESS ASSESSMENT NNÓS | CNH",
       "consultor": "TIAGO ANGELO",
@@ -792,7 +780,7 @@
       "repasseAtual": 0
     },
     {
-      "id": "a93f8023-28c3-4cf3-8f81-e60d9a998b2e",
+      "id": "f5cee3aa-5af4-431d-93d3-6d7f640347fd",
       "projeto": "DDN - BUSINESS ASSESSMENT",
       "atividade": "BUSINESS ASSESSMENT NNÓS | CNH",
       "consultor": "EDUARDO OLIVEIRA",
@@ -804,7 +792,7 @@
       "repasseAtual": 0
     },
     {
-      "id": "4e1bf91c-5e67-4a3a-9ac6-9de51ddd5b1f",
+      "id": "af3f8732-1a55-440c-9092-09f18c4f337f",
       "projeto": "PARTS ACADEMY",
       "atividade": "PARTS GAME",
       "consultor": "RODRIGO BARDIM",
@@ -816,19 +804,7 @@
       "repasseAtual": 0
     },
     {
-      "id": "2b1ab1b5-7dfe-496a-947f-72be5ad9f1c2",
-      "projeto": "TREINAMENTO COMERCIAL",
-      "atividade": "MASTER SALES",
-      "consultor": "FLÁVIO SOUZA",
-      "competencia": "2026-11-01",
-      "data_inicial": "2026-11-04",
-      "custoAgencia": 4087.27,
-      "custoConsultor": 0,
-      "custoTotal": 4087.27,
-      "repasseAtual": 0
-    },
-    {
-      "id": "00791e69-9de1-4f66-af2f-54c7a5bc4cdf",
+      "id": "6e9297b1-401f-4692-b3ce-53de701b34be",
       "projeto": "TREINAMENTO COMERCIAL",
       "atividade": "MASTER SALES",
       "consultor": "GABRIELE SILVA",

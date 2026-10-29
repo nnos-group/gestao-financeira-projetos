@@ -134,7 +134,7 @@ export async function enviarBmParaZohoSign(params: EnviarBmZohoParams) {
     {
       recipient_name: params.liderNome,
       recipient_email: params.liderEmail,
-      action_type: "APPROVER",
+      action_type: "SIGN",
       signing_order: 1,
       verify_recipient: false,
     },
