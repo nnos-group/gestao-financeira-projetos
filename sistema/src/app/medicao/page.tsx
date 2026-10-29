@@ -1372,97 +1372,120 @@ ${linhasProjetos.join("\n")}`;
 
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))", gap: "20px" }}>
                     {/* Assinatura do Prestador */}
-                    <div style={{ padding: "20px", borderRadius: "12px", backgroundColor: "var(--surface-container-low)", border: "1px solid var(--border)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-                      <div>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
-                          <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--secondary)" }}>Assinatura do Prestador</span>
-                          <span style={{ padding: "2px 8px", borderRadius: "999px", backgroundColor: "#d1fae5", color: "#065f46", fontSize: "11px", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                            <span className="material-symbols-outlined" style={{ fontSize: "12px" }}>done_all</span>
-                            Assinado Eletronicamente
-                          </span>
-                        </div>
+                    {(() => {
+                      const prestadorLog = bmVisualizando.logs?.find((l: any) => l.papel?.toLowerCase().includes("prestador")) || bmVisualizando.logs?.[1];
+                      const isPrestadorAssinado = prestadorLog?.status === "Assinado";
+                      const ipPrestador = prestadorLog?.detalhe?.includes("IP:")
+                        ? prestadorLog.detalhe.split("•")[0].replace("IP:", "").trim()
+                        : (isPrestadorAssinado ? "Assinado via Zoho Sign" : null);
 
-                        <div style={{ height: "60px", display: "flex", alignItems: "center", justifyContent: "center", borderBottom: "1px solid var(--border)", margin: "8px 0" }}>
-                          <span style={{ fontFamily: "cursive", fontSize: "28px", color: "var(--primary)", fontStyle: "italic", letterSpacing: "2px" }}>
-                            {formatarNomeAssinatura(bmVisualizando.consultorNome)}
-                          </span>
-                        </div>
+                      return (
+                        <div style={{ padding: "20px", borderRadius: "12px", backgroundColor: "var(--surface-container-low)", border: "1px solid var(--border)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                          <div>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
+                              <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--secondary)" }}>Assinatura do Prestador</span>
+                              {isPrestadorAssinado ? (
+                                <span style={{ padding: "2px 8px", borderRadius: "999px", backgroundColor: "#d1fae5", color: "#065f46", fontSize: "11px", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                                  <span className="material-symbols-outlined" style={{ fontSize: "12px" }}>done_all</span>
+                                  Assinado Eletronicamente
+                                </span>
+                              ) : (
+                                <span style={{ padding: "2px 8px", borderRadius: "999px", backgroundColor: "#fef3c7", color: "#92400e", fontSize: "11px", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                                  <span className="material-symbols-outlined" style={{ fontSize: "12px" }}>schedule</span>
+                                  Aguardando Assinatura
+                                </span>
+                              )}
+                            </div>
 
-                        <div style={{ textAlign: "center", marginTop: "10px" }}>
-                          <strong style={{ fontSize: "13px", color: "var(--primary)", display: "block" }}>{bmVisualizando.consultorNome}</strong>
-                          <span style={{ fontSize: "11px", color: "var(--on-surface-variant)" }}>
-                            Razão Social: {bmVisualizando.consultorNome.toLowerCase().includes("marcelo") ? "DRONEX COMERCIO E SERVICOS LTDA" : (bmVisualizando.consultorRazaoSocial || bmVisualizando.consultorNome)} • CNPJ: {bmVisualizando.consultorNome.toLowerCase().includes("marcelo") ? "55.408.003/0001-50" : (bmVisualizando.consultorCnpj || "Não informado")}
-                          </span>
-                        </div>
-                      </div>
+                            <div style={{ height: "60px", display: "flex", alignItems: "center", justifyContent: "center", borderBottom: "1px solid var(--border)", margin: "8px 0" }}>
+                              {isPrestadorAssinado ? (
+                                <span style={{ fontFamily: "cursive", fontSize: "28px", color: "var(--primary)", fontStyle: "italic", letterSpacing: "2px" }}>
+                                  {formatarNomeAssinatura(bmVisualizando.consultorNome)}
+                                </span>
+                              ) : (
+                                <span style={{ fontSize: "12px", color: "var(--on-surface-variant)", fontStyle: "italic" }}>
+                                  Espaço reservado para assinatura eletrônica
+                                </span>
+                              )}
+                            </div>
 
-                      {(() => {
-                        const prestadorLog = bmVisualizando.logs?.find((l: any) => l.papel?.toLowerCase().includes("prestador")) || bmVisualizando.logs?.[0];
-                        const ipPrestador = prestadorLog?.detalhe?.includes("IP:")
-                          ? prestadorLog.detalhe.split("•")[0].replace("IP:", "").trim()
-                          : "191.187.11.168";
-                        const dataPrestador = prestadorLog?.dataHora || (prestadorLog?.status === "Assinado" ? "23/10/2026, 15:00:00" : "Status: Pendente");
-
-                        return (
-                          <div style={{ marginTop: "16px", paddingTop: "10px", borderTop: "1px dashed var(--border)", display: "flex", justifyContent: "space-between", fontSize: "11px", color: "var(--on-surface-variant)" }}>
-                            <span>IP: {ipPrestador}</span>
-                            <span>Data: {dataPrestador}</span>
+                            <div style={{ textAlign: "center", marginTop: "10px" }}>
+                              <strong style={{ fontSize: "13px", color: "var(--primary)", display: "block" }}>{bmVisualizando.consultorNome}</strong>
+                              <span style={{ fontSize: "11px", color: "var(--on-surface-variant)" }}>
+                                Razão Social: {bmVisualizando.consultorNome.toLowerCase().includes("marcelo") ? "DRONEX COMERCIO E SERVICOS LTDA" : (bmVisualizando.consultorRazaoSocial || bmVisualizando.consultorNome)} • CNPJ: {bmVisualizando.consultorNome.toLowerCase().includes("marcelo") ? "55.408.003/0001-50" : (bmVisualizando.consultorCnpj || "Não informado")}
+                              </span>
+                            </div>
                           </div>
-                        );
-                      })()}
-                    </div>
+
+                          <div style={{ marginTop: "16px", paddingTop: "10px", borderTop: "1px dashed var(--border)", display: "flex", justifyContent: "space-between", fontSize: "11px", color: "var(--on-surface-variant)" }}>
+                            <span>{isPrestadorAssinado ? (ipPrestador ? `IP: ${ipPrestador}` : "Autenticado via Zoho Sign") : "Autenticação via Zoho Sign"}</span>
+                            <span>{isPrestadorAssinado ? `Data: ${prestadorLog?.dataHora || "Assinado"}` : "Status: Aguardando Assinatura"}</span>
+                          </div>
+                        </div>
+                      );
+                    })()}
 
                     {/* Assinatura da Coordenação / Financeiro */}
-                    <div style={{ padding: "20px", borderRadius: "12px", backgroundColor: "var(--surface-container-low)", border: "1px solid var(--border)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-                      <div>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
-                          <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--primary)" }}>
-                            Validação da Coordenação
-                          </span>
-                          <span style={{ padding: "2px 8px", borderRadius: "999px", backgroundColor: "#d1fae5", color: "#065f46", fontSize: "11px", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                            <span className="material-symbols-outlined" style={{ fontSize: "12px" }}>done_all</span>
-                            Validação Operacional
-                          </span>
-                        </div>
+                    {(() => {
+                      const coordLog = bmVisualizando.logs?.find((l: any) => l.papel?.toLowerCase().includes("coord") || l.papel?.toLowerCase().includes("valida")) || bmVisualizando.logs?.[2];
+                      const isCoordAssinado = coordLog?.status === "Assinado" || (bmVisualizando.status?.includes("Aprovado"));
+                      const zohoId = bmVisualizando.zohoDocumentId || bmVisualizando.zohoRequestId;
 
-                        <div style={{ height: "60px", display: "flex", alignItems: "center", justifyContent: "center", borderBottom: "1px solid var(--border)", margin: "8px 0" }}>
-                          <span style={{ fontFamily: "cursive", fontSize: "28px", color: "var(--secondary)", fontStyle: "italic", letterSpacing: "2px" }}>
-                            {bmVisualizando.consultorNome.toLowerCase().includes("marcelo")
-                              ? "Leonardo Campos"
-                              : formatarNomeAssinatura(bmVisualizando.responsavelNnosNome || "Marcelo Lara da Silva")}
-                          </span>
-                        </div>
+                      return (
+                        <div style={{ padding: "20px", borderRadius: "12px", backgroundColor: "var(--surface-container-low)", border: "1px solid var(--border)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                          <div>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
+                              <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--primary)" }}>
+                                Validação da Coordenação
+                              </span>
+                              {isCoordAssinado ? (
+                                <span style={{ padding: "2px 8px", borderRadius: "999px", backgroundColor: "#d1fae5", color: "#065f46", fontSize: "11px", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                                  <span className="material-symbols-outlined" style={{ fontSize: "12px" }}>done_all</span>
+                                  Validação Operacional
+                                </span>
+                              ) : (
+                                <span style={{ padding: "2px 8px", borderRadius: "999px", backgroundColor: "#fef3c7", color: "#92400e", fontSize: "11px", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                                  <span className="material-symbols-outlined" style={{ fontSize: "12px" }}>schedule</span>
+                                  Aguardando Validação
+                                </span>
+                              )}
+                            </div>
 
-                        <div style={{ textAlign: "center", marginTop: "10px" }}>
-                          <strong style={{ fontSize: "13px", color: "var(--primary)", display: "block" }}>
-                            {bmVisualizando.consultorNome.toLowerCase().includes("marcelo")
-                              ? "LEONARDO CAMPOS"
-                              : "MARCELO LARA DA SILVA"}
-                          </strong>
-                          <span style={{ fontSize: "11px", color: "var(--on-surface-variant)" }}>
-                            {bmVisualizando.consultorNome.toLowerCase().includes("marcelo")
-                              ? "Financeiro / Validação Final • NNÓS"
-                              : "Líder de Projetos / Coordenação Operacional • NNÓS"}
-                          </span>
-                        </div>
-                      </div>
+                            <div style={{ height: "60px", display: "flex", alignItems: "center", justifyContent: "center", borderBottom: "1px solid var(--border)", margin: "8px 0" }}>
+                              {isCoordAssinado ? (
+                                <span style={{ fontFamily: "cursive", fontSize: "28px", color: "var(--secondary)", fontStyle: "italic", letterSpacing: "2px" }}>
+                                  {bmVisualizando.consultorNome.toLowerCase().includes("marcelo")
+                                    ? "Leonardo Campos"
+                                    : formatarNomeAssinatura(bmVisualizando.responsavelNnosNome || "Marcelo Lara da Silva")}
+                                </span>
+                              ) : (
+                                <span style={{ fontSize: "12px", color: "var(--on-surface-variant)", fontStyle: "italic" }}>
+                                  Espaço reservado para validação operacional
+                                </span>
+                              )}
+                            </div>
 
-                      {(() => {
-                        const coordLog = bmVisualizando.logs?.find((l: any) => l.papel?.toLowerCase().includes("coord") || l.papel?.toLowerCase().includes("valida")) || bmVisualizando.logs?.[2];
-                        const docIdFinal = bmVisualizando.zohoDocumentId ||
-                          (coordLog?.detalhe?.includes("Doc ID:") ? coordLog.detalhe.split("Doc ID:")[1].trim() : null) ||
-                          bmVisualizando.zohoRequestId ||
-                          "2EEBEA08-B5P3HI3SGTH9S3DTW24ZYKXM-EG74VXMYB4CASUAB8G";
-                        const dataCoord = coordLog?.dataHora || (coordLog?.status === "Assinado" ? "23/10/2026, 15:13:00" : (bmVisualizando.status.includes("Aprovado") ? "23/10/2026, 15:13:00" : bmVisualizando.dataEnvio));
-
-                        return (
-                          <div style={{ marginTop: "16px", paddingTop: "10px", borderTop: "1px dashed var(--border)", display: "flex", justifyContent: "space-between", fontSize: "11px", color: "var(--on-surface-variant)" }}>
-                            <span>Zoho Doc ID: {docIdFinal}</span>
-                            <span>Data: {dataCoord}</span>
+                            <div style={{ textAlign: "center", marginTop: "10px" }}>
+                              <strong style={{ fontSize: "13px", color: "var(--primary)", display: "block" }}>
+                                {bmVisualizando.consultorNome.toLowerCase().includes("marcelo")
+                                  ? "LEONARDO CAMPOS"
+                                  : "MARCELO LARA DA SILVA"}
+                              </strong>
+                              <span style={{ fontSize: "11px", color: "var(--on-surface-variant)" }}>
+                                {bmVisualizando.consultorNome.toLowerCase().includes("marcelo")
+                                  ? "Financeiro / Validação Final • NNÓS"
+                                  : "Líder de Projetos / Coordenação Operacional • NNÓS"}
+                              </span>
+                            </div>
                           </div>
-                        );
-                      })()}
-                    </div>
+
+                          <div style={{ marginTop: "16px", paddingTop: "10px", borderTop: "1px dashed var(--border)", display: "flex", justifyContent: "space-between", fontSize: "11px", color: "var(--on-surface-variant)" }}>
+                            <span>{zohoId ? `Zoho Sign ID: ${zohoId}` : "Zoho Sign: Aguardando Disparo"}</span>
+                            <span>{isCoordAssinado ? `Data: ${coordLog?.dataHora || "Homologado"}` : "Status: Aguardando Validação"}</span>
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
 
