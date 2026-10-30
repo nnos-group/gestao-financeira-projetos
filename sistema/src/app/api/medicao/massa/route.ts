@@ -191,7 +191,7 @@ export async function GET(request: Request) {
       if (tipoMedicao === "1ª Quinzena") {
         // REGRA 1ª QUINZENA:
         // Apenas consultores com tag QUINZENAL (ou que não tenham tag INTEGRAL)
-        // e que tenham atividades cujo término seja antes do corte (dFim < diaCorte)
+        // e que tenham atividades cujo término seja até o corte (dFim <= diaCorte)
         if (tagMedicao === "INTEGRAL") return;
 
         atividadesFiltradas = atividadesPessoa.filter((a: any) => {
@@ -202,22 +202,31 @@ export async function GET(request: Request) {
         });
 
         periodoRotulo = `1ª Quinzena (Corte ${dataCorteStr})`;
+      } else if (tipoMedicao === "2ª Quinzena") {
+        // REGRA 2ª QUINZENA:
+        // Apenas consultores com tag QUINZENAL (ou que não tenham tag INTEGRAL)
+        // e que tenham atividades iniciando a partir do corte em diante (dIni >= diaCorte)
+        if (tagMedicao === "INTEGRAL") return;
+
+        atividadesFiltradas = atividadesPessoa.filter((a: any) => {
+          if (ehMesIntegral(a)) return false;
+          const dIni = extrairDia(a.data_inicial);
+          const dFim = extrairDia(a.data_final);
+          if (isNaN(dIni) && isNaN(dFim)) return false;
+          return (!isNaN(dIni) && dIni >= diaCorte) || (!isNaN(dFim) && dFim > diaCorte);
+        });
+
+        periodoRotulo = `2ª Quinzena (Início ${dataCorteStr})`;
       } else {
         // REGRA INTEGRAL:
-        // Caso A: Consultores com tag INTEGRAL -> todas as atividades do mês
-        // Caso B: Consultores com tag QUINZENAL -> atividades da 2ª Quinzena (iniciando no corte em diante), pois 1ª quinzena já foi enviada
-        if (tagMedicao === "INTEGRAL") {
+        // Consultores com tag INTEGRAL (ou todas as atividades do mês cheio)
+        if (tagMedicao === "QUINZENAL") {
+          // Se for quinzenal em modo integral, traz todas as atividades do mês
           atividadesFiltradas = [...atividadesPessoa];
-          periodoRotulo = "Integral (Mês Cheio)";
         } else {
-          atividadesFiltradas = atividadesPessoa.filter((a: any) => {
-            if (ehMesIntegral(a)) return false;
-            const dIni = extrairDia(a.data_inicial);
-            if (isNaN(dIni)) return false;
-            return dIni >= diaCorte;
-          });
-          periodoRotulo = `2ª Quinzena (Início ${dataCorteStr})`;
+          atividadesFiltradas = [...atividadesPessoa];
         }
+        periodoRotulo = "Integral (Mês Cheio)";
       }
 
       if (atividadesFiltradas.length === 0) return;

@@ -822,38 +822,47 @@ export async function gerarPdfOficialBm(dados: BmPdfDados): Promise<Uint8Array> 
   // =========================================================================
   // 7. RODAPÉ INSTITUCIONAL OFICIAL COM VALIDADE JURÍDICA
   // =========================================================================
-  // Fiel ao BmExportPdfSheet: Linha divisória superior escura e logomarca solta
-  const footY = 24;
+  // Fiel ao BmExportPdfSheet: Linha divisória superior escura e logomarca solta abaixo da linha
+  const footLineY = 44;
   page.drawLine({
-    start: { x: marginX, y: footY + 16 },
-    end: { x: marginX + contentWidth, y: footY + 16 },
+    start: { x: marginX, y: footLineY },
+    end: { x: marginX + contentWidth, y: footLineY },
     color: cDark,
     thickness: 1.5,
   });
 
-  const logoFootSize = 28;
+  const logoFootSize = 26;
+  const logoFootY = footLineY - 4 - logoFootSize; // y = 14 (vai de 14 a 40, respiro de 4pt abaixo da linha 44)
   if (logoImage) {
     page.drawImage(logoImage, {
       x: marginX,
-      y: footY - 8,
+      y: logoFootY,
       width: logoFootSize,
       height: logoFootSize,
     });
   }
 
-  const footTextX = logoImage ? marginX + logoFootSize + 8 : marginX;
+  const footTextX = logoImage ? marginX + logoFootSize + 10 : marginX;
   page.drawText("NNÓS CONSULTORIA E TREINAMENTO LTDA", {
     x: footTextX,
-    y: footY + 6,
+    y: footLineY - 15,
     size: 7.2,
     font: fontBold,
     color: cDark,
   });
 
-  page.drawText("CNPJ: 36.443.716/0001-00  •  Inscrição Municipal: 1.208.841/002-5  •  Rua Sergipe, nº 77 - Loja 1, Belo Horizonte - MG", {
+  page.drawText("CNPJ: 36.443.716/0001-00  •  Inscrição Municipal: 1.208.841/002-5", {
     x: footTextX,
-    y: footY - 4,
-    size: 6,
+    y: footLineY - 24,
+    size: 5.8,
+    font: fontRegular,
+    color: cMuted,
+  });
+
+  page.drawText("Rua Sergipe, nº 77 - Loja 1, Boa Viagem, Belo Horizonte - MG, CEP: 30.130-170", {
+    x: footTextX,
+    y: footLineY - 32,
+    size: 5.4,
     font: fontRegular,
     color: cMuted,
   });
@@ -863,18 +872,18 @@ export async function gerarPdfOficialBm(dados: BmPdfDados): Promise<Uint8Array> 
   const legalWidth = fontBold.widthOfTextAtSize(legalText, 8.5);
   page.drawText(legalText, {
     x: marginX + contentWidth - legalWidth,
-    y: footY + 6,
+    y: footLineY - 15,
     size: 8.5,
     font: fontBold,
     color: cPrimary,
   });
 
   const legalSub = "Documento gerado eletronicamente com validade jurídica via Zoho Sign";
-  const legalSubWidth = fontRegular.widthOfTextAtSize(legalSub, 6);
+  const legalSubWidth = fontRegular.widthOfTextAtSize(legalSub, 5.8);
   page.drawText(legalSub, {
     x: marginX + contentWidth - legalSubWidth,
-    y: footY - 4,
-    size: 6,
+    y: footLineY - 24,
+    size: 5.8,
     font: fontRegular,
     color: cMuted,
   });

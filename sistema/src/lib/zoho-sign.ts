@@ -208,9 +208,15 @@ export async function enviarBmParaZohoSign(params: EnviarBmZohoParams) {
     atividades: params.atividades || [],
   });
 
+  const nomeConsultorLimpo = (params.consultorNome || "Consultor")
+    .replace(/\s*\(Prestador\s*-\s*Teste\)/gi, "")
+    .trim()
+    .replace(/[/\\?%*:|"<>]/g, "")
+    .replace(/\s+/g, " ");
+
   const formData = new FormData();
   const blob = new Blob([new Uint8Array(pdfBuffer)], { type: "application/pdf" });
-  formData.append("file", blob, `BM_${params.codigoBm}.pdf`);
+  formData.append("file", blob, `BM_${params.codigoBm}_${nomeConsultorLimpo}.pdf`);
   formData.append("data", JSON.stringify(requestPayload));
 
   const res = await fetch(`${apiUrl}/requests`, {

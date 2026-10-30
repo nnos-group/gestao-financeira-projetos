@@ -23,7 +23,7 @@ export default function EnvioMassaBmModal({
 
   const [ano, setAno] = useState(String(anoHoje >= 2026 ? anoHoje : 2026));
   const [mesNum, setMesNum] = useState(mesHoje);
-  const [tipoMedicao, setTipoMedicao] = useState<"1ª Quinzena" | "Integral">("1ª Quinzena");
+  const [tipoMedicao, setTipoMedicao] = useState<"1ª Quinzena" | "2ª Quinzena" | "Integral">("1ª Quinzena");
   const [dataCorte, setDataCorte] = useState(`20/${String(mesHoje).padStart(2, "0")}/${anoHoje >= 2026 ? anoHoje : 2026}`);
 
   const [carregando, setCarregando] = useState(false);
@@ -217,8 +217,8 @@ export default function EnvioMassaBmModal({
           consultorEndereco: item.consultorEndereco,
           contrato: item.contrato,
           mesReferencia: item.mesReferenciaFormatado,
-          periodoTipo: item.periodoTipo,
-          dataCorte: item.periodoTipo === "1ª Quinzena" ? dataCorte : "-",
+          periodoTipo: item.periodoTipo || tipoMedicao,
+          dataCorte: (item.periodoTipo || tipoMedicao) !== "Integral" ? dataCorte : "-",
           totalHoras: item.totalHoras,
           valorTotal: item.valorTotal,
           mediaHora: item.mediaHora,
@@ -346,7 +346,7 @@ export default function EnvioMassaBmModal({
               backgroundColor: "var(--surface-container-low, #f8fafc)",
               border: "1px solid var(--border)",
               display: "grid",
-              gridTemplateColumns: tipoMedicao === "1ª Quinzena" ? "120px 180px 180px 180px" : "120px 200px 200px",
+              gridTemplateColumns: tipoMedicao !== "Integral" ? "120px 180px 180px 180px" : "120px 200px 200px",
               gap: "14px",
               alignItems: "flex-end",
               marginBottom: "18px",
@@ -379,13 +379,14 @@ export default function EnvioMassaBmModal({
                 value={tipoMedicao}
                 options={[
                   { value: "1ª Quinzena", label: "1ª Quinzena" },
+                  { value: "2ª Quinzena", label: "2ª Quinzena" },
                   { value: "Integral", label: "Integral" },
                 ]}
                 onChange={(v) => setTipoMedicao(v as any)}
               />
             </div>
 
-            {tipoMedicao === "1ª Quinzena" && (
+            {tipoMedicao !== "Integral" && (
               <div className="form-field">
                 <label>Data de Corte *</label>
                 <input
@@ -543,7 +544,9 @@ export default function EnvioMassaBmModal({
               <span style={{ fontSize: "11.5px", color: "var(--on-surface-variant)" }}>
                 {tipoMedicao === "1ª Quinzena"
                   ? "Exibindo consultores com tag Quinzenal e atividades até a data de corte"
-                  : "Exibindo consultores com tag Integral e quinzenais com atividades na 2ª quinzena"}
+                  : tipoMedicao === "2ª Quinzena"
+                  ? "Exibindo consultores com tag Quinzenal e atividades da 2ª quinzena"
+                  : "Exibindo consultores com tag Integral e atividades de todo o mês"}
               </span>
             </div>
 

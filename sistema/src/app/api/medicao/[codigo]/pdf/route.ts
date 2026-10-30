@@ -70,11 +70,17 @@ export async function GET(
       atividades: bm.atividades || [],
     });
 
+    // Substitui 'Oficial' pelo Nome do consultor higienizado no nome do arquivo (para identificação imediata no Zoho Sign)
+    const nomeConsultorLimpo = (bm.consultorNome || "Consultor")
+      .trim()
+      .replace(/[/\\?%*:|"<>]/g, "")
+      .replace(/\s+/g, " ");
+
     return new NextResponse(Buffer.from(pdfBytes), {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `inline; filename="BM_${bm.codigo}_Oficial.pdf"`,
+        "Content-Disposition": `inline; filename="BM_${bm.codigo}_${nomeConsultorLimpo}.pdf"`,
         "Cache-Control": "public, max-age=3600",
       },
     });
