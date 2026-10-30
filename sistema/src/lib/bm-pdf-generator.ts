@@ -764,76 +764,81 @@ export async function gerarPdfOficialBm(dados: BmPdfDados): Promise<Uint8Array> 
   });
 
   const sY = y - declH - 8;
-  const signBoxW = (contentWidth - 20) / 2; // ~265.6 pt
+  const gap = 8;
+  const boxW = (contentWidth - (gap * 2)) / 3; // ~171.76 pt cada caixa
 
   // -------------------------------------------------------------------------
   // CAIXA 1: ASSINATURA DO PRESTADOR DE SERVIÇOS (RECIPIENT 2)
   // -------------------------------------------------------------------------
-  const sb1X = marginX + 6;
+  const b1X = marginX;
   page.drawRectangle({
-    x: sb1X,
+    x: b1X,
     y: sY - signBoxH,
-    width: signBoxW,
+    width: boxW,
     height: signBoxH,
     color: cBgLight,
     borderColor: rgb(0.86, 0.92, 0.98),
     borderWidth: 1,
   });
 
-  page.drawText("ASSINATURA DO PRESTADOR", { x: sb1X + 12, y: sY - 14, size: 7.2, font: fontBold, color: cNavyHeader });
+  page.drawText("ASSINATURA DO PRESTADOR", { x: b1X + 8, y: sY - 14, size: 6.8, font: fontBold, color: cNavyHeader });
 
-  // Área de Assinatura e Data do Prestador (Text Tags Zoho Sign sem sobreposição)
-  page.drawText("{{Signature:Recipient2*}}", { x: sb1X + 16, y: sY - 42, size: 10, font: fontRegular, color: cBgLight });
-  page.drawText("{{Signdate:Recipient2*}}", { x: sb1X + 150, y: sY - 42, size: 8.5, font: fontRegular, color: cBgLight });
+  // Text Tags Zoho Sign: Assinatura e Data posicionadas verticalmente
+  page.drawText("{{Signature:Recipient2*}}", { x: b1X + 10, y: sY - 42, size: 10, font: fontRegular, color: cBgLight });
+  page.drawText("{{Signdate:Recipient2*}}", { x: b1X + 10, y: sY - 64, size: 8, font: fontRegular, color: cBgLight });
 
-  page.drawLine({ start: { x: sb1X + 12, y: sY - 78 }, end: { x: sb1X + signBoxW - 12, y: sY - 78 }, color: cBorder, thickness: 0.5 });
-  page.drawText(dados.consultorNome, { x: sb1X + 12, y: sY - 90, size: 8, font: fontBold, color: cDark });
-  page.drawText(`Razão Social: ${razaoSocial} • CNPJ: ${cnpj}`, { x: sb1X + 12, y: sY - 102, size: 6.2, font: fontRegular, color: cMuted });
+  page.drawLine({ start: { x: b1X + 8, y: sY - 78 }, end: { x: b1X + boxW - 8, y: sY - 78 }, color: cBorder, thickness: 0.5 });
+  page.drawText(dados.consultorNome, { x: b1X + 8, y: sY - 90, size: 7.5, font: fontBold, color: cDark });
+  page.drawText(`Razão Social: ${razaoSocial}`, { x: b1X + 8, y: sY - 100, size: 5.5, font: fontRegular, color: cMuted });
+  page.drawText(`CNPJ: ${cnpj}`, { x: b1X + 8, y: sY - 108, size: 5.5, font: fontRegular, color: cMuted });
 
   // -------------------------------------------------------------------------
-  // CAIXA 2: VALIDAÇÃO DA COORDENAÇÃO & LÍDER DE PROJETO (COM IDENTIFICAÇÃO E DATAS)
+  // CAIXA 2: VALIDAÇÃO DO LÍDER DE PROJETO (RECIPIENT 1)
   // -------------------------------------------------------------------------
-  const sb2X = marginX + 14 + signBoxW;
+  const b2X = marginX + boxW + gap;
   page.drawRectangle({
-    x: sb2X,
+    x: b2X,
     y: sY - signBoxH,
-    width: signBoxW,
+    width: boxW,
     height: signBoxH,
     color: cBgLight,
     borderColor: rgb(0.86, 0.92, 0.98),
     borderWidth: 1,
   });
 
-  // Linha divisória vertical interna separando Líder e Coordenação
-  const meioX = sb2X + (signBoxW / 2);
-  page.drawLine({
-    start: { x: meioX, y: sY - 6 },
-    end: { x: meioX, y: sY - signBoxH + 6 },
-    color: rgb(0.86, 0.92, 0.98),
-    thickness: 0.8,
+  page.drawText("VALIDAÇÃO DO LÍDER DE PROJETO", { x: b2X + 8, y: sY - 14, size: 6.8, font: fontBold, color: cNavyHeader });
+
+  // Text Tags Zoho Sign: Assinatura e Data do Líder
+  page.drawText("{{Signature:Recipient1*}}", { x: b2X + 10, y: sY - 42, size: 10, font: fontRegular, color: cBgLight });
+  page.drawText("{{Signdate:Recipient1*}}", { x: b2X + 10, y: sY - 64, size: 8, font: fontRegular, color: cBgLight });
+
+  page.drawLine({ start: { x: b2X + 8, y: sY - 78 }, end: { x: b2X + boxW - 8, y: sY - 78 }, color: cBorder, thickness: 0.5 });
+  page.drawText(dados.liderNome || "Beatriz Picorelli", { x: b2X + 8, y: sY - 90, size: 7.5, font: fontBold, color: cDark });
+  page.drawText("Liderança de Projeto • NNÓS Consultoria", { x: b2X + 8, y: sY - 102, size: 5.6, font: fontRegular, color: cMuted });
+
+  // -------------------------------------------------------------------------
+  // CAIXA 3: VALIDAÇÃO DA COORDENAÇÃO GERAL (RECIPIENT 3)
+  // -------------------------------------------------------------------------
+  const b3X = marginX + (boxW * 2) + (gap * 2);
+  page.drawRectangle({
+    x: b3X,
+    y: sY - signBoxH,
+    width: boxW,
+    height: signBoxH,
+    color: cBgLight,
+    borderColor: rgb(0.86, 0.92, 0.98),
+    borderWidth: 1,
   });
 
-  // --- SUB-COLUNA 1: LÍDER DE PROJETO (RECIPIENT 1) ---
-  page.drawText("LÍDER DE PROJETO", { x: sb2X + 10, y: sY - 14, size: 6.8, font: fontBold, color: cNavyHeader });
+  page.drawText("VALIDAÇÃO DA COORDENAÇÃO", { x: b3X + 8, y: sY - 14, size: 6.8, font: fontBold, color: cNavyHeader });
 
-  // Text Tags do Líder (Assinatura e Data em linhas verticais separadas, sem colisão)
-  page.drawText("{{Signature:Recipient1*}}", { x: sb2X + 10, y: sY - 42, size: 10, font: fontRegular, color: cBgLight });
-  page.drawText("{{Signdate:Recipient1*}}", { x: sb2X + 10, y: sY - 64, size: 8, font: fontRegular, color: cBgLight });
+  // Text Tags Zoho Sign: Assinatura e Data da Coordenação
+  page.drawText("{{Signature:Recipient3*}}", { x: b3X + 10, y: sY - 42, size: 10, font: fontRegular, color: cBgLight });
+  page.drawText("{{Signdate:Recipient3*}}", { x: b3X + 10, y: sY - 64, size: 8, font: fontRegular, color: cBgLight });
 
-  page.drawLine({ start: { x: sb2X + 8, y: sY - 78 }, end: { x: meioX - 8, y: sY - 78 }, color: cBorder, thickness: 0.5 });
-  page.drawText(dados.liderNome || "Beatriz Picorelli", { x: sb2X + 8, y: sY - 90, size: 7.5, font: fontBold, color: cDark });
-  page.drawText("Liderança de Projeto • NNÓS Consultoria", { x: sb2X + 8, y: sY - 102, size: 5.6, font: fontRegular, color: cMuted });
-
-  // --- SUB-COLUNA 2: COORDENAÇÃO GERAL / RESPONSÁVEL (RECIPIENT 3) ---
-  page.drawText("COORDENAÇÃO GERAL", { x: meioX + 10, y: sY - 14, size: 6.8, font: fontBold, color: cNavyHeader });
-
-  // Text Tags da Coordenação (Assinatura e Data em linhas verticais separadas, sem colisão)
-  page.drawText("{{Signature:Recipient3*}}", { x: meioX + 10, y: sY - 42, size: 10, font: fontRegular, color: cBgLight });
-  page.drawText("{{Signdate:Recipient3*}}", { x: meioX + 10, y: sY - 64, size: 8, font: fontRegular, color: cBgLight });
-
-  page.drawLine({ start: { x: meioX + 8, y: sY - 78 }, end: { x: sb2X + signBoxW - 8, y: sY - 78 }, color: cBorder, thickness: 0.5 });
-  page.drawText(dados.responsavelNome || "Marcelo Lara da Silva", { x: meioX + 8, y: sY - 90, size: 7.5, font: fontBold, color: cDark });
-  page.drawText("Coordenação Operacional • NNÓS Consultoria", { x: meioX + 8, y: sY - 102, size: 5.6, font: fontRegular, color: cMuted });
+  page.drawLine({ start: { x: b3X + 8, y: sY - 78 }, end: { x: b3X + boxW - 8, y: sY - 78 }, color: cBorder, thickness: 0.5 });
+  page.drawText(dados.responsavelNome || "Marcelo Lara da Silva", { x: b3X + 8, y: sY - 90, size: 7.5, font: fontBold, color: cDark });
+  page.drawText("Coordenação Operacional & Projetos • NNÓS", { x: b3X + 8, y: sY - 102, size: 5.6, font: fontRegular, color: cMuted });
 
   y -= (signSecH + 8);
 
