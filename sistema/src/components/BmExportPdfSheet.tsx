@@ -90,6 +90,11 @@ export default function BmExportPdfSheet({ bm }: BmExportPdfSheetProps) {
     ? "LEONARDO CAMPOS"
     : (bm.responsavelNnosNome ? bm.responsavelNnosNome.toUpperCase() : "MARCELO LARA DA SILVA");
 
+  // Logs de validação dos signatários
+  const logLider = bm.logs?.find((l) => l.papel?.toLowerCase().includes("líder") || l.papel?.toLowerCase().includes("lider") || l.papel?.toLowerCase().includes("aprovador")) || bm.logs?.[0];
+  const logPrestador = bm.logs?.find((l) => l.papel?.toLowerCase().includes("prestador")) || bm.logs?.[1] || bm.logs?.[0];
+  const logCoord = bm.logs?.find((l) => l.papel?.toLowerCase().includes("coord") || l.papel?.toLowerCase().includes("responsável") || l.papel?.toLowerCase().includes("responsavel")) || bm.logs?.[2];
+
   return (
     <div className="print-only-a4" style={{ display: "none" }}>
       {/* Importação das fontes Google Fonts (Sem JetBrains Mono / sem fonte tipo máquina de escrever) */}
@@ -571,51 +576,88 @@ export default function BmExportPdfSheet({ bm }: BmExportPdfSheetProps) {
                 </div>
               </div>
 
-              {/* Assinatura Coordenação (Conforme Print 1: Título fixo Validação da Coordenação) */}
-              <div style={{ border: "1px solid #dbeafe", backgroundColor: "#f8fafc", borderRadius: "8px", padding: "6px 8px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: "3px", borderBottom: "1px solid #e2e8f0" }}>
-                  <span style={{ fontSize: "8px", textTransform: "uppercase", fontWeight: 700, color: "#0f2a4a" }}>Validação da Coordenação</span>
-                  {(bm.logs[1]?.status === "Assinado" || bm.logs[2]?.status === "Assinado" || bm.status.includes("Aprovado")) ? (
-                    <span style={{ fontSize: "7px", backgroundColor: "#d1fae5", color: "#065f46", fontWeight: 700, padding: "1.5px 4px", borderRadius: "4px", display: "flex", alignItems: "center", gap: "2px" }}>
-                      <svg style={{ width: "8px", height: "8px", color: "#059669" }} fill="currentColor" viewBox="0 0 20 20"><path clipRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" fillRule="evenodd"></path></svg>
-                      Validação Operacional
+              {/* Caixa 2: Validação da Coordenação & Líder de Projeto (Dividida em Líder e Coordenação) */}
+              <div style={{ border: "1px solid #dbeafe", backgroundColor: "#f8fafc", borderRadius: "8px", padding: "6px 8px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                {/* SUB-COLUNA 1: LÍDER DE PROJETO */}
+                <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", borderRight: "1px solid #e2e8f0", paddingRight: "8px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: "3px", borderBottom: "1px solid #e2e8f0" }}>
+                    <span style={{ fontSize: "7.5px", textTransform: "uppercase", fontWeight: 700, color: "#0f2a4a" }}>Líder de Projeto</span>
+                    {(logLider?.status === "Assinado" || bm.status.includes("Aprovado")) ? (
+                      <span style={{ fontSize: "6.5px", backgroundColor: "#d1fae5", color: "#065f46", fontWeight: 700, padding: "1px 3px", borderRadius: "3px", display: "flex", alignItems: "center", gap: "2px" }}>
+                        <svg style={{ width: "7px", height: "7px", color: "#059669" }} fill="currentColor" viewBox="0 0 20 20"><path clipRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" fillRule="evenodd"></path></svg>
+                        Aprovado
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: "6.5px", backgroundColor: "#fef3c7", color: "#92400e", fontWeight: 700, padding: "1px 3px", borderRadius: "3px" }}>
+                        Aguardando
+                      </span>
+                    )}
+                  </div>
+
+                  <div style={{ textAlign: "center", padding: "2px 0" }}>
+                    {(logLider?.status === "Assinado" || bm.status.includes("Aprovado")) ? (
+                      <p style={{ fontFamily: "'Caveat', cursive", fontSize: "15px", color: "#1e293b", letterSpacing: "0.02em", userSelect: "none", margin: 0, lineHeight: 1.1 }}>
+                        {formatarNomeAssinatura(bm.liderProjetoNome || "Beatriz Picorelli")}
+                      </p>
+                    ) : (
+                      <div style={{ height: "18px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <span style={{ fontSize: "7.5px", color: "#94a3b8", fontStyle: "italic" }}>Espaço reservado para validação técnica</span>
+                      </div>
+                    )}
+                    <div style={{ width: "90px", height: "1px", backgroundColor: "#cbd5e1", margin: "3px auto" }}></div>
+                    <p style={{ fontSize: "8px", fontWeight: 700, color: "#0f172a", margin: "1px 0 0 0" }}>{(bm.liderProjetoNome || "Beatriz Picorelli").toUpperCase()}</p>
+                    <p style={{ fontSize: "6.5px", color: "#64748b", margin: 0 }}>Liderança de Projeto • NNÓS Consultoria</p>
+                  </div>
+
+                  <div style={{ paddingTop: "3px", borderTop: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", fontSize: "6.5px", color: "#64748b" }}>
+                    <span>Aprovação Técnica</span>
+                    <span>
+                      Data: {logLider?.dataHora && !logLider?.dataHora.includes("via Zoho")
+                        ? logLider.dataHora
+                        : (bm.status.includes("Aprovado") ? (logLider?.dataHora || "Aprovado") : "Aguardando")}
                     </span>
-                  ) : (
-                    <span style={{ fontSize: "7px", backgroundColor: "#fef3c7", color: "#92400e", fontWeight: 700, padding: "1.5px 4px", borderRadius: "4px" }}>
-                      Aguardando Validação
-                    </span>
-                  )}
+                  </div>
                 </div>
 
-                {/* Print 3 & Zoho Text Tag */}
-                <div style={{ textAlign: "center", padding: "2px 0" }}>
-                  {(bm.logs[1]?.status === "Assinado" || bm.logs[2]?.status === "Assinado" || bm.status.includes("Aprovado")) ? (
-                    <p style={{ fontFamily: "'Caveat', cursive", fontSize: "16px", color: "#1e293b", letterSpacing: "0.02em", userSelect: "none", margin: 0, lineHeight: 1.1 }}>
-                      {signatarioNnosNome}
-                    </p>
-                  ) : (
-                    <div style={{ height: "18px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <span style={{ fontSize: "8px", color: "#94a3b8", fontStyle: "italic" }}>Espaço reservado para validação operacional</span>
-                    </div>
-                  )}
-                  <div style={{ width: "120px", height: "1px", backgroundColor: "#cbd5e1", margin: "3px auto" }}></div>
-                  <p style={{ fontSize: "8.5px", fontWeight: 700, color: "#0f172a", margin: "1px 0 0 0" }}>{signatarioNnosUpper}</p>
-                  <p style={{ fontSize: "7px", color: "#64748b", margin: 0 }}>Líder de Projetos / Coordenação Operacional • NNÓS</p>
-                </div>
+                {/* SUB-COLUNA 2: COORDENAÇÃO GERAL */}
+                <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: "3px", borderBottom: "1px solid #e2e8f0" }}>
+                    <span style={{ fontSize: "7.5px", textTransform: "uppercase", fontWeight: 700, color: "#0f2a4a" }}>Coordenação Geral</span>
+                    {(logCoord?.status === "Assinado" || bm.status.includes("Aprovado")) ? (
+                      <span style={{ fontSize: "6.5px", backgroundColor: "#d1fae5", color: "#065f46", fontWeight: 700, padding: "1px 3px", borderRadius: "3px", display: "flex", alignItems: "center", gap: "2px" }}>
+                        <svg style={{ width: "7px", height: "7px", color: "#059669" }} fill="currentColor" viewBox="0 0 20 20"><path clipRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" fillRule="evenodd"></path></svg>
+                        Validado
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: "6.5px", backgroundColor: "#fef3c7", color: "#92400e", fontWeight: 700, padding: "1px 3px", borderRadius: "3px" }}>
+                        Aguardando
+                      </span>
+                    )}
+                  </div>
 
-                <div style={{ paddingTop: "3px", borderTop: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", fontSize: "7px", color: "#64748b" }}>
-                  <span>
-                    {bm.zohoRequestId
-                      ? `Zoho Sign ID: ${bm.zohoRequestId}`
-                      : (bm.logs[2]?.detalhe?.includes("Doc ID:")
-                        ? `Zoho Doc ID: ${bm.logs[2].detalhe.split("Doc ID:")[1].trim()}`
-                        : "Validação Operacional NNÓS")}
-                  </span>
-                  <span>
-                    Data: {bm.logs[2]?.dataHora && !bm.logs[2]?.dataHora.includes("via Zoho")
-                      ? bm.logs[2].dataHora
-                      : (bm.status.includes("Aprovado") ? (bm.logs[2]?.dataHora || bm.logs[1]?.dataHora || "Validado") : "Aguardando Validação")}
-                  </span>
+                  <div style={{ textAlign: "center", padding: "2px 0" }}>
+                    {(logCoord?.status === "Assinado" || bm.status.includes("Aprovado")) ? (
+                      <p style={{ fontFamily: "'Caveat', cursive", fontSize: "15px", color: "#1e293b", letterSpacing: "0.02em", userSelect: "none", margin: 0, lineHeight: 1.1 }}>
+                        {signatarioNnosNome}
+                      </p>
+                    ) : (
+                      <div style={{ height: "18px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <span style={{ fontSize: "7.5px", color: "#94a3b8", fontStyle: "italic" }}>Espaço reservado para validação operacional</span>
+                      </div>
+                    )}
+                    <div style={{ width: "90px", height: "1px", backgroundColor: "#cbd5e1", margin: "3px auto" }}></div>
+                    <p style={{ fontSize: "8px", fontWeight: 700, color: "#0f172a", margin: "1px 0 0 0" }}>{signatarioNnosUpper}</p>
+                    <p style={{ fontSize: "6.5px", color: "#64748b", margin: 0 }}>Coordenação Operacional • NNÓS</p>
+                  </div>
+
+                  <div style={{ paddingTop: "3px", borderTop: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", fontSize: "6.5px", color: "#64748b" }}>
+                    <span>Validação Operacional</span>
+                    <span>
+                      Data: {logCoord?.dataHora && !logCoord?.dataHora.includes("via Zoho")
+                        ? logCoord.dataHora
+                        : (bm.status.includes("Aprovado") ? (logCoord?.dataHora || "Validado") : "Aguardando")}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>

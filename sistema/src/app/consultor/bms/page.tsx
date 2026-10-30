@@ -644,7 +644,7 @@ export default function ConsultorBmsPage() {
                 </div>
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))", gap: "20px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "16px" }}>
                 {/* Assinatura do Prestador */}
                 {(() => {
                   const prestadorLog = bmVisualizando.logs?.find((l: any) => l.papel?.toLowerCase().includes("prestador")) || bmVisualizando.logs?.[1];
@@ -694,6 +694,62 @@ export default function ConsultorBmsPage() {
                       <div style={{ marginTop: "16px", paddingTop: "10px", borderTop: "1px dashed var(--border)", display: "flex", justifyContent: "space-between", fontSize: "11px", color: "var(--on-surface-variant)" }}>
                         <span>{isPrestadorAssinado ? (ipPrestador ? `IP: ${ipPrestador}` : "Autenticado via Zoho Sign") : "Autenticação via Zoho Sign"}</span>
                         <span>{isPrestadorAssinado ? `Data: ${prestadorLog?.dataHora || "Assinado"}` : "Status: Aguardando Assinatura"}</span>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Validação do Líder de Projeto */}
+                {(() => {
+                  const liderLog = bmVisualizando.logs?.find((l: any) => l.papel?.toLowerCase().includes("líder") || l.papel?.toLowerCase().includes("lider") || l.papel?.toLowerCase().includes("aprovador")) || bmVisualizando.logs?.[0];
+                  const isLiderAssinado = liderLog?.status === "Assinado" || (bmVisualizando.status?.includes("Aprovado"));
+                  const liderNome = bmVisualizando.liderProjetoNome || "Beatriz Picorelli";
+
+                  return (
+                    <div style={{ padding: "20px", borderRadius: "12px", backgroundColor: "var(--surface-container-low)", border: "1px solid var(--border)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                      <div>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
+                          <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--primary)" }}>
+                            Validação do Líder de Projeto
+                          </span>
+                          {isLiderAssinado ? (
+                            <span style={{ padding: "2px 8px", borderRadius: "999px", backgroundColor: "#d1fae5", color: "#065f46", fontSize: "11px", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                              <span className="material-symbols-outlined" style={{ fontSize: "12px" }}>done_all</span>
+                              Aprovado
+                            </span>
+                          ) : (
+                            <span style={{ padding: "2px 8px", borderRadius: "999px", backgroundColor: "#fef3c7", color: "#92400e", fontSize: "11px", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                              <span className="material-symbols-outlined" style={{ fontSize: "12px" }}>schedule</span>
+                              Aguardando Validação
+                            </span>
+                          )}
+                        </div>
+
+                        <div style={{ height: "60px", display: "flex", alignItems: "center", justifyContent: "center", borderBottom: "1px solid var(--border)", margin: "8px 0" }}>
+                          {isLiderAssinado ? (
+                            <span style={{ fontFamily: "cursive", fontSize: "28px", color: "var(--secondary, #0284c7)", fontStyle: "italic", letterSpacing: "2px" }}>
+                              {formatarNomeAssinatura(liderNome)}
+                            </span>
+                          ) : (
+                            <span style={{ fontSize: "12px", color: "var(--on-surface-variant)", fontStyle: "italic" }}>
+                              Espaço reservado para validação técnica
+                            </span>
+                          )}
+                        </div>
+
+                        <div style={{ textAlign: "center", marginTop: "10px" }}>
+                          <strong style={{ fontSize: "13px", color: "var(--primary)", display: "block" }}>
+                            {String(liderNome).toUpperCase()}
+                          </strong>
+                          <span style={{ fontSize: "11px", color: "var(--on-surface-variant)" }}>
+                            Liderança de Projeto • NNÓS Consultoria
+                          </span>
+                        </div>
+                      </div>
+
+                      <div style={{ marginTop: "16px", paddingTop: "10px", borderTop: "1px dashed var(--border)", display: "flex", justifyContent: "space-between", fontSize: "11px", color: "var(--on-surface-variant)" }}>
+                        <span>Aprovação Técnica Operacional</span>
+                        <span>{isLiderAssinado ? `Data: ${liderLog?.dataHora || "Aprovado"}` : "Status: Aguardando Validação"}</span>
                       </div>
                     </div>
                   );

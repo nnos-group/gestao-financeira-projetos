@@ -782,9 +782,9 @@ export async function gerarPdfOficialBm(dados: BmPdfDados): Promise<Uint8Array> 
 
   page.drawText("ASSINATURA DO PRESTADOR", { x: sb1X + 12, y: sY - 14, size: 7.2, font: fontBold, color: cNavyHeader });
 
-  // Área Ampla de Assinatura Zoho Sign (size 18 para expandir a altura do campo igual à referência em laranja)
-  page.drawText("{{Signature:Recipient2*        }}", { x: sb1X + 14, y: sY - 45, size: 18, font: fontRegular, color: cWhite });
-  page.drawText("{{Signdate:Recipient2*}}", { x: sb1X + 160, y: sY - 45, size: 9, font: fontRegular, color: cWhite });
+  // Área de Assinatura e Data do Prestador (Text Tags Zoho Sign sem sobreposição)
+  page.drawText("{{Signature:Recipient2*}}", { x: sb1X + 16, y: sY - 42, size: 10, font: fontRegular, color: cBgLight });
+  page.drawText("{{Signdate:Recipient2*}}", { x: sb1X + 150, y: sY - 42, size: 8.5, font: fontRegular, color: cBgLight });
 
   page.drawLine({ start: { x: sb1X + 12, y: sY - 78 }, end: { x: sb1X + signBoxW - 12, y: sY - 78 }, color: cBorder, thickness: 0.5 });
   page.drawText(dados.consultorNome, { x: sb1X + 12, y: sY - 90, size: 8, font: fontBold, color: cDark });
@@ -816,10 +816,9 @@ export async function gerarPdfOficialBm(dados: BmPdfDados): Promise<Uint8Array> 
   // --- SUB-COLUNA 1: LÍDER DE PROJETO (RECIPIENT 1) ---
   page.drawText("LÍDER DE PROJETO", { x: sb2X + 10, y: sY - 14, size: 6.8, font: fontBold, color: cNavyHeader });
 
-  // Assinatura ampla (size 17 para expandir a altura do campo conforme referência em laranja)
-  page.drawText("{{Signature:Recipient1*     }}", { x: sb2X + 10, y: sY - 42, size: 17, font: fontRegular, color: cWhite });
-  // Data de assinatura do Líder logo abaixo da assinatura
-  page.drawText("{{Signdate:Recipient1*}}", { x: sb2X + 10, y: sY - 64, size: 8.5, font: fontRegular, color: cWhite });
+  // Text Tags do Líder (Assinatura e Data em linhas verticais separadas, sem colisão)
+  page.drawText("{{Signature:Recipient1*}}", { x: sb2X + 10, y: sY - 42, size: 10, font: fontRegular, color: cBgLight });
+  page.drawText("{{Signdate:Recipient1*}}", { x: sb2X + 10, y: sY - 64, size: 8, font: fontRegular, color: cBgLight });
 
   page.drawLine({ start: { x: sb2X + 8, y: sY - 78 }, end: { x: meioX - 8, y: sY - 78 }, color: cBorder, thickness: 0.5 });
   page.drawText(dados.liderNome || "Beatriz Picorelli", { x: sb2X + 8, y: sY - 90, size: 7.5, font: fontBold, color: cDark });
@@ -828,10 +827,9 @@ export async function gerarPdfOficialBm(dados: BmPdfDados): Promise<Uint8Array> 
   // --- SUB-COLUNA 2: COORDENAÇÃO GERAL / RESPONSÁVEL (RECIPIENT 3) ---
   page.drawText("COORDENAÇÃO GERAL", { x: meioX + 10, y: sY - 14, size: 6.8, font: fontBold, color: cNavyHeader });
 
-  // Assinatura ampla (size 17 para expandir a altura do campo conforme referência em laranja)
-  page.drawText("{{Signature:Recipient3*     }}", { x: meioX + 10, y: sY - 42, size: 17, font: fontRegular, color: cWhite });
-  // Data de assinatura da Coordenação logo abaixo da assinatura
-  page.drawText("{{Signdate:Recipient3*}}", { x: meioX + 10, y: sY - 64, size: 8.5, font: fontRegular, color: cWhite });
+  // Text Tags da Coordenação (Assinatura e Data em linhas verticais separadas, sem colisão)
+  page.drawText("{{Signature:Recipient3*}}", { x: meioX + 10, y: sY - 42, size: 10, font: fontRegular, color: cBgLight });
+  page.drawText("{{Signdate:Recipient3*}}", { x: meioX + 10, y: sY - 64, size: 8, font: fontRegular, color: cBgLight });
 
   page.drawLine({ start: { x: meioX + 8, y: sY - 78 }, end: { x: sb2X + signBoxW - 8, y: sY - 78 }, color: cBorder, thickness: 0.5 });
   page.drawText(dados.responsavelNome || "Marcelo Lara da Silva", { x: meioX + 8, y: sY - 90, size: 7.5, font: fontBold, color: cDark });
