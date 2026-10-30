@@ -523,41 +523,40 @@ export default function BmExportPdfSheet({ bm }: BmExportPdfSheetProps) {
               </div>
             </div>
 
-            {/* Caixas de Assinatura Dinâmicas (Com Text Tags Zoho Sign para ancoragem dinâmica automática) */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+            {/* Caixas de Assinatura Dinâmicas e Amplas */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
               {/* Assinatura Prestador */}
-              <div style={{ border: "1px solid #dbeafe", backgroundColor: "#f8fafc", borderRadius: "8px", padding: "6px 8px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: "3px", borderBottom: "1px solid #e2e8f0" }}>
-                  <span style={{ fontSize: "8px", textTransform: "uppercase", fontWeight: 700, color: "#0f2a4a" }}>Assinatura do Prestador</span>
+              <div style={{ border: "1px solid #bfdbfe", backgroundColor: "#f8fafc", borderRadius: "8px", padding: "10px 12px", display: "flex", flexDirection: "column", justifyContent: "space-between", minHeight: "108px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: "4px", borderBottom: "1px solid #e2e8f0" }}>
+                  <span style={{ fontSize: "8.5px", textTransform: "uppercase", fontWeight: 700, color: "#0f2a4a" }}>Assinatura do Prestador</span>
                   {bm.logs[0]?.status === "Assinado" ? (
-                    <span style={{ fontSize: "7px", backgroundColor: "#d1fae5", color: "#065f46", fontWeight: 700, padding: "1.5px 4px", borderRadius: "4px", display: "flex", alignItems: "center", gap: "2px" }}>
-                      <svg style={{ width: "8px", height: "8px", color: "#059669" }} fill="currentColor" viewBox="0 0 20 20"><path clipRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" fillRule="evenodd"></path></svg>
+                    <span style={{ fontSize: "7.5px", backgroundColor: "#d1fae5", color: "#065f46", fontWeight: 700, padding: "2px 6px", borderRadius: "4px", display: "flex", alignItems: "center", gap: "3px" }}>
+                      <svg style={{ width: "9px", height: "9px", color: "#059669" }} fill="currentColor" viewBox="0 0 20 20"><path clipRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" fillRule="evenodd"></path></svg>
                       Assinado Eletronicamente
                     </span>
                   ) : (
-                    <span style={{ fontSize: "7px", backgroundColor: "#fef3c7", color: "#92400e", fontWeight: 700, padding: "1.5px 4px", borderRadius: "4px" }}>
+                    <span style={{ fontSize: "7.5px", backgroundColor: "#fef3c7", color: "#92400e", fontWeight: 700, padding: "2px 6px", borderRadius: "4px" }}>
                       Aguardando Assinatura
                     </span>
                   )}
                 </div>
 
-                {/* Print 3 & Zoho Text Tag: Se pendente exibe a tag dinâmica do Zoho Sign; se assinado exibe assinatura oficial */}
-                <div style={{ textAlign: "center", padding: "2px 0" }}>
+                <div style={{ textAlign: "center", padding: "8px 0" }}>
                   {bm.logs[0]?.status === "Assinado" ? (
-                    <p style={{ fontFamily: "'Caveat', cursive", fontSize: "16px", color: "#1e293b", letterSpacing: "0.02em", userSelect: "none", margin: 0, lineHeight: 1.1 }}>
+                    <p style={{ fontFamily: "'Caveat', cursive", fontSize: "20px", color: "#1e293b", letterSpacing: "0.02em", userSelect: "none", margin: 0, lineHeight: 1.1 }}>
                       {formatarNomeAssinatura(bm.consultorNome)}
                     </p>
                   ) : (
-                    <div style={{ height: "18px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <span style={{ fontSize: "8px", color: "#94a3b8", fontStyle: "italic" }}>Espaço reservado para assinatura eletrônica</span>
+                    <div style={{ height: "26px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <span style={{ fontSize: "8.5px", color: "#94a3b8", fontStyle: "italic" }}>Espaço amplo reservado para assinatura eletrônica</span>
                     </div>
                   )}
-                  <div style={{ width: "120px", height: "1px", backgroundColor: "#cbd5e1", margin: "3px auto" }}></div>
-                  <p style={{ fontSize: "8.5px", fontWeight: 700, color: "#0f172a", margin: "1px 0 0 0" }}>{bm.consultorNome}</p>
-                  <p style={{ fontSize: "7px", color: "#64748b", margin: 0 }}>Razão Social: {razaoSocial} • CNPJ: {cnpj}</p>
+                  <div style={{ width: "140px", height: "1px", backgroundColor: "#cbd5e1", margin: "4px auto" }}></div>
+                  <p style={{ fontSize: "9px", fontWeight: 700, color: "#0f172a", margin: "2px 0 0 0" }}>{bm.consultorNome}</p>
+                  <p style={{ fontSize: "7.5px", color: "#64748b", margin: 0 }}>Razão Social: {razaoSocial} • CNPJ: {cnpj}</p>
                 </div>
 
-                <div style={{ paddingTop: "3px", borderTop: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", fontSize: "7px", color: "#64748b" }}>
+                <div style={{ paddingTop: "4px", borderTop: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", fontSize: "7.5px", color: "#64748b" }}>
                   <span>
                     {bm.logs[0]?.detalhe?.includes("IP:")
                       ? bm.logs[0].detalhe.split("•")[0].trim()
@@ -571,45 +570,65 @@ export default function BmExportPdfSheet({ bm }: BmExportPdfSheetProps) {
                 </div>
               </div>
 
-              {/* Assinatura Coordenação (Conforme Print 1: Título fixo Validação da Coordenação) */}
-              <div style={{ border: "1px solid #dbeafe", backgroundColor: "#f8fafc", borderRadius: "8px", padding: "6px 8px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: "3px", borderBottom: "1px solid #e2e8f0" }}>
-                  <span style={{ fontSize: "8px", textTransform: "uppercase", fontWeight: 700, color: "#0f2a4a" }}>Validação da Coordenação</span>
+              {/* Assinatura Coordenação & Líder */}
+              <div style={{ border: "1px solid #bfdbfe", backgroundColor: "#f8fafc", borderRadius: "8px", padding: "10px 12px", display: "flex", flexDirection: "column", justifyContent: "space-between", minHeight: "108px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: "4px", borderBottom: "1px solid #e2e8f0" }}>
+                  <span style={{ fontSize: "8.5px", textTransform: "uppercase", fontWeight: 700, color: "#0f2a4a" }}>Validação da Coordenação & Líder</span>
                   {(bm.logs[1]?.status === "Assinado" || bm.logs[2]?.status === "Assinado" || bm.status.includes("Aprovado")) ? (
-                    <span style={{ fontSize: "7px", backgroundColor: "#d1fae5", color: "#065f46", fontWeight: 700, padding: "1.5px 4px", borderRadius: "4px", display: "flex", alignItems: "center", gap: "2px" }}>
-                      <svg style={{ width: "8px", height: "8px", color: "#059669" }} fill="currentColor" viewBox="0 0 20 20"><path clipRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" fillRule="evenodd"></path></svg>
+                    <span style={{ fontSize: "7.5px", backgroundColor: "#d1fae5", color: "#065f46", fontWeight: 700, padding: "2px 6px", borderRadius: "4px", display: "flex", alignItems: "center", gap: "3px" }}>
+                      <svg style={{ width: "9px", height: "9px", color: "#059669" }} fill="currentColor" viewBox="0 0 20 20"><path clipRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" fillRule="evenodd"></path></svg>
                       Validação Operacional
                     </span>
                   ) : (
-                    <span style={{ fontSize: "7px", backgroundColor: "#fef3c7", color: "#92400e", fontWeight: 700, padding: "1.5px 4px", borderRadius: "4px" }}>
+                    <span style={{ fontSize: "7.5px", backgroundColor: "#fef3c7", color: "#92400e", fontWeight: 700, padding: "2px 6px", borderRadius: "4px" }}>
                       Aguardando Validação
                     </span>
                   )}
                 </div>
 
-                {/* Print 3 & Zoho Text Tag */}
-                <div style={{ textAlign: "center", padding: "2px 0" }}>
-                  {(bm.logs[1]?.status === "Assinado" || bm.logs[2]?.status === "Assinado" || bm.status.includes("Aprovado")) ? (
-                    <p style={{ fontFamily: "'Caveat', cursive", fontSize: "16px", color: "#1e293b", letterSpacing: "0.02em", userSelect: "none", margin: 0, lineHeight: 1.1 }}>
-                      {signatarioNnosNome}
-                    </p>
-                  ) : (
-                    <div style={{ height: "18px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <span style={{ fontSize: "8px", color: "#94a3b8", fontStyle: "italic" }}>Espaço reservado para validação operacional</span>
-                    </div>
-                  )}
-                  <div style={{ width: "120px", height: "1px", backgroundColor: "#cbd5e1", margin: "3px auto" }}></div>
-                  <p style={{ fontSize: "8.5px", fontWeight: 700, color: "#0f172a", margin: "1px 0 0 0" }}>{signatarioNnosUpper}</p>
-                  <p style={{ fontSize: "7px", color: "#64748b", margin: 0 }}>Líder de Projetos / Coordenação Operacional • NNÓS</p>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", padding: "6px 0", textAlign: "center" }}>
+                  {/* Líder de Projeto */}
+                  <div style={{ borderRight: "1px solid #e2e8f0", paddingRight: "6px" }}>
+                    <span style={{ fontSize: "7px", color: "#0284c7", fontWeight: 700, display: "block" }}>1º Líder de Projeto</span>
+                    {(bm.logs[1]?.status === "Assinado" || bm.status.includes("Aprovado")) ? (
+                      <p style={{ fontFamily: "'Caveat', cursive", fontSize: "16px", color: "#1e293b", margin: "2px 0 0 0", lineHeight: 1 }}>
+                        {formatarNomeAssinatura(bm.liderProjetoNome || "Líder de Projeto")}
+                      </p>
+                    ) : (
+                      <div style={{ height: "20px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <span style={{ fontSize: "7.5px", color: "#94a3b8", fontStyle: "italic" }}>Aguardando Líder</span>
+                      </div>
+                    )}
+                    <div style={{ width: "80px", height: "1px", backgroundColor: "#cbd5e1", margin: "3px auto" }}></div>
+                    <p style={{ fontSize: "8px", fontWeight: 700, color: "#0f172a", margin: "1px 0 0 0" }}>{bm.liderProjetoNome || "Líder de Projeto"}</p>
+                    <p style={{ fontSize: "6.5px", color: "#64748b", margin: 0 }}>Líder Técnico</p>
+                  </div>
+
+                  {/* Coordenação Geral */}
+                  <div style={{ paddingLeft: "6px" }}>
+                    <span style={{ fontSize: "7px", color: "#0284c7", fontWeight: 700, display: "block" }}>2º Coordenação Geral</span>
+                    {(bm.logs[2]?.status === "Assinado" || bm.status.includes("Aprovado")) ? (
+                      <p style={{ fontFamily: "'Caveat', cursive", fontSize: "16px", color: "#1e293b", margin: "2px 0 0 0", lineHeight: 1 }}>
+                        {signatarioNnosNome}
+                      </p>
+                    ) : (
+                      <div style={{ height: "20px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <span style={{ fontSize: "7.5px", color: "#94a3b8", fontStyle: "italic" }}>Aguardando Coordenação</span>
+                      </div>
+                    )}
+                    <div style={{ width: "80px", height: "1px", backgroundColor: "#cbd5e1", margin: "3px auto" }}></div>
+                    <p style={{ fontSize: "8px", fontWeight: 700, color: "#0f172a", margin: "1px 0 0 0" }}>{signatarioNnosUpper}</p>
+                    <p style={{ fontSize: "6.5px", color: "#64748b", margin: 0 }}>Coordenação Operacional</p>
+                  </div>
                 </div>
 
-                <div style={{ paddingTop: "3px", borderTop: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", fontSize: "7px", color: "#64748b" }}>
+                <div style={{ paddingTop: "4px", borderTop: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", fontSize: "7.5px", color: "#64748b" }}>
                   <span>
                     {bm.zohoRequestId
                       ? `Zoho Sign ID: ${bm.zohoRequestId}`
                       : (bm.logs[2]?.detalhe?.includes("Doc ID:")
                         ? `Zoho Doc ID: ${bm.logs[2].detalhe.split("Doc ID:")[1].trim()}`
-                        : "Validação Operacional NNÓS")}
+                        : `Token: NX-VAL-${bm.codigo}`)}
                   </span>
                   <span>
                     Data: {bm.logs[2]?.dataHora && !bm.logs[2]?.dataHora.includes("via Zoho")
@@ -623,26 +642,23 @@ export default function BmExportPdfSheet({ bm }: BmExportPdfSheetProps) {
           {/* END: SignaturesSection */}
         </div>
 
-        {/* BEGIN: DocumentOfficialFooter (Print 3: Logomarca da NNÓS solta, sem estar envolvida por recipiente) */}
-        <footer style={{ marginTop: "10px", backgroundColor: "#ffffff", color: "#334155", padding: "8px 0 0 0", display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "8px", borderTop: "1.5px solid #0f172a" }}>
+        {/* BEGIN: DocumentOfficialFooter (Executivo Escuro Harmonioso) */}
+        <footer style={{ marginTop: "12px", backgroundColor: "#0a192f", color: "#cbd5e1", borderRadius: "8px", padding: "8px 12px", display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "8px", borderTop: "1px solid #334155" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            {/* Print 3: Logomarca solta sem recipiente */}
-            <img
-              src="/logo-coruja.png"
-              alt="Logo NNÓS"
-              style={{ width: "32px", height: "32px", objectFit: "contain", display: "block", flexShrink: 0 }}
-            />
+            <div style={{ width: "24px", height: "24px", borderRadius: "4px", backgroundColor: "#1e293b", border: "1px solid #334155", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: "10px", color: "#38bdf8" }}>
+              N
+            </div>
             <div>
-              <p style={{ fontWeight: 700, color: "#0f172a", margin: 0, lineHeight: 1.2 }}>NNÓS Consultoria e Treinamento LTDA</p>
-              <p style={{ color: "#64748b", margin: "2px 0 0 0" }}>CNPJ: 36.443.716/0001-00 • Inscrição Municipal: 1.208.841/002-5</p>
-              <p style={{ color: "#64748b", margin: 0 }}>Rua Sergipe, nº 77 - Loja 1, Boa Viagem, Belo Horizonte - MG, CEP: 30.130-170</p>
+              <p style={{ fontWeight: 700, color: "#ffffff", margin: 0, lineHeight: 1.2 }}>NNÓS Consultoria e Treinamento LTDA</p>
+              <p style={{ color: "#94a3b8", margin: "1px 0 0 0" }}>CNPJ: 36.443.716/0001-00 • Inscrição Municipal: 1.208.841/002-5</p>
+              <p style={{ color: "#94a3b8", margin: 0 }}>Rua Sergipe, nº 77 - Loja 1, Boa Viagem, Belo Horizonte - MG, CEP: 30.130-170</p>
             </div>
           </div>
           <div style={{ textAlign: "right" }}>
-            <p style={{ color: "#0284c7", fontWeight: 800, fontSize: "9px", margin: 0 }}>
-              Autenticador: BM {bm.codigo}-SET26
+            <p style={{ color: "#38bdf8", fontWeight: 800, fontSize: "9px", margin: 0 }}>
+              Autenticador: BM {bm.codigo}
             </p>
-            <p style={{ color: "#64748b", margin: "2px 0 0 0" }}>Documento gerado eletronicamente com validade jurídica</p>
+            <p style={{ color: "#94a3b8", margin: "1px 0 0 0" }}>Documento gerado eletronicamente com validade jurídica via Zoho Sign</p>
           </div>
         </footer>
         {/* END: DocumentOfficialFooter */}
