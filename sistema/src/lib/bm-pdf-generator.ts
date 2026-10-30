@@ -808,12 +808,10 @@ export async function gerarPdfOficialBm(dados: BmPdfDados): Promise<Uint8Array> 
 
   // Divisão interna Lado a Lado: 120pt de largura e 55pt de altura para cada signatário
   // Líder de Projeto (Recipient 1) no quadrante esquerdo
-  page.drawText("{{Signature:Recipient1*}}", { x: sb2X + 16, y: sY - 46, size: 8, font: fontRegular, color: cWhite });
-  page.drawText("{{Signdate:Recipient1*}}", { x: sb2X + 80, y: sY - 46, size: 8, font: fontRegular, color: cWhite });
+  page.drawText("{{Signature:Recipient1*}}", { x: sb2X + 18, y: sY - 46, size: 8, font: fontRegular, color: cWhite });
 
   // Coordenação Geral / Responsável (Recipient 3) no quadrante direito
-  page.drawText("{{Signature:Recipient3*}}", { x: sb2X + 140, y: sY - 46, size: 8, font: fontRegular, color: cWhite });
-  page.drawText("{{Signdate:Recipient3*}}", { x: sb2X + 205, y: sY - 46, size: 8, font: fontRegular, color: cWhite });
+  page.drawText("{{Signature:Recipient3*}}", { x: sb2X + 145, y: sY - 46, size: 8, font: fontRegular, color: cWhite });
 
   page.drawLine({ start: { x: sb2X + 12, y: sY - 76 }, end: { x: sb2X + signBoxW - 12, y: sY - 76 }, color: cBorder, thickness: 0.5 });
   page.drawText(dados.responsavelNome || "Marcelo Lara da Silva", { x: sb2X + 12, y: sY - 88, size: 8, font: fontBold, color: cDark });
