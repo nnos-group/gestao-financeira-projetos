@@ -719,8 +719,8 @@ export async function gerarPdfOficialBm(dados: BmPdfDados): Promise<Uint8Array> 
   // =========================================================================
   // 6. DECLARAÇÃO DE ACEITE & ASSINATURAS DIGITAIS AMPLIADAS
   // =========================================================================
-  // Altura ampliada para 108pt garantindo campo livre de 55pt de altura para o Zoho Sign
-  const signBoxH = 108;
+  // Altura ampliada para 114pt garantindo campo amplo de assinatura e identificação de todos os signatários
+  const signBoxH = 114;
   const declH = 22;
   const signSecH = declH + signBoxH + 12;
 
@@ -782,16 +782,16 @@ export async function gerarPdfOficialBm(dados: BmPdfDados): Promise<Uint8Array> 
 
   page.drawText("ASSINATURA DO PRESTADOR", { x: sb1X + 12, y: sY - 14, size: 7.2, font: fontBold, color: cNavyHeader });
 
-  // Área Ampla de Assinatura Zoho Sign: 55pt de altura livre desobstruída
-  page.drawText("{{Signature:Recipient2*}}", { x: sb1X + 24, y: sY - 46, size: 8, font: fontRegular, color: cWhite });
-  page.drawText("{{Signdate:Recipient2*}}", { x: sb1X + 155, y: sY - 46, size: 8, font: fontRegular, color: cWhite });
+  // Área Ampla de Assinatura Zoho Sign (size 18 para expandir a altura do campo igual à referência em laranja)
+  page.drawText("{{Signature:Recipient2*        }}", { x: sb1X + 14, y: sY - 45, size: 18, font: fontRegular, color: cWhite });
+  page.drawText("{{Signdate:Recipient2*}}", { x: sb1X + 160, y: sY - 45, size: 9, font: fontRegular, color: cWhite });
 
-  page.drawLine({ start: { x: sb1X + 12, y: sY - 76 }, end: { x: sb1X + signBoxW - 12, y: sY - 76 }, color: cBorder, thickness: 0.5 });
-  page.drawText(dados.consultorNome, { x: sb1X + 12, y: sY - 88, size: 8, font: fontBold, color: cDark });
-  page.drawText(`Razão Social: ${razaoSocial} • CNPJ: ${cnpj}`, { x: sb1X + 12, y: sY - 98, size: 6.2, font: fontRegular, color: cMuted });
+  page.drawLine({ start: { x: sb1X + 12, y: sY - 78 }, end: { x: sb1X + signBoxW - 12, y: sY - 78 }, color: cBorder, thickness: 0.5 });
+  page.drawText(dados.consultorNome, { x: sb1X + 12, y: sY - 90, size: 8, font: fontBold, color: cDark });
+  page.drawText(`Razão Social: ${razaoSocial} • CNPJ: ${cnpj}`, { x: sb1X + 12, y: sY - 102, size: 6.2, font: fontRegular, color: cMuted });
 
   // -------------------------------------------------------------------------
-  // CAIXA 2: VALIDAÇÃO DA COORDENAÇÃO & LÍDER (LADO A LADO SEM COMPRESSÃO)
+  // CAIXA 2: VALIDAÇÃO DA COORDENAÇÃO & LÍDER DE PROJETO (COM IDENTIFICAÇÃO E DATAS)
   // -------------------------------------------------------------------------
   const sb2X = marginX + 14 + signBoxW;
   page.drawRectangle({
@@ -804,18 +804,38 @@ export async function gerarPdfOficialBm(dados: BmPdfDados): Promise<Uint8Array> 
     borderWidth: 1,
   });
 
-  page.drawText("VALIDAÇÃO DA COORDENAÇÃO & LÍDER", { x: sb2X + 12, y: sY - 14, size: 7.2, font: fontBold, color: cNavyHeader });
+  // Linha divisória vertical interna separando Líder e Coordenação
+  const meioX = sb2X + (signBoxW / 2);
+  page.drawLine({
+    start: { x: meioX, y: sY - 6 },
+    end: { x: meioX, y: sY - signBoxH + 6 },
+    color: rgb(0.86, 0.92, 0.98),
+    thickness: 0.8,
+  });
 
-  // Divisão interna Lado a Lado: 120pt de largura e 55pt de altura para cada signatário
-  // Líder de Projeto (Recipient 1) no quadrante esquerdo
-  page.drawText("{{Signature:Recipient1*}}", { x: sb2X + 18, y: sY - 46, size: 8, font: fontRegular, color: cWhite });
+  // --- SUB-COLUNA 1: LÍDER DE PROJETO (RECIPIENT 1) ---
+  page.drawText("LÍDER DE PROJETO", { x: sb2X + 10, y: sY - 14, size: 6.8, font: fontBold, color: cNavyHeader });
 
-  // Coordenação Geral / Responsável (Recipient 3) no quadrante direito
-  page.drawText("{{Signature:Recipient3*}}", { x: sb2X + 145, y: sY - 46, size: 8, font: fontRegular, color: cWhite });
+  // Assinatura ampla (size 17 para expandir a altura do campo conforme referência em laranja)
+  page.drawText("{{Signature:Recipient1*     }}", { x: sb2X + 10, y: sY - 42, size: 17, font: fontRegular, color: cWhite });
+  // Data de assinatura do Líder logo abaixo da assinatura
+  page.drawText("{{Signdate:Recipient1*}}", { x: sb2X + 10, y: sY - 64, size: 8.5, font: fontRegular, color: cWhite });
 
-  page.drawLine({ start: { x: sb2X + 12, y: sY - 76 }, end: { x: sb2X + signBoxW - 12, y: sY - 76 }, color: cBorder, thickness: 0.5 });
-  page.drawText(dados.responsavelNome || "Marcelo Lara da Silva", { x: sb2X + 12, y: sY - 88, size: 8, font: fontBold, color: cDark });
-  page.drawText("Coordenação Operacional & Projetos • NNÓS Consultoria", { x: sb2X + 12, y: sY - 98, size: 6.2, font: fontRegular, color: cMuted });
+  page.drawLine({ start: { x: sb2X + 8, y: sY - 78 }, end: { x: meioX - 8, y: sY - 78 }, color: cBorder, thickness: 0.5 });
+  page.drawText(dados.liderNome || "Beatriz Picorelli", { x: sb2X + 8, y: sY - 90, size: 7.5, font: fontBold, color: cDark });
+  page.drawText("Liderança de Projeto • NNÓS Consultoria", { x: sb2X + 8, y: sY - 102, size: 5.6, font: fontRegular, color: cMuted });
+
+  // --- SUB-COLUNA 2: COORDENAÇÃO GERAL / RESPONSÁVEL (RECIPIENT 3) ---
+  page.drawText("COORDENAÇÃO GERAL", { x: meioX + 10, y: sY - 14, size: 6.8, font: fontBold, color: cNavyHeader });
+
+  // Assinatura ampla (size 17 para expandir a altura do campo conforme referência em laranja)
+  page.drawText("{{Signature:Recipient3*     }}", { x: meioX + 10, y: sY - 42, size: 17, font: fontRegular, color: cWhite });
+  // Data de assinatura da Coordenação logo abaixo da assinatura
+  page.drawText("{{Signdate:Recipient3*}}", { x: meioX + 10, y: sY - 64, size: 8.5, font: fontRegular, color: cWhite });
+
+  page.drawLine({ start: { x: meioX + 8, y: sY - 78 }, end: { x: sb2X + signBoxW - 8, y: sY - 78 }, color: cBorder, thickness: 0.5 });
+  page.drawText(dados.responsavelNome || "Marcelo Lara da Silva", { x: meioX + 8, y: sY - 90, size: 7.5, font: fontBold, color: cDark });
+  page.drawText("Coordenação Operacional • NNÓS Consultoria", { x: meioX + 8, y: sY - 102, size: 5.6, font: fontRegular, color: cMuted });
 
   y -= (signSecH + 8);
 
