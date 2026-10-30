@@ -181,7 +181,6 @@ export async function enviarBmParaZohoSign(params: EnviarBmZohoParams) {
     requests: {
       request_name: requestName,
       is_sequential: true,
-      is_text_tags: true, // Obrigatório para o Zoho Sign indexar automaticamente as tags {{Signature:...}}
       expiration_days: 7,
       email_reminders: true,
       reminder_period: 2,

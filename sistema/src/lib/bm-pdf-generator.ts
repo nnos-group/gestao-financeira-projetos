@@ -767,6 +767,9 @@ export async function gerarPdfOficialBm(dados: BmPdfDados): Promise<Uint8Array> 
   const gap = 8;
   const boxW = (contentWidth - (gap * 2)) / 3; // ~171.76 pt cada caixa
 
+  // Cor sutil para as tags no PDF (imperceptível sobre o card branco, mas garantindo 100% de leitura pelo parser do Zoho Sign)
+  const cTagGhost = rgb(0.97, 0.98, 0.99);
+
   // -------------------------------------------------------------------------
   // CAIXA 1: ASSINATURA DO PRESTADOR DE SERVIÇOS (RECIPIENT 2)
   // -------------------------------------------------------------------------
@@ -776,16 +779,16 @@ export async function gerarPdfOficialBm(dados: BmPdfDados): Promise<Uint8Array> 
     y: sY - signBoxH,
     width: boxW,
     height: signBoxH,
-    color: cWhite, // Fundo branco puro para harmonizar perfeitamente com a estampa de assinatura do Zoho Sign sem borda branca contrastante
+    color: cWhite, // Fundo branco puro para harmonizar perfeitamente com a estampa de assinatura do Zoho Sign
     borderColor: rgb(0.86, 0.92, 0.98),
     borderWidth: 1,
   });
 
   page.drawText("ASSINATURA DO PRESTADOR", { x: b1X + 8, y: sY - 14, size: 6.8, font: fontBold, color: cNavyHeader });
 
-  // Text Tags Zoho Sign Ampliadas: Altura escala com fontsize (20) e largura com espaços para área generosa
-  page.drawText("{{Signature:Recipient2*                  }}", { x: b1X + 10, y: sY - 46, size: 20, font: fontRegular, color: cWhite });
-  page.drawText("{{Signdate:Recipient2*      }}", { x: b1X + 10, y: sY - 67, size: 8.5, font: fontRegular, color: cWhite });
+  // Text Tags Oficiais Zoho Sign: Sintaxe estrita sem espaços para reconhecimento imediato pelo parser
+  page.drawText("{{Signature:Recipient2*}}", { x: b1X + 10, y: sY - 44, size: 14, font: fontRegular, color: cTagGhost });
+  page.drawText("{{Signdate:Recipient2*}}", { x: b1X + 10, y: sY - 64, size: 8, font: fontRegular, color: cTagGhost });
 
   page.drawLine({ start: { x: b1X + 8, y: sY - 76 }, end: { x: b1X + boxW - 8, y: sY - 76 }, color: cBorder, thickness: 0.5 });
   page.drawText(dados.consultorNome, { x: b1X + 8, y: sY - 88, size: 7.5, font: fontBold, color: cDark });
@@ -808,9 +811,9 @@ export async function gerarPdfOficialBm(dados: BmPdfDados): Promise<Uint8Array> 
 
   page.drawText("VALIDAÇÃO DO LÍDER DE PROJETO", { x: b2X + 8, y: sY - 14, size: 6.8, font: fontBold, color: cNavyHeader });
 
-  // Text Tags Zoho Sign Ampliadas: Líder de Projeto
-  page.drawText("{{Signature:Recipient1*                  }}", { x: b2X + 10, y: sY - 46, size: 20, font: fontRegular, color: cWhite });
-  page.drawText("{{Signdate:Recipient1*      }}", { x: b2X + 10, y: sY - 67, size: 8.5, font: fontRegular, color: cWhite });
+  // Text Tags Oficiais Zoho Sign: Líder de Projeto
+  page.drawText("{{Signature:Recipient1*}}", { x: b2X + 10, y: sY - 44, size: 14, font: fontRegular, color: cTagGhost });
+  page.drawText("{{Signdate:Recipient1*}}", { x: b2X + 10, y: sY - 64, size: 8, font: fontRegular, color: cTagGhost });
 
   page.drawLine({ start: { x: b2X + 8, y: sY - 76 }, end: { x: b2X + boxW - 8, y: sY - 76 }, color: cBorder, thickness: 0.5 });
   page.drawText(dados.liderNome || "Beatriz Picorelli", { x: b2X + 8, y: sY - 88, size: 7.5, font: fontBold, color: cDark });
@@ -832,9 +835,9 @@ export async function gerarPdfOficialBm(dados: BmPdfDados): Promise<Uint8Array> 
 
   page.drawText("VALIDAÇÃO DA COORDENAÇÃO", { x: b3X + 8, y: sY - 14, size: 6.8, font: fontBold, color: cNavyHeader });
 
-  // Text Tags Zoho Sign Ampliadas: Coordenação
-  page.drawText("{{Signature:Recipient3*                  }}", { x: b3X + 10, y: sY - 46, size: 20, font: fontRegular, color: cWhite });
-  page.drawText("{{Signdate:Recipient3*      }}", { x: b3X + 10, y: sY - 67, size: 8.5, font: fontRegular, color: cWhite });
+  // Text Tags Oficiais Zoho Sign: Coordenação
+  page.drawText("{{Signature:Recipient3*}}", { x: b3X + 10, y: sY - 44, size: 14, font: fontRegular, color: cTagGhost });
+  page.drawText("{{Signdate:Recipient3*}}", { x: b3X + 10, y: sY - 64, size: 8, font: fontRegular, color: cTagGhost });
 
   page.drawLine({ start: { x: b3X + 8, y: sY - 76 }, end: { x: b3X + boxW - 8, y: sY - 76 }, color: cBorder, thickness: 0.5 });
   page.drawText(dados.responsavelNome || "Marcelo Lara da Silva", { x: b3X + 8, y: sY - 88, size: 7.5, font: fontBold, color: cDark });
