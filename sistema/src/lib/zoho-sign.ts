@@ -181,6 +181,7 @@ export async function enviarBmParaZohoSign(params: EnviarBmZohoParams) {
     requests: {
       request_name: requestName,
       is_sequential: true,
+      is_text_tags: true, // Obrigatório para o Zoho Sign indexar automaticamente as tags {{Signature:...}}
       expiration_days: 7,
       email_reminders: true,
       reminder_period: 2,
@@ -245,6 +246,9 @@ export async function enviarBmParaZohoSign(params: EnviarBmZohoParams) {
   // Disparo dos e-mails via API oficial do Zoho Sign (transiciona de draft para inprogress)
   if (requestId && !submitSucesso) {
     try {
+      // Aguardar 2.5 segundos para o Zoho Sign indexar e converter as Text Tags no PDF antes de acionar o submit
+      await new Promise((resolve) => setTimeout(resolve, 2500));
+
       const submitParams = new URLSearchParams();
       submitParams.append("data", JSON.stringify({
         requests: {
@@ -260,6 +264,23 @@ export async function enviarBmParaZohoSign(params: EnviarBmZohoParams) {
         },
         body: submitParams.toString(),
       });
+
+      // Se falhar com 9101 (OCR de tags ainda em processamento no backend do Zoho), aguarda mais 2s e retenta
+      if (!submitRes.ok) {
+        const initialErr = await submitRes.text();
+        if (initialErr.includes("9101") || initialErr.includes("signatário") || initialErr.includes("signer")) {
+          console.log("⏳ Aguardando mais 2s para o Zoho Sign concluir o processamento das Text Tags...");
+          await new Promise((resolve) => setTimeout(resolve, 2000));
+          submitRes = await fetch(`${apiUrl}/requests/${requestId}/submit`, {
+            method: "POST",
+            headers: {
+              Authorization: `Zoho-oauthtoken ${accessToken}`,
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: submitParams.toString(),
+          });
+        }
+      }
 
       // Se não aceitar com inprogress, tenta com requests vazio
       if (!submitRes.ok && submitRes.status === 400) {

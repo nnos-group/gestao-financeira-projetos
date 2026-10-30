@@ -776,21 +776,21 @@ export async function gerarPdfOficialBm(dados: BmPdfDados): Promise<Uint8Array> 
     y: sY - signBoxH,
     width: boxW,
     height: signBoxH,
-    color: cBgLight,
+    color: cWhite, // Fundo branco puro para harmonizar perfeitamente com a estampa de assinatura do Zoho Sign sem borda branca contrastante
     borderColor: rgb(0.86, 0.92, 0.98),
     borderWidth: 1,
   });
 
   page.drawText("ASSINATURA DO PRESTADOR", { x: b1X + 8, y: sY - 14, size: 6.8, font: fontBold, color: cNavyHeader });
 
-  // Text Tags Zoho Sign: Assinatura e Data posicionadas verticalmente
-  page.drawText("{{Signature:Recipient2*}}", { x: b1X + 10, y: sY - 42, size: 10, font: fontRegular, color: cBgLight });
-  page.drawText("{{Signdate:Recipient2*}}", { x: b1X + 10, y: sY - 64, size: 8, font: fontRegular, color: cBgLight });
+  // Text Tags Zoho Sign Ampliadas: Altura escala com fontsize (20) e largura com espaços para área generosa
+  page.drawText("{{Signature:Recipient2*                  }}", { x: b1X + 10, y: sY - 46, size: 20, font: fontRegular, color: cWhite });
+  page.drawText("{{Signdate:Recipient2*      }}", { x: b1X + 10, y: sY - 67, size: 8.5, font: fontRegular, color: cWhite });
 
-  page.drawLine({ start: { x: b1X + 8, y: sY - 78 }, end: { x: b1X + boxW - 8, y: sY - 78 }, color: cBorder, thickness: 0.5 });
-  page.drawText(dados.consultorNome, { x: b1X + 8, y: sY - 90, size: 7.5, font: fontBold, color: cDark });
-  page.drawText(`Razão Social: ${razaoSocial}`, { x: b1X + 8, y: sY - 100, size: 5.5, font: fontRegular, color: cMuted });
-  page.drawText(`CNPJ: ${cnpj}`, { x: b1X + 8, y: sY - 108, size: 5.5, font: fontRegular, color: cMuted });
+  page.drawLine({ start: { x: b1X + 8, y: sY - 76 }, end: { x: b1X + boxW - 8, y: sY - 76 }, color: cBorder, thickness: 0.5 });
+  page.drawText(dados.consultorNome, { x: b1X + 8, y: sY - 88, size: 7.5, font: fontBold, color: cDark });
+  page.drawText(`Razão Social: ${razaoSocial}`, { x: b1X + 8, y: sY - 98, size: 5.5, font: fontRegular, color: cMuted });
+  page.drawText(`CNPJ: ${cnpj}`, { x: b1X + 8, y: sY - 106, size: 5.5, font: fontRegular, color: cMuted });
 
   // -------------------------------------------------------------------------
   // CAIXA 2: VALIDAÇÃO DO LÍDER DE PROJETO (RECIPIENT 1)
@@ -801,20 +801,20 @@ export async function gerarPdfOficialBm(dados: BmPdfDados): Promise<Uint8Array> 
     y: sY - signBoxH,
     width: boxW,
     height: signBoxH,
-    color: cBgLight,
+    color: cWhite, // Fundo branco puro
     borderColor: rgb(0.86, 0.92, 0.98),
     borderWidth: 1,
   });
 
   page.drawText("VALIDAÇÃO DO LÍDER DE PROJETO", { x: b2X + 8, y: sY - 14, size: 6.8, font: fontBold, color: cNavyHeader });
 
-  // Text Tags Zoho Sign: Assinatura e Data do Líder
-  page.drawText("{{Signature:Recipient1*}}", { x: b2X + 10, y: sY - 42, size: 10, font: fontRegular, color: cBgLight });
-  page.drawText("{{Signdate:Recipient1*}}", { x: b2X + 10, y: sY - 64, size: 8, font: fontRegular, color: cBgLight });
+  // Text Tags Zoho Sign Ampliadas: Líder de Projeto
+  page.drawText("{{Signature:Recipient1*                  }}", { x: b2X + 10, y: sY - 46, size: 20, font: fontRegular, color: cWhite });
+  page.drawText("{{Signdate:Recipient1*      }}", { x: b2X + 10, y: sY - 67, size: 8.5, font: fontRegular, color: cWhite });
 
-  page.drawLine({ start: { x: b2X + 8, y: sY - 78 }, end: { x: b2X + boxW - 8, y: sY - 78 }, color: cBorder, thickness: 0.5 });
-  page.drawText(dados.liderNome || "Beatriz Picorelli", { x: b2X + 8, y: sY - 90, size: 7.5, font: fontBold, color: cDark });
-  page.drawText("Liderança de Projeto • NNÓS Consultoria", { x: b2X + 8, y: sY - 102, size: 5.6, font: fontRegular, color: cMuted });
+  page.drawLine({ start: { x: b2X + 8, y: sY - 76 }, end: { x: b2X + boxW - 8, y: sY - 76 }, color: cBorder, thickness: 0.5 });
+  page.drawText(dados.liderNome || "Beatriz Picorelli", { x: b2X + 8, y: sY - 88, size: 7.5, font: fontBold, color: cDark });
+  page.drawText("Liderança de Projeto • NNÓS Consultoria", { x: b2X + 8, y: sY - 100, size: 5.6, font: fontRegular, color: cMuted });
 
   // -------------------------------------------------------------------------
   // CAIXA 3: VALIDAÇÃO DA COORDENAÇÃO GERAL (RECIPIENT 3)
@@ -825,20 +825,20 @@ export async function gerarPdfOficialBm(dados: BmPdfDados): Promise<Uint8Array> 
     y: sY - signBoxH,
     width: boxW,
     height: signBoxH,
-    color: cBgLight,
+    color: cWhite, // Fundo branco puro
     borderColor: rgb(0.86, 0.92, 0.98),
     borderWidth: 1,
   });
 
   page.drawText("VALIDAÇÃO DA COORDENAÇÃO", { x: b3X + 8, y: sY - 14, size: 6.8, font: fontBold, color: cNavyHeader });
 
-  // Text Tags Zoho Sign: Assinatura e Data da Coordenação
-  page.drawText("{{Signature:Recipient3*}}", { x: b3X + 10, y: sY - 42, size: 10, font: fontRegular, color: cBgLight });
-  page.drawText("{{Signdate:Recipient3*}}", { x: b3X + 10, y: sY - 64, size: 8, font: fontRegular, color: cBgLight });
+  // Text Tags Zoho Sign Ampliadas: Coordenação
+  page.drawText("{{Signature:Recipient3*                  }}", { x: b3X + 10, y: sY - 46, size: 20, font: fontRegular, color: cWhite });
+  page.drawText("{{Signdate:Recipient3*      }}", { x: b3X + 10, y: sY - 67, size: 8.5, font: fontRegular, color: cWhite });
 
-  page.drawLine({ start: { x: b3X + 8, y: sY - 78 }, end: { x: b3X + boxW - 8, y: sY - 78 }, color: cBorder, thickness: 0.5 });
-  page.drawText(dados.responsavelNome || "Marcelo Lara da Silva", { x: b3X + 8, y: sY - 90, size: 7.5, font: fontBold, color: cDark });
-  page.drawText("Coordenação Operacional & Projetos • NNÓS", { x: b3X + 8, y: sY - 102, size: 5.6, font: fontRegular, color: cMuted });
+  page.drawLine({ start: { x: b3X + 8, y: sY - 76 }, end: { x: b3X + boxW - 8, y: sY - 76 }, color: cBorder, thickness: 0.5 });
+  page.drawText(dados.responsavelNome || "Marcelo Lara da Silva", { x: b3X + 8, y: sY - 88, size: 7.5, font: fontBold, color: cDark });
+  page.drawText("Coordenação Operacional & Projetos • NNÓS", { x: b3X + 8, y: sY - 100, size: 5.6, font: fontRegular, color: cMuted });
 
   y -= (signSecH + 8);
 

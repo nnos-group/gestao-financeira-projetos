@@ -531,8 +531,8 @@ export default function BmExportPdfSheet({ bm }: BmExportPdfSheetProps) {
             {/* 3 Caixas de Assinatura Independentes Lado a Lado (Idêntico ao Print 1) */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px" }}>
               {/* CAIXA 1: ASSINATURA DO PRESTADOR */}
-              <div style={{ border: "1px solid #dbeafe", backgroundColor: "#f8fafc", borderRadius: "8px", padding: "6px 8px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: "3px", borderBottom: "1px solid #e2e8f0" }}>
+              <div style={{ border: "1px solid #e2e8f0", backgroundColor: "#ffffff", borderRadius: "8px", padding: "6px 8px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: "3px", borderBottom: "1px solid #f1f5f9" }}>
                   <span style={{ fontSize: "7.5px", textTransform: "uppercase", fontWeight: 700, color: "#0f2a4a" }}>Assinatura do Prestador</span>
                   {logPrestador?.status === "Assinado" ? (
                     <span style={{ fontSize: "6.5px", backgroundColor: "#d1fae5", color: "#065f46", fontWeight: 700, padding: "1px 3px", borderRadius: "3px", display: "flex", alignItems: "center", gap: "2px" }}>
@@ -546,22 +546,22 @@ export default function BmExportPdfSheet({ bm }: BmExportPdfSheetProps) {
                   )}
                 </div>
 
-                <div style={{ textAlign: "center", padding: "2px 0" }}>
+                <div style={{ textAlign: "center", padding: "4px 0" }}>
                   {logPrestador?.status === "Assinado" ? (
-                    <p style={{ fontFamily: "'Caveat', cursive", fontSize: "15px", color: "#1e293b", letterSpacing: "0.02em", userSelect: "none", margin: 0, lineHeight: 1.1 }}>
+                    <p style={{ fontFamily: "'Caveat', cursive", fontSize: "16px", color: "#1e293b", letterSpacing: "0.02em", userSelect: "none", margin: 0, lineHeight: 1.2 }}>
                       {formatarNomeAssinatura(bm.consultorNome)}
                     </p>
                   ) : (
-                    <div style={{ height: "18px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div style={{ height: "30px", display: "flex", alignItems: "center", justifyContent: "center" }}>
                       <span style={{ fontSize: "7.5px", color: "#94a3b8", fontStyle: "italic" }}>Espaço reservado para assinatura eletrônica</span>
                     </div>
                   )}
-                  <div style={{ width: "100px", height: "1px", backgroundColor: "#cbd5e1", margin: "3px auto" }}></div>
+                  <div style={{ width: "100px", height: "1px", backgroundColor: "#cbd5e1", margin: "4px auto 3px auto" }}></div>
                   <p style={{ fontSize: "8px", fontWeight: 700, color: "#0f172a", margin: "1px 0 0 0" }}>{bm.consultorNome}</p>
                   <p style={{ fontSize: "6.5px", color: "#64748b", margin: 0 }}>Razão Social: {razaoSocial} • CNPJ: {cnpj}</p>
                 </div>
 
-                <div style={{ paddingTop: "3px", borderTop: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", fontSize: "6.5px", color: "#64748b" }}>
+                <div style={{ paddingTop: "3px", borderTop: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between", fontSize: "6.5px", color: "#64748b" }}>
                   <span>
                     {logPrestador?.detalhe?.includes("IP:")
                       ? logPrestador.detalhe.split("•")[0].trim()
@@ -576,8 +576,8 @@ export default function BmExportPdfSheet({ bm }: BmExportPdfSheetProps) {
               </div>
 
               {/* CAIXA 2: VALIDAÇÃO DO LÍDER DE PROJETO */}
-              <div style={{ border: "1px solid #dbeafe", backgroundColor: "#f8fafc", borderRadius: "8px", padding: "6px 8px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: "3px", borderBottom: "1px solid #e2e8f0" }}>
+              <div style={{ border: "1px solid #e2e8f0", backgroundColor: "#ffffff", borderRadius: "8px", padding: "6px 8px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: "3px", borderBottom: "1px solid #f1f5f9" }}>
                   <span style={{ fontSize: "7.5px", textTransform: "uppercase", fontWeight: 700, color: "#0f2a4a" }}>Validação do Líder de Projeto</span>
                   {(logLider?.status === "Assinado" || bm.status.includes("Aprovado")) ? (
                     <span style={{ fontSize: "6.5px", backgroundColor: "#d1fae5", color: "#065f46", fontWeight: 700, padding: "1px 3px", borderRadius: "3px", display: "flex", alignItems: "center", gap: "2px" }}>
@@ -591,22 +591,22 @@ export default function BmExportPdfSheet({ bm }: BmExportPdfSheetProps) {
                   )}
                 </div>
 
-                <div style={{ textAlign: "center", padding: "2px 0" }}>
+                <div style={{ textAlign: "center", padding: "4px 0" }}>
                   {(logLider?.status === "Assinado" || bm.status.includes("Aprovado")) ? (
-                    <p style={{ fontFamily: "'Caveat', cursive", fontSize: "15px", color: "#1e293b", letterSpacing: "0.02em", userSelect: "none", margin: 0, lineHeight: 1.1 }}>
+                    <p style={{ fontFamily: "'Caveat', cursive", fontSize: "16px", color: "#1e293b", letterSpacing: "0.02em", userSelect: "none", margin: 0, lineHeight: 1.2 }}>
                       {formatarNomeAssinatura(bm.liderProjetoNome || "Beatriz Picorelli")}
                     </p>
                   ) : (
-                    <div style={{ height: "18px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div style={{ height: "30px", display: "flex", alignItems: "center", justifyContent: "center" }}>
                       <span style={{ fontSize: "7.5px", color: "#94a3b8", fontStyle: "italic" }}>Espaço reservado para validação técnica</span>
                     </div>
                   )}
-                  <div style={{ width: "100px", height: "1px", backgroundColor: "#cbd5e1", margin: "3px auto" }}></div>
+                  <div style={{ width: "100px", height: "1px", backgroundColor: "#cbd5e1", margin: "4px auto 3px auto" }}></div>
                   <p style={{ fontSize: "8px", fontWeight: 700, color: "#0f172a", margin: "1px 0 0 0" }}>{(bm.liderProjetoNome || "Beatriz Picorelli").toUpperCase()}</p>
                   <p style={{ fontSize: "6.5px", color: "#64748b", margin: 0 }}>Liderança de Projeto • NNÓS Consultoria</p>
                 </div>
 
-                <div style={{ paddingTop: "3px", borderTop: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", fontSize: "6.5px", color: "#64748b" }}>
+                <div style={{ paddingTop: "3px", borderTop: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between", fontSize: "6.5px", color: "#64748b" }}>
                   <span>Aprovação Técnica Operacional</span>
                   <span>
                     Data: {logLider?.dataHora && !logLider?.dataHora.includes("via Zoho")
@@ -617,8 +617,8 @@ export default function BmExportPdfSheet({ bm }: BmExportPdfSheetProps) {
               </div>
 
               {/* CAIXA 3: VALIDAÇÃO DA COORDENAÇÃO GERAL */}
-              <div style={{ border: "1px solid #dbeafe", backgroundColor: "#f8fafc", borderRadius: "8px", padding: "6px 8px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: "3px", borderBottom: "1px solid #e2e8f0" }}>
+              <div style={{ border: "1px solid #e2e8f0", backgroundColor: "#ffffff", borderRadius: "8px", padding: "6px 8px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: "3px", borderBottom: "1px solid #f1f5f9" }}>
                   <span style={{ fontSize: "7.5px", textTransform: "uppercase", fontWeight: 700, color: "#0f2a4a" }}>Validação da Coordenação</span>
                   {(logCoord?.status === "Assinado" || bm.status.includes("Aprovado")) ? (
                     <span style={{ fontSize: "6.5px", backgroundColor: "#d1fae5", color: "#065f46", fontWeight: 700, padding: "1px 3px", borderRadius: "3px", display: "flex", alignItems: "center", gap: "2px" }}>
@@ -632,22 +632,22 @@ export default function BmExportPdfSheet({ bm }: BmExportPdfSheetProps) {
                   )}
                 </div>
 
-                <div style={{ textAlign: "center", padding: "2px 0" }}>
+                <div style={{ textAlign: "center", padding: "4px 0" }}>
                   {(logCoord?.status === "Assinado" || bm.status.includes("Aprovado")) ? (
-                    <p style={{ fontFamily: "'Caveat', cursive", fontSize: "15px", color: "#1e293b", letterSpacing: "0.02em", userSelect: "none", margin: 0, lineHeight: 1.1 }}>
+                    <p style={{ fontFamily: "'Caveat', cursive", fontSize: "16px", color: "#1e293b", letterSpacing: "0.02em", userSelect: "none", margin: 0, lineHeight: 1.2 }}>
                       {signatarioNnosNome}
                     </p>
                   ) : (
-                    <div style={{ height: "18px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div style={{ height: "30px", display: "flex", alignItems: "center", justifyContent: "center" }}>
                       <span style={{ fontSize: "7.5px", color: "#94a3b8", fontStyle: "italic" }}>Espaço reservado para validação operacional</span>
                     </div>
                   )}
-                  <div style={{ width: "100px", height: "1px", backgroundColor: "#cbd5e1", margin: "3px auto" }}></div>
+                  <div style={{ width: "100px", height: "1px", backgroundColor: "#cbd5e1", margin: "4px auto 3px auto" }}></div>
                   <p style={{ fontSize: "8px", fontWeight: 700, color: "#0f172a", margin: "1px 0 0 0" }}>{signatarioNnosUpper}</p>
-                  <p style={{ fontSize: "6.5px", color: "#64748b", margin: 0 }}>Coordenação Operacional & Projetos • NNÓS</p>
+                  <p style={{ fontSize: "6.5px", color: "#64748b", margin: 0 }}>Coordenação Operacional &amp; Projetos • NNÓS</p>
                 </div>
 
-                <div style={{ paddingTop: "3px", borderTop: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", fontSize: "6.5px", color: "#64748b" }}>
+                <div style={{ paddingTop: "3px", borderTop: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between", fontSize: "6.5px", color: "#64748b" }}>
                   <span>{bm.zohoRequestId ? `Zoho Sign: ${bm.zohoRequestId.slice(0, 15)}...` : "Validação Operacional NNÓS"}</span>
                   <span>
                     Data: {logCoord?.dataHora && !logCoord?.dataHora.includes("via Zoho")
