@@ -1,5 +1,314 @@
 [
   {
+    "id": "bm-0912-1793372000000",
+    "codigo": "0912",
+    "consultorNome": "ADILSON PASINI",
+    "consultorRazaoSocial": "ADILSON PASINI - ME",
+    "consultorCnpj": "22.164.796/0001-50",
+    "consultorEmail": "adilson.pasini@gmail.com",
+    "consultorEndereco": "RUA AUGUSTO RENOIR 460 SOB 13 CEP 81510-420 GUABIROTUBA CURITIBA/PR",
+    "contrato": "2023.0003",
+    "mesReferencia": "Outubro / 2026",
+    "periodoTipo": "Integral",
+    "dataCorte": "20/10/2026",
+    "totalHoras": 40,
+    "valorTotal": 4200,
+    "mediaHora": 105,
+    "status": "Aprovado & Pronto p/ Faturamento",
+    "dataEnvio": "30/10/2026 às 10:58:52",
+    "liderProjetoNome": "Beatriz Picorelli",
+    "liderProjetoEmail": "beatriz.picorelli@nnos.com.br",
+    "responsavelNnosNome": "Marcelo Lara da Silva",
+    "responsavelNnosEmail": "marcelo.lara@nnos.com.br",
+    "copiaEmails": "leonardo.campos@nnos.com.br",
+    "zohoRequestId": "2EEBEA08-K5QBLNGYWF0LKKNBUCSUU8UTDAE6TPAO1LOPHIWV4FC",
+    "zohoDocumentId": "2EEBEA08-K5QBLNGYWF0LKKNBUCSUU8UTDAE6TPAO1LOPHIWV4FC",
+    "logs": [
+      {
+        "signatario": "Adilson Pasini",
+        "papel": "Prestador de Serviços",
+        "email": "adilson.pasini@gmail.com",
+        "status": "Assinado",
+        "dataHora": "30/10/2026 10:58:52 (Assinado)",
+        "detalhe": "Zoho Sign ID: 2EEBEA08-K5QBLNGYWF0LKKNBUCSUU8UTDAE6TPAO1LOPHIWV4FC"
+      },
+      {
+        "signatario": "MARCELO LARA DA SILVA",
+        "papel": "Responsável NNÓS (Coordenação Geral)",
+        "email": "marcelo.lara@nnos.com.br",
+        "status": "Assinado",
+        "dataHora": "30/10/2026 10:58:52 (Homologado)",
+        "detalhe": "Homologação financeira para faturamento e pagamento"
+      }
+    ],
+    "atividades": [
+      {
+        "centroCusto": "01.06.003.012",
+        "projeto": "PARTS ACADEMY",
+        "atividade": "EXCELÊNCIA EM VENDAS DE PEÇAS I e II",
+        "periodo": "19/10/2026 a 23/10/2026",
+        "dataInicial": "2026-10-19",
+        "dataFinal": "2026-10-23",
+        "horas": 20,
+        "valorHora": 105,
+        "valorTotal": 2100,
+        "rateioInterno": "45,93%",
+        "liderProjeto": "Beatriz Picorelli",
+        "liderEmail": "beatriz.picorelli@nnos.com.br"
+      },
+      {
+        "centroCusto": "01.06.003.012",
+        "projeto": "PARTS ACADEMY",
+        "atividade": "EXCELÊNCIA EM VENDAS DE PEÇAS II",
+        "periodo": "19/10/2026 a 23/10/2026",
+        "dataInicial": "2026-10-19",
+        "dataFinal": "2026-10-23",
+        "horas": 20,
+        "valorHora": 105,
+        "valorTotal": 2100,
+        "rateioInterno": "45,93%",
+        "liderProjeto": "Beatriz Picorelli",
+        "liderEmail": "beatriz.picorelli@nnos.com.br"
+      }
+    ]
+  },
+  {
+    "id": "bm-0911-1793372000000",
+    "codigo": "0911",
+    "consultorNome": "LILIA OLIVEIRA",
+    "consultorRazaoSocial": "CONSULIS CONSULTORIA LTDA",
+    "consultorCnpj": "09.024.198/0001-18",
+    "consultorEmail": "Consultoria.consulis@gmail.com",
+    "consultorEndereco": "RUA DOMINGOS GARCIA,120 Apto. 302, SÃO JOÃO BATISTA - BELO HORIZONTE - MG - CEP 31520-200.",
+    "contrato": "2023.0001",
+    "mesReferencia": "Outubro / 2026",
+    "periodoTipo": "2ª Quinzena",
+    "dataCorte": "20/10/2026",
+    "totalHoras": 16,
+    "valorTotal": 1760,
+    "mediaHora": 110,
+    "status": "Aprovado & Pronto p/ Faturamento",
+    "dataEnvio": "30/10/2026 às 10:56:59",
+    "liderProjetoNome": "Beatriz Picorelli",
+    "liderProjetoEmail": "beatriz.picorelli@nnos.com.br",
+    "responsavelNnosNome": "Marcelo Lara da Silva",
+    "responsavelNnosEmail": "marcelo.lara@nnos.com.br",
+    "copiaEmails": "leonardo.campos@nnos.com.br",
+    "zohoRequestId": "2EEBEA08-3EJFDJ9HJZQYVAA8MWWY6J_RKVHEOFHD4PP1NNUWBTS",
+    "zohoDocumentId": "2EEBEA08-3EJFDJ9HJZQYVAA8MWWY6J_RKVHEOFHD4PP1NNUWBTS",
+    "logs": [
+      {
+        "signatario": "Lilia Oliveira",
+        "papel": "Prestador de Serviços",
+        "email": "Consultoria.consulis@gmail.com",
+        "status": "Assinado",
+        "dataHora": "30/10/2026 10:56:59 (Assinado)",
+        "detalhe": "Zoho Sign ID: 2EEBEA08-3EJFDJ9HJZQYVAA8MWWY6J_RKVHEOFHD4PP1NNUWBTS"
+      },
+      {
+        "signatario": "MARCELO LARA DA SILVA",
+        "papel": "Responsável NNÓS (Coordenação Geral)",
+        "email": "marcelo.lara@nnos.com.br",
+        "status": "Assinado",
+        "dataHora": "30/10/2026 10:56:59 (Homologado)",
+        "detalhe": "Homologação financeira para faturamento e pagamento"
+      }
+    ],
+    "atividades": [
+      {
+        "centroCusto": "01.06.003.014",
+        "projeto": "TREINAMENTO COMERCIAL",
+        "atividade": "NEGOCIACIONES Y TÁCTICAS DE VENTAS",
+        "periodo": "22/10/2026 a 23/10/2026",
+        "dataInicial": "2026-10-22",
+        "dataFinal": "2026-10-23",
+        "horas": 16,
+        "valorHora": 110,
+        "valorTotal": 1760,
+        "rateioInterno": "48,11%",
+        "liderProjeto": "Beatriz Picorelli",
+        "liderEmail": "beatriz.picorelli@nnos.com.br"
+      }
+    ]
+  },
+  {
+    "id": "bm-0910-1793372000000",
+    "codigo": "0910",
+    "consultorNome": "ALEJANDRO LAPUENTE",
+    "consultorRazaoSocial": "ALEJANDRO DANIEL LAPUENTE DURANTE",
+    "consultorCnpj": "24.317.138/0001-87",
+    "consultorEmail": "alejandrolapuente@hotmail.com",
+    "consultorEndereco": "R PROFESSOR BENEDITO CONCEICAO, 730 CASA A, CAPAO DA IMBUIA - CURITIBA - PR - CEP 82.810-080",
+    "contrato": "2023.0005",
+    "mesReferencia": "Outubro / 2026",
+    "periodoTipo": "2ª Quinzena",
+    "dataCorte": "20/10/2026",
+    "totalHoras": 32,
+    "valorTotal": 4640,
+    "mediaHora": 145,
+    "status": "Aprovado & Pronto p/ Faturamento",
+    "dataEnvio": "30/10/2026 às 10:56:36",
+    "liderProjetoNome": "Beatriz Picorelli",
+    "liderProjetoEmail": "beatriz.picorelli@nnos.com.br",
+    "responsavelNnosNome": "Marcelo Lara da Silva",
+    "responsavelNnosEmail": "marcelo.lara@nnos.com.br",
+    "copiaEmails": "leonardo.campos@nnos.com.br",
+    "zohoRequestId": "2EEBEA08-SWRIKNLXHZRG6-LWQGYL0TM3TR_-QCDJM2XAATPGK0A",
+    "zohoDocumentId": "2EEBEA08-SWRIKNLXHZRG6-LWQGYL0TM3TR_-QCDJM2XAATPGK0A",
+    "logs": [
+      {
+        "signatario": "Alejandro Daniel Lapuente Durante",
+        "papel": "Prestador de Serviços",
+        "email": "alejandrolapuente@hotmail.com",
+        "status": "Assinado",
+        "dataHora": "30/10/2026 10:56:36 (Assinado)",
+        "detalhe": "Zoho Sign ID: 2EEBEA08-SWRIKNLXHZRG6-LWQGYL0TM3TR_-QCDJM2XAATPGK0A"
+      },
+      {
+        "signatario": "MARCELO LARA DA SILVA",
+        "papel": "Responsável NNÓS (Coordenação Geral)",
+        "email": "marcelo.lara@nnos.com.br",
+        "status": "Assinado",
+        "dataHora": "30/10/2026 10:56:36 (Homologado)",
+        "detalhe": "Homologação financeira para faturamento e pagamento"
+      }
+    ],
+    "atividades": [
+      {
+        "centroCusto": "01.06.005.031",
+        "projeto": "IVECO ACADEMY",
+        "atividade": "WORKSHOP GARANTIA E NEGOCIAÇÃO DE CONFLITOS",
+        "periodo": "20/10/2026 a 21/10/2026",
+        "dataInicial": "2026-10-20",
+        "dataFinal": "2026-10-21",
+        "horas": 32,
+        "valorHora": 145,
+        "valorTotal": 4640,
+        "rateioInterno": "0,00%",
+        "liderProjeto": "Beatriz Picorelli",
+        "liderEmail": "beatriz.picorelli@nnos.com.br"
+      }
+    ]
+  },
+  {
+    "id": "bm-0921-1793372000000",
+    "codigo": "0921",
+    "consultorNome": "FLÁVIO SOUZA",
+    "consultorRazaoSocial": "FLAVIO QUADROS DE SOUZA",
+    "consultorCnpj": "66.727.474/0001-48",
+    "consultorEmail": "flavio.sousa56@hotmail.com",
+    "consultorEndereco": "RUA SANTOS DUMONT, 46, APT 706, CENTRO, CEP 95900-072, LAJEADO - RS",
+    "contrato": "2026.0043",
+    "mesReferencia": "Outubro / 2026",
+    "periodoTipo": "Integral",
+    "dataCorte": "20/10/2026",
+    "totalHoras": 96,
+    "valorTotal": 12000,
+    "mediaHora": 125,
+    "status": "Aprovado & Pronto p/ Faturamento",
+    "dataEnvio": "30/10/2026 às 11:09:01",
+    "liderProjetoNome": "Beatriz Picorelli",
+    "liderProjetoEmail": "beatriz.picorelli@nnos.com.br",
+    "responsavelNnosNome": "Marcelo Lara da Silva",
+    "responsavelNnosEmail": "marcelo.lara@nnos.com.br",
+    "copiaEmails": "leonardo.campos@nnos.com.br",
+    "zohoRequestId": "2EEBEA08-QGSD0DAHHTXX1U0UBQD01JQM5KUSJQZCY4SC0YMFLWK",
+    "zohoDocumentId": "2EEBEA08-QGSD0DAHHTXX1U0UBQD01JQM5KUSJQZCY4SC0YMFLWK",
+    "logs": [
+      {
+        "signatario": "Flavio Quadros de Souza",
+        "papel": "Prestador de Serviços",
+        "email": "flavio.sousa56@hotmail.com",
+        "status": "Assinado",
+        "dataHora": "30/10/2026 11:09:01 (Assinado)",
+        "detalhe": "Zoho Sign ID: 2EEBEA08-QGSD0DAHHTXX1U0UBQD01JQM5KUSJQZCY4SC0YMFLWK"
+      },
+      {
+        "signatario": "MARCELO LARA DA SILVA",
+        "papel": "Responsável NNÓS (Coordenação Geral)",
+        "email": "marcelo.lara@nnos.com.br",
+        "status": "Assinado",
+        "dataHora": "30/10/2026 11:09:01 (Homologado)",
+        "detalhe": "Homologação financeira para faturamento e pagamento"
+      }
+    ],
+    "atividades": [
+      {
+        "centroCusto": "01.06.001.071",
+        "projeto": "PROJETO ESPECIAL 01",
+        "atividade": "INSTRUTOR DEDICADO",
+        "periodo": "01/10/2026 a 31/10/2026",
+        "dataInicial": "2026-10-01",
+        "dataFinal": "2026-10-31",
+        "horas": 96,
+        "valorHora": 125,
+        "valorTotal": 12000,
+        "rateioInterno": "54,68%",
+        "liderProjeto": "Beatriz Picorelli",
+        "liderEmail": "beatriz.picorelli@nnos.com.br"
+      }
+    ]
+  },
+  {
+    "id": "bm-0927-1793372000000",
+    "codigo": "0927",
+    "consultorNome": "MARISTELA GARCIA",
+    "consultorRazaoSocial": "SÓCIO",
+    "consultorCnpj": "36.443.716/0001-00",
+    "consultorEmail": "maristela.garcia@nnos.com.br",
+    "consultorEndereco": "Rua Sergipe, nº 77 - Loja 1, Boa Viagem, Belo Horizonte, MG",
+    "contrato": "SÓCIO",
+    "mesReferencia": "Outubro / 2026",
+    "periodoTipo": "Integral",
+    "dataCorte": "20/10/2026",
+    "totalHoras": 24,
+    "valorTotal": 2936.17,
+    "mediaHora": 122.34,
+    "status": "Aprovado & Pronto p/ Faturamento",
+    "dataEnvio": "30/10/2026 às 11:16:24",
+    "liderProjetoNome": "Beatriz Picorelli",
+    "liderProjetoEmail": "beatriz.picorelli@nnos.com.br",
+    "responsavelNnosNome": "Marcelo Lara da Silva",
+    "responsavelNnosEmail": "marcelo.lara@nnos.com.br",
+    "copiaEmails": "leonardo.campos@nnos.com.br",
+    "zohoRequestId": "2EEBEA08-WEH2WRJDVNKBJVV4SV_NRGUIOXWFC3FZRN6R3VY1JHC",
+    "zohoDocumentId": "2EEBEA08-WEH2WRJDVNKBJVV4SV_NRGUIOXWFC3FZRN6R3VY1JHC",
+    "logs": [
+      {
+        "signatario": "Maristela Garcia",
+        "papel": "Prestador de Serviços",
+        "email": "maristela.garcia@nnos.com.br",
+        "status": "Assinado",
+        "dataHora": "30/10/2026 11:16:24 (Assinado)",
+        "detalhe": "Zoho Sign ID: 2EEBEA08-WEH2WRJDVNKBJVV4SV_NRGUIOXWFC3FZRN6R3VY1JHC"
+      },
+      {
+        "signatario": "MARCELO LARA DA SILVA",
+        "papel": "Responsável NNÓS (Coordenação Geral)",
+        "email": "marcelo.lara@nnos.com.br",
+        "status": "Assinado",
+        "dataHora": "30/10/2026 11:16:24 (Homologado)",
+        "detalhe": "Homologação financeira para faturamento e pagamento"
+      }
+    ],
+    "atividades": [
+      {
+        "centroCusto": "01.06.003.012",
+        "projeto": "PARTS ACADEMY",
+        "atividade": "FUNDAMENTOS FINANCEIROS PARA GESTÃO",
+        "periodo": "14/10/2026 a 16/10/2026",
+        "dataInicial": "2026-10-14",
+        "dataFinal": "2026-10-16",
+        "horas": 24,
+        "valorHora": 122.34,
+        "valorTotal": 2936.17,
+        "rateioInterno": "53,51%",
+        "liderProjeto": "Beatriz Picorelli",
+        "liderEmail": "beatriz.picorelli@nnos.com.br"
+      }
+    ]
+  },
+  {
     "id": "bm-0920-1793372000000",
     "codigo": "0920",
     "consultorNome": "FELIPE MARTINS",
