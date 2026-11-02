@@ -1,15 +1,6 @@
 <!DOCTYPE html>
-<html class="light" lang="pt-BR">
+<html class="dark" lang="pt-BR">
 <head>
-  <script>
-    try {
-      sessionStorage.setItem('nnos_auth', 'true');
-      localStorage.setItem('nnos_theme', 'light');
-      document.documentElement.classList.remove('dark');
-      document.documentElement.classList.add('light');
-    } catch(e) {}
-  </script>
-
 <base href="https://nnos-group.github.io/relatorio-financeiro-nnos-2026/">
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
@@ -283,7 +274,7 @@
 
 <script>
   (function() {
-    const saved = 'light';
+    const saved = localStorage.getItem('nnos_theme') || 'dark';
     if (saved === 'light') {
       document.documentElement.classList.remove('dark');
       document.documentElement.classList.add('light');
@@ -292,9 +283,12 @@
       document.documentElement.classList.add('dark');
     }
   })();
-  /* auth check disabled for internal portal */
+  if (sessionStorage.getItem('nnos_auth') !== 'true') {
+    window.location.href = 'index.html';
+  }
   function logout() {
-    window.location.href = '/relatorios';
+    sessionStorage.removeItem('nnos_auth');
+    window.location.href = 'index.html';
   }
 </script>
 </head>
@@ -942,8 +936,8 @@ document.addEventListener('keydown', function(e) {
   }
 
   (function() {
-    const saved = 'light';
-    applyTheme('light');
+    const saved = localStorage.getItem('nnos_theme') || 'dark';
+    applyTheme(saved);
   })();
 </script>
 </body>
