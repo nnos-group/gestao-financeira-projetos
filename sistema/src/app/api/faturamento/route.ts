@@ -96,9 +96,17 @@ export async function GET() {
           // Extrair ano e mês da competência (ex: "2026-11-01" ou "2026-12-01")
           const partesComp = comp.split("-");
           const mesNum = parseInt(partesComp[1] || "1", 10);
-          // REGRA DE NEGÓCIO: Preservar estritamente o histórico faturado da planilha (Jan a Out)
-          // Aplicar a integração APENAS para os lançamentos previstos de Novembro (11) e Dezembro (12)
-          if (mesNum < 11) {
+          // REGRA DE NEGÓCIO: Preservar estritamente o faturamento oficial da planilha.
+          // Novembro já possui todas as faturas emitidas e previstas na aba FATURAMENTO da planilha.
+          // Se o mês já possui registros de faturamento na planilha oficial, não gerar lançamentos automáticos de projetos para evitar duplicidade.
+          const mesNomeComp = MESES_MAP[mesNum];
+          const mesJaOficializadoNaPlanilha = faturasSalvas.some(
+            (f: any) =>
+              (f.realizado || "").toUpperCase() === mesNomeComp ||
+              (f.faturado || "").toUpperCase() === mesNomeComp
+          );
+
+          if (mesNum < 12 || mesJaOficializadoNaPlanilha) {
             return;
           }
 

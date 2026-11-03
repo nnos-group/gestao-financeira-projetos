@@ -299,9 +299,9 @@ export default function FaturamentoPage() {
           if (!item || item.id === "fat-709" || item.numeroNota === "TOTAL" || item.area === "-" || item.projeto === "TOTAL") {
             return false;
           }
-          // Preserva estritamente o histórico faturado da planilha (Jan a Out)
-          // Regra de projeto só é aplicada para Novembro e Dezembro
-          if (item.origemProjetos && item.realizado && item.realizado !== "NOVEMBRO" && item.realizado !== "DEZEMBRO") {
+          // Preserva estritamente o histórico faturado da planilha (Jan a Nov)
+          // Regra de projeto só é aplicada para Dezembro se necessário
+          if (item.origemProjetos && item.realizado && item.realizado !== "DEZEMBRO") {
             return false;
           }
           return true;
