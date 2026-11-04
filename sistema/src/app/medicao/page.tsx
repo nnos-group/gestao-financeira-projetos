@@ -436,18 +436,25 @@ export default function BoletimMedicaoPage() {
     return previewAtividades.reduce((acc, a) => acc + (a.valorTotal || 0), 0);
   }, [previewAtividades]);
 
-  // Filtro de BMs na tabela
+  // Filtro e ordenação decrescente por código (último BM emitido no topo visual)
   const bmsFiltrados = useMemo(() => {
-    return bmsLista.filter((b) => {
-      if (filtroStatus !== "Todos" && b.status !== filtroStatus) return false;
-      if (busca.trim()) {
-        const termo = busca.toLowerCase();
-        const nomeCurto = formatarNomeCurto(b.consultorNome, b.consultorCnpj);
-        const texto = `${b.codigo} ${b.consultorNome} ${nomeCurto} ${b.contrato} ${b.mesReferencia}`.toLowerCase();
-        if (!texto.includes(termo)) return false;
-      }
-      return true;
-    });
+    return bmsLista
+      .filter((b) => {
+        if (filtroStatus !== "Todos" && b.status !== filtroStatus) return false;
+        if (busca.trim()) {
+          const termo = busca.toLowerCase();
+          const nomeCurto = formatarNomeCurto(b.consultorNome, b.consultorCnpj);
+          const texto = `${b.codigo} ${b.consultorNome} ${nomeCurto} ${b.contrato} ${b.mesReferencia}`.toLowerCase();
+          if (!texto.includes(termo)) return false;
+        }
+        return true;
+      })
+      .sort((a, b) => {
+        const codA = parseInt(String(a.codigo || "").replace(/\D/g, ""), 10) || 0;
+        const codB = parseInt(String(b.codigo || "").replace(/\D/g, ""), 10) || 0;
+        if (codB !== codA) return codB - codA;
+        return String(b.codigo || "").localeCompare(String(a.codigo || ""));
+      });
   }, [bmsLista, busca, filtroStatus]);
 
   // Iniciar geração do BM a partir dos lançamentos da base de Projetos

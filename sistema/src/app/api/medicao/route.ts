@@ -293,6 +293,14 @@ export async function GET(request: Request) {
       console.warn("Aviso ao consultar Supabase em /api/medicao:", sbErr.message);
     }
 
+    // Ordenar sempre por código decrescente (maior número no topo)
+    bms.sort((a: any, b: any) => {
+      const codA = parseInt(String(a.codigo || "").replace(/\D/g, ""), 10) || 0;
+      const codB = parseInt(String(b.codigo || "").replace(/\D/g, ""), 10) || 0;
+      if (codB !== codA) return codB - codA;
+      return String(b.codigo || "").localeCompare(String(a.codigo || ""));
+    });
+
     return NextResponse.json(bms);
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
