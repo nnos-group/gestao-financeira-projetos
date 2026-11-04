@@ -58,7 +58,7 @@ interface BoletimMedicaoItem {
   atividades: AtividadeMedicao[];
 }
 
-const INITIAL_BMS: BoletimMedicaoItem[] = (bms2026Base as unknown as BoletimMedicaoItem[]).filter((b) => b.codigo !== "0912");
+const INITIAL_BMS: BoletimMedicaoItem[] = bms2026Base as unknown as BoletimMedicaoItem[];
 
 const CONSULTORES_DISPONIVEIS = (consultoresBase as any[])
   .filter((c: any) => c.ativo !== false)
@@ -119,10 +119,9 @@ export default function BoletimMedicaoPage() {
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {
-          const limpos = data.filter((b: any) => b.codigo !== "0912");
-          setBmsLista(limpos);
+          setBmsLista(data);
           try {
-            localStorage.setItem('nnos_bms_2026_v5', JSON.stringify(limpos));
+            localStorage.setItem('nnos_bms_2026_v5', JSON.stringify(data));
           } catch {}
         }
       })
@@ -133,8 +132,7 @@ export default function BoletimMedicaoPage() {
           if (local) {
             const parsed = JSON.parse(local);
             if (Array.isArray(parsed) && parsed.length > 0) {
-              const limposLocal = parsed.filter((b: any) => b.codigo !== "0912");
-              setBmsLista(limposLocal);
+              setBmsLista(parsed);
             }
           }
         } catch {}
