@@ -3,6 +3,8 @@
 import Link from "next/link";
 import React, { useState, useMemo, useEffect } from "react";
 import ThemeToggle from "@/components/ThemeToggle";
+import UserProfileHeader from "@/components/UserProfileHeader";
+import { usePerfilAcesso } from "@/contexts/PerfilAcessoContext";
 import pagamentosBase from "@/lib/pagamentos-base.json";
 import consultoresBase from "@/lib/consultores-base.json";
 import ccBase from "@/lib/centros-de-custo.json";
@@ -175,6 +177,7 @@ const MESES_NOMES = [
 const MESES_ABREV = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
 export default function PagamentosPage() {
+  const { perfilAtivoId, pertenceAoLiderAtivo } = usePerfilAcesso();
   const dataHoje = new Date();
   const mesAtualNome = MESES_NOMES[dataHoje.getMonth()] || "OUTUBRO";
 
@@ -559,6 +562,9 @@ export default function PagamentosPage() {
   // Filtragem
   const pagamentosFiltrados = useMemo(() => {
     return pagamentos.filter((p) => {
+      if (perfilAtivoId === "LIDER" && !pertenceAoLiderAtivo(p.projeto, p.centroCusto)) {
+        return false;
+      }
       if (filtroAno !== "TODOS") {
         const ano = (p.dataPagto || "").split("/")[2] || "2026";
         if (ano !== filtroAno) return false;
@@ -580,7 +586,7 @@ export default function PagamentosPage() {
       }
       return true;
     });
-  }, [pagamentos, filtroAno, filtroMes, filtroStatus, filtroTipo, categoriasSelecionadas, busca]);
+  }, [pagamentos, filtroAno, filtroMes, filtroStatus, filtroTipo, categoriasSelecionadas, busca, perfilAtivoId, pertenceAoLiderAtivo]);
 
   // Totais e KPIs calculados dinamicamente sobre o filtro
   const totais = useMemo(() => {
@@ -699,6 +705,7 @@ export default function PagamentosPage() {
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             <ThemeToggle />
+            <UserProfileHeader />
           </div>
         </header>
 

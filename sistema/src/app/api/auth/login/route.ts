@@ -4,7 +4,7 @@ import {
   salvarUsuarios,
   registrarLogSeguranca,
   gerarCodigoTotp,
-} from "@/app/api/admin/usuarios/route";
+} from "@/lib/usuarios-service";
 
 export async function POST(req: NextRequest) {
   try {
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     if (acao === "SOLICITAR_RECUPERACAO") {
       const identificador = String(body.identificador || "").trim().toLowerCase();
       const user = usuarios.find(
-        (u) =>
+        (u: any) =>
           String(u.login).toLowerCase() === identificador ||
           String(u.email).toLowerCase() === identificador ||
           String(u.nome).toLowerCase() === identificador
@@ -106,7 +106,7 @@ export async function POST(req: NextRequest) {
       }
 
       const idx = usuarios.findIndex(
-        (u) =>
+        (u: any) =>
           String(u.login).toLowerCase() === identificador ||
           String(u.email).toLowerCase() === identificador
       );
@@ -178,7 +178,7 @@ export async function POST(req: NextRequest) {
     const modoSomenteMfa = Boolean(body.modoSomenteMfa);
 
     const idx = usuarios.findIndex(
-      (u) =>
+      (u: any) =>
         String(u.login).toLowerCase() === identificador ||
         String(u.email).toLowerCase() === identificador ||
         String(u.nome).toLowerCase() === identificador

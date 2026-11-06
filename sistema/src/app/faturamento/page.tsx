@@ -3,6 +3,8 @@
 import Link from "next/link";
 import React, { useState, useMemo, useEffect } from "react";
 import ThemeToggle from "@/components/ThemeToggle";
+import UserProfileHeader from "@/components/UserProfileHeader";
+import { usePerfilAcesso } from "@/contexts/PerfilAcessoContext";
 import faturamentoBase from "@/lib/faturamento-base.json";
 import ccBase from "@/lib/centros-de-custo.json";
 import ModernDropdown from "@/components/ModernDropdown";
@@ -193,6 +195,7 @@ const MESES_ABREV = [
 ];
 
 export default function FaturamentoPage() {
+  const { perfilAtivoId, pertenceAoLiderAtivo } = usePerfilAcesso();
   const dataHoje = new Date();
   const mesAtualNome = MESES_NOMES[dataHoje.getMonth()] || "OUTUBRO";
 
@@ -527,6 +530,10 @@ export default function FaturamentoPage() {
   // Filtragem Robusta (Ano, Mês, Status, Vencido/A Vencer, Múltiplos Perfis, Área e Busca Textual)
   const faturamentosFiltrados = useMemo(() => {
     return faturamentos.filter((f) => {
+      // Filtro por Perfil de Acesso (Líder restrito aos seus projetos)
+      if (perfilAtivoId === "LIDER" && !pertenceAoLiderAtivo(f.projeto, f.centroCusto)) {
+        return false;
+      }
       // Filtro por Ano
       if (filtroAno !== "TODOS") {
         const anoVenc = f.vencimento ? f.vencimento.match(/\d{4}/)?.[0] : null;
@@ -601,7 +608,7 @@ export default function FaturamentoPage() {
       }
       return true;
     });
-  }, [faturamentos, filtroAno, filtroMes, filtroStatus, filtroVencimento, perfisSelecionados, filtroArea, busca]);
+  }, [faturamentos, filtroAno, filtroMes, filtroStatus, filtroVencimento, perfisSelecionados, filtroArea, busca, perfilAtivoId, pertenceAoLiderAtivo]);
 
   // Totais e KPIs calculados considerando o mês da competência (Print 1):
   // TOTAL PREVISTO: soma da coluna REALIZADO no mês filtrado
@@ -768,6 +775,7 @@ export default function FaturamentoPage() {
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             <ThemeToggle />
+            <UserProfileHeader />
           </div>
         </header>
 

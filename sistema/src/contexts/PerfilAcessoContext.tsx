@@ -84,9 +84,9 @@ function normalizarTexto(str?: string | null): string {
 }
 
 function normalizarListaPerfis(lista: PerfilAcessoItem[]): PerfilAcessoItem[] {
-  if (!Array.isArray(lista) || lista.length === 0) return perfisIniciais as PerfilAcessoItem[];
-  const padraoAdmin = (perfisIniciais as PerfilAcessoItem[]).find((p) => p.id === "ADMIN");
-  const padraoDiretoria = (perfisIniciais as PerfilAcessoItem[]).find((p) => p.id === "DIRETORIA");
+  if (!Array.isArray(lista) || lista.length === 0) return perfisIniciais as unknown as PerfilAcessoItem[];
+  const padraoAdmin = (perfisIniciais as unknown as PerfilAcessoItem[]).find((p) => p.id === "ADMIN");
+  const padraoDiretoria = (perfisIniciais as unknown as PerfilAcessoItem[]).find((p) => p.id === "DIRETORIA");
 
   const resultado = lista.map((p) => {
     if (p.id === "ADMIN") {
@@ -118,7 +118,7 @@ export function PerfilAcessoProvider({ children }: { children: React.ReactNode }
   const router = useRouter();
   const pathname = usePathname();
 
-  const [perfis, setPerfis] = useState<PerfilAcessoItem[]>(perfisIniciais as PerfilAcessoItem[]);
+  const [perfis, setPerfis] = useState<PerfilAcessoItem[]>(perfisIniciais as unknown as PerfilAcessoItem[]);
   const [perfilAtivoId, setPerfilAtivoId] = useState<string>("ADMIN");
   const [liderSimulado, setLiderSimuladoState] = useState<string>("BEATRIZ PICORELLI");
   const [hidratado, setHidratado] = useState<boolean>(false);

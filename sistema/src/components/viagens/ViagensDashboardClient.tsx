@@ -273,6 +273,39 @@ export default function ViagensDashboardClient({
 
       {/* Área Principal com recuo da Sidebar */}
       <div className="main-wrapper">
+        {/* Top Header Fixo Oficial Padronizado */}
+        <header className="top-header">
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <span
+              className="font-label-sm"
+              style={{
+                color: "var(--on-surface-variant)",
+                letterSpacing: "0.04em",
+                textTransform: "uppercase",
+                fontWeight: 600,
+              }}
+            >
+              Portal Corporativo · NNÓS
+            </span>
+            <span style={{ color: "var(--outline-variant)" }}>/</span>
+            <span
+              className="font-label-sm"
+              style={{
+                color: "var(--primary)",
+                fontWeight: 700,
+                letterSpacing: "0.02em",
+              }}
+            >
+              Viagens & Logística
+            </span>
+          </div>
+
+          <div className="header-actions">
+            <ThemeToggle />
+            <UserProfileHeader />
+          </div>
+        </header>
+
         <main className="content-container" style={{ padding: "28px 36px", overflowY: "auto", minHeight: "100vh" }}>
         {/* Header Superior com Seletor de Perfil e Filtro Temporal */}
         <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "22px", flexWrap: "wrap", gap: "16px" }}>
@@ -371,9 +404,6 @@ export default function ViagensDashboardClient({
                 })}
               </div>
             </div>
-
-            <ThemeToggle />
-            <UserProfileHeader />
           </div>
         </header>
 

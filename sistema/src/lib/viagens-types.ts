@@ -76,6 +76,8 @@ export interface ViagemSolicitacao {
   dataFinal: string;
   horas?: number;
   status: StatusViagem;
+  centroCusto?: string;
+  agencia?: string;
   agenciaNome: string;
   necessidades: {
     aereo: boolean;

@@ -24,7 +24,7 @@
       "homologarBmFinanceiro": true,
       "dispararZohoSign": true,
       "gerenciarPermissoesPerfis": true,
-      "restringirAoProprio Escopo": false
+      "restringirAoProprioEscopo": false
     },
     "modulos": [
       {

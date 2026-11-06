@@ -599,7 +599,7 @@ export default function CentroDeCustoPage() {
                   display: "inline-flex",
                   alignItems: "center",
                   gap: "6px",
-                  backgroundColor: abaAtiva === "estrutura" ? "#0f2a4a" : "transparent", display: somenteVisualizar ? "none" : "inline-flex",
+                  backgroundColor: abaAtiva === "estrutura" ? "#0f2a4a" : "transparent",
                   color: abaAtiva === "estrutura" ? "#ffffff" : "var(--on-surface-variant)",
                   transition: "all 0.15s ease",
                 }}
@@ -620,7 +620,7 @@ export default function CentroDeCustoPage() {
                   display: "inline-flex",
                   alignItems: "center",
                   gap: "6px",
-                  backgroundColor: abaAtiva === "simulador" ? "#0f2a4a" : "transparent", display: somenteVisualizar ? "none" : "inline-flex",
+                  backgroundColor: abaAtiva === "simulador" ? "#0f2a4a" : "transparent",
                   color: abaAtiva === "simulador" ? "#ffffff" : "var(--on-surface-variant)",
                   transition: "all 0.15s ease",
                 }}

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import logsPadrao from "@/lib/logs-acesso.json";
-import { registrarLogSeguranca } from "@/app/api/admin/usuarios/route";
+import { registrarLogSeguranca } from "@/lib/usuarios-service";
 
 const LOGS_PATH = path.join(process.cwd(), "src", "lib", "logs-acesso.json");
 

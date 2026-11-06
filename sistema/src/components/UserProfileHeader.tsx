@@ -12,6 +12,7 @@ interface UsuarioAtivoInfo {
   email: string;
   cargo: string;
   fotoUrl: string;
+  perfilId?: string;
   mfaSecret?: string;
 }
 
