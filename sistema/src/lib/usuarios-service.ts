@@ -110,3 +110,4 @@ export function gerarNovoSegredoBase32(): string {
   }
   return s;
 }
+

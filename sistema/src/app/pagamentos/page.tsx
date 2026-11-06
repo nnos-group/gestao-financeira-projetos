@@ -177,7 +177,9 @@ const MESES_NOMES = [
 const MESES_ABREV = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
 export default function PagamentosPage() {
-  const { perfilAtivoId, pertenceAoLiderAtivo } = usePerfilAcesso();
+  const { perfilAtivoId, pertenceAoLiderAtivo, nivelModulo, liderSimulado } = usePerfilAcesso();
+  const nivelPag = nivelModulo("pagamentos");
+  const somenteVisualizar = perfilAtivoId !== "ADMIN" && (nivelPag === "VISUALIZAR" || nivelPag === "BLOQUEADO");
   const dataHoje = new Date();
   const mesAtualNome = MESES_NOMES[dataHoje.getMonth()] || "OUTUBRO";
 
@@ -336,6 +338,7 @@ export default function PagamentosPage() {
   });
 
   const abrirNovoLancamento = () => {
+    if (somenteVisualizar) return;
     setItemEdicao(null);
     setForm({
       realizado: mesAtualNome,
@@ -351,6 +354,7 @@ export default function PagamentosPage() {
   };
 
   const abrirEditar = (item: PagamentoItem) => {
+    if (somenteVisualizar) return;
     setItemEdicao(item);
     setForm({
       ...item,
@@ -361,6 +365,7 @@ export default function PagamentosPage() {
 
   const handleSalvarLancamento = (e: React.FormEvent) => {
     e.preventDefault();
+    if (somenteVisualizar) return;
     const consultorFormatado = formatarNomeCurto(form.consultor?.trim() || "");
     if (!consultorFormatado) {
       alert("Por favor, preencha o Consultor / Beneficiário.");
@@ -586,7 +591,7 @@ export default function PagamentosPage() {
       }
       return true;
     });
-  }, [pagamentos, filtroAno, filtroMes, filtroStatus, filtroTipo, categoriasSelecionadas, busca, perfilAtivoId, pertenceAoLiderAtivo]);
+  }, [pagamentos, filtroAno, filtroMes, filtroStatus, filtroTipo, categoriasSelecionadas, busca, perfilAtivoId, pertenceAoLiderAtivo, liderSimulado]);
 
   // Totais e KPIs calculados dinamicamente sobre o filtro
   const totais = useMemo(() => {
@@ -750,24 +755,26 @@ export default function PagamentosPage() {
                 )}
               </button>
 
-              <button
-                type="button"
-                onClick={abrirNovoLancamento}
-                className="btn-primary"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  fontSize: "13px",
-                  fontWeight: 700,
-                  padding: "10px 18px",
-                  boxShadow: "0 2px 8px rgba(0,21,47,0.18)",
-                  cursor: "pointer",
-                }}
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>add_card</span>
-                <span>Novo Lançamento / Despesa</span>
-              </button>
+              {!somenteVisualizar && (
+                <button
+                  type="button"
+                  onClick={abrirNovoLancamento}
+                  className="btn-primary"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    fontSize: "13px",
+                    fontWeight: 700,
+                    padding: "10px 18px",
+                    boxShadow: "0 2px 8px rgba(0,21,47,0.18)",
+                    cursor: "pointer",
+                  }}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>add_card</span>
+                  <span>Novo Lançamento / Despesa</span>
+                </button>
+              )}
             </div>
           </div>
 
@@ -1058,7 +1065,9 @@ export default function PagamentosPage() {
                     <th style={{ padding: "10px 12px", width: "115px" }}>Status</th>
                     <th style={{ padding: "10px 10px", textAlign: "center", width: "65px" }}>BM</th>
                     <th style={{ padding: "10px 14px", minWidth: "140px" }}>Obs.</th>
-                    <th style={{ padding: "10px 12px", textAlign: "center", width: "75px" }}>Ações</th>
+                    {!somenteVisualizar && (
+                      <th style={{ padding: "10px 12px", textAlign: "center", width: "75px" }}>Ações</th>
+                    )}
                   </tr>
                 </thead>
                 <tbody>
@@ -1216,26 +1225,28 @@ export default function PagamentosPage() {
                       </td>
 
                       {/* Ações */}
-                      <td style={{ padding: "10px 12px", textAlign: "center", whiteSpace: "nowrap" }}>
-                        <div style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                          <button
-                            type="button"
-                            onClick={() => abrirEditar(item)}
-                            title="Editar"
-                            style={{ border: "none", background: "none", cursor: "pointer", padding: "2px", color: "var(--secondary)" }}
-                          >
-                            <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>edit</span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => excluirLancamento(item.id)}
-                            title="Excluir"
-                            style={{ border: "none", background: "none", cursor: "pointer", padding: "2px", color: "#dc2626" }}
-                          >
-                            <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>delete</span>
-                          </button>
-                        </div>
-                      </td>
+                      {!somenteVisualizar && (
+                        <td style={{ padding: "10px 12px", textAlign: "center", whiteSpace: "nowrap" }}>
+                          <div style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                            <button
+                              type="button"
+                              onClick={() => abrirEditar(item)}
+                              title="Editar"
+                              style={{ border: "none", background: "none", cursor: "pointer", padding: "2px", color: "var(--secondary)" }}
+                            >
+                              <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>edit</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => excluirLancamento(item.id)}
+                              title="Excluir"
+                              style={{ border: "none", background: "none", cursor: "pointer", padding: "2px", color: "#dc2626" }}
+                            >
+                              <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>delete</span>
+                            </button>
+                          </div>
+                        </td>
+                      )}
                     </tr>
                   );
                 })}
@@ -1251,10 +1262,10 @@ export default function PagamentosPage() {
                 <div className="modal-header">
                   <h3>
                     <span className="material-symbols-outlined" style={{ color: "var(--primary)" }}>
-                      {itemEdicao ? "edit_calendar" : "add_circle"}
+                      {somenteVisualizar ? "visibility" : itemEdicao ? "edit_calendar" : "add_circle"}
                     </span>
                     <span>
-                      {itemEdicao ? "Editar Lançamento de Pagamento" : "Novo Lançamento / Despesa Operacional"}
+                      {somenteVisualizar ? "Visualizar Lançamento de Pagamento (Somente Leitura)" : itemEdicao ? "Editar Lançamento de Pagamento" : "Novo Lançamento / Despesa Operacional"}
                     </span>
                   </h3>
                   <button
@@ -1267,6 +1278,7 @@ export default function PagamentosPage() {
                 </div>
 
                 <form onSubmit={handleSalvarLancamento} style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, overflow: "hidden" }}>
+                  <fieldset disabled={somenteVisualizar} style={{ border: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", flex: 1, minHeight: 0, overflow: "hidden" }}>
                   <div className="modal-body" style={{ overflowY: "auto", flex: 1, minHeight: 0 }}>
                     <div className="modal-grid-2">
                       <div className="form-field">
@@ -1481,24 +1493,37 @@ export default function PagamentosPage() {
                       </div>
                     </div>
                   </div>
+                  </fieldset>
 
                   <div className="modal-footer">
-                    <button
-                      type="button"
-                      className="btn-secondary"
-                      onClick={() => setModalAberto(false)}
-                    >
-                      Cancelar
-                    </button>
-                    <button
-                      type="submit"
-                      className="btn-primary"
-                    >
-                      <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
-                        check_circle
-                      </span>
-                      <span>Salvar Lançamento</span>
-                    </button>
+                    {somenteVisualizar ? (
+                      <button
+                        type="button"
+                        className="btn-primary"
+                        onClick={() => setModalAberto(false)}
+                      >
+                        Fechar
+                      </button>
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          className="btn-secondary"
+                          onClick={() => setModalAberto(false)}
+                        >
+                          Cancelar
+                        </button>
+                        <button
+                          type="submit"
+                          className="btn-primary"
+                        >
+                          <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
+                            check_circle
+                          </span>
+                          <span>Salvar Lançamento</span>
+                        </button>
+                      </>
+                    )}
                   </div>
                 </form>
               </div>

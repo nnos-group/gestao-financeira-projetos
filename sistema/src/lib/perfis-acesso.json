@@ -24,7 +24,7 @@
       "homologarBmFinanceiro": true,
       "dispararZohoSign": true,
       "gerenciarPermissoesPerfis": true,
-      "restringirAoProprioEscopo": false
+      "restringirAoProprio Escopo": false
     },
     "modulos": [
       {
@@ -352,7 +352,7 @@
       }
     ],
     "regrasSeguranca": {
-      "verFaturamentoCliente": false,
+      "verFaturamentoCliente": true,
       "verMargemImpostos": true,
       "verDadosBancarios": false,
       "aprovarCotacoesViagem": true,

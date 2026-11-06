@@ -191,7 +191,7 @@ export default function BoletimMedicaoPage() {
   };
 
   // Filtros da Central de Medições
-  const { perfilAtivoId, pertenceAoLiderAtivo, regraAtiva } = usePerfilAcesso();
+  const { perfilAtivoId, pertenceAoLiderAtivo, regraAtiva, liderSimulado } = usePerfilAcesso();
   const [busca, setBusca] = useState("");
   const [filtroStatus, setFiltroStatus] = useState("Todos");
 
@@ -444,11 +444,16 @@ export default function BoletimMedicaoPage() {
     return bmsLista
       .filter((b) => {
         if (perfilAtivoId === "LIDER") {
-          const matchLiderDireto = pertenceAoLiderAtivo(undefined, undefined, b.liderProjetoNome);
-          const matchAtividade = (b.atividades || []).some((at) =>
-            pertenceAoLiderAtivo(at.projeto, (at as any).centroCusto)
-          );
-          if (!matchLiderDireto && !matchAtividade) return false;
+          const temAtividades = Array.isArray(b.atividades) && b.atividades.length > 0;
+          if (temAtividades) {
+            const matchAtividade = b.atividades.some((at) =>
+              pertenceAoLiderAtivo(at.projeto, (at as any).centroCusto, (at as any).liderProjeto || b.liderProjetoNome)
+            );
+            if (!matchAtividade) return false;
+          } else {
+            const matchLiderDireto = pertenceAoLiderAtivo(undefined, undefined, b.liderProjetoNome);
+            if (!matchLiderDireto) return false;
+          }
         }
         if (filtroStatus !== "Todos" && b.status !== filtroStatus) return false;
         if (busca.trim()) {
@@ -465,7 +470,7 @@ export default function BoletimMedicaoPage() {
         if (codB !== codA) return codB - codA;
         return String(b.codigo || "").localeCompare(String(a.codigo || ""));
       });
-  }, [bmsLista, busca, filtroStatus, perfilAtivoId, pertenceAoLiderAtivo]);
+  }, [bmsLista, busca, filtroStatus, perfilAtivoId, pertenceAoLiderAtivo, liderSimulado]);
 
   // Iniciar geração do BM a partir dos lançamentos da base de Projetos
   const handleIniciarGeracaoBM = () => {

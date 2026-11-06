@@ -15,10 +15,10 @@ export async function POST(req: NextRequest) {
     const dispositivoResumo = userAgent.includes("Edg")
       ? "Windows • Microsoft Edge"
       : userAgent.includes("Chrome")
-      ? "Windows • Google Chrome"
-      : userAgent.includes("Safari")
-      ? "macOS/iOS • Safari"
-      : "Navegador Corporativo";
+        ? "Windows • Google Chrome"
+        : userAgent.includes("Safari")
+          ? "macOS/iOS • Safari"
+          : "Navegador Corporativo";
 
     // 1. LOGOUT
     if (acao === "LOGOUT") {

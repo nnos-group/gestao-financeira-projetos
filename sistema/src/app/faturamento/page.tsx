@@ -195,7 +195,9 @@ const MESES_ABREV = [
 ];
 
 export default function FaturamentoPage() {
-  const { perfilAtivoId, pertenceAoLiderAtivo } = usePerfilAcesso();
+  const { perfilAtivoId, pertenceAoLiderAtivo, nivelModulo, liderSimulado } = usePerfilAcesso();
+  const nivelFat = nivelModulo("faturamento");
+  const somenteVisualizar = perfilAtivoId !== "ADMIN" && (nivelFat === "VISUALIZAR" || nivelFat === "BLOQUEADO");
   const dataHoje = new Date();
   const mesAtualNome = MESES_NOMES[dataHoje.getMonth()] || "OUTUBRO";
 
@@ -394,6 +396,7 @@ export default function FaturamentoPage() {
   }, [form.projeto]);
 
   const abrirNovaFatura = () => {
+    if (somenteVisualizar) return;
     setItemEdicao(null);
     setForm({
       realizado: mesAtualNome,
@@ -413,6 +416,7 @@ export default function FaturamentoPage() {
   };
 
   const abrirEditar = (item: FaturamentoItem) => {
+    if (somenteVisualizar) return;
     setItemEdicao(item);
     setForm({ ...item, tipoDocumento: item.tipoDocumento || (item.numeroNota && item.numeroNota.toUpperCase().includes("ND") ? "ND" : "NF") });
     setModalAberto(true);
@@ -420,6 +424,7 @@ export default function FaturamentoPage() {
 
   const handleSalvarFatura = (e: React.FormEvent) => {
     e.preventDefault();
+    if (somenteVisualizar) return;
     if (!form.projeto || !form.projeto.trim()) {
       alert("Por favor, selecione ou digite o Projeto.");
       return;
@@ -608,7 +613,7 @@ export default function FaturamentoPage() {
       }
       return true;
     });
-  }, [faturamentos, filtroAno, filtroMes, filtroStatus, filtroVencimento, perfisSelecionados, filtroArea, busca, perfilAtivoId, pertenceAoLiderAtivo]);
+  }, [faturamentos, filtroAno, filtroMes, filtroStatus, filtroVencimento, perfisSelecionados, filtroArea, busca, perfilAtivoId, pertenceAoLiderAtivo, liderSimulado]);
 
   // Totais e KPIs calculados considerando o mês da competência (Print 1):
   // TOTAL PREVISTO: soma da coluna REALIZADO no mês filtrado
@@ -797,24 +802,26 @@ export default function FaturamentoPage() {
             </div>
 
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <button
-                type="button"
-                onClick={abrirNovaFatura}
-                className="btn-primary"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  fontSize: "13px",
-                  fontWeight: 700,
-                  padding: "10px 18px",
-                  boxShadow: "0 2px 8px rgba(0,21,47,0.18)",
-                  cursor: "pointer",
-                }}
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>add_task</span>
-                <span>Nova Fatura / Lançamento</span>
-              </button>
+              {!somenteVisualizar && (
+                <button
+                  type="button"
+                  onClick={abrirNovaFatura}
+                  className="btn-primary"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    fontSize: "13px",
+                    fontWeight: 700,
+                    padding: "10px 18px",
+                    boxShadow: "0 2px 8px rgba(0,21,47,0.18)",
+                    cursor: "pointer",
+                  }}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>add_task</span>
+                  <span>Nova Fatura / Lançamento</span>
+                </button>
+              )}
             </div>
           </div>
 
@@ -1162,7 +1169,9 @@ export default function FaturamentoPage() {
                     <th style={{ padding: "12px 12px", width: "100px", whiteSpace: "nowrap" }}>Vencimento</th>
                     <th style={{ padding: "12px 12px", width: "100px", whiteSpace: "nowrap" }}>Data Pagto</th>
                     <th style={{ padding: "12px 12px", width: "105px", textAlign: "center", whiteSpace: "nowrap" }}>Fluxo / Dias</th>
-                    <th style={{ padding: "12px 12px", textAlign: "center", width: "65px", whiteSpace: "nowrap" }}>Ações</th>
+                    {!somenteVisualizar && (
+                      <th style={{ padding: "12px 12px", textAlign: "center", width: "65px", whiteSpace: "nowrap" }}>Ações</th>
+                    )}
                   </tr>
                 </thead>
                 <tbody>
@@ -1362,80 +1371,82 @@ export default function FaturamentoPage() {
                           </td>
 
                           {/* Ações */}
-                          <td style={{ padding: "12px 12px", textAlign: "center", whiteSpace: "nowrap" }}>
-                            <div style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  abrirEditar(item);
-                                }}
-                                title="Editar"
-                                style={{ border: "none", background: "none", cursor: "pointer", padding: "2px", color: "var(--secondary)" }}
-                              >
-                                <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>edit</span>
-                              </button>
-
-                              {confirmandoExclusaoFatId === item.id ? (
-                                <div style={{ display: "inline-flex", alignItems: "center", gap: "2px" }} onClick={(e) => e.stopPropagation()}>
-                                  <button
-                                    type="button"
-                                    onClick={() => excluirFatura(item.id)}
-                                    title="Confirmar exclusão desta fatura"
-                                    style={{
-                                      border: "1px solid #b91c1c",
-                                      backgroundColor: "#dc2626",
-                                      color: "#ffffff",
-                                      cursor: "pointer",
-                                      padding: "2px 6px",
-                                      borderRadius: "4px",
-                                      fontSize: "11px",
-                                      fontWeight: 700,
-                                      display: "inline-flex",
-                                      alignItems: "center",
-                                      gap: "2px",
-                                    }}
-                                  >
-                                    Excluir?
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => setConfirmandoExclusaoFatId(null)}
-                                    title="Cancelar"
-                                    style={{
-                                      border: "1px solid var(--border)",
-                                      backgroundColor: "var(--surface)",
-                                      color: "var(--on-surface-variant)",
-                                      cursor: "pointer",
-                                      padding: "2px 5px",
-                                      borderRadius: "4px",
-                                      fontSize: "11px",
-                                    }}
-                                  >
-                                    ✕
-                                  </button>
-                                </div>
-                              ) : (
+                          {!somenteVisualizar && (
+                            <td style={{ padding: "12px 12px", textAlign: "center", whiteSpace: "nowrap" }}>
+                              <div style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
                                 <button
                                   type="button"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    setConfirmandoExclusaoFatId(item.id);
+                                    abrirEditar(item);
                                   }}
-                                  title="Excluir fatura / ND"
-                                  style={{ border: "none", background: "none", cursor: "pointer", padding: "2px", color: "#dc2626" }}
+                                  title="Editar"
+                                  style={{ border: "none", background: "none", cursor: "pointer", padding: "2px", color: "var(--secondary)" }}
                                 >
-                                  <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>delete</span>
+                                  <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>edit</span>
                                 </button>
-                              )}
-                            </div>
-                          </td>
+
+                                {confirmandoExclusaoFatId === item.id ? (
+                                  <div style={{ display: "inline-flex", alignItems: "center", gap: "2px" }} onClick={(e) => e.stopPropagation()}>
+                                    <button
+                                      type="button"
+                                      onClick={() => excluirFatura(item.id)}
+                                      title="Confirmar exclusão desta fatura"
+                                      style={{
+                                        border: "1px solid #b91c1c",
+                                        backgroundColor: "#dc2626",
+                                        color: "#ffffff",
+                                        cursor: "pointer",
+                                        padding: "2px 6px",
+                                        borderRadius: "4px",
+                                        fontSize: "11px",
+                                        fontWeight: 700,
+                                        display: "inline-flex",
+                                        alignItems: "center",
+                                        gap: "2px",
+                                      }}
+                                    >
+                                      Excluir?
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setConfirmandoExclusaoFatId(null)}
+                                      title="Cancelar"
+                                      style={{
+                                        border: "1px solid var(--border)",
+                                        backgroundColor: "var(--surface)",
+                                        color: "var(--on-surface-variant)",
+                                        cursor: "pointer",
+                                        padding: "2px 5px",
+                                        borderRadius: "4px",
+                                        fontSize: "11px",
+                                      }}
+                                    >
+                                      ✕
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setConfirmandoExclusaoFatId(item.id);
+                                    }}
+                                    title="Excluir fatura / ND"
+                                    style={{ border: "none", background: "none", cursor: "pointer", padding: "2px", color: "#dc2626" }}
+                                  >
+                                    <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>delete</span>
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          )}
                         </tr>
 
                         {/* LINHA EXPANSÍVEL: SUBPAINEL VERTICAL DE DETALHES (CONFORME PRINT 4) */}
                         {expandido && (
                           <tr style={{ backgroundColor: "#f8fafc", borderBottom: "1px solid #e2e8f0" }}>
-                            <td colSpan={12} style={{ padding: "0 18px 16px 42px" }}>
+                            <td colSpan={somenteVisualizar ? 11 : 12} style={{ padding: "0 18px 16px 42px" }}>
                               <div
                                 style={{
                                   backgroundColor: "#ffffff",
@@ -1539,9 +1550,9 @@ export default function FaturamentoPage() {
                 <div className="modal-header">
                   <h3>
                     <span className="material-symbols-outlined" style={{ color: "var(--primary)" }}>
-                      {itemEdicao ? "edit_note" : "add_circle"}
+                      {somenteVisualizar ? "visibility" : itemEdicao ? "edit_note" : "add_circle"}
                     </span>
-                    <span>{itemEdicao ? "Editar Fatura de Cliente" : "Nova Fatura / Lançamento de Faturamento"}</span>
+                    <span>{somenteVisualizar ? "Visualizar Fatura (Somente Leitura)" : itemEdicao ? "Editar Fatura de Cliente" : "Nova Fatura / Lançamento de Faturamento"}</span>
                   </h3>
                   <button
                     type="button"
@@ -1553,6 +1564,7 @@ export default function FaturamentoPage() {
                 </div>
 
                 <form onSubmit={handleSalvarFatura}>
+                  <fieldset disabled={somenteVisualizar} style={{ border: "none", padding: 0, margin: 0 }}>
                   <div className="modal-body">
                     <div className="modal-grid-2">
                       <div className="form-field">
@@ -1901,46 +1913,68 @@ export default function FaturamentoPage() {
                       </div>
                     </div>
                   </div>
+                  </fieldset>
 
                   <div className="modal-footer">
-                    <button
-                      type="button"
-                      onClick={() => setModalAberto(false)}
-                      style={{
-                        padding: "10px 22px",
-                        borderRadius: "8px",
-                        border: "1px solid var(--border)",
-                        background: "#ffffff",
-                        color: "var(--on-surface-variant)",
-                        cursor: "pointer",
-                        fontSize: "13px",
-                        fontWeight: 600,
-                        transition: "all 0.15s ease",
-                      }}
-                    >
-                      Cancelar
-                    </button>
-                    <button
-                      type="submit"
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "8px",
-                        padding: "10px 24px",
-                        borderRadius: "8px",
-                        backgroundColor: "#00152f",
-                        color: "#ffffff",
-                        fontSize: "13px",
-                        fontWeight: 700,
-                        cursor: "pointer",
-                        border: "none",
-                        boxShadow: "0 2px 6px rgba(0,21,47,0.2)",
-                        transition: "all 0.15s ease",
-                      }}
-                    >
-                      <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>check_circle</span>
-                      <span>{itemEdicao ? "Salvar Fatura" : "Cadastrar Fatura"}</span>
-                    </button>
+                    {somenteVisualizar ? (
+                      <button
+                        type="button"
+                        onClick={() => setModalAberto(false)}
+                        style={{
+                          padding: "10px 24px",
+                          borderRadius: "8px",
+                          backgroundColor: "#00152f",
+                          color: "#ffffff",
+                          fontSize: "13px",
+                          fontWeight: 700,
+                          cursor: "pointer",
+                          border: "none",
+                        }}
+                      >
+                        Fechar
+                      </button>
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => setModalAberto(false)}
+                          style={{
+                            padding: "10px 22px",
+                            borderRadius: "8px",
+                            border: "1px solid var(--border)",
+                            background: "#ffffff",
+                            color: "var(--on-surface-variant)",
+                            cursor: "pointer",
+                            fontSize: "13px",
+                            fontWeight: 600,
+                            transition: "all 0.15s ease",
+                          }}
+                        >
+                          Cancelar
+                        </button>
+                        <button
+                          type="submit"
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            padding: "10px 24px",
+                            borderRadius: "8px",
+                            backgroundColor: "#00152f",
+                            color: "#ffffff",
+                            fontSize: "13px",
+                            fontWeight: 700,
+                            cursor: "pointer",
+                            border: "none",
+                            boxShadow: "0 2px 6px rgba(0,21,47,0.2)",
+                            transition: "all 0.15s ease",
+                          }}
+                        >
+                          <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>check_circle</span>
+                          <span>{itemEdicao ? "Salvar Fatura" : "Cadastrar Fatura"}</span>
+                        </button>
+                      </>
+                    )}
                   </div>
                 </form>
               </div>
