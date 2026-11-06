@@ -3,7 +3,9 @@ import fs from "fs";
 import path from "path";
 import { supabaseAdmin } from "@/lib/supabase-server";
 
-const FILE_PATH = path.join(process.cwd(), "src/lib/bms-2026.json");
+const FILE_PATH = fs.existsSync(path.join(process.cwd(), "sistema/src/lib/bms-2026.json"))
+  ? path.join(process.cwd(), "sistema/src/lib/bms-2026.json")
+  : path.join(process.cwd(), "src/lib/bms-2026.json");
 
 // Throttle da sincronização ativa com o Zoho Sign: evita dezenas de chamadas HTTP a cada abertura de tela.
 // O resultado da última sincronização já fica persistido no Supabase (lido logo acima).
@@ -48,9 +50,17 @@ export async function GET(request: Request) {
               const cod = String(item.codigo);
               if (vistos.has(cod)) continue;
               vistos.add(cod);
-              // Se o registro na nuvem era o item de teste (ex: 0908 com Líder - Teste), prioriza o oficial local
-              if (String(item.liderProjetoNome || "").includes("Teste") && mapaLocal.has(cod)) {
-                mesclados.push(mapaLocal.get(cod));
+              // Quando o BM existe na base local calibrada, prioriza seus dados de líder, projeto e atividades,
+              // herdando da nuvem o status e tracking do Zoho Sign
+              if (mapaLocal.has(cod)) {
+                const localItem = mapaLocal.get(cod);
+                mesclados.push({
+                  ...localItem,
+                  status: item.status || localItem.status,
+                  zohoRequestId: item.zohoRequestId || localItem.zohoRequestId,
+                  zohoDocumentId: item.zohoDocumentId || localItem.zohoDocumentId,
+                  logs: Array.isArray(item.logs) && item.logs.length > 0 ? item.logs : localItem.logs,
+                });
               } else {
                 mesclados.push(item);
               }

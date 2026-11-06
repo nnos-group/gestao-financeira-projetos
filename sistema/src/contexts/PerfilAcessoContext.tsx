@@ -343,13 +343,7 @@ export function PerfilAcessoProvider({ children }: { children: React.ReactNode }
 
       const alvoNorm = normalizarTexto(liderSimulado);
 
-      if (liderDireto) {
-        const lidNorm = normalizarTexto(liderDireto);
-        if (lidNorm && lidNorm !== "-" && lidNorm !== "—") {
-          return lidNorm === alvoNorm || lidNorm.includes(alvoNorm) || alvoNorm.includes(lidNorm);
-        }
-      }
-
+      // 1. Autoridade Primária por Centro de Custo
       if (centroCustoCodigo) {
         const ccNorm = normalizarTexto(centroCustoCodigo);
         const donoCC = mapaPorCC.get(ccNorm);
@@ -358,6 +352,7 @@ export function PerfilAcessoProvider({ children }: { children: React.ReactNode }
         }
       }
 
+      // 2. Autoridade Primária por Projeto / Contrato
       if (projetoNome) {
         const projNorm = normalizarTexto(projetoNome);
         const donoProj = mapaPorProjeto.get(projNorm);
@@ -369,6 +364,14 @@ export function PerfilAcessoProvider({ children }: { children: React.ReactNode }
           if (projNorm.includes(kProj) || kProj.includes(projNorm)) {
             return kLider === alvoNorm;
           }
+        }
+      }
+
+      // 3. Fallback para Líder Direto informado
+      if (liderDireto) {
+        const lidNorm = normalizarTexto(liderDireto);
+        if (lidNorm && lidNorm !== "-" && lidNorm !== "—") {
+          return lidNorm === alvoNorm || lidNorm.includes(alvoNorm) || alvoNorm.includes(lidNorm);
         }
       }
 

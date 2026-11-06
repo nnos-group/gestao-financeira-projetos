@@ -123,14 +123,14 @@ export default function BoletimMedicaoPage() {
         if (Array.isArray(data) && data.length > 0) {
           setBmsLista(data);
           try {
-            localStorage.setItem('nnos_bms_2026_v5', JSON.stringify(data));
+            localStorage.setItem('nnos_bms_2026_v7', JSON.stringify(data));
           } catch {}
         }
       })
       .catch((err) => {
         console.warn('Erro ao buscar /api/medicao', err);
         try {
-          const local = localStorage.getItem('nnos_bms_2026_v5');
+          const local = localStorage.getItem('nnos_bms_2026_v7');
           if (local) {
             const parsed = JSON.parse(local);
             if (Array.isArray(parsed) && parsed.length > 0) {
