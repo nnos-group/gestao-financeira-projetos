@@ -2,12 +2,14 @@
 import Link from "next/link";
 import React, { useState, useMemo, useEffect } from "react";
 import ThemeToggle from "@/components/ThemeToggle";
+import UserProfileHeader from "@/components/UserProfileHeader";
 import BmExportPdfSheet from "@/components/BmExportPdfSheet";
 import ModernDropdown from "@/components/ModernDropdown";
 import bms2026Base from "@/lib/bms-2026.json";
 import consultoresBase from "@/lib/consultores-base.json";
 import { formatarNomeCurto } from "@/lib/consultor-utils";
 import EnvioMassaBmModal from "@/components/medicao/EnvioMassaBmModal";
+import { usePerfilAcesso } from "@/contexts/PerfilAcessoContext";
 
 interface AtividadeMedicao {
   projeto: string;
@@ -189,6 +191,7 @@ export default function BoletimMedicaoPage() {
   };
 
   // Filtros da Central de Medições
+  const { perfilAtivoId, pertenceAoLiderAtivo, regraAtiva } = usePerfilAcesso();
   const [busca, setBusca] = useState("");
   const [filtroStatus, setFiltroStatus] = useState("Todos");
 
@@ -440,6 +443,13 @@ export default function BoletimMedicaoPage() {
   const bmsFiltrados = useMemo(() => {
     return bmsLista
       .filter((b) => {
+        if (perfilAtivoId === "LIDER") {
+          const matchLiderDireto = pertenceAoLiderAtivo(undefined, undefined, b.liderProjetoNome);
+          const matchAtividade = (b.atividades || []).some((at) =>
+            pertenceAoLiderAtivo(at.projeto, (at as any).centroCusto)
+          );
+          if (!matchLiderDireto && !matchAtividade) return false;
+        }
         if (filtroStatus !== "Todos" && b.status !== filtroStatus) return false;
         if (busca.trim()) {
           const termo = busca.toLowerCase();
@@ -455,7 +465,7 @@ export default function BoletimMedicaoPage() {
         if (codB !== codA) return codB - codA;
         return String(b.codigo || "").localeCompare(String(a.codigo || ""));
       });
-  }, [bmsLista, busca, filtroStatus]);
+  }, [bmsLista, busca, filtroStatus, perfilAtivoId, pertenceAoLiderAtivo]);
 
   // Iniciar geração do BM a partir dos lançamentos da base de Projetos
   const handleIniciarGeracaoBM = () => {
@@ -782,6 +792,8 @@ ${linhasProjetos.join("\n")}`;
               <span>Relatórios</span>
             </Link>
             <Link href="/consultor" className="nav-item"><span className="material-symbols-outlined">support_agent</span><span>Consultor</span></Link>
+            <Link href="/lider" className="nav-item"><span className="material-symbols-outlined">supervisor_account</span><span>Líder de Projeto</span></Link>
+            <Link href="/admin" className="nav-item"><span className="material-symbols-outlined">admin_panel_settings</span><span>Administrador</span></Link>
           </nav>
         </div>
 
@@ -827,22 +839,7 @@ ${linhasProjetos.join("\n")}`;
 
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             <ThemeToggle />
-            <div
-              style={{
-                width: "36px",
-                height: "36px",
-                borderRadius: "50%",
-                backgroundColor: "var(--primary)",
-                color: "var(--on-primary)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontWeight: "700",
-                fontSize: "13px",
-              }}
-            >
-              LC
-            </div>
+            <UserProfileHeader />
           </div>
         </header>
 
@@ -1605,6 +1602,7 @@ ${linhasProjetos.join("\n")}`;
                       </p>
                     </div>
 
+                    {regraAtiva("dispararZohoSign") && (
                     <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
                       <button
                         type="button"
@@ -1647,6 +1645,7 @@ ${linhasProjetos.join("\n")}`;
                         <span>{painelGeracaoAberto ? "Fechar Formulário" : "Novo Boletim de Medição"}</span>
                       </button>
                     </div>
+                    )}
                   </div>
 
                   {/* CARDS DE INDICADORES CONSOLIDADOS DE 2026 */}
@@ -1657,7 +1656,7 @@ ${linhasProjetos.join("\n")}`;
                       </div>
                       <div>
                         <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--on-surface-variant)" }}>BMs Emitidos (2026)</span>
-                        <h3 style={{ fontSize: "20px", fontWeight: 800, color: "var(--primary)", margin: "2px 0 0 0" }}>{bmsLista.length}</h3>
+                        <h3 style={{ fontSize: "20px", fontWeight: 800, color: "var(--primary)", margin: "2px 0 0 0" }}>{bmsFiltrados.length}</h3>
                         <span style={{ fontSize: "10px", color: "var(--secondary)" }}>Ano 2026 consolidado</span>
                       </div>
                     </div>
@@ -1669,9 +1668,11 @@ ${linhasProjetos.join("\n")}`;
                       <div>
                         <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--on-surface-variant)" }}>Total Faturado (2026)</span>
                         <h3 style={{ fontSize: "20px", fontWeight: 800, color: "var(--secondary)", margin: "2px 0 0 0" }}>
-                          R$ {bmsLista.reduce((acc, b) => acc + (b.valorTotal || 0), 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          R$ {bmsFiltrados.reduce((acc, b) => acc + (b.valorTotal || 0), 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </h3>
-                        <span style={{ fontSize: "10px", color: "#059669", fontWeight: 600 }}>222 Medições Faturadas</span>
+                        <span style={{ fontSize: "10px", color: "#059669", fontWeight: 600 }}>
+                          {bmsFiltrados.filter((b) => b.status.includes("Faturamento") || b.status.includes("Aprovado")).length} Medições Faturadas
+                        </span>
                       </div>
                     </div>
 
@@ -1682,7 +1683,7 @@ ${linhasProjetos.join("\n")}`;
                       <div>
                         <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--on-surface-variant)" }}>Carga Horária Medida</span>
                         <h3 style={{ fontSize: "20px", fontWeight: 800, color: "var(--primary)", margin: "2px 0 0 0" }}>
-                          {bmsLista.reduce((acc, b) => acc + (b.totalHoras || 0), 0).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} h
+                          {bmsFiltrados.reduce((acc, b) => acc + (b.totalHoras || 0), 0).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} h
                         </h3>
                         <span style={{ fontSize: "10px", color: "var(--on-surface-variant)" }}>Horas técnicas aprovadas</span>
                       </div>
@@ -1695,7 +1696,7 @@ ${linhasProjetos.join("\n")}`;
                       <div>
                         <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--on-surface-variant)" }}>Prestadores Ativos</span>
                         <h3 style={{ fontSize: "20px", fontWeight: 800, color: "var(--primary)", margin: "2px 0 0 0" }}>
-                          {new Set(bmsLista.map((b) => formatarNomeCurto(b.consultorNome, b.consultorCnpj))).size}
+                          {new Set(bmsFiltrados.map((b) => formatarNomeCurto(b.consultorNome, b.consultorCnpj))).size}
                         </h3>
                         <span style={{ fontSize: "10px", color: "var(--on-surface-variant)" }}>Profissionais c/ BM em 2026</span>
                       </div>
@@ -1901,7 +1902,7 @@ ${linhasProjetos.join("\n")}`;
                       value={filtroStatus}
                       onChange={(val) => setFiltroStatus(String(val))}
                       options={[
-                        { value: "Todos", label: `Todos os Status (${bmsLista.length})` },
+                        { value: "Todos", label: `Todos os Status (${bmsFiltrados.length})` },
                         { value: "Pendente de Assinatura", label: "Pendente de Assinatura" },
                         { value: "Assinado pelo Prestador", label: "Assinado pelo Prestador" },
                         { value: "Aprovado pelo Líder", label: "Aprovado pelo Líder" },
@@ -2072,6 +2073,7 @@ ${linhasProjetos.join("\n")}`;
                                     <span className="material-symbols-outlined" style={{ fontSize: "14px", color: "var(--secondary)" }}>draw</span>
                                   </button>
                                 )}
+                                {regraAtiva("homologarBmFinanceiro") && (
                                 <button
                                   type="button"
                                   onClick={() => handleExcluirBm(bm)}
@@ -2081,6 +2083,7 @@ ${linhasProjetos.join("\n")}`;
                                 >
                                   <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>delete</span>
                                 </button>
+                                )}
                               </div>
                             </td>
                           </tr>

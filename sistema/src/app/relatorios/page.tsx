@@ -3,6 +3,7 @@
 import Link from "next/link";
 import React, { useMemo, useState } from "react";
 import ThemeToggle from "@/components/ThemeToggle";
+import { usePerfilAcesso } from "@/contexts/PerfilAcessoContext";
 
 type Indicador = {
   rotulo: string;
@@ -132,6 +133,7 @@ const RELATORIOS: Relatorio[] = [
 const CATEGORIAS = ["Todos", "Financeiro", "Projetos", "Despesas"] as const;
 
 export default function RelatoriosPage() {
+  const { perfilAtivoId } = usePerfilAcesso();
   const [categoria, setCategoria] = useState<(typeof CATEGORIAS)[number]>("Todos");
   const [busca, setBusca] = useState("");
 
@@ -139,10 +141,11 @@ export default function RelatoriosPage() {
     () =>
       RELATORIOS.filter(
         (r) =>
+          (perfilAtivoId !== "LIDER" || r.id === "painel-lider" || r.id === "performance-projetos") &&
           (categoria === "Todos" || r.categoria === categoria) &&
           `${r.titulo} ${r.descricao} ${r.tag}`.toLowerCase().includes(busca.toLowerCase())
       ),
-    [categoria, busca]
+    [categoria, busca, perfilAtivoId]
   );
 
   return (
@@ -168,6 +171,8 @@ export default function RelatoriosPage() {
             <Link href="/pagamentos" className="nav-item"><span className="material-symbols-outlined">payments</span><span>Pagamentos</span></Link>
             <Link href="/relatorios" className="nav-item active"><span className="material-symbols-outlined">monitoring</span><span>Relatórios</span></Link>
             <Link href="/consultor" className="nav-item"><span className="material-symbols-outlined">support_agent</span><span>Consultor</span></Link>
+            <Link href="/lider" className="nav-item"><span className="material-symbols-outlined">supervisor_account</span><span>Líder de Projeto</span></Link>
+            <Link href="/admin" className="nav-item"><span className="material-symbols-outlined">admin_panel_settings</span><span>Administrador</span></Link>
           </nav>
         </div>
         <div className="sidebar-footer">

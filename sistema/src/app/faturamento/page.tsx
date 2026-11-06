@@ -726,6 +726,8 @@ export default function FaturamentoPage() {
               <span>Relatórios</span>
             </Link>
             <Link href="/consultor" className="nav-item"><span className="material-symbols-outlined">support_agent</span><span>Consultor</span></Link>
+            <Link href="/lider" className="nav-item"><span className="material-symbols-outlined">supervisor_account</span><span>Líder de Projeto</span></Link>
+            <Link href="/admin" className="nav-item"><span className="material-symbols-outlined">admin_panel_settings</span><span>Administrador</span></Link>
           </nav>
         </div>
 

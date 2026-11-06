@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { supabaseAdmin } from "@/lib/supabase-server";
 import ThemeToggle from "@/components/ThemeToggle";
+import UserProfileHeader from "@/components/UserProfileHeader";
 import FloatingCardsList, { LancamentoItem } from "@/components/FloatingCardsList";
 import NovaAtividadeBotao from "@/components/NovaAtividadeBotao";
 import AnoSelector from "@/components/AnoSelector";
@@ -311,6 +312,8 @@ export default async function ProjetosPage({
               <span>Relatórios</span>
             </Link>
             <Link href="/consultor" className="nav-item"><span className="material-symbols-outlined">support_agent</span><span>Consultor</span></Link>
+            <Link href="/lider" className="nav-item"><span className="material-symbols-outlined">supervisor_account</span><span>Líder de Projeto</span></Link>
+            <Link href="/admin" className="nav-item"><span className="material-symbols-outlined">admin_panel_settings</span><span>Administrador</span></Link>
           </nav>
         </div>
 
@@ -357,40 +360,7 @@ export default async function ProjetosPage({
 
           <div className="header-actions">
             <ThemeToggle />
-
-            <button
-              type="button"
-              className="btn-header-menu"
-              title="Menu do Sistema"
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
-                grid_view
-              </span>
-              <span>Menu</span>
-            </button>
-
-            <button
-              type="button"
-              className="btn-header-logout"
-              title="Encerrar sessão"
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
-                logout
-              </span>
-              <span>Sair</span>
-            </button>
-
-            <div className="header-user">
-              <div className="user-details">
-                <strong>Coordenação Central</strong>
-                <span>Planejamento & Finanças</span>
-              </div>
-              <div className="user-avatar">
-                <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>
-                  person
-                </span>
-              </div>
-            </div>
+            <UserProfileHeader />
           </div>
         </header>
 
@@ -449,91 +419,6 @@ export default async function ProjetosPage({
                 solicitacoesViagem={solicitacoesViagem}
                 headerTopContent={
               <>
-                {/* 5 KPI Metric Floating Cards */}
-                <section className="kpis-grid" aria-label="Indicadores Operacionais">
-                  {/* 1. TOTAL FATURAR */}
-                  <div className="kpi-card">
-                    <div className="kpi-content">
-                      <span className="kpi-label">TOTAL FATURAR</span>
-                      <div className="kpi-value-row">
-                        <span className="kpi-value medium">{brl(totalFaturar)}</span>
-                      </div>
-                    </div>
-                    <div className="kpi-icon-box success-bg">
-                      <span className="material-symbols-outlined" style={{ fontSize: "22px" }}>
-                        payments
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* 2. TOTAL CONSULTORES */}
-                  <div className="kpi-card">
-                    <div className="kpi-content">
-                      <span className="kpi-label">TOTAL CONSULTORES</span>
-                      <div className="kpi-value-row">
-                        <span className="kpi-value medium">{brl(totalConsultores)}</span>
-                      </div>
-                    </div>
-                    <div className="kpi-icon-box">
-                      <span className="material-symbols-outlined" style={{ fontSize: "22px" }}>
-                        badge
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* 3. TOTAL LOGÍSTICA */}
-                  <div className="kpi-card">
-                    <div className="kpi-content">
-                      <span className="kpi-label">TOTAL LOGÍSTICA</span>
-                      <div className="kpi-value-row">
-                        <span className="kpi-value medium">{brl(totalLogistica)}</span>
-                      </div>
-                    </div>
-                    <div className="kpi-icon-box secondary-bg">
-                      <span className="material-symbols-outlined" style={{ fontSize: "22px" }}>
-                        flight_takeoff
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* 4. TOTAL REPASSAR */}
-                  <div className="kpi-card">
-                    <div className="kpi-content">
-                      <span className="kpi-label">TOTAL REPASSAR</span>
-                      <div className="kpi-value-row">
-                        <span className="kpi-value medium">{brl(totalRepassar)}</span>
-                      </div>
-                    </div>
-                    <div className="kpi-icon-box tertiary-bg">
-                      <span className="material-symbols-outlined" style={{ fontSize: "22px" }}>
-                        currency_exchange
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* 5. TOTAL CANCELADO */}
-                  <div className="kpi-card">
-                    <div className="kpi-content">
-                      <span className="kpi-label">TOTAL CANCELADO</span>
-                      <div className="kpi-value-row">
-                        <span className="kpi-value medium" style={{ color: "var(--error, #b91c1c)" }}>
-                          {totalCanceladoValor > 0 ? brl(totalCanceladoValor) : `${totalCanceladosQtd} turmas`}
-                        </span>
-                        {totalCanceladoValor > 0 && (
-                          <span className="kpi-subtext" style={{ color: "#b91c1c" }}>
-                            {totalCanceladosQtd} turmas
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="kpi-icon-box cancel-bg">
-                      <span className="material-symbols-outlined" style={{ fontSize: "22px" }}>
-                        event_busy
-                      </span>
-                    </div>
-                  </div>
-                </section>
-
                 {/* Faixa de Navegação por Competência Mensal */}
                 <nav className="month-strip" aria-label="Seleção de Competência" style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
                   <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", marginRight: "6px" }}>

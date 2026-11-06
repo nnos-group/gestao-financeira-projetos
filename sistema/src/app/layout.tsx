@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Inter } from "next/font/google";
 import "./globals.css";
 import { SecurityGuard } from "@/components/SecurityGuard";
+import { PerfilAcessoProvider } from "@/contexts/PerfilAcessoContext";
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -79,7 +80,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className={`${jakarta.variable} ${inter.variable}`}>
         <SecurityGuard />
-        {children}
+        <PerfilAcessoProvider>{children}</PerfilAcessoProvider>
       </body>
     </html>
   );

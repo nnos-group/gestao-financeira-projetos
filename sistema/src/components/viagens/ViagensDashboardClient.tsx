@@ -1,4 +1,6 @@
 "use client";
+import UserProfileHeader from "@/components/UserProfileHeader";
+import ModernDropdown from "@/components/ModernDropdown";
 
 import React, { useState, useMemo } from "react";
 import Link from "next/link";
@@ -9,6 +11,7 @@ import { ViagemSolicitacao, StatusViagem } from "@/lib/viagens-types";
 import ViagensRoleSelector, { ViagensPerfil } from "./ViagensRoleSelector";
 import CotacoesMatrixModal from "./CotacoesMatrixModal";
 import { formatarDataBR, formatarPeriodoBR } from "@/lib/date-utils";
+import { usePerfilAcesso } from "@/contexts/PerfilAcessoContext";
 
 interface ViagensDashboardClientProps {
   solicitacoesIniciais: ViagemSolicitacao[];
@@ -23,7 +26,16 @@ export default function ViagensDashboardClient({
   mesSelecionado,
   anosDisponiveis = [2025, 2026, 2027],
 }: ViagensDashboardClientProps) {
+  const { perfilAtivoId, pertenceAoLiderAtivo } = usePerfilAcesso();
   const [solicitacoes, setSolicitacoes] = useState<ViagemSolicitacao[]>(solicitacoesIniciais);
+  React.useEffect(() => { setSolicitacoes(solicitacoesIniciais); }, [solicitacoesIniciais]);
+  React.useEffect(() => {
+    if (perfilAtivoId === "LIDER") setPerfilAtivo("LIDER");
+    else if (perfilAtivoId === "AGENCIA") setPerfilAtivo("AGENCIA");
+    else if (perfilAtivoId === "FINANCEIRO") setPerfilAtivo("FINANCEIRO");
+    else if (perfilAtivoId === "CONSULTOR" || perfilAtivoId === "SOCIO") setPerfilAtivo("CONSULTOR");
+  }, [perfilAtivoId]);
+  const solicitacoesEscopo = useMemo(() => (perfilAtivoId === "LIDER" ? solicitacoes.filter((s) => pertenceAoLiderAtivo(s.projeto, s.centroCusto)) : solicitacoes), [solicitacoes, perfilAtivoId, pertenceAoLiderAtivo]);
   const [perfilAtivo, setPerfilAtivo] = useState<ViagensPerfil>("LIDER");
   const [busca, setBusca] = useState("");
   const [filtroStatus, setFiltroStatus] = useState<string>("TODOS");
@@ -68,7 +80,7 @@ export default function ViagensDashboardClient({
 
   // Filtragem da Lista
   const solicitacoesFiltradas = useMemo(() => {
-    return solicitacoes.filter((s) => {
+    return solicitacoesEscopo.filter((s) => {
       if (filtroStatus !== "TODOS" && s.status !== filtroStatus) return false;
       if (busca.trim()) {
         const b = busca.toLowerCase();
@@ -80,11 +92,20 @@ export default function ViagensDashboardClient({
       }
       return true;
     });
-  }, [solicitacoes, filtroStatus, busca]);
+  }, [solicitacoesEscopo, filtroStatus, busca]);
 
   // Contadores de KPIs
   const kpis = useMemo(() => {
-    const total = solicitacoes.length;
+    const total = solicitacoesEscopo.length;
+    const aguardandoCotacao = solicitacoesEscopo.filter((s) => s.status === "AGUARDANDO_COTACAO" || s.status === "EM_COTACAO").length;
+    const aguardandoAprovacao = solicitacoesEscopo.filter((s) => s.status === "AGUARDANDO_APROVACAO" || s.requerReaprovacao).length;
+    const emContratacao = solicitacoesEscopo.filter((s) => s.status === "APROVADO_AGUARDANDO_COMPRA" || s.status === "EM_CONTRATACAO").length;
+    const vouchersEnviados = solicitacoesEscopo.filter((s) => s.status === "VOUCHERS_ENVIADOS" || s.status === "AGUARDANDO_PRESTACAO_CONTAS").length;
+    const concluidas = solicitacoesEscopo.filter((s) => s.status === "CONCLUIDO").length;
+    const totalCustoPrevisto = solicitacoesEscopo.reduce((acc, s) => acc + (s.totalAprovado || s.totalCotado || 0), 0);
+    const totalContratado = solicitacoesEscopo.reduce((acc, s) => acc + (s.totalContratado || 0), 0);
+    const totalRealizado = solicitacoesEscopo.reduce((acc, s) => acc + (s.totalRealizado || 0), 0);
+    if (false) {
     const aguardandoCotacao = solicitacoes.filter((s) => s.status === "AGUARDANDO_COTACAO" || s.status === "EM_COTACAO").length;
     const aguardandoAprovacao = solicitacoes.filter((s) => s.status === "AGUARDANDO_APROVACAO" || s.requerReaprovacao).length;
     const emContratacao = solicitacoes.filter((s) => s.status === "APROVADO_AGUARDANDO_COMPRA" || s.status === "EM_CONTRATACAO").length;
@@ -93,7 +114,7 @@ export default function ViagensDashboardClient({
 
     const totalCustoPrevisto = solicitacoes.reduce((acc, s) => acc + (s.totalAprovado || s.totalCotado || 0), 0);
     const totalContratado = solicitacoes.reduce((acc, s) => acc + (s.totalContratado || 0), 0);
-    const totalRealizado = solicitacoes.reduce((acc, s) => acc + (s.totalRealizado || 0), 0);
+    const totalRealizado = solicitacoes.reduce((acc, s) => acc + (s.totalRealizado || 0), 0); }
 
     return {
       total,
@@ -106,7 +127,7 @@ export default function ViagensDashboardClient({
       totalContratado,
       totalRealizado,
     };
-  }, [solicitacoes]);
+  }, [solicitacoesEscopo]);
 
   const getStatusBadge = (s: ViagemSolicitacao) => {
     if (s.requerReaprovacao) {
@@ -233,6 +254,8 @@ export default function ViagensDashboardClient({
               <span>Relatórios</span>
             </Link>
             <Link href="/consultor" className="nav-item"><span className="material-symbols-outlined">support_agent</span><span>Consultor</span></Link>
+            <Link href="/lider" className="nav-item"><span className="material-symbols-outlined">supervisor_account</span><span>Líder de Projeto</span></Link>
+            <Link href="/admin" className="nav-item"><span className="material-symbols-outlined">admin_panel_settings</span><span>Administrador</span></Link>
           </nav>
         </div>
 
@@ -269,11 +292,16 @@ export default function ViagensDashboardClient({
 
           <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
             {/* Seletor de Perfil do Usuário */}
-            <ViagensRoleSelector
+            <div style={{ display: perfilAtivoId === "ADMIN" ? "inline-flex" : "none" }}>
+              <ViagensRoleSelector
               perfilAtivo={perfilAtivo}
               onChangePerfil={(p) => {
                 setPerfilAtivo(p);
                 showToast(`Visão alterada para: ${p === "AGENCIA" ? "Agência de Viagens" : p === "LIDER" ? "Líder de Projeto" : p === "FINANCEIRO" ? "Financeiro" : "Consultor"}`);
+              }}
+            />
+            </div>
+            <span style={{ display: "none" }} data-ignore={{
               }}
             />
 
@@ -298,14 +326,30 @@ export default function ViagensDashboardClient({
 
               {/* Seletor de Mês com Toggle: ao clicar novamente no mês retira o filtro e exibe o ano inteiro */}
               <div style={{ display: "inline-flex", gap: "2px", flexWrap: "wrap" }}>
+                <Link
+                  href={`/viagens?ano=${anoSelecionado}&mes=todos`}
+                  style={{
+                    padding: "5px 10px",
+                    fontSize: "12px",
+                    fontWeight: mesSelecionado === null ? 700 : 500,
+                    borderRadius: "6px",
+                    textDecoration: "none",
+                    color: mesSelecionado === null ? "#fff" : "var(--on-surface-variant)",
+                    backgroundColor: mesSelecionado === null ? "var(--primary)" : "transparent",
+                    transition: "all 0.15s ease",
+                    cursor: "pointer",
+                  }}
+                >
+                  Todos
+                </Link>
                 {mesesNomes.map((nome, idx) => {
                   const num = idx + 1;
                   const isSelected = num === mesSelecionado;
                   const href = isSelected
-                    ? `/viagens?ano=${anoSelecionado}`
+                    ? `/viagens?ano=${anoSelecionado}&mes=todos`
                     : `/viagens?ano=${anoSelecionado}&mes=${num}`;
                   return (
-                    <a
+                    <Link
                       key={num}
                       href={href}
                       style={{
@@ -322,13 +366,14 @@ export default function ViagensDashboardClient({
                       title={isSelected ? `Mês ${nome} ativo. Clique para desmarcar e ver todas as viagens de ${anoSelecionado}` : `Filtrar por ${nome}/${anoSelecionado}`}
                     >
                       {nome.substring(0, 3)}
-                    </a>
+                    </Link>
                   );
                 })}
               </div>
             </div>
 
             <ThemeToggle />
+            <UserProfileHeader />
           </div>
         </header>
 
@@ -590,7 +635,7 @@ export default function ViagensDashboardClient({
             />
           </div>
 
-          <select
+          {false && <select
             value={filtroStatus}
             onChange={(e) => setFiltroStatus(e.target.value)}
             style={{
@@ -612,7 +657,24 @@ export default function ViagensDashboardClient({
             <option value="VOUCHERS_ENVIADOS">Vouchers Enviados</option>
             <option value="AGUARDANDO_PRESTACAO_CONTAS">Aguardando Prestação de Contas</option>
             <option value="CONCLUIDO">Concluído</option>
-          </select>
+          </select>}
+          <ModernDropdown
+            value={filtroStatus}
+            onChange={(val) => setFiltroStatus(String(val))}
+            options={[
+              { value: "TODOS", label: "Todos os Status" },
+              { value: "AGUARDANDO_COTACAO", label: "1. Aguardando Cotação" },
+              { value: "EM_COTACAO", label: "Em Cotação" },
+              { value: "AGUARDANDO_APROVACAO", label: "2. Aguardando Aprovação" },
+              { value: "APROVADO_AGUARDANDO_COMPRA", label: "3. Aprovado • Aguardando Compra" },
+              { value: "VOUCHERS_PENDENTES", label: "Vouchers Pendentes" },
+              { value: "VOUCHERS_ENVIADOS", label: "4. Vouchers Enviados" },
+              { value: "AGUARDANDO_PRESTACAO_CONTAS", label: "Aguardando Prestação de Contas" },
+              { value: "CONCLUIDO", label: "5. Concluído" },
+            ]}
+            icon="filter_list"
+            minWidth="250px"
+          />
         </div>
 
         {/* Listagem em Cards Flutuantes Padronizados */}
@@ -662,15 +724,15 @@ export default function ViagensDashboardClient({
                 <div
                   key={item.id}
                   style={{
-                    backgroundColor: "var(--surface, #ffffff)",
+                    backgroundColor: "var(--surface-container-lowest, #ffffff)",
                     border: item.requerReaprovacao ? "2px solid #ef4444" : "1px solid var(--border, #e2e8f0)",
-                    borderRadius: "14px",
+                    borderRadius: "12px",
                     overflow: "hidden",
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
-                    transition: "all 0.2s ease",
+                    boxShadow: isExpanded ? "0 4px 12px rgba(0, 0, 0, 0.06)" : "0 1px 3px rgba(0, 0, 0, 0.04)",
+                    transition: "all 0.18s ease",
                   }}
                 >
-                  {/* Linha Principal do Card */}
+                  {/* Linha Principal do Card (Fundo sempre branco puro conforme Print 1) */}
                   <div
                     style={{
                       padding: "16px 20px",
@@ -679,7 +741,8 @@ export default function ViagensDashboardClient({
                       justifyContent: "space-between",
                       gap: "24px",
                       cursor: "pointer",
-                      background: isExpanded ? "var(--surface-container-low, #f8fafc)" : "transparent",
+                      background: "var(--surface-container-lowest, #ffffff)",
+                      borderBottom: isExpanded ? "1px solid var(--border, #e2e8f0)" : "none",
                     }}
                     onClick={() => alternarCard(item.id)}
                   >
@@ -688,17 +751,29 @@ export default function ViagensDashboardClient({
                       <button
                         type="button"
                         style={{
-                          background: "transparent",
-                          border: "none",
-                          cursor: "pointer",
-                          color: "var(--on-surface-variant)",
+                          width: "32px",
+                          height: "32px",
+                          borderRadius: "8px",
+                          backgroundColor: isExpanded ? "var(--primary, #00152f)" : "var(--surface-container, #f1f5f9)",
+                          color: isExpanded ? "#ffffff" : "var(--on-surface-variant)",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
+                          cursor: "pointer",
+                          border: "none",
+                          transition: "all 0.15s ease",
+                          flexShrink: 0,
                           padding: 0,
                         }}
                       >
-                        <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>
+                        <span
+                          className="material-symbols-outlined"
+                          style={{
+                            fontSize: "18px",
+                            color: isExpanded ? "#ffffff" : "var(--on-surface-variant)",
+                            lineHeight: 1,
+                          }}
+                        >
                           {isExpanded ? "expand_less" : "expand_more"}
                         </span>
                       </button>
@@ -848,56 +923,104 @@ export default function ViagensDashboardClient({
                     </div>
                   </div>
 
-                  {/* Drawer Expansível de Detalhamento Logístico (Padrão 6 Blocos) */}
-                  {isExpanded && (
-                    <div
-                      style={{
-                        padding: "16px 20px",
-                        borderTop: "1px solid var(--border, #e2e8f0)",
-                        backgroundColor: "var(--surface-container-low, #f8fafc)",
-                      }}
-                    >
-                      <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "10px" }}>
-                        {/* 1. Aéreo */}
-                        <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "8px", padding: "10px" }}>
-                          <span style={{ fontSize: "11px", color: "var(--on-surface-variant)" }}>Passagem Aérea</span>
-                          <div style={{ fontSize: "14px", fontWeight: 800, marginTop: "2px", color: "var(--on-surface)" }}>{brl(vAereo)}</div>
-                          <span style={{ fontSize: "10px", color: "var(--secondary)" }}>{vAereo > 0 ? "Contratado" : "Sem aéreo"}</span>
+                  {/* Drawer Expansível de Detalhamento Logístico (Padrão Print 4 de Projetos) */}
+                  {isExpanded &&
+                  (
+                    <div className="logistics-drawer" style={{ borderTop: "1px solid var(--border)", backgroundColor: "var(--surface-container-low)" }}>
+                      <div className="drawer-header">
+                        <div className="drawer-title-group" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "var(--secondary, #00a896)" }}>
+                            flight
+                          </span>
+                          <h4 style={{ margin: 0, fontSize: "12px", lineHeight: "16px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--primary)" }}>
+                            Detalhamento Logístico & Despesas de Viagem
+                          </h4>
+                        </div>
+                        <div className="drawer-tags">
+                          <div className="drawer-tags-box">
+                            <span style={{ fontSize: "11px", color: "var(--on-surface-variant)" }}>Status:</span>
+                            <strong style={{ fontSize: "11px", color: badge.color }}>{badge.label}</strong>
+                          </div>
+                          {item.agencia && (
+                            <div className="drawer-tag">
+                              AGÊNCIA: {item.agencia}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Matriz de Custos da Viagem (6 Mini-Cards exatamente padronizados com /projetos) */}
+                      <div className="logistics-matrix">
+                        {/* Item 1: Aéreo */}
+                        <div className="cost-box">
+                          <div className="cost-box-header">
+                            <span>Passagem Aérea</span>
+                            <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "var(--secondary)" }}>
+                              flight
+                            </span>
+                          </div>
+                          <span className="cost-box-value">{brl(vAereo)}</span>
+                          <span className="cost-box-note">{vAereo > 0 ? "Emissão e taxas" : "Sem aéreo"}</span>
                         </div>
 
-                        {/* 2. Hotel */}
-                        <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "8px", padding: "10px" }}>
-                          <span style={{ fontSize: "11px", color: "var(--on-surface-variant)" }}>Hotel / Estadia</span>
-                          <div style={{ fontSize: "14px", fontWeight: 800, marginTop: "2px", color: "var(--on-surface)" }}>{brl(vHotel)}</div>
-                          <span style={{ fontSize: "10px", color: "var(--secondary)" }}>{vHotel > 0 ? "Contratado" : "Sem estadia"}</span>
+                        {/* Item 2: Hotel */}
+                        <div className="cost-box">
+                          <div className="cost-box-header">
+                            <span>Hotel / Estadia</span>
+                            <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "var(--secondary)" }}>
+                              hotel
+                            </span>
+                          </div>
+                          <span className="cost-box-value">{brl(vHotel)}</span>
+                          <span className="cost-box-note">{vHotel > 0 ? "Hospedagem faturada" : "Sem diárias"}</span>
                         </div>
 
-                        {/* 3. Carro */}
-                        <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "8px", padding: "10px" }}>
-                          <span style={{ fontSize: "11px", color: "var(--on-surface-variant)" }}>Carro / Translado</span>
-                          <div style={{ fontSize: "14px", fontWeight: 800, marginTop: "2px", color: "var(--on-surface)" }}>{brl(vCarro)}</div>
-                          <span style={{ fontSize: "10px", color: "var(--secondary)" }}>{vCarro > 0 ? "Contratado" : "Sem translado"}</span>
+                        {/* Item 3: Carro */}
+                        <div className="cost-box">
+                          <div className="cost-box-header">
+                            <span>Carro / Translado</span>
+                            <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "var(--secondary)" }}>
+                              directions_car
+                            </span>
+                          </div>
+                          <span className="cost-box-value">{brl(vCarro)}</span>
+                          <span className="cost-box-note">{vCarro > 0 ? "Locação / Translado" : "Sem translado"}</span>
                         </div>
 
-                        {/* 4. Seguro */}
-                        <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "8px", padding: "10px" }}>
-                          <span style={{ fontSize: "11px", color: "var(--on-surface-variant)" }}>Seguro / Outros</span>
-                          <div style={{ fontSize: "14px", fontWeight: 800, marginTop: "2px", color: "var(--on-surface)" }}>{brl(vSeguro)}</div>
-                          <span style={{ fontSize: "10px", color: "var(--outline)" }}>{vSeguro > 0 ? "Apólice ativa" : "Não aplicável"}</span>
+                        {/* Item 4: Seguro */}
+                        <div className="cost-box">
+                          <div className="cost-box-header">
+                            <span>Seguro / Outros</span>
+                            <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "var(--outline)" }}>
+                              verified_user
+                            </span>
+                          </div>
+                          <span className="cost-box-value">{brl(vSeguro)}</span>
+                          <span className="cost-box-note">{vSeguro > 0 ? "Apólice ativa" : "Não aplicável"}</span>
                         </div>
 
-                        {/* 5. Alimentação */}
-                        <div style={{ background: "var(--surface)", border: "1px solid #d97706", borderRadius: "8px", padding: "10px" }}>
-                          <span style={{ fontSize: "11px", color: "#d97706" }}>Alimentação / Diária</span>
-                          <div style={{ fontSize: "14px", fontWeight: 800, marginTop: "2px", color: "#d97706" }}>{brl(vDiaria)}</div>
-                          <span style={{ fontSize: "10px", color: "var(--on-surface-variant)" }}>Despesa Financeiro</span>
+                        {/* Item 5: Diária / Alimentação - PADRÃO LIMPO DE PROJETOS (SEM BORDA LARANJA) */}
+                        <div className="cost-box">
+                          <div className="cost-box-header">
+                            <span>Alimentação / Diária</span>
+                            <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "var(--secondary)" }}>
+                              restaurant
+                            </span>
+                          </div>
+                          <span className="cost-box-value">{brl(vDiaria)}</span>
+                          <span className="cost-box-note">{vDiaria > 0 ? "Despesa Consultor" : "Sem diárias"}</span>
                         </div>
 
-                        {/* 6. Total Viagem */}
-                        <div style={{ background: "var(--primary, #0f2a4a)", borderRadius: "8px", padding: "10px", color: "#ffffff" }}>
-                          <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.7)" }}>TOTAL VIAGEM</span>
-                          <div style={{ fontSize: "15px", fontWeight: 900, marginTop: "2px", color: "#ffffff" }}>{brl(totalGeral)}</div>
-                          <span style={{ fontSize: "10px", color: "var(--secondary, #00a896)" }}>100% Sincronizado</span>
+                        {/* Item 6: Total Viagem em Destaque Navy */}
+                        <div className="cost-box highlight">
+                          <div className="cost-box-header">
+                            <span>Total Viagem</span>
+                            <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "var(--secondary-fixed)" }}>
+                              account_balance_wallet
+                            </span>
+                          </div>
+                          <span className="cost-box-value">{brl(totalGeral)}</span>
+                          <span className="cost-box-note">Conciliado 100%</span>
                         </div>
                       </div>
                     </div>

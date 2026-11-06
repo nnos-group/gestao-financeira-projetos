@@ -43,7 +43,8 @@ export default async function ViagensPage({
     : 2026;
 
   // Se sp.mes não for informado ou for vazio, mesSelecionado é null (modo Ano Inteiro)
-  const mesSelecionado = sp.mes ? Math.min(12, Math.max(1, Number(sp.mes))) : null;
+  const mesCorrente = new Date().getMonth() + 1;
+  const mesSelecionado = sp.mes === "todos" ? null : Math.min(12, Math.max(1, Number(sp.mes) || mesCorrente));
 
   // Sincroniza e obtém as solicitações do ano
   const todasSolicitacoes = await sincronizarSolicitacoesIniciais(String(anoSelecionado));

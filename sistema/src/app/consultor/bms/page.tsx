@@ -980,12 +980,12 @@ export default function ConsultorBmsPage() {
                       </td>
                     </tr>
                   ) : (
-                    bmsFiltrados.map((bm: any) => {
+                      bmsFiltrados.map((bm: any, bmIdx: number) => {
                       const isAprovado = bm.status === "Aprovado & Pronto p/ Faturamento";
                       const isAssinado = bm.status === "Assinado pelo Prestador" || bm.status === "Aprovado pelo Líder";
 
                       return (
-                        <tr key={bm.id || bm.codigo} style={{ borderBottom: "1px solid var(--border)" }}>
+                        <tr key={`${bm.id || bm.codigo}-${bmIdx}`} style={{ borderBottom: "1px solid var(--border)" }}>
                           <td style={{ padding: "14px 16px", fontWeight: 800, color: "var(--primary)", whiteSpace: "nowrap" }}>
                             {bm.codigo}
                           </td>

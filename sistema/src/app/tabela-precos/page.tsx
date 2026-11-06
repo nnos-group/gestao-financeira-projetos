@@ -5,6 +5,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import ThemeToggle from "@/components/ThemeToggle";
 import ModernDropdown from "@/components/ModernDropdown";
 import { formatarDataBR } from "@/lib/date-utils";
+import { usePerfilAcesso } from "@/contexts/PerfilAcessoContext";
 
 interface PrecoItem {
   atividade: string;
@@ -69,6 +70,10 @@ interface Contrato {
 }
 
 export default function TabelaPrecosPage() {
+  const { perfilAtivoId, nivelModulo } = usePerfilAcesso();
+  const podeEditarTabela =
+    (perfilAtivoId === "ADMIN" || perfilAtivoId === "FINANCEIRO") &&
+    nivelModulo("tabela-precos") !== "VISUALIZAR";
   const [contratos, setContratos] = useState<Contrato[]>([]);
   const [contratoSelecionadoId, setContratoSelecionadoId] = useState<string>("contrato-cnh");
   const [abaAtiva, setAbaAtiva] = useState<"cliente" | "consultores" | "centros_custo" | "reajustes">("cliente");
@@ -354,6 +359,8 @@ export default function TabelaPrecosPage() {
               <span>Relatórios</span>
             </Link>
             <Link href="/consultor" className="nav-item"><span className="material-symbols-outlined">support_agent</span><span>Consultor</span></Link>
+            <Link href="/lider" className="nav-item"><span className="material-symbols-outlined">supervisor_account</span><span>Líder de Projeto</span></Link>
+            <Link href="/admin" className="nav-item"><span className="material-symbols-outlined">admin_panel_settings</span><span>Administrador</span></Link>
           </nav>
         </div>
 
@@ -469,50 +476,54 @@ export default function TabelaPrecosPage() {
                 />
               </div>
 
-              <button
-                type="button"
-                onClick={() => setModalReajusteAberto(true)}
-                className="btn-primary"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  padding: "9px 16px",
-                  borderRadius: "10px",
-                  fontWeight: 700,
-                  fontSize: "12.5px",
-                  cursor: "pointer",
-                  background: "#0083ca",
-                  color: "#ffffff",
-                  border: "none",
-                  boxShadow: "0 2px 6px rgba(0, 131, 202, 0.25)",
-                }}
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>trending_up</span>
-                <span>Aplicar Reajuste Contratual</span>
-              </button>
+              {podeEditarTabela && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setModalReajusteAberto(true)}
+                    className="btn-primary"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      padding: "9px 16px",
+                      borderRadius: "10px",
+                      fontWeight: 700,
+                      fontSize: "12.5px",
+                      cursor: "pointer",
+                      background: "#0083ca",
+                      color: "#ffffff",
+                      border: "none",
+                      boxShadow: "0 2px 6px rgba(0, 131, 202, 0.25)",
+                    }}
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>trending_up</span>
+                    <span>Aplicar Reajuste Contratual</span>
+                  </button>
 
-              <button
-                type="button"
-                onClick={() => setModalNovoContratoAberto(true)}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  padding: "9px 16px",
-                  borderRadius: "10px",
-                  fontWeight: 700,
-                  fontSize: "12.5px",
-                  cursor: "pointer",
-                  background: "#0f2a4a",
-                  color: "#ffffff",
-                  border: "none",
-                  boxShadow: "0 2px 6px rgba(15, 42, 74, 0.25)",
-                }}
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>add_circle</span>
-                <span>Novo Contrato</span>
-              </button>
+                  <button
+                    type="button"
+                    onClick={() => setModalNovoContratoAberto(true)}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      padding: "9px 16px",
+                      borderRadius: "10px",
+                      fontWeight: 700,
+                      fontSize: "12.5px",
+                      cursor: "pointer",
+                      background: "#0f2a4a",
+                      color: "#ffffff",
+                      border: "none",
+                      boxShadow: "0 2px 6px rgba(15, 42, 74, 0.25)",
+                    }}
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>add_circle</span>
+                    <span>Novo Contrato</span>
+                  </button>
+                </>
+              )}
             </div>
           </div>
 
@@ -1205,14 +1216,16 @@ export default function TabelaPrecosPage() {
                     Ao selecionar qualquer um destes Centros de Custo no lançamento de uma atividade, a Tabela de Preços do <strong>{contratoAtual.nome}</strong> será aplicada automaticamente.
                   </p>
                 </div>
-                <a
-                  href="/centro-de-custo"
-                  className="btn-primary"
-                  style={{ textDecoration: "none", fontSize: "12px", padding: "6px 14px", display: "inline-flex", alignItems: "center", gap: "6px", background: "var(--primary)", color: "#fff", borderRadius: "8px" }}
-                >
-                  <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>edit</span>
-                  <span>Gerenciar Matriz de Centros de Custo</span>
-                </a>
+                {podeEditarTabela && (
+                  <a
+                    href="/centro-de-custo"
+                    className="btn-primary"
+                    style={{ textDecoration: "none", fontSize: "12px", padding: "6px 14px", display: "inline-flex", alignItems: "center", gap: "6px", background: "var(--primary)", color: "#fff", borderRadius: "8px" }}
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>edit</span>
+                    <span>Gerenciar Matriz de Centros de Custo</span>
+                  </a>
+                )}
               </div>
 
               <div style={{ padding: "18px" }}>

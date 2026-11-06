@@ -127,17 +127,54 @@ export async function GET(req: NextRequest) {
         .maybeSingle();
 
       let bmsBase: any[] = [];
+      const bmsPath = path.resolve(process.cwd(), "src/lib/bms-2026.json");
+      let bmsLocais: any[] = [];
+      if (fs.existsSync(bmsPath)) {
+        try {
+          bmsLocais = JSON.parse(fs.readFileSync(bmsPath, "utf-8"));
+        } catch {}
+      }
+
       if (listaCloud?.descricao) {
         try {
-          bmsBase = JSON.parse(listaCloud.descricao);
+          const parsedCloud = JSON.parse(listaCloud.descricao);
+          if (Array.isArray(parsedCloud) && parsedCloud.length > 0) {
+            const mapaLocal = new Map(bmsLocais.map((item: any) => [String(item.codigo), item]));
+            const vistos = new Set<string>();
+            const mesclados: any[] = [];
+
+            for (const item of parsedCloud) {
+              const cod = String(item.codigo);
+              if (vistos.has(cod)) continue;
+              vistos.add(cod);
+              if (String(item.liderProjetoNome || "").includes("Teste") && mapaLocal.has(cod)) {
+                mesclados.push(mapaLocal.get(cod));
+              } else {
+                mesclados.push(item);
+              }
+            }
+
+            for (const item of bmsLocais) {
+              const cod = String(item.codigo);
+              if (!vistos.has(cod)) {
+                vistos.add(cod);
+                mesclados.push(item);
+              }
+            }
+
+            bmsBase = mesclados;
+          }
         } catch {}
       }
 
       if (bmsBase.length === 0) {
-        const bmsPath = path.resolve(process.cwd(), "src/lib/bms-2026.json");
-        if (fs.existsSync(bmsPath)) {
-          bmsBase = JSON.parse(fs.readFileSync(bmsPath, "utf-8"));
-        }
+        const vistos = new Set<string>();
+        bmsBase = bmsLocais.filter((item: any) => {
+          const cod = String(item.codigo);
+          if (vistos.has(cod)) return false;
+          vistos.add(cod);
+          return true;
+        });
       }
 
       // Mesclar status de bms_assinaturas_status

@@ -1,0 +1,1157 @@
+[
+  {
+    "id": "ADMIN",
+    "nome": "Administrador",
+    "sigla": "ADMIN",
+    "icone": "admin_panel_settings",
+    "cor": "#0f2a4a",
+    "bgCor": "#e0f2fe",
+    "rotaPadrao": "/projetos",
+    "escopoDados": "GLOBAL",
+    "descricao": "Acesso irrestrito a todos os módulos operacionais, financeiros, societários, relatórios e configuração de permissões do sistema.",
+    "usuariosVinculados": [
+      {
+        "nome": "LEONARDO CAMPOS",
+        "email": "leonardo.campos@nnos.com.br",
+        "cargo": "Sócio Diretor Financeiro & Adm"
+      }
+    ],
+    "regrasSeguranca": {
+      "verFaturamentoCliente": true,
+      "verMargemImpostos": true,
+      "verDadosBancarios": true,
+      "aprovarCotacoesViagem": true,
+      "homologarBmFinanceiro": true,
+      "dispararZohoSign": true,
+      "gerenciarPermissoesPerfis": true,
+      "restringirAoProprio Escopo": false
+    },
+    "modulos": [
+      {
+        "id": "projetos",
+        "nome": "Projetos & Atividades",
+        "rota": "/projetos",
+        "icone": "assignment",
+        "visivel": true,
+        "nivel": "TOTAL",
+        "abaPadrao": "Todos os Projetos",
+        "observacao": "Planejamento completo, faturamento, repasse, margem e alocação de consultores."
+      },
+      {
+        "id": "medicao",
+        "nome": "BM - Boletim de Medição",
+        "rota": "/medicao",
+        "icone": "receipt_long",
+        "visivel": true,
+        "nivel": "TOTAL",
+        "abaPadrao": "Visão Geral & Emissão em Massa",
+        "observacao": "Geração individual/em massa, disparo Zoho Sign e homologação financeira."
+      },
+      {
+        "id": "viagens",
+        "nome": "Viagens & Logística",
+        "rota": "/viagens",
+        "icone": "flight",
+        "visivel": true,
+        "nivel": "TOTAL",
+        "abaPadrao": "Líder de Projeto / Financeiro",
+        "observacao": "Acesso a todas as abas: Agência, Líder de Projeto, Financeiro e Consultor."
+      },
+      {
+        "id": "centro-de-custo",
+        "nome": "Centro de Custo",
+        "rota": "/centro-de-custo",
+        "icone": "account_tree",
+        "visivel": true,
+        "nivel": "TOTAL",
+        "abaPadrao": "Estrutura Corporativa",
+        "observacao": "Criação e edição de centros de custo, áreas de negócio e líderes."
+      },
+      {
+        "id": "tabela-precos",
+        "nome": "Tabela de Preços",
+        "rota": "/tabela-precos",
+        "icone": "request_quote",
+        "visivel": true,
+        "nivel": "TOTAL",
+        "abaPadrao": "Tarifário Contratual",
+        "observacao": "Gestão completa de tarifas de venda ao cliente e repasse por perfil."
+      },
+      {
+        "id": "pessoas",
+        "nome": "Pessoas",
+        "rota": "/pessoas",
+        "icone": "group",
+        "visivel": true,
+        "nivel": "TOTAL",
+        "abaPadrao": "Todos (Sócios, Parceiros, CLT)",
+        "observacao": "Cadastro completo de documentos, CNPJ, dados bancários, PIX e contratos."
+      },
+      {
+        "id": "faturamento",
+        "nome": "Faturamento",
+        "rota": "/faturamento",
+        "icone": "receipt",
+        "visivel": true,
+        "nivel": "TOTAL",
+        "abaPadrao": "Faturamento Anual",
+        "observacao": "Controle de notas fiscais emitidas aos clientes, impostos e recebimentos."
+      },
+      {
+        "id": "pagamentos",
+        "nome": "Pagamentos",
+        "rota": "/pagamentos",
+        "icone": "payments",
+        "visivel": true,
+        "nivel": "TOTAL",
+        "abaPadrao": "Contas a Pagar & Auditoria BM",
+        "observacao": "Gestão de pagamentos a parceiros, pró-labore societário, RDVs e cartão corporativo."
+      },
+      {
+        "id": "relatorios",
+        "nome": "Relatórios",
+        "rota": "/relatorios",
+        "icone": "monitoring",
+        "visivel": true,
+        "nivel": "TOTAL",
+        "abaPadrao": "Central Executiva (7 Relatórios)",
+        "observacao": "DRE, Matriz Financeira, Painel por Líder, Performance, Contas a Pagar e Prospecção."
+      },
+      {
+        "id": "consultor",
+        "nome": "Consultor",
+        "rota": "/consultor",
+        "icone": "support_agent",
+        "visivel": true,
+        "nivel": "TOTAL",
+        "abaPadrao": "Portal c/ Simulador",
+        "observacao": "Acesso ao portal do consultor com seletor de simulação habilitado."
+      },
+      {
+        "id": "lider",
+        "nome": "Líder de Projeto",
+        "rota": "/lider",
+        "icone": "supervisor_account",
+        "visivel": true,
+        "nivel": "TOTAL",
+        "abaPadrao": "Visão Consolidada / Simulador",
+        "observacao": "Painel gerencial de todas as carteiras de líderes de projeto."
+      },
+      {
+        "id": "admin",
+        "nome": "Administrador",
+        "rota": "/admin",
+        "icone": "admin_panel_settings",
+        "visivel": true,
+        "nivel": "TOTAL",
+        "abaPadrao": "Matriz de Perfis & Acessos",
+        "observacao": "Configuração de RBAC, módulos visíveis por perfil e auditoria de acessos."
+      }
+    ]
+  },
+  {
+    "id": "DIRETORIA",
+    "nome": "Diretoria Executiva",
+    "sigla": "DIRETORIA",
+    "icone": "corporate_fare",
+    "cor": "#1e3a8a",
+    "bgCor": "#dbeafe",
+    "rotaPadrao": "/projetos",
+    "escopoDados": "GLOBAL",
+    "descricao": "Visão executiva dedicada à Diretoria: acompanhamento estratégico de resultados, DRE, matriz financeira, projetos, faturamento e aprovações conforme liberações configuradas pelo Administrador.",
+    "usuariosVinculados": [
+      {
+        "nome": "MARCELO LARA",
+        "email": "marcelo.lara@nnos.com.br",
+        "cargo": "Sócio Diretor Executivo"
+      },
+      {
+        "nome": "PEDRO LAGE",
+        "email": "pedro.lage@nnos.com.br",
+        "cargo": "Sócio Diretor de Operações"
+      },
+      {
+        "nome": "PEDRO COLARES",
+        "email": "pedro.colares@nnos.com.br",
+        "cargo": "Sócio Consultor Especialista"
+      }
+    ],
+    "regrasSeguranca": {
+      "verFaturamentoCliente": true,
+      "verMargemImpostos": true,
+      "verDadosBancarios": true,
+      "aprovarCotacoesViagem": true,
+      "homologarBmFinanceiro": true,
+      "dispararZohoSign": false,
+      "gerenciarPermissoesPerfis": false,
+      "restringirAoProprioEscopo": false
+    },
+    "modulos": [
+      {
+        "id": "projetos",
+        "nome": "Projetos & Atividades",
+        "rota": "/projetos",
+        "icone": "assignment",
+        "visivel": true,
+        "nivel": "VISUALIZAR",
+        "abaPadrao": "Todos os Projetos",
+        "observacao": "Acompanhamento geral de projetos, atividades, consultores e margens."
+      },
+      {
+        "id": "medicao",
+        "nome": "BM - Boletim de Medição",
+        "rota": "/medicao",
+        "icone": "receipt_long",
+        "visivel": true,
+        "nivel": "EDITAR_APROVAR",
+        "abaPadrao": "Validação Executiva & BMs",
+        "observacao": "Conferência e validação executiva dos Boletins de Medição."
+      },
+      {
+        "id": "viagens",
+        "nome": "Viagens & Logística",
+        "rota": "/viagens",
+        "icone": "flight",
+        "visivel": true,
+        "nivel": "EDITAR_APROVAR",
+        "abaPadrao": "Visão Consolidada",
+        "observacao": "Acompanhamento e aprovação de demandas logísticas e viagens."
+      },
+      {
+        "id": "centro-de-custo",
+        "nome": "Centro de Custo",
+        "rota": "/centro-de-custo",
+        "icone": "account_tree",
+        "visivel": true,
+        "nivel": "VISUALIZAR",
+        "abaPadrao": "Estrutura Corporativa",
+        "observacao": "Consulta de unidades de negócio, clientes e centros de custo."
+      },
+      {
+        "id": "tabela-precos",
+        "nome": "Tabela de Preços",
+        "rota": "/tabela-precos",
+        "icone": "request_quote",
+        "visivel": true,
+        "nivel": "VISUALIZAR",
+        "abaPadrao": "Tarifário Contratual",
+        "observacao": "Consulta de tarifas contratuais e histórico de reajustes."
+      },
+      {
+        "id": "pessoas",
+        "nome": "Pessoas",
+        "rota": "/pessoas",
+        "icone": "group",
+        "visivel": true,
+        "nivel": "VISUALIZAR",
+        "abaPadrao": "Sócios, Parceiros & Equipe",
+        "observacao": "Consulta do quadro de consultores, sócios e parceiros."
+      },
+      {
+        "id": "faturamento",
+        "nome": "Faturamento",
+        "rota": "/faturamento",
+        "icone": "receipt",
+        "visivel": true,
+        "nivel": "VISUALIZAR",
+        "abaPadrao": "Faturamento Anual",
+        "observacao": "Acompanhamento executivo de notas emitidas e recebíveis."
+      },
+      {
+        "id": "pagamentos",
+        "nome": "Pagamentos",
+        "rota": "/pagamentos",
+        "icone": "payments",
+        "visivel": true,
+        "nivel": "VISUALIZAR",
+        "abaPadrao": "Contas a Pagar & Repasses",
+        "observacao": "Visão executiva de desembolsos, repasses e folha."
+      },
+      {
+        "id": "relatorios",
+        "nome": "Relatórios",
+        "rota": "/relatorios",
+        "icone": "monitoring",
+        "visivel": true,
+        "nivel": "VISUALIZAR",
+        "abaPadrao": "Central Executiva (DRE & Matriz)",
+        "observacao": "Acesso integral à DRE Gerencial, Matriz Financeira, Painel por Líder e Performance."
+      },
+      {
+        "id": "consultor",
+        "nome": "Consultor",
+        "rota": "/consultor",
+        "icone": "support_agent",
+        "visivel": true,
+        "nivel": "TOTAL",
+        "abaPadrao": "Meus BMs & Entregas",
+        "observacao": "Acesso ao portal individual para conferência de suas próprias alocações."
+      },
+      {
+        "id": "lider",
+        "nome": "Líder de Projeto",
+        "rota": "/lider",
+        "icone": "supervisor_account",
+        "visivel": true,
+        "nivel": "VISUALIZAR",
+        "abaPadrao": "Supervisão de Carteiras",
+        "observacao": "Permite simular/supervisionar a carteira dos líderes de projeto."
+      },
+      {
+        "id": "admin",
+        "nome": "Administrador",
+        "rota": "/admin",
+        "icone": "admin_panel_settings",
+        "visivel": false,
+        "nivel": "BLOQUEADO",
+        "abaPadrao": "Restrito ao Administrador",
+        "observacao": "Configuração de segurança centralizada no perfil Administrador."
+      }
+    ]
+  },
+  {
+    "id": "LIDER",
+    "nome": "Líder de Projeto",
+    "sigla": "LÍDER",
+    "icone": "supervisor_account",
+    "cor": "#0369a1",
+    "bgCor": "#e0f2fe",
+    "rotaPadrao": "/projetos",
+    "escopoDados": "CARTEIRA_LIDER",
+    "descricao": "Acesso ao sistema único com menus e telas restritos ao perfil autorizado e dados filtrados para a carteira do Líder de Projeto (aprovação de viagens, BMs, projetos e relatórios da carteira).",
+    "usuariosVinculados": [
+      {
+        "nome": "BEATRIZ PICORELLI",
+        "email": "beatriz.picorelli@nnos.com.br",
+        "cargo": "Líder de Projetos • HRD"
+      },
+      {
+        "nome": "CAROLINE AMIEVA",
+        "email": "caroline.amieva@nnos.com.br",
+        "cargo": "Líder de Projetos • Business Solutions"
+      },
+      {
+        "nome": "JEFFERSON SOUZA",
+        "email": "jefferson.souza@nnos.com.br",
+        "cargo": "Líder de Projetos • Dealer Development"
+      },
+      {
+        "nome": "VINICIUS SOUZA",
+        "email": "vinicius.souza@nnos.com.br",
+        "cargo": "Líder de Projetos • Business Solutions"
+      },
+      {
+        "nome": "FÁBIO CANASSA",
+        "email": "fabio.canassa@nnos.com.br",
+        "cargo": "Líder de Projetos • Outsourcing Porsche"
+      },
+      {
+        "nome": "JOICE LAGE",
+        "email": "joice.lage@nnos.com.br",
+        "cargo": "Líder de Projetos • Educação"
+      }
+    ],
+    "regrasSeguranca": {
+      "verFaturamentoCliente": false,
+      "verMargemImpostos": true,
+      "verDadosBancarios": false,
+      "aprovarCotacoesViagem": true,
+      "homologarBmFinanceiro": false,
+      "dispararZohoSign": false,
+      "gerenciarPermissoesPerfis": false,
+      "restringirAoProprioEscopo": true
+    },
+    "modulos": [
+      {
+        "id": "projetos",
+        "nome": "Projetos & Atividades",
+        "rota": "/projetos",
+        "icone": "assignment",
+        "visivel": true,
+        "nivel": "TOTAL",
+        "abaPadrao": "Projetos da Carteira do Líder",
+        "observacao": "Planejar atividades, alocar consultores e sinalizar necessidade de logística."
+      },
+      {
+        "id": "medicao",
+        "nome": "BM - Boletim de Medição",
+        "rota": "/medicao",
+        "icone": "receipt_long",
+        "visivel": true,
+        "nivel": "EDITAR_APROVAR",
+        "abaPadrao": "BMs dos Projetos da Carteira",
+        "observacao": "Conferência de horas executadas e aprovação técnica dos boletins da sua equipe."
+      },
+      {
+        "id": "viagens",
+        "nome": "Viagens & Logística",
+        "rota": "/viagens",
+        "icone": "flight",
+        "visivel": true,
+        "nivel": "EDITAR_APROVAR",
+        "abaPadrao": "Aba: Líder de Projeto",
+        "observacao": "Pré-selecionado na aba Líder de Projeto para aprovar/recusar cotações da agência."
+      },
+      {
+        "id": "centro-de-custo",
+        "nome": "Centro de Custo",
+        "rota": "/centro-de-custo",
+        "icone": "account_tree",
+        "visivel": true,
+        "nivel": "VISUALIZAR",
+        "abaPadrao": "Meus Centros de Custo",
+        "observacao": "Consulta de códigos de centro de custo e contratos vinculados à sua área."
+      },
+      {
+        "id": "tabela-precos",
+        "nome": "Tabela de Preços",
+        "rota": "/tabela-precos",
+        "icone": "request_quote",
+        "visivel": true,
+        "nivel": "VISUALIZAR",
+        "abaPadrao": "Consulta de Tarifas",
+        "observacao": "Visualização de valores contratuais para orçamentação de atividades."
+      },
+      {
+        "id": "pessoas",
+        "nome": "Pessoas",
+        "rota": "/pessoas",
+        "icone": "group",
+        "visivel": true,
+        "nivel": "TOTAL",
+        "abaPadrao": "Consultores & Instrutores",
+        "observacao": "Consulta de perfil técnico, base e aeroporto dos consultores (dados bancários ocultos)."
+      },
+      {
+        "id": "relatorios",
+        "nome": "Relatórios",
+        "rota": "/relatorios",
+        "icone": "monitoring",
+        "visivel": true,
+        "nivel": "VISUALIZAR",
+        "abaPadrao": "Painel por Líder & Performance",
+        "observacao": "Acesso liberado para Painel por Líder e Performance de Projetos (DRE Societário restrito)."
+      },
+      {
+        "id": "lider",
+        "nome": "Líder de Projeto",
+        "rota": "/lider",
+        "icone": "supervisor_account",
+        "visivel": false,
+        "nivel": "BLOQUEADO",
+        "abaPadrao": "Modo Líder Ativo no Menu",
+        "observacao": "Mantém o item Líder de Projeto visível e destacado no menu lateral."
+      },
+      {
+        "id": "faturamento",
+        "nome": "Faturamento",
+        "rota": "/faturamento",
+        "icone": "receipt",
+        "visivel": true,
+        "nivel": "VISUALIZAR",
+        "abaPadrao": "Restrito ao Financeiro",
+        "observacao": "Emissão de NFs e conciliação bancária centralizadas no Financeiro."
+      },
+      {
+        "id": "pagamentos",
+        "nome": "Pagamentos",
+        "rota": "/pagamentos",
+        "icone": "payments",
+        "visivel": false,
+        "nivel": "BLOQUEADO",
+        "abaPadrao": "Restrito ao Financeiro",
+        "observacao": "Folha, pró-labore societário e baixas bancárias restritos à Controladoria."
+      },
+      {
+        "id": "consultor",
+        "nome": "Consultor",
+        "rota": "/consultor",
+        "icone": "support_agent",
+        "visivel": false,
+        "nivel": "BLOQUEADO",
+        "abaPadrao": "Oculto",
+        "observacao": "Visão individual exclusiva do prestador."
+      },
+      {
+        "id": "admin",
+        "nome": "Administrador",
+        "rota": "/admin",
+        "icone": "admin_panel_settings",
+        "visivel": false,
+        "nivel": "BLOQUEADO",
+        "abaPadrao": "Restrito à Diretoria",
+        "observacao": "Configuração de segurança restrita a Administradores."
+      }
+    ]
+  },
+  {
+    "id": "FINANCEIRO",
+    "nome": "Financeiro & Controladoria",
+    "sigla": "FINANCEIRO",
+    "icone": "account_balance",
+    "cor": "#047857",
+    "bgCor": "#d1fae5",
+    "rotaPadrao": "/medicao",
+    "escopoDados": "GLOBAL",
+    "descricao": "Gestão de faturamento, emissão e disparo de Boletins de Medição (Zoho Sign), conciliação de Notas Fiscais, contas a pagar, reembolsos RDV/VExpenses e relatórios contábeis.",
+    "usuariosVinculados": [
+      {
+        "nome": "IGOR PICORELLI",
+        "email": "igor.picorelli@nnos.com.br",
+        "cargo": "Gestão Adm & Controle Financeiro"
+      },
+      {
+        "nome": "LEONARDO CAMPOS",
+        "email": "leonardo.campos@nnos.com.br",
+        "cargo": "Coordenação Financeira & Contábil"
+      },
+      {
+        "nome": "KARINA RIBEIRO",
+        "email": "karina.domingues1@hotmail.com",
+        "cargo": "Analista de Qualidade"
+      }
+    ],
+    "regrasSeguranca": {
+      "verFaturamentoCliente": true,
+      "verMargemImpostos": true,
+      "verDadosBancarios": true,
+      "aprovarCotacoesViagem": false,
+      "homologarBmFinanceiro": true,
+      "dispararZohoSign": true,
+      "gerenciarPermissoesPerfis": false,
+      "restringirAoProprioEscopo": false
+    },
+    "modulos": [
+      {
+        "id": "medicao",
+        "nome": "BM - Boletim de Medição",
+        "rota": "/medicao",
+        "icone": "receipt_long",
+        "visivel": true,
+        "nivel": "TOTAL",
+        "abaPadrao": "Todos os BMs & Emissão em Massa",
+        "observacao": "Geração de BMs, sincronização Zoho Sign, conferência de NFs e liberação p/ pagamento."
+      },
+      {
+        "id": "faturamento",
+        "nome": "Faturamento",
+        "rota": "/faturamento",
+        "icone": "receipt",
+        "visivel": true,
+        "nivel": "TOTAL",
+        "abaPadrao": "Faturamento & Impostos",
+        "observacao": "Gestão integral do faturamento mensal, retenções e recebíveis."
+      },
+      {
+        "id": "pagamentos",
+        "nome": "Pagamentos",
+        "rota": "/pagamentos",
+        "icone": "payments",
+        "visivel": false,
+        "nivel": "BLOQUEADO",
+        "abaPadrao": "Contas a Pagar & Cruzamento BM",
+        "observacao": "Baixa de pagamentos, conciliação de BMs x NFs, RDVs e Cartão Corporativo."
+      },
+      {
+        "id": "viagens",
+        "nome": "Viagens & Logística",
+        "rota": "/viagens",
+        "icone": "flight",
+        "visivel": true,
+        "nivel": "EDITAR_APROVAR",
+        "abaPadrao": "Aba: Financeiro (Auditoria RDV)",
+        "observacao": "Pré-selecionado na aba Financeiro para auditoria de custos contratados vs. realizados."
+      },
+      {
+        "id": "centro-de-custo",
+        "nome": "Centro de Custo",
+        "rota": "/centro-de-custo",
+        "icone": "account_tree",
+        "visivel": true,
+        "nivel": "TOTAL",
+        "abaPadrao": "Plano de Centros de Custo",
+        "observacao": "Manutenção da estrutura contábil e vínculo com clientes/CNPJ."
+      },
+      {
+        "id": "tabela-precos",
+        "nome": "Tabela de Preços",
+        "rota": "/tabela-precos",
+        "icone": "request_quote",
+        "visivel": true,
+        "nivel": "TOTAL",
+        "abaPadrao": "Tabela Oficial",
+        "observacao": "Conferência e atualização de valores-hora e taxas de repasse."
+      },
+      {
+        "id": "pessoas",
+        "nome": "Pessoas",
+        "rota": "/pessoas",
+        "icone": "group",
+        "visivel": true,
+        "nivel": "TOTAL",
+        "abaPadrao": "Cadastro PJ / Dados Bancários",
+        "observacao": "Acesso completo a CNPJ, Razão Social, Contratos, Banco, Agência, Conta e PIX."
+      },
+      {
+        "id": "relatorios",
+        "nome": "Relatórios",
+        "rota": "/relatorios",
+        "icone": "monitoring",
+        "visivel": true,
+        "nivel": "TOTAL",
+        "abaPadrao": "DRE, Matriz & Contas a Pagar",
+        "observacao": "Acesso a todos os relatórios financeiros e contábeis."
+      },
+      {
+        "id": "projetos",
+        "nome": "Projetos & Atividades",
+        "rota": "/projetos",
+        "icone": "assignment",
+        "visivel": true,
+        "nivel": "TOTAL",
+        "abaPadrao": "Conferência de Lançamentos",
+        "observacao": "Visualização de atividades planejadas para auditoria de faturamento e medição."
+      },
+      {
+        "id": "lider",
+        "nome": "Líder de Projeto",
+        "rota": "/lider",
+        "icone": "supervisor_account",
+        "visivel": true,
+        "nivel": "VISUALIZAR",
+        "abaPadrao": "Auditoria por Carteira",
+        "observacao": "Consulta consolidada das carteiras dos líderes."
+      },
+      {
+        "id": "consultor",
+        "nome": "Consultor",
+        "rota": "/consultor",
+        "icone": "support_agent",
+        "visivel": false,
+        "nivel": "BLOQUEADO",
+        "abaPadrao": "Oculto",
+        "observacao": "Portal de uso individual do prestador."
+      },
+      {
+        "id": "admin",
+        "nome": "Administrador",
+        "rota": "/admin",
+        "icone": "admin_panel_settings",
+        "visivel": false,
+        "nivel": "BLOQUEADO",
+        "abaPadrao": "Restrito à Diretoria",
+        "observacao": "Gestão de perfis restrita ao Administrador."
+      }
+    ]
+  },
+  {
+    "id": "AGENCIA",
+    "nome": "Agência de Viagens & Logística",
+    "sigla": "AGÊNCIA",
+    "icone": "flight_takeoff",
+    "cor": "#b45309",
+    "bgCor": "#fef3c7",
+    "rotaPadrao": "/viagens",
+    "escopoDados": "LOGISTICA",
+    "descricao": "Operação exclusiva de cotações aéreas, hospedagem e locação de veículos, emissão de bilhetes/vouchers e disparo de orientações de viagem e políticas de prestação de contas.",
+    "usuariosVinculados": [
+      {
+        "nome": "CENTRAL DE VIAGENS (AGÊNCIA)",
+        "email": "viagens@nnos.com.br",
+        "cargo": "Operador de Cotações & Emissão"
+      }
+    ],
+    "regrasSeguranca": {
+      "verFaturamentoCliente": false,
+      "verMargemImpostos": false,
+      "verDadosBancarios": false,
+      "aprovarCotacoesViagem": false,
+      "homologarBmFinanceiro": false,
+      "dispararZohoSign": false,
+      "gerenciarPermissoesPerfis": false,
+      "restringirAoProprioEscopo": true
+    },
+    "modulos": [
+      {
+        "id": "viagens",
+        "nome": "Viagens & Logística",
+        "rota": "/viagens",
+        "icone": "flight",
+        "visivel": true,
+        "nivel": "EDITAR_APROVAR",
+        "abaPadrao": "Aba: Agência de Viagens",
+        "observacao": "Pré-selecionado na aba Agência de Viagens: inserir cotações, anexar PDFs e enviar vouchers."
+      },
+      {
+        "id": "pessoas",
+        "nome": "Pessoas",
+        "rota": "/pessoas",
+        "icone": "group",
+        "visivel": true,
+        "nivel": "VISUALIZAR",
+        "abaPadrao": "Dados de Embarque do Viajante",
+        "observacao": "Exibe Nome Completo, CPF, RG, Nascimento, Base e Aeroporto Preferencial (oculta valores/PIX)."
+      },
+      {
+        "id": "projetos",
+        "nome": "Projetos & Atividades",
+        "rota": "/projetos",
+        "icone": "assignment",
+        "visivel": false,
+        "nivel": "BLOQUEADO",
+        "abaPadrao": "Agenda c/ Logística",
+        "observacao": "Consulta de datas, locais e atividades que requerem deslocamento (sem valores financeiros)."
+      },
+      {
+        "id": "medicao",
+        "nome": "BM - Boletim de Medição",
+        "rota": "/medicao",
+        "icone": "receipt_long",
+        "visivel": false,
+        "nivel": "BLOQUEADO",
+        "abaPadrao": "Sem Acesso",
+        "observacao": "Dados de medição de honorários ocultos para a agência."
+      },
+      {
+        "id": "centro-de-custo",
+        "nome": "Centro de Custo",
+        "rota": "/centro-de-custo",
+        "icone": "account_tree",
+        "visivel": false,
+        "nivel": "BLOQUEADO",
+        "abaPadrao": "Sem Acesso",
+        "observacao": "Oculto no menu."
+      },
+      {
+        "id": "tabela-precos",
+        "nome": "Tabela de Preços",
+        "rota": "/tabela-precos",
+        "icone": "request_quote",
+        "visivel": false,
+        "nivel": "BLOQUEADO",
+        "abaPadrao": "Sem Acesso",
+        "observacao": "Confidencial."
+      },
+      {
+        "id": "faturamento",
+        "nome": "Faturamento",
+        "rota": "/faturamento",
+        "icone": "receipt",
+        "visivel": false,
+        "nivel": "BLOQUEADO",
+        "abaPadrao": "Sem Acesso",
+        "observacao": "Confidencial."
+      },
+      {
+        "id": "pagamentos",
+        "nome": "Pagamentos",
+        "rota": "/pagamentos",
+        "icone": "payments",
+        "visivel": false,
+        "nivel": "BLOQUEADO",
+        "abaPadrao": "Sem Acesso",
+        "observacao": "Confidencial."
+      },
+      {
+        "id": "relatorios",
+        "nome": "Relatórios",
+        "rota": "/relatorios",
+        "icone": "monitoring",
+        "visivel": false,
+        "nivel": "BLOQUEADO",
+        "abaPadrao": "Sem Acesso",
+        "observacao": "Relatórios gerenciais ocultos."
+      },
+      {
+        "id": "consultor",
+        "nome": "Consultor",
+        "rota": "/consultor",
+        "icone": "support_agent",
+        "visivel": false,
+        "nivel": "BLOQUEADO",
+        "abaPadrao": "Sem Acesso",
+        "observacao": "Oculto."
+      },
+      {
+        "id": "lider",
+        "nome": "Líder de Projeto",
+        "rota": "/lider",
+        "icone": "supervisor_account",
+        "visivel": false,
+        "nivel": "BLOQUEADO",
+        "abaPadrao": "Sem Acesso",
+        "observacao": "Oculto."
+      },
+      {
+        "id": "admin",
+        "nome": "Administrador",
+        "rota": "/admin",
+        "icone": "admin_panel_settings",
+        "visivel": false,
+        "nivel": "BLOQUEADO",
+        "abaPadrao": "Sem Acesso",
+        "observacao": "Oculto."
+      }
+    ]
+  },
+  {
+    "id": "SOCIO",
+    "nome": "Sócio Consultor",
+    "sigla": "SÓCIO",
+    "icone": "workspace_premium",
+    "cor": "#6d28d9",
+    "bgCor": "#ede9fe",
+    "rotaPadrao": "/consultor",
+    "escopoDados": "PROPRIO_USUARIO",
+    "descricao": "Visão dedicada aos Sócios Consultores da NNÓS: acompanhamento da própria agenda, BMs societários, viagens corporativas, rateio interno e relatórios executivos.",
+    "usuariosVinculados": [
+      {
+        "nome": "ANTONIO PEREZ",
+        "email": "perez.amieva@nnos.com.br",
+        "cargo": "Sócio Consultor Especialista"
+      },
+      {
+        "nome": "CLEIVSON VIEIRA",
+        "email": "cmv_cmv@hotmail.com",
+        "cargo": "Sócio Consultor Especialista"
+      },
+      {
+        "nome": "C. DOURADO",
+        "email": "clorisvaldo.dourado@nnos.com.br",
+        "cargo": "Sócio Consultor Especialista"
+      },
+      {
+        "nome": "GIBA - JOÃO GILBERTO",
+        "email": "joao.gilberto@nnos.com.br",
+        "cargo": "Sócio Consultor Especialista"
+      },
+      {
+        "nome": "PEDRO COLARES",
+        "email": "pedro.colares@nnos.com.br",
+        "cargo": "Sócio Consultor Especialista"
+      },
+      {
+        "nome": "FELIPE CAMPOS",
+        "email": "felipe.campos@nnos.com.br",
+        "cargo": "Sócio Consultor Especialista"
+      },
+      {
+        "nome": "MARISTELA GARCIA",
+        "email": "maristela.garcia@nnos.com.br",
+        "cargo": "Sócia Consultora Especialista"
+      }
+    ],
+    "regrasSeguranca": {
+      "verFaturamentoCliente": true,
+      "verMargemImpostos": true,
+      "verDadosBancarios": false,
+      "aprovarCotacoesViagem": false,
+      "homologarBmFinanceiro": false,
+      "dispararZohoSign": false,
+      "gerenciarPermissoesPerfis": false,
+      "restringirAoProprioEscopo": true
+    },
+    "modulos": [
+      {
+        "id": "consultor",
+        "nome": "Consultor",
+        "rota": "/consultor",
+        "icone": "support_agent",
+        "visivel": true,
+        "nivel": "TOTAL",
+        "abaPadrao": "Visão Geral, BMs & Pagamentos",
+        "observacao": "Painel completo das entregas do sócio, BMs homologados, rateio interno e extratos."
+      },
+      {
+        "id": "projetos",
+        "nome": "Projetos & Atividades",
+        "rota": "/projetos",
+        "icone": "assignment",
+        "visivel": true,
+        "nivel": "VISUALIZAR",
+        "abaPadrao": "Minhas Alocações",
+        "observacao": "Consulta das atividades e projetos em que o sócio está alocado."
+      },
+      {
+        "id": "viagens",
+        "nome": "Viagens & Logística",
+        "rota": "/viagens",
+        "icone": "flight",
+        "visivel": true,
+        "nivel": "VISUALIZAR",
+        "abaPadrao": "Aba: Consultor (Minhas Viagens)",
+        "observacao": "Consulta de bilhetes, vouchers e políticas de prestação de contas (CNH/Iveco/NNÓS)."
+      },
+      {
+        "id": "relatorios",
+        "nome": "Relatórios",
+        "rota": "/relatorios",
+        "icone": "monitoring",
+        "visivel": true,
+        "nivel": "VISUALIZAR",
+        "abaPadrao": "DRE & Performance de Projetos",
+        "observacao": "Acesso executivo aos indicadores consolidados da consultoria."
+      },
+      {
+        "id": "medicao",
+        "nome": "BM - Boletim de Medição",
+        "rota": "/medicao",
+        "icone": "receipt_long",
+        "visivel": false,
+        "nivel": "BLOQUEADO",
+        "abaPadrao": "Acesso via Meus BMs (/consultor/bms)",
+        "observacao": "Consultado diretamente no Portal do Consultor."
+      },
+      {
+        "id": "centro-de-custo",
+        "nome": "Centro de Custo",
+        "rota": "/centro-de-custo",
+        "icone": "account_tree",
+        "visivel": false,
+        "nivel": "BLOQUEADO",
+        "abaPadrao": "Oculto",
+        "observacao": "Gestão administrativa."
+      },
+      {
+        "id": "tabela-precos",
+        "nome": "Tabela de Preços",
+        "rota": "/tabela-precos",
+        "icone": "request_quote",
+        "visivel": false,
+        "nivel": "BLOQUEADO",
+        "abaPadrao": "Oculto",
+        "observacao": "Gestão comercial."
+      },
+      {
+        "id": "pessoas",
+        "nome": "Pessoas",
+        "rota": "/pessoas",
+        "icone": "group",
+        "visivel": false,
+        "nivel": "BLOQUEADO",
+        "abaPadrao": "Oculto",
+        "observacao": "Restrito ao RH/Financeiro."
+      },
+      {
+        "id": "faturamento",
+        "nome": "Faturamento",
+        "rota": "/faturamento",
+        "icone": "receipt",
+        "visivel": false,
+        "nivel": "BLOQUEADO",
+        "abaPadrao": "Oculto",
+        "observacao": "Restrito ao Financeiro."
+      },
+      {
+        "id": "pagamentos",
+        "nome": "Pagamentos",
+        "rota": "/pagamentos",
+        "icone": "payments",
+        "visivel": false,
+        "nivel": "BLOQUEADO",
+        "abaPadrao": "Acesso via Meus Pagamentos",
+        "observacao": "Consultado diretamente em /consultor/pagamentos."
+      },
+      {
+        "id": "lider",
+        "nome": "Líder de Projeto",
+        "rota": "/lider",
+        "icone": "supervisor_account",
+        "visivel": false,
+        "nivel": "BLOQUEADO",
+        "abaPadrao": "Oculto",
+        "observacao": "Habilitado apenas para líderes de carteira."
+      },
+      {
+        "id": "admin",
+        "nome": "Administrador",
+        "rota": "/admin",
+        "icone": "admin_panel_settings",
+        "visivel": false,
+        "nivel": "BLOQUEADO",
+        "abaPadrao": "Oculto",
+        "observacao": "Restrito à Diretoria Executiva."
+      }
+    ]
+  },
+  {
+    "id": "CONSULTOR",
+    "nome": "Consultor / Instrutor Parceiro",
+    "sigla": "PARCEIRO",
+    "icone": "support_agent",
+    "cor": "#0284c7",
+    "bgCor": "#e0f2fe",
+    "rotaPadrao": "/consultor",
+    "escopoDados": "PROPRIO_USUARIO",
+    "descricao": "Acesso estrito ao Portal do Consultor (/consultor): visualização exclusiva da própria agenda, vouchers de viagem, políticas de reembolso, BMs para emissão de NF e histórico de pagamentos.",
+    "usuariosVinculados": [
+      {
+        "nome": "ALEJANDRO LAPUENTE",
+        "email": "alejandrolapuente@hotmail.com",
+        "cargo": "Consultor Parceiro Sênior"
+      },
+      {
+        "nome": "CEZAR HENRIQUE",
+        "email": "ctguiaconsultoria@gmail.com",
+        "cargo": "Consultor Parceiro Sênior"
+      },
+      {
+        "nome": "ADILSON PASINI",
+        "email": "adilson.pasini@gmail.com",
+        "cargo": "Consultor Parceiro Sênior"
+      },
+      {
+        "nome": "LILIA OLIVEIRA",
+        "email": "Consultoria.consulis@gmail.com",
+        "cargo": "Consultora Parceira Sênior"
+      },
+      {
+        "nome": "FELIPE MARTINS",
+        "email": "felipemm0702@hotmail.com",
+        "cargo": "Consultor Parceiro Dedicado"
+      },
+      {
+        "nome": "RODRIGO BARDIM",
+        "email": "rodrigobardim@gmail.com",
+        "cargo": "Consultor Parceiro Dedicado"
+      },
+      {
+        "nome": "WILLIAM SANTOS",
+        "email": "william291970@gmail.com",
+        "cargo": "Consultor Parceiro Dedicado"
+      }
+    ],
+    "regrasSeguranca": {
+      "verFaturamentoCliente": false,
+      "verMargemImpostos": false,
+      "verDadosBancarios": false,
+      "aprovarCotacoesViagem": false,
+      "homologarBmFinanceiro": false,
+      "dispararZohoSign": false,
+      "gerenciarPermissoesPerfis": false,
+      "restringirAoProprioEscopo": true
+    },
+    "modulos": [
+      {
+        "id": "consultor",
+        "nome": "Consultor",
+        "rota": "/consultor",
+        "icone": "support_agent",
+        "visivel": true,
+        "nivel": "VISUALIZAR",
+        "abaPadrao": "Portal do Consultor (5 Sub-telas)",
+        "observacao": "Acesso completo às próprias telas: Visão Geral, Minha Agenda, Minhas Viagens, Meus BMs e Meus Pagamentos."
+      },
+      {
+        "id": "projetos",
+        "nome": "Projetos & Atividades",
+        "rota": "/projetos",
+        "icone": "assignment",
+        "visivel": false,
+        "nivel": "BLOQUEADO",
+        "abaPadrao": "Bloqueado (Usa /consultor/agenda)",
+        "observacao": "Impede visualização de faturamento ao cliente e atividades de terceiros."
+      },
+      {
+        "id": "medicao",
+        "nome": "BM - Boletim de Medição",
+        "rota": "/medicao",
+        "icone": "receipt_long",
+        "visivel": false,
+        "nivel": "BLOQUEADO",
+        "abaPadrao": "Bloqueado (Usa /consultor/bms)",
+        "observacao": "Visualiza apenas os próprios BMs pelo Portal do Consultor."
+      },
+      {
+        "id": "viagens",
+        "nome": "Viagens & Logística",
+        "rota": "/viagens",
+        "icone": "flight",
+        "visivel": false,
+        "nivel": "BLOQUEADO",
+        "abaPadrao": "Bloqueado (Usa /consultor/viagens)",
+        "observacao": "Visualiza apenas seus próprios vouchers e políticas em /consultor/viagens."
+      },
+      {
+        "id": "centro-de-custo",
+        "nome": "Centro de Custo",
+        "rota": "/centro-de-custo",
+        "icone": "account_tree",
+        "visivel": false,
+        "nivel": "BLOQUEADO",
+        "abaPadrao": "Sem Acesso",
+        "observacao": "Restrito à gestão interna."
+      },
+      {
+        "id": "tabela-precos",
+        "nome": "Tabela de Preços",
+        "rota": "/tabela-precos",
+        "icone": "request_quote",
+        "visivel": false,
+        "nivel": "BLOQUEADO",
+        "abaPadrao": "Sem Acesso",
+        "observacao": "Tarifas de clientes confidenciais."
+      },
+      {
+        "id": "pessoas",
+        "nome": "Pessoas",
+        "rota": "/pessoas",
+        "icone": "group",
+        "visivel": false,
+        "nivel": "BLOQUEADO",
+        "abaPadrao": "Sem Acesso",
+        "observacao": "Dados pessoais de terceiros protegidos (LGPD)."
+      },
+      {
+        "id": "faturamento",
+        "nome": "Faturamento",
+        "rota": "/faturamento",
+        "icone": "receipt",
+        "visivel": false,
+        "nivel": "BLOQUEADO",
+        "abaPadrao": "Sem Acesso",
+        "observacao": "Confidencial."
+      },
+      {
+        "id": "pagamentos",
+        "nome": "Pagamentos",
+        "rota": "/pagamentos",
+        "icone": "payments",
+        "visivel": false,
+        "nivel": "BLOQUEADO",
+        "abaPadrao": "Bloqueado (Usa /consultor/pagamentos)",
+        "observacao": "Visualiza apenas seus próprios pagamentos e RDVs."
+      },
+      {
+        "id": "relatorios",
+        "nome": "Relatórios",
+        "rota": "/relatorios",
+        "icone": "monitoring",
+        "visivel": false,
+        "nivel": "BLOQUEADO",
+        "abaPadrao": "Sem Acesso",
+        "observacao": "Relatórios estratégicos restritos."
+      },
+      {
+        "id": "lider",
+        "nome": "Líder de Projeto",
+        "rota": "/lider",
+        "icone": "supervisor_account",
+        "visivel": false,
+        "nivel": "BLOQUEADO",
+        "abaPadrao": "Sem Acesso",
+        "observacao": "Restrito aos Líderes de Projeto."
+      },
+      {
+        "id": "admin",
+        "nome": "Administrador",
+        "rota": "/admin",
+        "icone": "admin_panel_settings",
+        "visivel": false,
+        "nivel": "BLOQUEADO",
+        "abaPadrao": "Sem Acesso",
+        "observacao": "Restrito à Diretoria Executiva."
+      }
+    ]
+  }
+]

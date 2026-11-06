@@ -7,6 +7,7 @@ import { ViagemSolicitacao, AnexoDocumento } from "@/lib/viagens-types";
 import { calcularPrazoPrestacaoContas, formatarPeriodoBR } from "@/lib/date-utils";
 import { calcularValoresAtividade, verificarEhSocio, verificarEhComissao } from "@/lib/tabela-precos-calculator";
 import { AgendaBloqueio, verificarConflitoBloqueio } from "@/lib/agenda-bloqueios";
+import { usePerfilAcesso } from "@/contexts/PerfilAcessoContext";
 
 export type ViagemItem = {
   id: string;
@@ -353,6 +354,7 @@ export default function FloatingCardsList({
   headerTopContent?: React.ReactNode;
 }) {
   const router = useRouter();
+  const { perfilAtivoId, liderSimulado, pertenceAoLiderAtivo, regraAtiva, nivelModulo } = usePerfilAcesso();
   const [lista, setLista] = useState<LancamentoItem[]>(itens);
   const [previewVoucherDoc, setPreviewVoucherDoc] = useState<AnexoDocumento | null>(null);
   const [confirmandoExclusaoId, setConfirmandoExclusaoId] = useState<string | null>(null);
@@ -1381,20 +1383,31 @@ export default function FloatingCardsList({
     setExpandedIds(novo);
   };
 
+  const listaEscopoPerfil = useMemo(() => {
+    if (perfilAtivoId !== "LIDER") return lista;
+    return lista.filter((it) =>
+      pertenceAoLiderAtivo(
+        it.projetos?.nome,
+        it.projetos?.centros_custo?.codigo,
+        it.projetos?.centros_custo?.lideres?.nome
+      )
+    );
+  }, [lista, perfilAtivoId, pertenceAoLiderAtivo]);
+
   const instrutoresLista = useMemo(() => {
     return Array.from(
-      new Set(lista.map((it) => it.consultores?.nome).filter(Boolean) as string[])
+      new Set(listaEscopoPerfil.map((it) => it.consultores?.nome).filter(Boolean) as string[])
     ).sort();
-  }, [lista]);
+  }, [listaEscopoPerfil]);
 
   const cidadesLista = useMemo(() => {
     return Array.from(
-      new Set(lista.map((it) => it.local).filter(Boolean) as string[])
+      new Set(listaEscopoPerfil.map((it) => it.local).filter(Boolean) as string[])
     ).sort();
-  }, [lista]);
+  }, [listaEscopoPerfil]);
 
   const filtrados = useMemo(() => {
-    return lista
+    return listaEscopoPerfil
       .filter((it) => {
         if (filtroInstrutor && it.consultores?.nome !== filtroInstrutor) {
           return false;
@@ -1433,12 +1446,125 @@ export default function FloatingCardsList({
         return true;
       })
       .sort(compararProjetos);
-  }, [lista, busca, filtroInstrutor, filtroCidade, filtroLogistica, filtroStatus]);
+  }, [listaEscopoPerfil, busca, filtroInstrutor, filtroCidade, filtroLogistica, filtroStatus]);
+
+  const kpisDinamicos = useMemo(() => {
+    const cancelados = filtrados.filter((it) =>
+      (it.status || "").toUpperCase().includes("CANCEL")
+    );
+    const totalCanceladosQtd = cancelados.length;
+    const totalCanceladoValor = cancelados.reduce((s, it) => s + (it.faturar ?? 0), 0);
+    const totalFaturar = filtrados.reduce((s, it) => s + (it.faturar ?? 0), 0);
+    const totalConsultores = filtrados.reduce((s, it) => s + (it.custo_consultor ?? 0), 0);
+    const totalRepassar = filtrados.reduce((s, it) => s + (it.repasse ?? 0), 0);
+    const totalLogistica = filtrados.reduce((s, it) => {
+      const v = Array.isArray(it.viagens) ? it.viagens[0] : it.viagens;
+      return s + (v?.total ?? 0);
+    }, 0);
+
+    return {
+      totalFaturar,
+      totalConsultores,
+      totalLogistica,
+      totalRepassar,
+      totalCanceladosQtd,
+      totalCanceladoValor,
+    };
+  }, [filtrados]);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
       {/* Bloco Congelado / Sticky (KPIs, Competência, Filtros e Cabeçalho de Colunas) */}
       <div className="sticky-control-panel">
+        {/* 5 KPI Metric Floating Cards (Filtrados dinamicamente por Líder e Filtros Ativos) */}
+        <section className="kpis-grid" aria-label="Indicadores Operacionais">
+          {/* 1. TOTAL FATURAR */}
+          <div className="kpi-card">
+            <div className="kpi-content">
+              <span className="kpi-label">TOTAL FATURAR</span>
+              <div className="kpi-value-row">
+                <span className="kpi-value medium">
+                  {regraAtiva("verFaturamentoCliente") ? brl(kpisDinamicos.totalFaturar) : "—"}
+                </span>
+              </div>
+            </div>
+            <div className="kpi-icon-box success-bg">
+              <span className="material-symbols-outlined" style={{ fontSize: "22px" }}>
+                payments
+              </span>
+            </div>
+          </div>
+
+          {/* 2. TOTAL CONSULTORES */}
+          <div className="kpi-card">
+            <div className="kpi-content">
+              <span className="kpi-label">TOTAL CONSULTORES</span>
+              <div className="kpi-value-row">
+                <span className="kpi-value medium">{brl(kpisDinamicos.totalConsultores)}</span>
+              </div>
+            </div>
+            <div className="kpi-icon-box">
+              <span className="material-symbols-outlined" style={{ fontSize: "22px" }}>
+                badge
+              </span>
+            </div>
+          </div>
+
+          {/* 3. TOTAL LOGÍSTICA */}
+          <div className="kpi-card">
+            <div className="kpi-content">
+              <span className="kpi-label">TOTAL LOGÍSTICA</span>
+              <div className="kpi-value-row">
+                <span className="kpi-value medium">{brl(kpisDinamicos.totalLogistica)}</span>
+              </div>
+            </div>
+            <div className="kpi-icon-box secondary-bg">
+              <span className="material-symbols-outlined" style={{ fontSize: "22px" }}>
+                flight_takeoff
+              </span>
+            </div>
+          </div>
+
+          {/* 4. TOTAL REPASSAR */}
+          <div className="kpi-card">
+            <div className="kpi-content">
+              <span className="kpi-label">TOTAL REPASSAR</span>
+              <div className="kpi-value-row">
+                <span className="kpi-value medium">{brl(kpisDinamicos.totalRepassar)}</span>
+              </div>
+            </div>
+            <div className="kpi-icon-box tertiary-bg">
+              <span className="material-symbols-outlined" style={{ fontSize: "22px" }}>
+                currency_exchange
+              </span>
+            </div>
+          </div>
+
+          {/* 5. TOTAL CANCELADO */}
+          <div className="kpi-card">
+            <div className="kpi-content">
+              <span className="kpi-label">TOTAL CANCELADO</span>
+              <div className="kpi-value-row">
+                <span className="kpi-value medium" style={{ color: "var(--error, #b91c1c)" }}>
+                  {kpisDinamicos.totalCanceladoValor > 0
+                    ? brl(kpisDinamicos.totalCanceladoValor)
+                    : `${kpisDinamicos.totalCanceladosQtd} turmas`}
+                </span>
+                {kpisDinamicos.totalCanceladoValor > 0 && (
+                  <span className="kpi-subtext" style={{ color: "#b91c1c" }}>
+                    {kpisDinamicos.totalCanceladosQtd} turmas
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="kpi-icon-box cancel-bg">
+              <span className="material-symbols-outlined" style={{ fontSize: "22px" }}>
+                event_busy
+              </span>
+            </div>
+          </div>
+        </section>
+
         {headerTopContent}
 
         {/* Faixa de Filtros Operacionais Flutuante */}
@@ -1835,26 +1961,28 @@ export default function FloatingCardsList({
                   {/* Col 6: Faturar (Valor de Faturamento) */}
                   <div className="col-faturar">
                     <span className="financial-value">
-                      {brl(valorFaturar)}
+                      {regraAtiva("verFaturamentoCliente") ? brl(valorFaturar) : "—"}
                     </span>
                   </div>
 
                   {/* Col 7: Ações (Botão Editar) */}
                   <div className="col-actions">
-                    <button
-                      type="button"
-                      className="btn-card-edit"
-                      title="Editar Atividade"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setModalItem(it);
-                      }}
-                    >
-                      <span className="material-symbols-outlined" style={{ fontSize: "15px" }}>
-                        edit
-                      </span>
-                      <span>Editar</span>
-                    </button>
+                    {nivelModulo("projetos") !== "VISUALIZAR" && (
+                      <button
+                        type="button"
+                        className="btn-card-edit"
+                        title="Editar Atividade"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setModalItem(it);
+                        }}
+                      >
+                        <span className="material-symbols-outlined" style={{ fontSize: "15px" }}>
+                          edit
+                        </span>
+                        <span>Editar</span>
+                      </button>
+                    )}
                   </div>
                 </div>
 

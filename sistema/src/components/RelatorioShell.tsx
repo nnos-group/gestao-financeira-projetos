@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import ThemeToggle from "@/components/ThemeToggle";
+import UserProfileHeader from "@/components/UserProfileHeader";
 
 const MENU = [
   { href: "/projetos", icon: "assignment", label: "Projetos & Atividades" },
@@ -15,6 +16,8 @@ const MENU = [
   { href: "/pagamentos", icon: "payments", label: "Pagamentos" },
   { href: "/relatorios", icon: "monitoring", label: "Relatórios" },
   { href: "/consultor", icon: "support_agent", label: "Consultor" },
+  { href: "/lider", icon: "supervisor_account", label: "Líder de Projeto" },
+  { href: "/admin", icon: "admin_panel_settings", label: "Administrador" },
 ];
 
 export default function RelatorioShell({
@@ -83,7 +86,10 @@ export default function RelatorioShell({
               <span className="font-label-sm" style={{ color: "var(--primary)", fontWeight: 700 }}>{titulo}</span>
             </div>
           </div>
-          <ThemeToggle />
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <ThemeToggle />
+            <UserProfileHeader />
+          </div>
         </header>
         <main style={{ padding: "24px 28px", display: "flex", flexDirection: "column", gap: "20px", minWidth: 0 }}>
           {children}

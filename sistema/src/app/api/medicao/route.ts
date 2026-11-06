@@ -40,7 +40,31 @@ export async function GET(request: Request) {
         try {
           const parsedCloud = JSON.parse(listaCloud.descricao);
           if (Array.isArray(parsedCloud) && parsedCloud.length > 0) {
-            bms = parsedCloud;
+            const mapaLocal = new Map(bms.map((item: any) => [String(item.codigo), item]));
+            const vistos = new Set<string>();
+            const mesclados: any[] = [];
+
+            for (const item of parsedCloud) {
+              const cod = String(item.codigo);
+              if (vistos.has(cod)) continue;
+              vistos.add(cod);
+              // Se o registro na nuvem era o item de teste (ex: 0908 com Líder - Teste), prioriza o oficial local
+              if (String(item.liderProjetoNome || "").includes("Teste") && mapaLocal.has(cod)) {
+                mesclados.push(mapaLocal.get(cod));
+              } else {
+                mesclados.push(item);
+              }
+            }
+
+            for (const item of bms) {
+              const cod = String(item.codigo);
+              if (!vistos.has(cod)) {
+                vistos.add(cod);
+                mesclados.push(item);
+              }
+            }
+
+            bms = mesclados;
           }
         } catch {}
       }

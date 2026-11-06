@@ -2,8 +2,15 @@
 
 import React from "react";
 import RelatorioShell from "@/components/RelatorioShell";
+import { usePerfilAcesso } from "@/contexts/PerfilAcessoContext";
 
 export default function RelatorioPainelLiderPage() {
+  const { perfilAtivoId, liderSimulado } = usePerfilAcesso();
+  const iframeSrc =
+    perfilAtivoId === "LIDER" && liderSimulado && liderSimulado !== "TODOS"
+      ? `/relatorios-portal/lider.html?lider=${encodeURIComponent(liderSimulado)}`
+      : "/relatorios-portal/lider.html";
+
   return (
     <RelatorioShell titulo="Painel por Líder · 2026">
       <div style={{ display: "flex", flexDirection: "column", gap: "12px", height: "calc(100vh - 110px)", minHeight: "650px" }}>
@@ -13,11 +20,11 @@ export default function RelatorioPainelLiderPage() {
               Painel Executivo por Líder
             </h1>
             <p style={{ margin: "2px 0 0", fontSize: "12.5px", color: "var(--on-surface-variant)" }}>
-              Visão executiva por gestor de projetos: receita, custos diretos, impostos, margens e rankings (Dados Nativos do Supabase).
+              Visão executiva por gestor de projetos: receita, custos diretos, impostos, margens e rankings.
             </p>
           </div>
           <a
-            href="/relatorios-portal/lider.html"
+            href={iframeSrc}
             target="_blank"
             rel="noopener noreferrer"
             style={{
@@ -51,7 +58,8 @@ export default function RelatorioPainelLiderPage() {
           }}
         >
           <iframe
-            src="/relatorios-portal/lider.html"
+            key={iframeSrc}
+            src={iframeSrc}
             title="Painel por Líder NNÓS"
             style={{
               width: "100%",

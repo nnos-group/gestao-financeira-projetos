@@ -275,7 +275,7 @@ export default function ConsultorPage() {
                   const isAprovado = bm.status?.includes("Aprovado");
                   return (
                     <div
-                      key={bm.codigo || idx}
+                      key={bm.id || `${bm.codigo}-${idx}`}
                       style={{
                         padding: "14px 16px",
                         borderRadius: "10px",

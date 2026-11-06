@@ -5,6 +5,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import ThemeToggle from "@/components/ThemeToggle";
 import ccBase from "@/lib/centros-de-custo.json";
 import ModernDropdown from "@/components/ModernDropdown";
+import { usePerfilAcesso } from "@/contexts/PerfilAcessoContext";
 
 interface CentroCustoItem {
   centroDeCusto: string;
@@ -33,6 +34,8 @@ interface ClienteItem {
 const OPCOES_CONTRATO_PADRAO = ["Avulso", "Comercial", "CRM", "DM", "N/A", "Stellantis"];
 
 export default function CentroDeCustoPage() {
+  const { perfilAtivoId, pertenceAoLiderAtivo, nivelModulo } = usePerfilAcesso();
+  const somenteVisualizar = nivelModulo("centro-de-custo") === "VISUALIZAR" || perfilAtivoId === "LIDER";
   const [busca, setBusca] = useState("");
   const [filtroArea, setFiltroArea] = useState("TODAS");
   const [filtroLider, setFiltroLider] = useState("TODOS");
@@ -112,6 +115,7 @@ export default function CentroDeCustoPage() {
   // Filtragem da Lista
   const centrosFiltrados = useMemo(() => {
     return centros.filter((c) => {
+      if (perfilAtivoId === "LIDER" && !pertenceAoLiderAtivo(c.projeto, c.centroDeCusto, c.liderProjeto)) return false;
       if (filtroArea !== "TODAS" && c.area !== filtroArea) return false;
       if (filtroLider !== "TODOS" && c.liderProjeto !== filtroLider) return false;
       if (busca.trim()) {
@@ -125,7 +129,7 @@ export default function CentroDeCustoPage() {
       }
       return true;
     });
-  }, [centros, filtroArea, filtroLider, busca]);
+  }, [centros, filtroArea, filtroLider, busca, perfilAtivoId, pertenceAoLiderAtivo]);
 
   // Cálculo da última referência global (Print 4: 078)
   const { ultimaRefGlobal, proximoSequencial } = useMemo(() => {
@@ -480,6 +484,8 @@ export default function CentroDeCustoPage() {
               <span>Relatórios</span>
             </Link>
             <Link href="/consultor" className="nav-item"><span className="material-symbols-outlined">support_agent</span><span>Consultor</span></Link>
+            <Link href="/lider" className="nav-item"><span className="material-symbols-outlined">supervisor_account</span><span>Líder de Projeto</span></Link>
+            <Link href="/admin" className="nav-item"><span className="material-symbols-outlined">admin_panel_settings</span><span>Administrador</span></Link>
           </nav>
         </div>
 
@@ -578,11 +584,11 @@ export default function CentroDeCustoPage() {
                 }}
               >
                 <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>view_list</span>
-                <span>Centros de Custo ({centros.length})</span>
+                <span>Centros de Custo ({centrosFiltrados.length})</span>
               </button>
               <button
                 type="button"
-                onClick={() => setAbaAtiva("estrutura")}
+                onClick={() => setAbaAtiva("estrutura")} hidden={somenteVisualizar}
                 style={{
                   padding: "8px 16px",
                   borderRadius: "8px",
@@ -593,7 +599,7 @@ export default function CentroDeCustoPage() {
                   display: "inline-flex",
                   alignItems: "center",
                   gap: "6px",
-                  backgroundColor: abaAtiva === "estrutura" ? "#0f2a4a" : "transparent",
+                  backgroundColor: abaAtiva === "estrutura" ? "#0f2a4a" : "transparent", display: somenteVisualizar ? "none" : "inline-flex",
                   color: abaAtiva === "estrutura" ? "#ffffff" : "var(--on-surface-variant)",
                   transition: "all 0.15s ease",
                 }}
@@ -603,7 +609,7 @@ export default function CentroDeCustoPage() {
               </button>
               <button
                 type="button"
-                onClick={() => setAbaAtiva("simulador")}
+                onClick={() => setAbaAtiva("simulador")} hidden={somenteVisualizar}
                 style={{
                   padding: "8px 16px",
                   borderRadius: "8px",
@@ -614,7 +620,7 @@ export default function CentroDeCustoPage() {
                   display: "inline-flex",
                   alignItems: "center",
                   gap: "6px",
-                  backgroundColor: abaAtiva === "simulador" ? "#0f2a4a" : "transparent",
+                  backgroundColor: abaAtiva === "simulador" ? "#0f2a4a" : "transparent", display: somenteVisualizar ? "none" : "inline-flex",
                   color: abaAtiva === "simulador" ? "#ffffff" : "var(--on-surface-variant)",
                   transition: "all 0.15s ease",
                 }}
@@ -629,22 +635,22 @@ export default function CentroDeCustoPage() {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px", marginBottom: "24px" }}>
             <div style={{ background: "#ffffff", padding: "18px 20px", borderRadius: "12px", border: "1px solid var(--border)", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
               <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--on-surface-variant)", textTransform: "uppercase" }}>Total Centros de Custo</div>
-              <div style={{ fontSize: "28px", fontWeight: 900, color: "#0f2a4a", marginTop: "4px" }}>{centros.length}</div>
+              <div style={{ fontSize: "28px", fontWeight: 900, color: "#0f2a4a", marginTop: "4px" }}>{centrosFiltrados.length}</div>
               <div style={{ fontSize: "11.5px", color: "var(--on-surface-variant)", marginTop: "2px" }}>Contratos & Alocações ativas</div>
             </div>
             <div style={{ background: "#ffffff", padding: "18px 20px", borderRadius: "12px", border: "1px solid var(--border)", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
               <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--on-surface-variant)", textTransform: "uppercase" }}>Unidades de Negócio</div>
-              <div style={{ fontSize: "28px", fontWeight: 900, color: "#0284c7", marginTop: "4px" }}>{unidades.length}</div>
+              <div style={{ fontSize: "28px", fontWeight: 900, color: "#0284c7", marginTop: "4px" }}>{perfilAtivoId === "LIDER" ? new Set(centrosFiltrados.map((c) => c.area).filter(Boolean)).size : unidades.length}</div>
               <div style={{ fontSize: "11.5px", color: "var(--on-surface-variant)", marginTop: "2px" }}>Diretoria, TI, Dealer Dev, HRD, etc.</div>
             </div>
             <div style={{ background: "#ffffff", padding: "18px 20px", borderRadius: "12px", border: "1px solid var(--border)", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
               <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--on-surface-variant)", textTransform: "uppercase" }}>Clientes & CNPJs Mapeados</div>
-              <div style={{ fontSize: "28px", fontWeight: 900, color: "#16a34a", marginTop: "4px" }}>{clientes.length}</div>
+              <div style={{ fontSize: "28px", fontWeight: 900, color: "#16a34a", marginTop: "4px" }}>{perfilAtivoId === "LIDER" ? new Set(centrosFiltrados.map((c) => (c.centroDeCusto || "").split(".")[2]).filter(Boolean)).size : clientes.length}</div>
               <div style={{ fontSize: "11.5px", color: "var(--on-surface-variant)", marginTop: "2px" }}>IVECO, CNH, Stellantis, Porsche, etc.</div>
             </div>
             <div style={{ background: "#ffffff", padding: "18px 20px", borderRadius: "12px", border: "1px solid var(--border)", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
               <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--on-surface-variant)", textTransform: "uppercase" }}>Líderes de Projeto Ativos</div>
-              <div style={{ fontSize: "28px", fontWeight: 900, color: "#7c3aed", marginTop: "4px" }}>{lideresUnicos.length}</div>
+              <div style={{ fontSize: "28px", fontWeight: 900, color: "#7c3aed", marginTop: "4px" }}>{perfilAtivoId === "LIDER" ? new Set(centrosFiltrados.map((c) => c.liderProjeto).filter(Boolean)).size : lideresUnicos.length}</div>
               <div style={{ fontSize: "11.5px", color: "var(--on-surface-variant)", marginTop: "2px" }}>Beatriz, Jefferson, Caroline, etc.</div>
             </div>
           </div>
@@ -719,7 +725,7 @@ export default function CentroDeCustoPage() {
                         <th style={{ padding: "12px 16px", width: "120px", whiteSpace: "nowrap" }}>Contrato</th>
                         <th style={{ padding: "12px 16px", width: "290px", whiteSpace: "nowrap" }}>Área de Negócio</th>
                         <th style={{ padding: "12px 16px", width: "200px", whiteSpace: "nowrap" }}>Líder de Projeto</th>
-                        <th style={{ padding: "12px 16px", width: "80px", textAlign: "center", whiteSpace: "nowrap" }}>Ações</th>
+                        {!somenteVisualizar && <th style={{ padding: "12px 16px", width: "80px", textAlign: "center", whiteSpace: "nowrap" }}>Ações</th>}
                       </tr>
                     </thead>
                     <tbody>
@@ -803,7 +809,7 @@ export default function CentroDeCustoPage() {
                             )}
                           </td>
                           {/* Coluna de Ações: Editar e Excluir */}
-                          <td style={{ padding: "12px 16px", textAlign: "center", whiteSpace: "nowrap" }}>
+                          <td style={{ padding: "12px 16px", textAlign: "center", whiteSpace: "nowrap", display: somenteVisualizar ? "none" : "table-cell" }}>
                             <div style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
                               <button
                                 type="button"
