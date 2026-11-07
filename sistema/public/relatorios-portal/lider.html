@@ -6059,7 +6059,11 @@
         if (elLogPct) elLogPct.textContent = `${(t.logisticaPctTotal || 0).toFixed(2).replace('.', ',')}%`;
         if (elRepasse) elRepasse.textContent = formatBRL(t.repasseTotal);
         if (elProsp) elProsp.textContent = formatBRL(t.prospeccaoTotal);
-        if (elProspRow) elProspRow.style.display = 'flex';
+        if (elProspRow) {
+          elProspRow.style.display = 'flex';
+          const labelSpan = elProspRow.querySelector('span.text-slate-500, span.dark\\:text-gray-400');
+          if (labelSpan) labelSpan.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-purple-500 flex-shrink-0"></span> Prospecção:';
+        }
       }
       return;
     }
@@ -6073,17 +6077,27 @@
       : null;
 
     if (lidSupa && Array.isArray(lidSupa.projetos)) {
-      lidSupa.projetos.forEach(p => {
-        const pArea = (p.area || '').toLowerCase();
-        if (currentArea !== 'todas' && pArea !== currentArea) return;
-        rec += (p.receita || 0);
-        custos += (p.custosConsolidados || 0);
-        margem += (p.margem || 0);
-        imp += (p.impostos || 0);
-        log += (p.logistica || 0);
-        repasse += (p.repasse || 0);
-        qtdProj++;
-      });
+      if (currentArea === 'todas') {
+        rec = lidSupa.receita || 0;
+        custos = (lidSupa.custosConsolidados ?? lidSupa.custosConsultores ?? 0);
+        margem = lidSupa.margem || 0;
+        imp = lidSupa.impostos || 0;
+        log = (lidSupa.custosLogistica ?? lidSupa.logistica ?? 0);
+        repasse = Math.abs(lidSupa.repasse || 0);
+        qtdProj = lidSupa.projetos.length;
+      } else {
+        lidSupa.projetos.forEach(p => {
+          const pArea = (p.area || '').toLowerCase();
+          if (pArea !== currentArea) return;
+          rec += (p.receita || 0);
+          custos += (p.custosConsolidados ?? p.custoConsultor ?? p.custoTotal ?? 0);
+          margem += (p.margem || 0);
+          imp += (p.impostos || 0);
+          log += (p.logistica ?? p.custoLogistica ?? 0);
+          repasse += Math.abs(p.repasse || 0);
+          qtdProj++;
+        });
+      }
     } else {
       // Fallback instantâneo via DOM antes do retorno da API
       const lane = document.querySelector(`.leader-swimlane[data-leader-name="${currentLider}"]`);
@@ -6102,8 +6116,26 @@
         }
         lane.querySelectorAll('.project-card').forEach(c => {
           const cArea = (c.getAttribute('data-area') || '').toLowerCase();
-          if (currentArea === 'todas' || cArea === currentArea) qtdProj++;
+          if (currentArea === 'todas' || cArea === currentArea) {
+            qtdProj++;
+            c.querySelectorAll('.space-y-2 .flex').forEach(row => {
+              const label = row.textContent || '';
+              const valEl = row.querySelector('.text-right span');
+              const val = valEl ? parseMoeda(valEl.textContent) : 0;
+              if (label.includes('Logística')) log += val;
+              if (label.includes('Repasse')) repasse += val;
+              if (currentArea !== 'todas' && label.includes('Custos Operacionais')) custos += val;
+              if (currentArea !== 'todas' && label.includes('Impostos')) imp += val;
+            });
+            if (currentArea !== 'todas') {
+              const recEl = c.querySelector('.text-lg.font-bold');
+              if (recEl) rec += parseMoeda(recEl.textContent);
+            }
+          }
         });
+        if (currentArea !== 'todas' && rec > 0) {
+          margem = rec - imp - custos - Math.max(0, log - repasse);
+        }
       }
     }
 
@@ -6135,7 +6167,17 @@
     if (elLog) elLog.textContent = formatBRL(log);
     if (elLogPct) elLogPct.textContent = `${logPct.toFixed(2).replace('.', ',')}%`;
     if (elRepasse) elRepasse.textContent = formatBRL(repasse);
-    if (elProspRow) elProspRow.style.display = 'none';
+    if (elProspRow) {
+      const logLiquida = Math.max(0, log - repasse);
+      if (logLiquida > 0) {
+        elProspRow.style.display = 'flex';
+        const labelSpan = elProspRow.querySelector('span.text-slate-500, span.dark\\:text-gray-400');
+        if (labelSpan) labelSpan.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-cyan-500 flex-shrink-0"></span> Custo Líquido:';
+        if (elProsp) elProsp.textContent = formatBRL(logLiquida);
+      } else {
+        elProspRow.style.display = 'none';
+      }
+    }
   }
 
   function filtrarMetasPorEscopo() {

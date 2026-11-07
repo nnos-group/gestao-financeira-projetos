@@ -397,6 +397,8 @@ export async function GET(req: Request) {
 
         const projetosList = Object.values(lider.projetosMap).map((p: any) => {
           p.custoTotal = p.custoConsultor;
+          p.custosConsolidados = p.custoConsultor;
+          p.logistica = p.custoLogistica;
           const projLogLiquida = Math.max(0, p.custoLogistica - p.repasse);
           p.impostos = (p.receita * impostoPct) / 100;
           p.margem = p.receita - p.impostos - p.custoTotal - projLogLiquida;
@@ -429,6 +431,7 @@ export async function GET(req: Request) {
           receita: lider.receita,
           custosConsultores: lider.custosConsultores,
           custosLogistica: lider.custosLogistica,
+          logistica: lider.custosLogistica,
           repasse: lider.repasse,
           custosConsolidados: lider.custosConsolidados,
           custosPct: lider.custosPct,
