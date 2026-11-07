@@ -429,8 +429,8 @@
         "icone": "monitoring",
         "visivel": true,
         "nivel": "VISUALIZAR",
-        "abaPadrao": "Painel por Líder & Performance",
-        "observacao": "Acesso liberado para Painel por Líder e Performance de Projetos (DRE Societário restrito)."
+        "abaPadrao": "Painel por Líder",
+        "observacao": "Acesso liberado exclusivamente ao Painel por Líder (Performance e DRE restritos à Diretoria/Adm)."
       },
       {
         "id": "lider",

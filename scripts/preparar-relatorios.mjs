@@ -6,9 +6,19 @@ if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 
 const files = ['matriz.html', 'uva.html', 'booking.html', 'prospeccao.html'];
 
+const localReportsDir = path.resolve(process.cwd(), '..', '2026 - Relatório Financeiro - NNÓS -26');
+
 for (const f of files) {
-  const res = await fetch('https://nnos-group.github.io/relatorio-financeiro-nnos-2026/' + f);
-  let html = await res.text();
+  let html = '';
+  const localFile = path.join(localReportsDir, f);
+  if (fs.existsSync(localFile)) {
+    html = fs.readFileSync(localFile, 'utf8');
+    console.log(`Lido localmente de: ${localFile}`);
+  } else {
+    const res = await fetch('https://nnos-group.github.io/relatorio-financeiro-nnos-2026/' + f);
+    html = await res.text();
+    console.log(`Baixado de GitHub Pages: ${f}`);
+  }
 
   // Injetar base href para garantir que imagens, fontes e CSS funcionem 100%
   if (!html.includes('<base ')) {

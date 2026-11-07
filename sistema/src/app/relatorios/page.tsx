@@ -141,7 +141,7 @@ export default function RelatoriosPage() {
     () =>
       RELATORIOS.filter(
         (r) =>
-          (perfilAtivoId !== "LIDER" || r.id === "painel-lider" || r.id === "performance-projetos") &&
+          (perfilAtivoId !== "LIDER" || r.id === "painel-lider") &&
           (categoria === "Todos" || r.categoria === categoria) &&
           `${r.titulo} ${r.descricao} ${r.tag}`.toLowerCase().includes(busca.toLowerCase())
       ),
