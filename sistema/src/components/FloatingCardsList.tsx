@@ -1785,6 +1785,49 @@ export default function FloatingCardsList({
               repasseExibicao = totalViagem;
             }
 
+            // Status Dinâmico de Conciliação de Logística / Viagem
+            const statusConciliacaoViagem = (() => {
+              if (totalViagem <= 0) {
+                if (it.precisa_logistica) {
+                  return {
+                    texto: "Aguardando Cotação",
+                    cor: "rgba(255, 255, 255, 0.65)",
+                    title: "Demanda de logística solicitada, aguardando lançamento de custos da agência",
+                  };
+                }
+                return {
+                  texto: "Não Aplicável",
+                  cor: "rgba(255, 255, 255, 0.45)",
+                  title: "Atividade sem demandas ou despesas de viagem",
+                };
+              }
+
+              const repasseVal = repasseExibicao || 0;
+              const pct = Math.min(100, Math.round((repasseVal / totalViagem) * 100));
+
+              if (pct >= 100) {
+                return {
+                  texto: "Conciliado 100%",
+                  cor: "#34d399",
+                  title: `Total de viagem integralmente conciliado por ND / Repasse (R$ ${repasseVal.toFixed(2)})`,
+                };
+              }
+
+              if (pct > 0) {
+                return {
+                  texto: `Conciliado ${pct}%`,
+                  cor: "#fbbf24",
+                  title: `Conciliação parcial: R$ ${repasseVal.toFixed(2)} repassados de R$ ${totalViagem.toFixed(2)} (${pct}%)`,
+                };
+              }
+
+              return {
+                texto: "Pendente ND",
+                cor: "#f87171",
+                title: `Total de R$ ${totalViagem.toFixed(2)} em despesas sem Nota de Débito (ND) ou repasse registrado`,
+              };
+            })();
+
             // Busca de sugestão inteligente por projeto e valor exato em Faturamento
             const projNomeLimpo = (it.projetos?.nome || "").trim().toUpperCase();
             const ndsProjeto = faturasLogistica.filter((f) => f.projeto === projNomeLimpo);
@@ -2120,7 +2163,17 @@ export default function FloatingCardsList({
                         <span className="cost-box-value">
                           {brl(v?.total ?? 0)}
                         </span>
-                        <span className="cost-box-note">Conciliado 100%</span>
+                        <span
+                          className="cost-box-note"
+                          style={{
+                            color: statusConciliacaoViagem.cor,
+                            fontWeight: 700,
+                            letterSpacing: "0.2px",
+                          }}
+                          title={statusConciliacaoViagem.title}
+                        >
+                          {statusConciliacaoViagem.texto}
+                        </span>
                       </div>
                     </div>
 

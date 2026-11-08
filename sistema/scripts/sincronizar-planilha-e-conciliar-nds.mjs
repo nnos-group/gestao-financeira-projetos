@@ -140,7 +140,23 @@ for (let m = 0; m < 12; m++) {
       const tipo = fornecedor ? 'parceiro' : socios.has(instrutor) ? 'socio' : parceiros.has(instrutor) ? 'parceiro' : 'funcionario';
       consultoresVistos.set(instrutor, { nome: instrutor, tipo, fornecedor });
     }
-    const custoBruto = r[14];
+    const custoBruto = num(r[14]);
+    const atividadeTxt = txt(r[2]) || '';
+    const ativUpper = atividadeTxt.toUpperCase();
+    const ehComissao = ativUpper.includes('COMISSÃO') || ativUpper.includes('COMISSAO');
+    const ehExcecao = instrutor && ['MARCELO LARA', 'PEDRO LAGE', 'PEDRO COLARES'].some((ex) => instrutor.includes(ex));
+    const ehSocio = instrutor && (socios.has(instrutor) || [
+      'ELIZA FORTUNA', 'FELIPE CAMPOS', 'CLEIVSON VIEIRA', 'ANTONIO PEREZ',
+      'DOLORES LITZA', 'CLORISVALDO DOURADO', 'GIBA - JOÃO GILBERTO', 'GABRIEL GOES',
+      'MARISTELA GARCIA', 'JEFFERSON SOUZA', 'LEONARDO CAMPOS', 'BEATRIZ PICORELLI',
+      'KARLA GOMES', 'JAYZA RODRIGUES'
+    ].some((s) => instrutor.includes(s)));
+
+    let custoFinal = custoBruto;
+    if (custoBruto != null && custoBruto > 0 && ehSocio && !ehComissao && !ehExcecao) {
+      custoFinal = Math.round(custoBruto * 1.06 * 100) / 100;
+    }
+
     const key = `${m}-${idx}`;
 
     lancs.push({
@@ -148,7 +164,7 @@ for (let m = 0; m < 12; m++) {
       competencia,
       projeto,
       instrutor,
-      atividade: txt(r[2]) || null,
+      atividade: atividadeTxt || null,
       modalidade: up(r[3]) === 'PRESENCIAL' ? 'PRESENCIAL' : up(r[3]) === 'VIRTUAL' ? 'VIRTUAL' : null,
       local: txt(r[4]) || null,
       regiao: up(r[5]) === 'LATAM' ? 'LATAM' : 'BRA',
@@ -158,7 +174,7 @@ for (let m = 0; m < 12; m++) {
       horas: num(r[10]),
       faturar: num(r[12]),
       repasse: num(r[13]),
-      custo_consultor: typeof custoBruto === 'number' ? custoBruto : null,
+      custo_consultor: custoFinal,
       logistica: num(r[16]),
       status: txt(r[17]) || null,
       precisa_logistica: up(r[18]) === 'SIM' ? true : up(r[18]) === 'NAO' || up(r[18]) === 'NÃO' ? false : null,

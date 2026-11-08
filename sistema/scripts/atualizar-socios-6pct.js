@@ -14,10 +14,13 @@ const { createClient } = require('@supabase/supabase-js');
 const supabase = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
 
 const socios = [
-  'LILIA OLIVEIRA', 'KARLA GOMES', 'PEDRO COLARES', 'FELIPE CAMPOS',
-  'CLEIVSON VIEIRA', 'ANTONIO PEREZ', 'DOLORES LITZA', 'GABRIEL GOES',
-  'JAYZA RODRIGUES', 'JEFFERSON SOUZA'
+  'ELIZA FORTUNA', 'FELIPE CAMPOS', 'CLEIVSON VIEIRA', 'ANTONIO PEREZ',
+  'DOLORES LITZA', 'CLORISVALDO DOURADO', 'GIBA - JOÃO GILBERTO', 'GABRIEL GOES',
+  'MARISTELA GARCIA', 'JEFFERSON SOUZA', 'LEONARDO CAMPOS', 'BEATRIZ PICORELLI',
+  'KARLA GOMES', 'JAYZA RODRIGUES'
 ];
+
+const excecoes = ['MARCELO LARA', 'PEDRO LAGE', 'PEDRO COLARES'];
 
 async function executarAtualizacao() {
   console.log('Iniciando busca de lancamentos de socios para 2026...');
@@ -43,7 +46,9 @@ async function executarAtualizacao() {
     const ativ = (l.atividade || '').toUpperCase().trim();
     const isSocio = socios.some(s => cons.includes(s));
 
-    if (isSocio && !ativ.includes('COMISS') && !ativ.includes('COMISSÃO')) {
+    const isExcecao = excecoes.some(ex => cons.includes(ex));
+
+    if (isSocio && !isExcecao && !ativ.includes('COMISS') && !ativ.includes('COMISSÃO')) {
       const custoAtual = Number(l.custo_consultor) || 0;
       if (custoAtual > 0) {
         const novoCusto = Math.round(custoAtual * 1.06 * 100) / 100;
