@@ -178,6 +178,70 @@ export async function GET(req: Request) {
       projetosMap: Record<string, any>;
     }> = {};
 
+    // 5.1. Pré-popular Líderes e Carteiras Completas a partir dos Centros de Custo cadastrados no Supabase
+    try {
+      const { data: todosCCs } = await db
+        .from("centros_custo")
+        .select("id, codigo, projeto, areas(id, nome), lideres(id, nome)");
+
+      if (todosCCs && Array.isArray(todosCCs)) {
+        for (const cc of todosCCs) {
+          if (!cc.lideres?.nome) continue;
+          const liderNomeCru = cc.lideres.nome;
+          const liderNome = formatarNome(liderNomeCru);
+          const projNome = cc.projeto || "Sem Nome";
+          const areaNome = normalizarAreaNome(cc.areas?.nome || "");
+
+          if (!lideresMap[liderNome]) {
+            const iniciais = getIniciais(liderNomeCru);
+            lideresMap[liderNome] = {
+              id: cc.lideres.id || liderNome.toLowerCase().replace(/\s+/g, "-"),
+              nome: liderNome,
+              iniciais,
+              cargo: "Líder de Projetos Corporativos",
+              avatarGradiente: getAvatarGradiente(iniciais),
+              receita: 0,
+              custosConsultores: 0,
+              custosLogistica: 0,
+              repasse: 0,
+              custosConsolidados: 0,
+              custosPct: 0,
+              impostos: 0,
+              margem: 0,
+              margemPct: 0,
+              statusMargem: "saudavel",
+              projetosMap: {},
+            };
+          }
+
+          const lData = lideresMap[liderNome];
+          if (!lData.projetosMap[projNome]) {
+            lData.projetosMap[projNome] = {
+              id: projNome,
+              titulo: projNome,
+              lider: liderNome,
+              area: areaNome,
+              centroCusto: cc.codigo || "—",
+              receita: 0,
+              custoConsultor: 0,
+              custoLogistica: 0,
+              repasse: 0,
+              custoTotal: 0,
+              impostos: 0,
+              margem: 0,
+              margemPct: 0,
+              pctImpostos: 0,
+              pctCustos: 0,
+              pctLogistica: 0,
+              pctRepasse: 0,
+            };
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("Aviso ao buscar centros de custo para pré-popular líderes:", e);
+    }
+
     const projetosTotais: any[] = [];
     const receitasPorArea: Record<string, number> = {
       "INNOVATION": 0,
@@ -414,12 +478,23 @@ export async function GET(req: Request) {
           else if (p.margemPct >= 0) p.statusMargem = "estavel";
           else p.statusMargem = "prejuizo";
 
-          projetosTotais.push(p);
+          if (p.receita > 0 || p.custoConsultor > 0) {
+            projetosTotais.push(p);
+          }
           return p;
         });
 
-        // Ordenar projetos do líder por receita decrescente
-        projetosList.sort((a: any, b: any) => b.receita - a.receita);
+        // Ordenar projetos do líder: primeiro com movimento (maior receita), depois os sem movimento
+        projetosList.sort((a: any, b: any) => {
+          const movA = (a.receita || 0) + (a.custoConsultor || 0);
+          const movB = (b.receita || 0) + (b.custoConsultor || 0);
+          if (movB !== movA) return movB - movA;
+          return a.titulo.localeCompare(b.titulo);
+        });
+
+        const projetosAtivosQtd = projetosList.filter(
+          (p: any) => (p.receita || 0) > 0 || (p.custoConsultor || 0) > 0
+        ).length;
 
         return {
           id: lider.id,
@@ -428,6 +503,7 @@ export async function GET(req: Request) {
           cargo: lider.cargo,
           avatarGradiente: lider.avatarGradiente,
           totalProjetos: projetosList.length,
+          projetosAtivos: projetosAtivosQtd,
           receita: lider.receita,
           custosConsultores: lider.custosConsultores,
           custosLogistica: lider.custosLogistica,

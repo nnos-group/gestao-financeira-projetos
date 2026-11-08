@@ -6072,8 +6072,13 @@
     let rec = 0, custos = 0, margem = 0, imp = 0, log = 0, repasse = 0, qtdProj = 0;
     const nomeFmt = currentLider.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 
+    const normMatch = str => (str || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
     const lidSupa = (__dadosSupabaseCache && Array.isArray(__dadosSupabaseCache.lideres))
-      ? __dadosSupabaseCache.lideres.find(l => (l.nome || '').toLowerCase() === currentLider)
+      ? __dadosSupabaseCache.lideres.find(l => {
+          const lNome = normMatch(l.nome);
+          const cNome = normMatch(currentLider);
+          return lNome === cNome || lNome.includes(cNome) || cNome.includes(lNome);
+        })
       : null;
 
     if (lidSupa && Array.isArray(lidSupa.projetos)) {
@@ -6084,7 +6089,7 @@
         imp = lidSupa.impostos || 0;
         log = (lidSupa.custosLogistica ?? lidSupa.logistica ?? 0);
         repasse = Math.abs(lidSupa.repasse || 0);
-        qtdProj = lidSupa.projetos.length;
+        qtdProj = lidSupa.totalProjetos || lidSupa.projetos.length;
       } else {
         lidSupa.projetos.forEach(p => {
           const pArea = (p.area || '').toLowerCase();
@@ -6727,22 +6732,244 @@
         }
       }
 
-      // 4. Atualizar Totais Consolidados das Raias dos Líderes
+      // 4. Atualizar Raias dos Líderes e Cards de Projetos Dinamicamente a partir do Supabase
+      const normStr = (str) => (str || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+
       if (data.lideres && Array.isArray(data.lideres)) {
         data.lideres.forEach(lid => {
-          const lane = document.querySelector(`.leader-swimlane[data-leader-name="${lid.nome.toLowerCase()}"]`);
-          if (lane) {
-            const spans = lane.querySelectorAll('.tabular-nums span.text-sm');
-            if (spans && spans.length >= 3) {
-              spans[0].textContent = formatBRL(lid.receita);
-              spans[1].innerHTML = `${formatBRL(lid.custosConsolidados)} <span class="text-[10px] text-slate-500 dark:text-gray-400 font-normal">(${lid.custosPct.toFixed(2).replace('.', ',')}%)</span>`;
-              spans[2].innerHTML = `${formatBRL(lid.margem)} <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300">${lid.margemPct.toFixed(2).replace('.', ',')}%</span>`;
+          const lidNorm = normStr(lid.nome);
+          const lane = Array.from(document.querySelectorAll('.leader-swimlane')).find(l => {
+            const dNorm = normStr(l.getAttribute('data-leader-name'));
+            return dNorm === lidNorm || dNorm.includes(lidNorm) || lidNorm.includes(dNorm);
+          });
+          if (!lane) return;
+
+          // 4.1. Atualizar Badges do Cabeçalho da Raia (Rentabilidade e Contagem de Projetos)
+          const badgesContainer = lane.querySelector('h3')?.parentElement;
+          if (badgesContainer) {
+            const allSpans = badgesContainer.querySelectorAll(':scope > span');
+            if (allSpans.length >= 3) {
+              let badgeRentClass = 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/40';
+              let dotBg = 'bg-emerald-500';
+              let badgeRentText = `Alta Rentabilidade (${lid.margemPct.toFixed(2).replace('.', ',')}%)`;
+              if (lid.margemPct >= 30) {
+                badgeRentClass = 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/40';
+                dotBg = 'bg-emerald-500';
+                badgeRentText = `Alta Rentabilidade (${lid.margemPct.toFixed(2).replace('.', ',')}%)`;
+              } else if (lid.margemPct >= 15) {
+                badgeRentClass = 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/40';
+                dotBg = 'bg-emerald-500';
+                badgeRentText = `Margem Saudável (${lid.margemPct.toFixed(2).replace('.', ',')}%)`;
+              } else if (lid.margemPct >= 0) {
+                badgeRentClass = 'bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-500/40';
+                dotBg = 'bg-amber-500';
+                badgeRentText = `Margem Estável (${lid.margemPct.toFixed(2).replace('.', ',')}%)`;
+              } else {
+                badgeRentClass = 'bg-rose-500/15 text-rose-800 dark:text-rose-300 border-rose-300 dark:border-rose-500/40';
+                dotBg = 'bg-rose-500';
+                badgeRentText = `Alerta / Prejuízo (${lid.margemPct.toFixed(2).replace('.', ',')}%)`;
+              }
+              allSpans[1].className = `px-2.5 py-0.5 rounded-full text-xs font-bold ${badgeRentClass} border flex items-center gap-1.5`;
+              allSpans[1].innerHTML = `<span class="w-1.5 h-1.5 rounded-full ${dotBg}"></span> ${badgeRentText}`;
+
+              allSpans[2].textContent = `${lid.projetosAtivos} Projeto${lid.projetosAtivos === 1 ? '' : 's'} Ativo${lid.projetosAtivos === 1 ? '' : 's'} (${lid.totalProjetos} na Carteira)`;
             }
+          }
+
+          // 4.2. Atualizar Totais Consolidados do Cabeçalho da Raia
+          const spans = lane.querySelectorAll('.tabular-nums span.text-sm');
+          if (spans && spans.length >= 3) {
+            spans[0].textContent = formatBRL(lid.receita);
+            spans[1].innerHTML = `${formatBRL(lid.custosConsolidados)} <span class="text-[10px] text-slate-500 dark:text-gray-400 font-normal">(${lid.custosPct.toFixed(2).replace('.', ',')}%)</span>`;
+            spans[2].innerHTML = `${formatBRL(lid.margem)} <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300">${lid.margemPct.toFixed(2).replace('.', ',')}%</span>`;
+          }
+
+          // 4.3. Renderizar Dinamicamente os Cards de Projetos na Grade da Raia
+          const grid = lane.querySelector('.grid');
+          if (grid && Array.isArray(lid.projetos) && lid.projetos.length > 0) {
+            const projsParaExibir = lid.projetos.filter(p => (p.receita > 0 || (p.custoConsultor || 0) > 0 || (p.logistica || 0) > 0));
+            const listaCards = projsParaExibir.length > 0 ? projsParaExibir : lid.projetos.slice(0, 4);
+
+            grid.innerHTML = listaCards.map(p => {
+              const borderCor = p.margem >= 0 ? 'hover:border-emerald-500/50' : 'border-rose-300 dark:border-rose-500/40 hover:border-rose-500';
+              const margemBg = p.margem >= 0 
+                ? 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-200 dark:border-emerald-500/30 text-emerald-900 dark:text-emerald-200' 
+                : 'bg-rose-50 dark:bg-rose-950/50 border-rose-200 dark:border-rose-500/30 text-rose-900 dark:text-rose-200';
+              const margemPill = p.margem >= 0 ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white';
+              const margemText = p.margem >= 0 ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400';
+              const margemBar = p.margem >= 0 ? 'bg-emerald-500' : 'bg-rose-500';
+
+              const custoOper = p.custosConsolidados ?? p.custoConsultor ?? p.custoTotal ?? 0;
+              const logisticaVal = p.logistica ?? p.custoLogistica ?? 0;
+              const repasseVal = p.repasse ?? 0;
+
+              return `
+                <article class="project-card group relative bg-white dark:bg-slate-900/80 rounded-2xl p-5 border border-slate-200/90 dark:border-white/10 ${borderCor} shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between"
+                         data-titulo="${p.titulo.toLowerCase().trim()}"
+                         data-lider="${lid.nome.toLowerCase().trim()}"
+                         data-area="${(p.area || '').toLowerCase().trim()}">
+                  <div class="space-y-4">
+                    <!-- Header do Card -->
+                    <div class="flex items-start justify-between gap-2 min-h-[44px]">
+                      <h4 class="font-bold text-slate-900 dark:text-white text-sm leading-snug group-hover:text-sky-600 dark:group-hover:text-sky-300 transition-colors flex-1" title="${p.titulo}">
+                        ${p.titulo}
+                      </h4>
+                      <span class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 whitespace-nowrap flex-shrink-0">
+                        ${p.area || 'Geral'}
+                      </span>
+                    </div>
+
+                    <!-- Destaque de Receita -->
+                    <div class="bg-slate-50 dark:bg-slate-950/60 rounded-xl p-3 border border-slate-200/70 dark:border-white/5">
+                      <div class="flex justify-between items-center text-xs">
+                        <span class="text-slate-500 dark:text-gray-400 font-medium">RECEITA TOTAL</span>
+                        <span class="font-bold text-slate-400 dark:text-gray-500 tabular-nums">100,0%</span>
+                      </div>
+                      <div class="text-lg font-bold text-slate-900 dark:text-white tabular-nums mt-0.5">
+                        ${formatBRL(p.receita)}
+                      </div>
+                    </div>
+
+                    <!-- Distribuição Financeira -->
+                    <div class="space-y-2 text-xs">
+                      <div class="flex justify-between items-center py-1 border-b border-slate-100 dark:border-white/5">
+                        <span class="text-slate-600 dark:text-gray-400 flex items-center gap-1.5 font-medium">
+                          <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Impostos
+                        </span>
+                        <div class="text-right tabular-nums">
+                          <span class="font-semibold text-slate-800 dark:text-gray-300">${formatBRL(p.impostos)}</span>
+                          <span class="text-[11px] text-slate-400 dark:text-gray-500 ml-1">(${p.pctImpostos.toFixed(2).replace('.', ',')}%)</span>
+                        </div>
+                      </div>
+
+                      <div class="flex justify-between items-center py-1 border-b border-slate-100 dark:border-white/5">
+                        <span class="text-slate-600 dark:text-gray-400 flex items-center gap-1.5 font-medium">
+                          <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> Custos Operacionais
+                        </span>
+                        <div class="text-right tabular-nums">
+                          <span class="font-semibold text-slate-800 dark:text-gray-300">${formatBRL(custoOper)}</span>
+                          <span class="text-[11px] text-slate-400 dark:text-gray-500 ml-1">(${p.pctCustos.toFixed(2).replace('.', ',')}%)</span>
+                        </div>
+                      </div>
+
+                      <div class="flex justify-between items-center py-1 border-b border-slate-100 dark:border-white/5">
+                        <span class="text-slate-600 dark:text-gray-400 flex items-center gap-1.5 font-medium">
+                          <span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span> Logística
+                        </span>
+                        <div class="text-right tabular-nums">
+                          <span class="font-semibold text-slate-800 dark:text-gray-300">${formatBRL(logisticaVal)}</span>
+                          <span class="text-[11px] text-slate-400 dark:text-gray-500 ml-1">(${p.pctLogistica.toFixed(2).replace('.', ',')}%)</span>
+                        </div>
+                      </div>
+
+                      <div class="flex justify-between items-center py-1 border-b border-slate-100 dark:border-white/5">
+                        <span class="text-slate-600 dark:text-gray-400 flex items-center gap-1.5 font-medium">
+                          <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Repasse
+                        </span>
+                        <div class="text-right tabular-nums">
+                          <span class="font-semibold text-slate-800 dark:text-gray-300">${formatBRL(repasseVal)}</span>
+                          <span class="text-[11px] text-slate-400 dark:text-gray-500 ml-1">(${p.pctRepasse.toFixed(2).replace('.', ',')}%)</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Barra de Distribuição Visual -->
+                    <div class="space-y-1">
+                      <div class="flex justify-between text-[10px] text-slate-500 dark:text-gray-400 font-medium">
+                        <span>Composição de Custos</span>
+                        <span class="${margemText} font-bold">Margem ${p.margemPct.toFixed(2).replace('.', ',')}%</span>
+                      </div>
+                      <div class="w-full h-2 bg-slate-100 dark:bg-slate-950 rounded-full overflow-hidden flex border border-slate-200 dark:border-white/5">
+                        <div class="bg-slate-400 h-full" style="width: ${Math.min(100, Math.max(0, p.pctImpostos))}%" title="Impostos: ${p.pctImpostos.toFixed(1)}%"></div>
+                        <div class="bg-amber-400 h-full" style="width: ${Math.min(100, Math.max(0, p.pctCustos))}%" title="Custos: ${p.pctCustos.toFixed(1)}%"></div>
+                        <div class="bg-sky-400 h-full" style="width: ${Math.min(100, Math.max(0, p.pctLogistica))}%" title="Logística: ${p.pctLogistica.toFixed(1)}%"></div>
+                        <div class="${margemBar} h-full" style="width: ${Math.min(100, Math.max(0, p.margemPct))}%" title="Margem: ${p.margemPct.toFixed(1)}%"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Bottom: Margem Destacada -->
+                  <div class="mt-5 pt-3.5 border-t -mx-5 -mb-5 px-5 py-3 rounded-b-2xl flex items-center justify-between ${margemBg}">
+                    <div>
+                      <span class="text-[10px] font-bold uppercase tracking-wider block opacity-80">MARGEM LÍQUIDA</span>
+                      <span class="text-base font-bold tabular-nums">${formatBRL(p.margem)}</span>
+                    </div>
+                    <span class="px-2.5 py-1 rounded-lg text-xs font-bold tabular-nums shadow-sm ${margemPill}">
+                      ${p.margemPct.toFixed(2).replace('.', ',')}%
+                    </span>
+                  </div>
+                </article>
+              `;
+            }).join('');
           }
         });
       }
 
-      // 5. Reaplicar travas de perfil e atualizar cards/tabelas com dados do Supabase
+      // 5. Atualizar Ranking de Rentabilidade (Top 1-10, Top 11-20, Bottom 10) Dinamicamente
+      if (data.rankings) {
+        const formatRecRank = (v) => {
+          if (!v) return 'R$ 0';
+          return 'R$ ' + Math.round(v).toLocaleString('pt-BR');
+        };
+
+        const renderRankItem = (p, isTop) => {
+          const rankBadgeBg = isTop ? (p.rank === 1 ? 'bg-emerald-600' : 'bg-[#1b365d]') : 'bg-rose-600';
+          const rankBorder = isTop ? (p.rank === 1 ? 'border-2 border-emerald-500/60 dark:border-emerald-500/40 hover:border-emerald-600' : 'border border-slate-300 dark:border-white/10 hover:border-blue-500') : 'border border-rose-300 dark:border-rose-500/30 hover:border-rose-500';
+          const margemClass = p.margem >= 0 ? 'bg-emerald-100 text-emerald-950 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-400 dark:border-emerald-500/40' : 'bg-rose-100 text-rose-950 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-400 dark:border-rose-500/40';
+          const margemValClass = p.margem >= 0 ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-700 dark:text-rose-400';
+          const initials = (p.lider || '').split(' ').filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase();
+
+          return `
+            <div class="ranking-item bg-white dark:bg-slate-900 rounded-lg p-2.5 ${rankBorder} shadow-sm hover:shadow transition-all"
+                 data-lider="${(p.lider || '').toLowerCase()}"
+                 data-area="${(p.area || '').toLowerCase()}"
+                 data-titulo="${(p.titulo || '').toLowerCase()}"
+                 data-rank="${p.rank}">
+              <div class="flex items-center justify-between gap-1.5">
+                <div class="flex items-center gap-1.5 min-w-0">
+                  <span class="flex-shrink-0 w-5 h-5 rounded ${rankBadgeBg} text-white font-extrabold text-[10px] flex items-center justify-center shadow-xs">${p.rank}</span>
+                  <span class="font-bold text-slate-950 dark:text-white text-xs truncate" title="${p.titulo}">${p.titulo}</span>
+                  <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-500/30 flex-shrink-0">${p.area || 'Geral'}</span>
+                </div>
+                <div class="flex items-center gap-1.5 flex-shrink-0 tabular-nums">
+                  <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-gray-200 border border-slate-300 dark:border-white/10">
+                    <span class="text-slate-500 dark:text-gray-400 font-medium text-[9px]">Rec:</span> ${formatRecRank(p.receita)}
+                  </span>
+                  <span class="px-1.5 py-0.5 rounded text-[10px] ${margemClass} font-black">
+                    ${p.margemPct.toFixed(2).replace('.', ',')}%
+                  </span>
+                </div>
+              </div>
+              <div class="flex items-center justify-between mt-1.5 pt-1.5 border-t border-slate-200 dark:border-white/5 text-[11px]">
+                <div class="flex items-center gap-1 text-slate-700 dark:text-gray-300 truncate">
+                  <span class="w-4 h-4 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-[8px] font-bold flex items-center justify-center flex-shrink-0">${initials}</span>
+                  <span class="truncate font-semibold">${p.lider}</span>
+                </div>
+                <div class="text-right flex items-center gap-1 flex-shrink-0 tabular-nums">
+                  <span class="text-[10px] text-slate-500 dark:text-gray-400 font-medium">Margem:</span>
+                  <span class="font-black ${margemValClass} text-xs">${formatBRL(p.margem)}</span>
+                </div>
+              </div>
+            </div>
+          `;
+        };
+
+        const col1 = document.getElementById('ranking-col-1');
+        const col2 = document.getElementById('ranking-col-2');
+        const col3 = document.getElementById('ranking-col-3');
+
+        if (col1 && Array.isArray(data.rankings.top1a10)) {
+          col1.innerHTML = data.rankings.top1a10.map(p => renderRankItem(p, true)).join('');
+        }
+        if (col2 && Array.isArray(data.rankings.top11a20)) {
+          col2.innerHTML = data.rankings.top11a20.map(p => renderRankItem(p, true)).join('');
+        }
+        if (col3 && Array.isArray(data.rankings.bottom10)) {
+          col3.innerHTML = data.rankings.bottom10.map(p => renderRankItem(p, false)).join('');
+        }
+      }
+
+      // 6. Reaplicar travas de perfil, cards macro e filtros com dados frescos do Supabase
       configurarTravaLiderRestrito();
       aplicarFiltros();
     } catch (err) {
