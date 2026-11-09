@@ -456,9 +456,17 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
     return { bg: "#f1f5f9", color: "#475569", border: "#e2e8f0" };
   };
 
+  const fecharTudo = () => {
+    setModalPoliticasAberto(false);
+    setModalFluxogramaAberto(false);
+    aoFechar();
+  };
+
+  if (!mounted || !aberto) return null;
+
   const modalConteudo = (
     <div
-      onClick={aoFechar}
+      onClick={fecharTudo}
       style={{
         position: "fixed",
         inset: 0,
@@ -672,7 +680,7 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
             {/* Botão Fechar */}
             <button
               type="button"
-              onClick={aoFechar}
+              onClick={fecharTudo}
               aria-label="Fechar janela"
               style={{
                 width: "34px",
