@@ -145,9 +145,9 @@
   },
   {
     "id": "usr-011",
-    "login": "agencia.viagens",
-    "nome": "Agência de Viagens Corporativas",
-    "email": "atendimento@agenciaviagens.com.br",
+    "login": "agencia.fatima",
+    "nome": "Agência de Viagens FÁTIMA",
+    "email": "fcconsultoriadeviagens@gmail.com",
     "cargo": "Operador de Cotações & Emissão",
     "perfilId": "AGENCIA",
     "liderVinculado": "TODOS",

@@ -129,9 +129,9 @@ export default function UserProfileHeader() {
 
     if (perfilAtivoId === "AGENCIA") {
       return {
-        login: "agencia.viagens",
-        nome: "Agência de Viagens",
-        email: "atendimento@agenciaviagens.com.br",
+        login: "agencia.fatima",
+        nome: "Agência de Viagens FÁTIMA",
+        email: "fcconsultoriadeviagens@gmail.com",
         cargo: "Operação de Cotações & Vouchers",
         fotoUrl: fotosPorChave["agencia.viagens"] || "",
         mfaSecret: "AGENC2026NNOSKEY",

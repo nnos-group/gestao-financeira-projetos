@@ -9,13 +9,15 @@ import ModernDropdown from "@/components/ModernDropdown";
 import perfisIniciais from "@/lib/perfis-acesso.json";
 import { usePerfilAcesso } from "@/contexts/PerfilAcessoContext";
 import GestaoUsuariosELogs from "@/components/admin/GestaoUsuariosELogs";
+import ModuloHomologacaoConvites from "@/components/admin/ModuloHomologacaoConvites";
 
 type AbaAdmin =
   | "CONFIGURAR_PERFIL"
   | "MATRIZ_GERAL"
   | "USUARIOS"
   | "GESTAO_USUARIOS"
-  | "LOGS_ACESSO";
+  | "LOGS_ACESSO"
+  | "HOMOLOGACAO";
 
 const REGRAS_SEGURANCA_META: { chave: string; titulo: string; descricao: string; icone: string }[] = [
   {
@@ -686,6 +688,27 @@ export default function AdminPage() {
                 <span className="material-symbols-outlined" style={{ fontSize: "17px" }}>policy</span>
                 <span>5. Monitoramento de Log de Acesso</span>
               </button>
+
+              <button
+                type="button"
+                onClick={() => setAbaAtiva("HOMOLOGACAO")}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  padding: "8px 14px",
+                  borderRadius: "8px",
+                  border: "none",
+                  cursor: "pointer",
+                  fontSize: "12.5px",
+                  fontWeight: 700,
+                  backgroundColor: abaAtiva === "HOMOLOGACAO" ? "var(--primary)" : "transparent",
+                  color: abaAtiva === "HOMOLOGACAO" ? "#ffffff" : "var(--on-surface-variant)",
+                }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: "17px" }}>forward_to_inbox</span>
+                <span>6. Homologação &amp; Convites</span>
+              </button>
             </div>
 
             {perfilAtual && (
@@ -1138,6 +1161,16 @@ export default function AdminPage() {
           {(abaAtiva === "GESTAO_USUARIOS" || abaAtiva === "LOGS_ACESSO") && (
             <GestaoUsuariosELogs
               modo={abaAtiva}
+              perfis={perfis}
+              onToast={showToast}
+            />
+          )}
+
+          {/* ================================================================= */}
+          {/* ABA 6: HOMOLOGAÇÃO & DISPARO DE CONVITES                          */}
+          {/* ================================================================= */}
+          {abaAtiva === "HOMOLOGACAO" && (
+            <ModuloHomologacaoConvites
               perfis={perfis}
               onToast={showToast}
             />

@@ -19,6 +19,25 @@ function normalizarPerfisSeparados(lista: any[]): { perfis: any[]; migrado: bool
           "Acesso irrestrito a todos os módulos operacionais, financeiros, societários, relatórios e configuração de permissões do sistema.",
       };
     }
+
+    if (p.id === "AGENCIA") {
+      const usuariosAtualizados = (p.usuariosVinculados || []).map((u: any) => {
+        if (
+          u.email === "viagens@nnos.com.br" ||
+          (u.nome && u.nome.toUpperCase().includes("CENTRAL DE VIAGENS"))
+        ) {
+          migrado = true;
+          return {
+            nome: "Agência de Viagens FÁTIMA",
+            email: "fcconsultoriadeviagens@gmail.com",
+            cargo: "Operador de Cotações & Emissão",
+          };
+        }
+        return u;
+      });
+      return { ...p, usuariosVinculados: usuariosAtualizados };
+    }
+
     return p;
   });
 
