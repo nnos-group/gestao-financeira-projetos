@@ -185,17 +185,19 @@ export async function GET(req: Request) {
         .select("id, codigo, projeto, areas(id, nome), lideres(id, nome)");
 
       if (todosCCs && Array.isArray(todosCCs)) {
-        for (const cc of todosCCs) {
-          if (!cc.lideres?.nome) continue;
-          const liderNomeCru = cc.lideres.nome;
+        for (const cc of todosCCs as any[]) {
+          const lidObj = Array.isArray(cc.lideres) ? cc.lideres[0] : cc.lideres;
+          const areaObj = Array.isArray(cc.areas) ? cc.areas[0] : cc.areas;
+          if (!lidObj?.nome) continue;
+          const liderNomeCru = lidObj.nome;
           const liderNome = formatarNome(liderNomeCru);
           const projNome = cc.projeto || "Sem Nome";
-          const areaNome = normalizarAreaNome(cc.areas?.nome || "");
+          const areaNome = normalizarAreaNome(areaObj?.nome || "");
 
           if (!lideresMap[liderNome]) {
             const iniciais = getIniciais(liderNomeCru);
             lideresMap[liderNome] = {
-              id: cc.lideres.id || liderNome.toLowerCase().replace(/\s+/g, "-"),
+              id: lidObj.id || liderNome.toLowerCase().replace(/\s+/g, "-"),
               nome: liderNome,
               iniciais,
               cargo: "Líder de Projetos Corporativos",

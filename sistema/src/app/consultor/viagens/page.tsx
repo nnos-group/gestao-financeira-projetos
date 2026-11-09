@@ -654,7 +654,7 @@ export default function ConsultorViagensPage() {
               );
 
               const nec = v.necessidades || {};
-              const temDemandaLogistica = Boolean(nec.aereo || nec.hotel || nec.carro || nec.seguro) || totalViagem > 0 || (Array.isArray(v.categorias) && v.categorias.some((c: any) => c.necessaria || (c.alternativas && c.alternativas.length > 0));
+              const temDemandaLogistica = Boolean(nec.aereo || nec.hotel || nec.carro || nec.seguro) || totalViagem > 0 || Boolean(Array.isArray(v.categorias) && v.categorias.some((c: any) => c.necessaria || (c.alternativas && c.alternativas.length > 0)));
 
               const statusStr = String(v.status || "CONCLUIDO").toUpperCase();
               const isConcluido = statusStr.includes("CONCLU") && temDemandaLogistica;
