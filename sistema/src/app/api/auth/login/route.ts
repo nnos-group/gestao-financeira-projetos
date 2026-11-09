@@ -24,9 +24,9 @@ export async function POST(req: NextRequest) {
     if (acao === "LOGOUT") {
       const { login, nome, email, perfilId } = body;
       registrarLogSeguranca({
-        usuarioLogin: login || "nnos",
-        usuarioNome: nome || "Usuário Corporativo",
-        usuarioEmail: email || "controladoria@nnos.com.br",
+        usuarioLogin: login || "leonardo.campos",
+        usuarioNome: nome || "Leonardo Campos",
+        usuarioEmail: email || "leonardo.campos@nnos.com.br",
         perfilId: perfilId || "ADMIN",
         evento: "LOGOUT_SESSAO",
         metodo: "Encerramento Voluntário",
