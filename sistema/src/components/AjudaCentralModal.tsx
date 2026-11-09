@@ -31,7 +31,7 @@ function processarTrechosInline(texto: string): React.ReactNode[] {
 
     if (parte.startsWith("***") && parte.endsWith("***") && parte.length >= 6) {
       return (
-        <strong key={i} className="font-bold text-inherit italic">
+        <strong key={i} style={{ fontWeight: 700, color: "inherit", fontStyle: "italic" }}>
           {parte.slice(3, -3)}
         </strong>
       );
@@ -39,7 +39,7 @@ function processarTrechosInline(texto: string): React.ReactNode[] {
 
     if (parte.startsWith("**") && parte.endsWith("**") && parte.length >= 4) {
       return (
-        <strong key={i} className="font-bold text-inherit">
+        <strong key={i} style={{ fontWeight: 700, color: "inherit" }}>
           {parte.slice(2, -2)}
         </strong>
       );
@@ -49,7 +49,15 @@ function processarTrechosInline(texto: string): React.ReactNode[] {
       return (
         <code
           key={i}
-          className="px-1.5 py-0.5 rounded bg-sky-50 text-sky-700 font-mono text-xs font-semibold"
+          style={{
+            padding: "2px 6px",
+            borderRadius: "4px",
+            backgroundColor: "rgba(2, 132, 199, 0.08)",
+            color: "#0284c7",
+            fontFamily: "monospace",
+            fontSize: "12px",
+            fontWeight: 600,
+          }}
         >
           {parte.slice(1, -1)}
         </code>
@@ -58,7 +66,7 @@ function processarTrechosInline(texto: string): React.ReactNode[] {
 
     if (parte.startsWith("*") && parte.endsWith("*") && parte.length >= 2) {
       return (
-        <em key={i} className="italic">
+        <em key={i} style={{ fontStyle: "italic" }}>
           {parte.slice(1, -1)}
         </em>
       );
@@ -82,20 +90,70 @@ function ChatMessageContent({ texto }: { texto: string }) {
     blocos.push(
       <div
         key={`box-passos-${chaveBase}`}
-        className="my-3 p-3.5 bg-slate-50 rounded-xl border border-slate-200"
+        style={{
+          marginTop: "12px",
+          marginBottom: "12px",
+          padding: "14px 16px",
+          backgroundColor: "#f8fafc",
+          borderRadius: "12px",
+          border: "1px solid #e2e8f0",
+        }}
       >
-        <div className="flex items-center gap-1.5 text-[11px] font-extrabold text-[#0284c7] tracking-wider uppercase mb-3">
-          <span className="material-symbols-outlined text-base">format_list_bulleted</span>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
+            fontSize: "11px",
+            fontWeight: 800,
+            color: "#0284c7",
+            letterSpacing: "0.05em",
+            textTransform: "uppercase",
+            marginBottom: "12px",
+          }}
+        >
+          <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
+            format_list_bulleted
+          </span>
           <span>PASSO A PASSO NO SISTEMA:</span>
         </div>
 
-        <div className="flex flex-col gap-2.5">
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
           {listaNumeradaTemp.map((item, idx) => (
-            <div key={`item-${idx}`} className="flex items-start gap-2.5 text-[12.5px] leading-relaxed text-slate-700">
-              <div className="w-5 h-5 rounded-md bg-white border border-slate-300 text-slate-600 text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
+            <div
+              key={`item-${idx}`}
+              style={{
+                display: "flex",
+                alignItems: "flex-start",
+                gap: "10px",
+                fontSize: "12.5px",
+                lineHeight: 1.5,
+                color: "#334155",
+              }}
+            >
+              <div
+                style={{
+                  width: "22px",
+                  height: "22px",
+                  borderRadius: "6px",
+                  backgroundColor: "#ffffff",
+                  border: "1px solid #cbd5e1",
+                  color: "#475569",
+                  fontSize: "11.5px",
+                  fontWeight: 700,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                  marginTop: "1px",
+                  boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+                }}
+              >
                 {item.num}
               </div>
-              <div className="flex-1 min-w-0">{processarTrechosInline(item.conteudo)}</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                {processarTrechosInline(item.conteudo)}
+              </div>
             </div>
           ))}
         </div>
@@ -128,8 +186,22 @@ function ChatMessageContent({ texto }: { texto: string }) {
     if (linha.startsWith("###")) {
       const conteudo = linha.replace(/^###\s*/, "").replace(/^[📁📋💼🛫\s]+/, "");
       blocos.push(
-        <div key={`h3-${index}`} className="flex items-center gap-2 mt-2 mb-2 text-slate-900 font-extrabold text-sm sm:text-base">
-          <span className="material-symbols-outlined text-[#0284c7] text-lg">article</span>
+        <div
+          key={`h3-${index}`}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            marginTop: "8px",
+            marginBottom: "8px",
+            color: "#0f2a4a",
+            fontWeight: 800,
+            fontSize: "14px",
+          }}
+        >
+          <span className="material-symbols-outlined" style={{ color: "#0284c7", fontSize: "18px" }}>
+            article
+          </span>
           <span>{processarTrechosInline(conteudo)}</span>
         </div>
       );
@@ -140,10 +212,24 @@ function ChatMessageContent({ texto }: { texto: string }) {
     if (linha.startsWith(">")) {
       const conteudo = linha.replace(/^>\s*/, "").replace(/^[*_]+Dica:[*_]+\s*/i, "");
       blocos.push(
-        <div key={`quote-${index}`} className="my-2.5 p-3 rounded-xl bg-amber-50/80 border border-amber-200/80 flex items-start gap-2.5">
-          <span className="material-symbols-outlined text-amber-600 text-base shrink-0 mt-0.5">lightbulb</span>
-          <div className="text-xs text-amber-950 font-medium leading-relaxed">
-            <strong className="font-bold text-amber-900">Dica: </strong>
+        <div
+          key={`quote-${index}`}
+          style={{
+            margin: "10px 0",
+            padding: "10px 14px",
+            borderRadius: "10px",
+            backgroundColor: "#fffbeb",
+            border: "1px solid #fde68a",
+            display: "flex",
+            alignItems: "flex-start",
+            gap: "10px",
+          }}
+        >
+          <span className="material-symbols-outlined" style={{ color: "#d97706", fontSize: "17px", marginTop: "1px" }}>
+            lightbulb
+          </span>
+          <div style={{ fontSize: "12px", color: "#78350f", lineHeight: 1.5, fontWeight: 500 }}>
+            <strong style={{ fontWeight: 700, color: "#92400e" }}>Dica: </strong>
             {processarTrechosInline(conteudo)}
           </div>
         </div>
@@ -153,7 +239,15 @@ function ChatMessageContent({ texto }: { texto: string }) {
 
     // Parágrafo regular
     blocos.push(
-      <p key={`p-${index}`} className="my-1 text-[13px] leading-relaxed text-slate-700">
+      <p
+        key={`p-${index}`}
+        style={{
+          margin: "4px 0",
+          fontSize: "13px",
+          lineHeight: 1.6,
+          color: "#334155",
+        }}
+      >
         {processarTrechosInline(linha)}
       </p>
     );
@@ -319,104 +413,246 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
   ];
 
   // Helper de cores por categoria de módulo
-  const getCategoriaIconStyle = (cat: string, id: string) => {
-    if (id === "tabela-precos") return "bg-amber-50 text-amber-600 border border-amber-100";
-    if (id === "relatorios") return "bg-indigo-50 text-indigo-600 border border-indigo-100";
-    if (id === "centro-de-custo") return "bg-purple-50 text-purple-600 border border-purple-100";
-    if (cat === "Financeiro") return "bg-emerald-50 text-emerald-600 border border-emerald-100";
-    if (cat === "Operacional") return "bg-sky-50 text-sky-600 border border-sky-100";
-    if (cat === "Consultoria") return "bg-sky-50 text-sky-600 border border-sky-100";
-    return "bg-slate-100 text-slate-600 border border-slate-200";
+  const getCategoriaIconColors = (cat: string, id: string) => {
+    if (id === "tabela-precos") return { bg: "#fef3c7", color: "#d97706", border: "#fde68a" };
+    if (id === "relatorios") return { bg: "#e0e7ff", color: "#4f46e5", border: "#c7d2fe" };
+    if (id === "centro-de-custo") return { bg: "#f3e8ff", color: "#9333ea", border: "#e9d5ff" };
+    if (cat === "Financeiro") return { bg: "#ecfdf5", color: "#059669", border: "#a7f3d0" };
+    if (cat === "Operacional") return { bg: "#f0f9ff", color: "#0284c7", border: "#bae6fd" };
+    if (cat === "Consultoria") return { bg: "#f0f9ff", color: "#0284c7", border: "#bae6fd" };
+    return { bg: "#f1f5f9", color: "#475569", border: "#e2e8f0" };
   };
 
   const modalConteudo = (
     <div
       onClick={aoFechar}
-      className="fixed inset-0 bg-[#071322]/75 backdrop-blur-md z-[99999] flex items-center justify-center p-2 sm:p-4 md:p-6"
+      style={{
+        position: "fixed",
+        inset: 0,
+        backgroundColor: "rgba(7, 19, 34, 0.75)",
+        backdropFilter: "blur(8px)",
+        WebkitBackdropFilter: "blur(8px)",
+        zIndex: 99999,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "16px",
+      }}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-[1240px] h-[93vh] max-h-[890px] bg-white rounded-2xl lg:rounded-3xl shadow-2xl border border-white/60 ring-1 ring-slate-900/10 flex flex-col overflow-hidden animate-fadeIn"
+        style={{
+          position: "relative",
+          width: "100%",
+          maxWidth: "1240px",
+          height: "93vh",
+          maxHeight: "890px",
+          backgroundColor: "#ffffff",
+          borderRadius: "24px",
+          boxShadow: "0 25px 60px -15px rgba(15, 42, 74, 0.35)",
+          border: "1px solid rgba(226, 232, 240, 0.9)",
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+        }}
       >
         {/* ======================================================== */}
         {/* CABEÇALHO DO MODAL (Fiel ao Design do Usuário)            */}
         {/* ======================================================== */}
-        <header className="px-6 sm:px-8 py-4 bg-white border-b border-slate-200/90 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 select-none shrink-0 relative z-10">
+        <header
+          style={{
+            padding: "16px 28px",
+            backgroundColor: "#ffffff",
+            borderBottom: "1px solid #e2e8f0",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexShrink: 0,
+            gap: "16px",
+          }}
+        >
           {/* Título, Ícone e Tag de Versão */}
-          <div className="flex items-center gap-3.5">
-            <div className="relative flex items-center justify-center">
-              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#0f2a4a] via-[#0369a1] to-[#0284c7] text-white flex items-center justify-center shadow-lg shadow-sky-900/20 ring-4 ring-sky-50">
-                <span className="material-symbols-outlined text-xl">menu_book</span>
-              </div>
-              <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-sky-500 border-2 border-white"></span>
+          <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+            <div
+              style={{
+                position: "relative",
+                width: "44px",
+                height: "44px",
+                borderRadius: "16px",
+                background: "linear-gradient(135deg, #0f2a4a 0%, #0369a1 50%, #0284c7 100%)",
+                color: "#ffffff",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: "0 4px 14px rgba(2, 132, 199, 0.25)",
+                flexShrink: 0,
+              }}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: "22px" }}>
+                menu_book
               </span>
+              <span
+                style={{
+                  position: "absolute",
+                  top: "-3px",
+                  right: "-3px",
+                  width: "10px",
+                  height: "10px",
+                  borderRadius: "50%",
+                  backgroundColor: "#0ea5e9",
+                  border: "2px solid #ffffff",
+                }}
+              />
             </div>
             <div>
-              <div className="flex items-center gap-2.5 flex-wrap">
-                <h1 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                <h1
+                  style={{
+                    fontSize: "17px",
+                    fontWeight: 800,
+                    color: "#0f2a4a",
+                    margin: 0,
+                    letterSpacing: "-0.01em",
+                  }}
+                >
                   Central de Ajuda &amp; Agente de IA NNÓS
                 </h1>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-sky-50 text-[#0284c7] border border-sky-200/70">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#0284c7]"></span>
+                <span
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    padding: "2px 10px",
+                    borderRadius: "20px",
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    backgroundColor: "#f0f9ff",
+                    color: "#0284c7",
+                    border: "1px solid #bae6fd",
+                  }}
+                >
+                  <span
+                    style={{
+                      width: "6px",
+                      height: "6px",
+                      borderRadius: "50%",
+                      backgroundColor: "#0284c7",
+                    }}
+                  />
                   v4.18 • Suporte Integrado
                 </span>
               </div>
-              <p className="text-xs text-slate-500 font-normal mt-0.5">
+              <p style={{ margin: "2px 0 0 0", fontSize: "12px", color: "#64748b" }}>
                 Mapeamento completo dos menus, passo a passo operacional e inteligência artificial para dúvidas.
               </p>
             </div>
           </div>
 
           {/* Segmented Control Tabs & Ação Fechar */}
-          <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
-            <div className="inline-flex p-1 bg-slate-100/90 rounded-xl border border-slate-200/80 text-xs font-semibold shadow-inner" role="tablist">
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <div
+              style={{
+                display: "inline-flex",
+                padding: "4px",
+                backgroundColor: "#f1f5f9",
+                borderRadius: "12px",
+                border: "1px solid #e2e8f0",
+              }}
+            >
               {/* Aba 1: Guia de Processos */}
               <button
                 type="button"
-                role="tab"
-                aria-selected={abaAtiva === "GUIA"}
                 onClick={() => setAbaAtiva("GUIA")}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all cursor-pointer ${
-                  abaAtiva === "GUIA"
-                    ? "bg-[#0284c7] text-white shadow-sm hover:bg-[#0369a1]"
-                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/70 font-medium"
-                }`}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  padding: "7px 14px",
+                  borderRadius: "8px",
+                  fontSize: "12px",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  border: "none",
+                  transition: "all 0.15s ease",
+                  backgroundColor: abaAtiva === "GUIA" ? "#0284c7" : "transparent",
+                  color: abaAtiva === "GUIA" ? "#ffffff" : "#475569",
+                  boxShadow: abaAtiva === "GUIA" ? "0 2px 6px rgba(2, 132, 199, 0.25)" : "none",
+                }}
               >
-                <span className="material-symbols-outlined text-sm">menu_book</span>
+                <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
+                  menu_book
+                </span>
                 <span>Guia de Processos</span>
               </button>
 
               {/* Aba 2: Agente de IA NNÓS */}
               <button
                 type="button"
-                role="tab"
-                aria-selected={abaAtiva === "IA"}
                 onClick={() => setAbaAtiva("IA")}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all cursor-pointer ${
-                  abaAtiva === "IA"
-                    ? "bg-[#0b2545] text-white font-bold shadow-sm"
-                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/70 font-medium"
-                }`}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "7px",
+                  padding: "7px 14px",
+                  borderRadius: "8px",
+                  fontSize: "12px",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  border: "none",
+                  transition: "all 0.15s ease",
+                  backgroundColor: abaAtiva === "IA" ? "#0b2545" : "transparent",
+                  color: abaAtiva === "IA" ? "#ffffff" : "#475569",
+                  boxShadow: abaAtiva === "IA" ? "0 2px 6px rgba(11, 37, 69, 0.25)" : "none",
+                }}
               >
-                <div className="w-4 h-4 rounded-full bg-white flex items-center justify-center p-0.5 shrink-0">
-                  <img src="/logo-coruja.png" alt="NNÓS" className="w-3.5 h-3.5 object-contain" />
+                <div
+                  style={{
+                    width: "16px",
+                    height: "16px",
+                    borderRadius: "50%",
+                    backgroundColor: "#ffffff",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: "1.5px",
+                    flexShrink: 0,
+                  }}
+                >
+                  <img
+                    src="/logo-coruja.png"
+                    alt="NNÓS"
+                    style={{ width: "13px", height: "13px", objectFit: "contain", display: "block" }}
+                  />
                 </div>
                 <span>Agente de IA NNÓS</span>
               </button>
             </div>
 
-            <div className="h-6 w-px bg-slate-200 hidden sm:block"></div>
+            <div style={{ width: "1px", height: "24px", backgroundColor: "#e2e8f0" }} />
 
             {/* Botão Fechar */}
             <button
               type="button"
               onClick={aoFechar}
               aria-label="Fechar janela"
-              className="w-9 h-9 rounded-xl border border-slate-200/90 text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center transition-all hover:rotate-90 duration-200 cursor-pointer"
+              style={{
+                width: "34px",
+                height: "34px",
+                borderRadius: "10px",
+                border: "1px solid #e2e8f0",
+                backgroundColor: "#ffffff",
+                color: "#64748b",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                transition: "all 0.15s ease",
+              }}
+              title="Fechar (Esc)"
             >
-              <span className="material-symbols-outlined text-lg">close</span>
+              <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
+                close
+              </span>
             </button>
           </div>
         </header>
@@ -424,18 +660,42 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
         {/* ======================================================== */}
         {/* CORPO DO MODAL: GUIA DE PROCESSOS OU AGENTE DE IA        */}
         {/* ======================================================== */}
-        <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-slate-50/60">
+        <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
           {abaAtiva === "GUIA" ? (
             /* ======================================================== */
             /* ABA 1: GUIA PASSO A PASSO (FIEL AO DESIGN DO MOCKUP)     */
             /* ======================================================== */
-            <div className="flex-1 flex flex-col md:flex-row overflow-hidden w-full h-full">
+            <div style={{ display: "flex", width: "100%", height: "100%", overflow: "hidden" }}>
               {/* Barra Lateral Esquerda: Módulos Corporativos */}
-              <aside className="w-full md:w-[330px] lg:w-[350px] border-r border-slate-200/90 bg-white flex flex-col shrink-0">
+              <aside
+                style={{
+                  width: "340px",
+                  borderRight: "1px solid #e2e8f0",
+                  backgroundColor: "#ffffff",
+                  display: "flex",
+                  flexDirection: "column",
+                  flexShrink: 0,
+                }}
+              >
                 {/* Campo de Busca Rápida */}
-                <div className="p-3.5 border-b border-slate-100">
-                  <div className="relative flex items-center">
-                    <span className="material-symbols-outlined absolute left-3 text-slate-400 text-sm pointer-events-none">
+                <div style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9" }}>
+                  <div
+                    style={{
+                      position: "relative",
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                  >
+                    <span
+                      className="material-symbols-outlined"
+                      style={{
+                        position: "absolute",
+                        left: "10px",
+                        fontSize: "18px",
+                        color: "#94a3b8",
+                        pointerEvents: "none",
+                      }}
+                    >
                       search
                     </span>
                     <input
@@ -444,58 +704,98 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                       placeholder="Buscar módulos, regras ou telas..."
                       value={termoBusca}
                       onChange={(e) => setTermoBusca(e.target.value)}
-                      className="w-full pl-9 pr-14 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50/70 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-[#0284c7] transition-all font-medium"
+                      style={{
+                        width: "100%",
+                        padding: "8px 36px 8px 34px",
+                        fontSize: "12px",
+                        borderRadius: "10px",
+                        border: "1px solid #e2e8f0",
+                        backgroundColor: "#f8fafc",
+                        color: "#0f2a4a",
+                        outline: "none",
+                      }}
                     />
-                    <div className="absolute right-2.5 flex items-center pointer-events-none">
-                      <kbd className="px-1.5 py-0.5 text-[10px] font-semibold text-slate-400 bg-white border border-slate-200 rounded-md shadow-xs">
-                        ⌘K
-                      </kbd>
+                    <div
+                      style={{
+                        position: "absolute",
+                        right: "8px",
+                        padding: "2px 6px",
+                        fontSize: "10px",
+                        fontWeight: 700,
+                        color: "#94a3b8",
+                        backgroundColor: "#ffffff",
+                        border: "1px solid #e2e8f0",
+                        borderRadius: "6px",
+                        pointerEvents: "none",
+                      }}
+                    >
+                      ⌘K
                     </div>
                   </div>
 
                   {/* Pílulas de Filtro por Categoria */}
-                  <div className="flex items-center gap-1.5 mt-2.5 overflow-x-auto pb-0.5 custom-scroll-thin">
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "10px" }}>
                     <button
                       type="button"
                       onClick={() => setCategoriaFiltro("TODOS")}
-                      className={`px-2.5 py-1 text-[11px] rounded-lg shrink-0 transition-colors cursor-pointer ${
-                        categoriaFiltro === "TODOS"
-                          ? "bg-[#0f2a4a] text-white font-semibold shadow-xs"
-                          : "bg-slate-100 text-slate-600 hover:bg-slate-200/80 font-medium"
-                      }`}
+                      style={{
+                        padding: "4px 10px",
+                        fontSize: "11px",
+                        fontWeight: categoriaFiltro === "TODOS" ? 700 : 500,
+                        borderRadius: "8px",
+                        border: "none",
+                        cursor: "pointer",
+                        backgroundColor: categoriaFiltro === "TODOS" ? "#0f2a4a" : "#f1f5f9",
+                        color: categoriaFiltro === "TODOS" ? "#ffffff" : "#475569",
+                      }}
                     >
                       Todos ({LISTA_PROCESSOS_AJUDA.length})
                     </button>
                     <button
                       type="button"
                       onClick={() => setCategoriaFiltro("Operacional")}
-                      className={`px-2.5 py-1 text-[11px] rounded-lg shrink-0 transition-colors cursor-pointer ${
-                        categoriaFiltro === "Operacional"
-                          ? "bg-[#0f2a4a] text-white font-semibold shadow-xs"
-                          : "bg-slate-100 text-slate-600 hover:bg-slate-200/80 font-medium"
-                      }`}
+                      style={{
+                        padding: "4px 10px",
+                        fontSize: "11px",
+                        fontWeight: categoriaFiltro === "Operacional" ? 700 : 500,
+                        borderRadius: "8px",
+                        border: "none",
+                        cursor: "pointer",
+                        backgroundColor: categoriaFiltro === "Operacional" ? "#0f2a4a" : "#f1f5f9",
+                        color: categoriaFiltro === "Operacional" ? "#ffffff" : "#475569",
+                      }}
                     >
                       Operacional
                     </button>
                     <button
                       type="button"
                       onClick={() => setCategoriaFiltro("Financeiro")}
-                      className={`px-2.5 py-1 text-[11px] rounded-lg shrink-0 transition-colors cursor-pointer ${
-                        categoriaFiltro === "Financeiro"
-                          ? "bg-[#0f2a4a] text-white font-semibold shadow-xs"
-                          : "bg-slate-100 text-slate-600 hover:bg-slate-200/80 font-medium"
-                      }`}
+                      style={{
+                        padding: "4px 10px",
+                        fontSize: "11px",
+                        fontWeight: categoriaFiltro === "Financeiro" ? 700 : 500,
+                        borderRadius: "8px",
+                        border: "none",
+                        cursor: "pointer",
+                        backgroundColor: categoriaFiltro === "Financeiro" ? "#0f2a4a" : "#f1f5f9",
+                        color: categoriaFiltro === "Financeiro" ? "#ffffff" : "#475569",
+                      }}
                     >
                       Financeiro
                     </button>
                     <button
                       type="button"
                       onClick={() => setCategoriaFiltro("Gestão")}
-                      className={`px-2.5 py-1 text-[11px] rounded-lg shrink-0 transition-colors cursor-pointer ${
-                        categoriaFiltro === "Gestão"
-                          ? "bg-[#0f2a4a] text-white font-semibold shadow-xs"
-                          : "bg-slate-100 text-slate-600 hover:bg-slate-200/80 font-medium"
-                      }`}
+                      style={{
+                        padding: "4px 10px",
+                        fontSize: "11px",
+                        fontWeight: categoriaFiltro === "Gestão" ? 700 : 500,
+                        borderRadius: "8px",
+                        border: "none",
+                        cursor: "pointer",
+                        backgroundColor: categoriaFiltro === "Gestão" ? "#0f2a4a" : "#f1f5f9",
+                        color: categoriaFiltro === "Gestão" ? "#ffffff" : "#475569",
+                      }}
                     >
                       Gestão
                     </button>
@@ -503,69 +803,128 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                 </div>
 
                 {/* Cabeçalho da Seção */}
-                <div className="px-4 py-2 bg-slate-50/70 border-b border-slate-100 flex items-center justify-between text-[11px] font-bold text-slate-500 tracking-wider uppercase">
+                <div
+                  style={{
+                    padding: "8px 16px",
+                    backgroundColor: "#f8fafc",
+                    borderBottom: "1px solid #f1f5f9",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    fontSize: "10.5px",
+                    fontWeight: 700,
+                    color: "#64748b",
+                    letterSpacing: "0.05em",
+                    textTransform: "uppercase",
+                  }}
+                >
                   <span>MÓDULOS CORPORATIVOS</span>
-                  <span className="text-[10px] text-slate-400 font-semibold lowercase">
+                  <span style={{ fontSize: "10px", color: "#94a3b8", textTransform: "lowercase", fontWeight: 600 }}>
                     {processosFiltrados.length} itens
                   </span>
                 </div>
 
                 {/* Lista Tátil dos Módulos */}
-                <nav aria-label="Lista de Menus" className="flex-1 overflow-y-auto p-2.5 space-y-1.5 custom-scroll-thin">
+                <nav
+                  aria-label="Lista de Menus"
+                  style={{
+                    flex: 1,
+                    overflowY: "auto",
+                    padding: "10px",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "6px",
+                  }}
+                >
                   {processosFiltrados.map((proc) => {
                     const ativo = proc.id === menuAtual.id;
-                    const catPill =
-                      proc.categoria === "Financeiro"
-                        ? "bg-emerald-50 text-emerald-700 border border-emerald-200/60"
-                        : proc.categoria === "Gestão & Diretoria"
-                        ? "bg-purple-50 text-purple-700 border border-purple-200/60"
-                        : proc.categoria === "Consultoria"
-                        ? "bg-sky-50 text-sky-700 border border-sky-200/60"
-                        : proc.categoria === "Segurança"
-                        ? "bg-slate-100 text-slate-700"
-                        : "bg-sky-50 text-sky-700 border border-sky-200/60";
+                    const catColors = getCategoriaIconColors(proc.categoria, proc.id);
 
                     return (
                       <button
                         key={proc.id}
                         type="button"
                         onClick={() => setMenuSelecionadoId(proc.id)}
-                        className={`w-full text-left relative group flex items-center justify-between p-2.5 rounded-xl transition-all cursor-pointer overflow-hidden ${
-                          ativo
-                            ? "bg-sky-50/90 text-sky-900 border border-sky-200/90 shadow-sm"
-                            : "hover:bg-slate-100/80 border border-transparent"
-                        }`}
+                        style={{
+                          width: "100%",
+                          textAlign: "left",
+                          position: "relative",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          padding: "10px 12px",
+                          borderRadius: "12px",
+                          cursor: "pointer",
+                          transition: "all 0.15s ease",
+                          backgroundColor: ativo ? "#f0f9ff" : "transparent",
+                          border: ativo ? "1px solid #bae6fd" : "1px solid transparent",
+                          color: ativo ? "#0369a1" : "#334155",
+                          boxShadow: ativo ? "0 2px 6px rgba(2, 132, 199, 0.08)" : "none",
+                        }}
                       >
                         {ativo && (
-                          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-7 bg-[#0284c7] rounded-r-md"></div>
-                        )}
-                        <div className={`flex items-center gap-3 min-w-0 ${ativo ? "pl-1.5" : ""}`}>
                           <div
-                            className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-                              ativo
-                                ? "bg-gradient-to-br from-sky-500 to-[#0284c7] text-white shadow-sm shadow-sky-500/25"
-                                : getCategoriaIconStyle(proc.categoria, proc.id)
-                            }`}
+                            style={{
+                              position: "absolute",
+                              left: 0,
+                              top: "50%",
+                              transform: "translateY(-50%)",
+                              width: "5px",
+                              height: "26px",
+                              backgroundColor: "#0284c7",
+                              borderTopRightRadius: "4px",
+                              borderBottomRightRadius: "4px",
+                            }}
+                          />
+                        )}
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0, paddingLeft: ativo ? "6px" : 0 }}>
+                          <div
+                            style={{
+                              width: "36px",
+                              height: "36px",
+                              borderRadius: "10px",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              flexShrink: 0,
+                              backgroundColor: ativo ? "#0284c7" : catColors.bg,
+                              color: ativo ? "#ffffff" : catColors.color,
+                              border: ativo ? "none" : `1px solid ${catColors.border}`,
+                              boxShadow: ativo ? "0 2px 6px rgba(2, 132, 199, 0.3)" : "none",
+                            }}
                           >
-                            <span className="material-symbols-outlined text-lg">{proc.icone}</span>
+                            <span className="material-symbols-outlined" style={{ fontSize: "19px" }}>
+                              {proc.icone}
+                            </span>
                           </div>
-                          <div className="min-w-0">
-                            <div className="text-xs font-bold text-slate-900 truncate">{proc.menuNome}</div>
-                            <div className={`text-[10px] truncate ${ativo ? "text-sky-700 font-medium" : "text-slate-500"}`}>
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ fontSize: "12.5px", fontWeight: ativo ? 700 : 600, color: "#0f2a4a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                              {proc.menuNome}
+                            </div>
+                            <div style={{ fontSize: "10.5px", color: ativo ? "#0284c7" : "#64748b", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                               {proc.subtitulo || `${proc.passos.length} etapas no fluxo`}
                             </div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-1.5 shrink-0 ml-2">
+
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0, marginLeft: "8px" }}>
                           <span
-                            className={`px-1.5 py-0.5 rounded text-[9px] font-semibold ${
-                              ativo ? "bg-sky-200/60 text-sky-800 font-bold" : catPill
-                            }`}
+                            style={{
+                              padding: "2px 6px",
+                              borderRadius: "6px",
+                              fontSize: "9.5px",
+                              fontWeight: 700,
+                              backgroundColor: ativo ? "rgba(2, 132, 199, 0.15)" : catColors.bg,
+                              color: ativo ? "#0369a1" : catColors.color,
+                              border: `1px solid ${catColors.border}`,
+                            }}
                           >
                             {proc.categoria.split(" ")[0]}
                           </span>
                           {ativo && (
-                            <span className="material-symbols-outlined text-[13px] text-[#0284c7]">arrow_forward</span>
+                            <span className="material-symbols-outlined" style={{ fontSize: "14px", color: "#0284c7" }}>
+                              arrow_forward
+                            </span>
                           )}
                         </div>
                       </button>
@@ -573,7 +932,7 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                   })}
 
                   {processosFiltrados.length === 0 && (
-                    <div className="p-6 text-center text-xs text-slate-400">
+                    <div style={{ padding: "24px 12px", textAlign: "center", fontSize: "12px", color: "#94a3b8" }}>
                       Nenhum módulo encontrado para "{termoBusca}".
                     </div>
                   )}
@@ -581,45 +940,111 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
               </aside>
 
               {/* Coluna da Direita: Visualização Detalhada do Passo a Passo (Main) */}
-              <main className="flex-1 flex flex-col overflow-y-auto bg-white p-6 sm:p-8 lg:p-10 custom-scroll-thin">
+              <main
+                style={{
+                  flex: 1,
+                  display: "flex",
+                  flexDirection: "column",
+                  overflowY: "auto",
+                  backgroundColor: "#ffffff",
+                  padding: "32px 36px",
+                }}
+              >
                 {/* Module Feature Header Banner */}
-                <section className="border-b border-slate-100 pb-7 mb-7">
-                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-sky-50 to-blue-100/80 border border-sky-200/90 text-[#0284c7] flex items-center justify-center shadow-sm shrink-0">
-                        <span className="material-symbols-outlined text-2xl">{menuAtual.icone}</span>
+                <section style={{ borderBottom: "1px solid #f1f5f9", paddingBottom: "24px", marginBottom: "24px" }}>
+                  <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "20px" }}>
+                    <div style={{ display: "flex", alignItems: "flex-start", gap: "16px" }}>
+                      <div
+                        style={{
+                          width: "48px",
+                          height: "48px",
+                          borderRadius: "16px",
+                          background: "linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)",
+                          border: "1px solid #bae6fd",
+                          color: "#0284c7",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          boxShadow: "0 2px 8px rgba(2, 132, 199, 0.12)",
+                          flexShrink: 0,
+                        }}
+                      >
+                        <span className="material-symbols-outlined" style={{ fontSize: "26px" }}>
+                          {menuAtual.icone}
+                        </span>
                       </div>
                       <div>
-                        <div className="flex items-center gap-2.5 flex-wrap">
-                          <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                          <h2 style={{ fontSize: "22px", fontWeight: 800, color: "#0f2a4a", margin: 0, letterSpacing: "-0.01em" }}>
                             {menuAtual.menuNome}
                           </h2>
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold bg-sky-50 text-[#0284c7] border border-sky-200/70">
+                          <span
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              padding: "2px 8px",
+                              borderRadius: "6px",
+                              fontSize: "11px",
+                              fontWeight: 700,
+                              backgroundColor: "#f0f9ff",
+                              color: "#0284c7",
+                              border: "1px solid #bae6fd",
+                            }}
+                          >
                             Módulo Principal
                           </span>
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200/70">
+                          <span
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              padding: "2px 8px",
+                              borderRadius: "6px",
+                              fontSize: "11px",
+                              fontWeight: 600,
+                              backgroundColor: "#f1f5f9",
+                              color: "#475569",
+                              border: "1px solid #e2e8f0",
+                            }}
+                          >
                             {menuAtual.categoria}
                           </span>
-                          <span className="inline-flex items-center gap-1 text-xs text-slate-400 font-medium ml-1">
-                            <span className="material-symbols-outlined text-[13px]">schedule</span>
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "11.5px", color: "#94a3b8", marginLeft: "4px" }}>
+                            <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>
+                              schedule
+                            </span>
                             {menuAtual.tempoLeitura || `${Math.max(2, menuAtual.passos.length)} min de leitura`}
                           </span>
                         </div>
-                        <p className="mt-2 text-xs sm:text-sm text-slate-600 leading-relaxed max-w-3xl">
+
+                        <p style={{ margin: "8px 0 0 0", fontSize: "13px", color: "#475569", lineHeight: 1.6, maxWidth: "760px" }}>
                           {menuAtual.descricaoGeral}
                         </p>
                       </div>
                     </div>
 
                     {/* Botão de Ação Direto para o Módulo */}
-                    <div className="shrink-0 flex items-center">
+                    <div style={{ flexShrink: 0 }}>
                       <Link
                         href={menuAtual.rota}
                         onClick={aoFechar}
-                        className="inline-flex items-center justify-center gap-2.5 px-4.5 py-2.5 rounded-xl bg-[#0284c7] hover:bg-[#0369a1] text-white text-xs sm:text-sm font-semibold transition-all shadow-md shadow-sky-600/20 group hover:shadow-lg cursor-pointer"
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          padding: "10px 18px",
+                          borderRadius: "12px",
+                          backgroundColor: "#0284c7",
+                          color: "#ffffff",
+                          fontSize: "13px",
+                          fontWeight: 700,
+                          textDecoration: "none",
+                          boxShadow: "0 2px 10px rgba(2, 132, 199, 0.25)",
+                          transition: "all 0.15s ease",
+                          cursor: "pointer",
+                        }}
                       >
                         <span>Abrir Módulo de {menuAtual.menuNome.split(" - ")[0].split(" & ")[0]}</span>
-                        <span className="material-symbols-outlined text-xs transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
+                        <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
                           open_in_new
                         </span>
                       </Link>
@@ -627,13 +1052,37 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                   </div>
 
                   {/* Metadata Pill Bar: Público Recomendado */}
-                  <div className="mt-4 pt-4 border-t border-slate-100 flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                    <span className="font-bold text-slate-700 flex items-center gap-1.5">
-                      <span className="material-symbols-outlined text-sky-600 text-sm">how_to_reg</span>
+                  <div
+                    style={{
+                      marginTop: "16px",
+                      paddingTop: "14px",
+                      borderTop: "1px solid #f8fafc",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      flexWrap: "wrap",
+                      fontSize: "12px",
+                      color: "#64748b",
+                    }}
+                  >
+                    <span style={{ fontWeight: 700, color: "#334155", display: "flex", alignItems: "center", gap: "4px" }}>
+                      <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "#0284c7" }}>
+                        how_to_reg
+                      </span>
                       Público recomendado:
                     </span>
                     {menuAtual.publicoAlvo.split(",").map((p, idx) => (
-                      <span key={idx} className="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 font-medium">
+                      <span
+                        key={idx}
+                        style={{
+                          padding: "3px 10px",
+                          borderRadius: "20px",
+                          backgroundColor: "#f1f5f9",
+                          color: "#334155",
+                          fontSize: "11.5px",
+                          fontWeight: 500,
+                        }}
+                      >
                         {p.trim()}
                       </span>
                     ))}
@@ -641,38 +1090,111 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                 </section>
 
                 {/* Stepper Timeline Section */}
-                <section className="space-y-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2.5">
-                      <span className="flex h-2 w-2 rounded-full bg-[#0284c7]"></span>
-                      <h3 className="text-sm sm:text-base font-bold text-slate-900 tracking-tight">
+                <section style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span
+                        style={{
+                          width: "8px",
+                          height: "8px",
+                          borderRadius: "50%",
+                          backgroundColor: "#0284c7",
+                        }}
+                      />
+                      <h3 style={{ fontSize: "15px", fontWeight: 800, color: "#0f2a4a", margin: 0 }}>
                         Trilha Operacional Passo a Passo
                       </h3>
                     </div>
-                    <span className="text-xs font-semibold text-slate-400">
+                    <span style={{ fontSize: "12px", fontWeight: 600, color: "#94a3b8" }}>
                       {menuAtual.passos.length} etapas sequenciais
                     </span>
                   </div>
 
                   {/* Stepper Container com Linha de Gradiente Contínua */}
-                  <div className="relative pl-8 space-y-6 before:absolute before:left-4 before:top-4 before:bottom-4 before:w-0.5 before:bg-gradient-to-b before:from-sky-500 before:via-sky-300 before:to-slate-200">
+                  <div
+                    style={{
+                      position: "relative",
+                      paddingLeft: "36px",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "20px",
+                    }}
+                  >
+                    {/* Linha vertical contínua conectando os nós */}
+                    <div
+                      style={{
+                        position: "absolute",
+                        left: "15px",
+                        top: "16px",
+                        bottom: "24px",
+                        width: "2px",
+                        background: "linear-gradient(to bottom, #0284c7 0%, #38bdf8 50%, #e2e8f0 100%)",
+                      }}
+                    />
+
                     {menuAtual.passos.map((passo) => (
-                      <div key={passo.numero} className="relative group">
+                      <div key={passo.numero} style={{ position: "relative" }}>
                         {/* Stepper Node Circular */}
-                        <div className="absolute -left-8 top-1 flex items-center justify-center w-8 h-8 rounded-full bg-[#0284c7] text-white font-bold text-xs shadow-md shadow-sky-600/30 ring-4 ring-white z-10">
+                        <div
+                          style={{
+                            position: "absolute",
+                            left: "-36px",
+                            top: "4px",
+                            width: "32px",
+                            height: "32px",
+                            borderRadius: "50%",
+                            backgroundColor: "#0284c7",
+                            color: "#ffffff",
+                            fontSize: "13px",
+                            fontWeight: 800,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            boxShadow: "0 2px 8px rgba(2, 132, 199, 0.35)",
+                            border: "3px solid #ffffff",
+                            zIndex: 2,
+                          }}
+                        >
                           {passo.numero}
                         </div>
 
                         {/* Card do Passo */}
-                        <div className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-xs hover:border-slate-300 transition-all">
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
-                            <h4 className="text-sm sm:text-base font-bold text-slate-900">{passo.titulo}</h4>
+                        <div
+                          style={{
+                            backgroundColor: "#ffffff",
+                            borderRadius: "16px",
+                            border: "1px solid #e2e8f0",
+                            padding: "18px 20px",
+                            boxShadow: "0 1px 3px rgba(0,0,0,0.03)",
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              gap: "8px",
+                              marginBottom: "8px",
+                              flexWrap: "wrap",
+                            }}
+                          >
+                            <h4 style={{ margin: 0, fontSize: "14.5px", fontWeight: 800, color: "#0f2a4a" }}>
+                              {passo.titulo}
+                            </h4>
                             {passo.tags && (
-                              <div className="flex items-center gap-1.5 flex-wrap">
+                              <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
                                 {passo.tags.map((tag, tIdx) => (
                                   <span
                                     key={tIdx}
-                                    className="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-600"
+                                    style={{
+                                      padding: "2px 8px",
+                                      borderRadius: "6px",
+                                      fontSize: "10px",
+                                      fontWeight: 600,
+                                      backgroundColor: "#f1f5f9",
+                                      color: "#475569",
+                                      border: "1px solid #e2e8f0",
+                                    }}
                                   >
                                     {tag}
                                   </span>
@@ -680,61 +1202,129 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                               </div>
                             )}
                           </div>
-                          <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+
+                          <p style={{ margin: 0, fontSize: "13px", color: "#475569", lineHeight: 1.6 }}>
                             {passo.descricao}
                           </p>
 
                           {/* Widget Especial: Grade de Campos (Step 2 Projetos) */}
                           {passo.tipoEspecial === "campo-grid" && (
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-3 mt-3 border-t border-slate-100">
-                              <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200/60">
-                                <span className="text-[10px] uppercase font-bold text-slate-400 block">Localidade</span>
-                                <span className="text-xs font-semibold text-slate-800">Concessionária &amp; Cidade</span>
+                            <div
+                              style={{
+                                display: "grid",
+                                gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                                gap: "10px",
+                                paddingTop: "12px",
+                                marginTop: "12px",
+                                borderTop: "1px solid #f1f5f9",
+                              }}
+                            >
+                              <div style={{ backgroundColor: "#f8fafc", padding: "10px 12px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+                                <span style={{ fontSize: "10px", textTransform: "uppercase", fontWeight: 800, color: "#94a3b8", display: "block" }}>
+                                  Localidade
+                                </span>
+                                <span style={{ fontSize: "12px", fontWeight: 700, color: "#0f2a4a" }}>
+                                  Concessionária &amp; Cidade
+                                </span>
                               </div>
-                              <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200/60">
-                                <span className="text-[10px] uppercase font-bold text-slate-400 block">Período Previsto</span>
-                                <span className="text-xs font-semibold text-slate-800">Data Início e Término</span>
+                              <div style={{ backgroundColor: "#f8fafc", padding: "10px 12px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+                                <span style={{ fontSize: "10px", textTransform: "uppercase", fontWeight: 800, color: "#94a3b8", display: "block" }}>
+                                  Período Previsto
+                                </span>
+                                <span style={{ fontSize: "12px", fontWeight: 700, color: "#0f2a4a" }}>
+                                  Data Início e Término
+                                </span>
                               </div>
-                              <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200/60">
-                                <span className="text-[10px] uppercase font-bold text-slate-400 block">Carga Horária</span>
-                                <span className="text-xs font-semibold text-slate-800">Módulos de 8h, 24h ou 40h</span>
+                              <div style={{ backgroundColor: "#f8fafc", padding: "10px 12px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+                                <span style={{ fontSize: "10px", textTransform: "uppercase", fontWeight: 800, color: "#94a3b8", display: "block" }}>
+                                  Carga Horária
+                                </span>
+                                <span style={{ fontSize: "12px", fontWeight: 700, color: "#0f2a4a" }}>
+                                  Módulos de 8h, 24h ou 40h
+                                </span>
                               </div>
                             </div>
                           )}
 
                           {/* Widget Especial: Regra Fiscal Sócio Consultor (Step 3 Projetos) */}
                           {passo.tipoEspecial === "regra-fiscal" && (
-                            <div className="mt-3.5 p-3 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 flex items-start gap-3 shadow-xs">
-                              <div className="w-6 h-6 rounded-lg bg-amber-500 text-white flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold">
+                            <div
+                              style={{
+                                marginTop: "12px",
+                                padding: "12px 14px",
+                                borderRadius: "12px",
+                                background: "linear-gradient(to right, #fffbeb 0%, #fff7ed 100%)",
+                                border: "1px solid #fde68a",
+                                display: "flex",
+                                alignItems: "flex-start",
+                                gap: "10px",
+                              }}
+                            >
+                              <div
+                                style={{
+                                  width: "22px",
+                                  height: "22px",
+                                  borderRadius: "6px",
+                                  backgroundColor: "#f59e0b",
+                                  color: "#ffffff",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  flexShrink: 0,
+                                  fontSize: "12px",
+                                  fontWeight: 800,
+                                  marginTop: "1px",
+                                }}
+                              >
                                 %
                               </div>
-                              <div className="text-xs text-amber-950 leading-relaxed">
-                                <span className="font-bold text-amber-900">Regra Fiscal Sócio Consultor:</span> Caso o instrutor alocado seja registrado na modalidade <strong className="font-semibold text-amber-950">Sócio Consultor emitindo Nota Fiscal (NF)</strong>, o sistema calcula e acrescenta automaticamente <strong className="font-semibold text-amber-950">+6% sobre o repasse bruto</strong> para fins de equilíbrio tributário.
+                              <div style={{ fontSize: "12px", color: "#78350f", lineHeight: 1.5 }}>
+                                <strong style={{ fontWeight: 800, color: "#92400e" }}>Regra Fiscal Sócio Consultor: </strong>
+                                Caso o instrutor alocado seja registrado na modalidade <strong>Sócio Consultor emitindo Nota Fiscal (NF)</strong>, o sistema calcula e acrescenta automaticamente <strong>+6% sobre o repasse bruto</strong> para fins de equilíbrio tributário.
                               </div>
                             </div>
                           )}
 
                           {/* Widget Especial: Grade de Modais de Logística (Step 4 Projetos) */}
                           {passo.tipoEspecial === "logistica-grid" && (
-                            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 pt-3 mt-3 border-t border-slate-100">
-                              <div className="flex items-center gap-2 p-2 rounded-lg bg-slate-50 border border-slate-200/60 text-xs font-semibold text-slate-700">
-                                <span className="material-symbols-outlined text-sky-600 text-sm">flight</span>
+                            <div
+                              style={{
+                                display: "grid",
+                                gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))",
+                                gap: "8px",
+                                paddingTop: "12px",
+                                marginTop: "12px",
+                                borderTop: "1px solid #f1f5f9",
+                              }}
+                            >
+                              <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 10px", borderRadius: "8px", backgroundColor: "#f8fafc", border: "1px solid #e2e8f0", fontSize: "12px", fontWeight: 600, color: "#334155" }}>
+                                <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "#0284c7" }}>
+                                  flight
+                                </span>
                                 <span>Aéreo</span>
                               </div>
-                              <div className="flex items-center gap-2 p-2 rounded-lg bg-slate-50 border border-slate-200/60 text-xs font-semibold text-slate-700">
-                                <span className="material-symbols-outlined text-sky-600 text-sm">hotel</span>
+                              <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 10px", borderRadius: "8px", backgroundColor: "#f8fafc", border: "1px solid #e2e8f0", fontSize: "12px", fontWeight: 600, color: "#334155" }}>
+                                <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "#0284c7" }}>
+                                  hotel
+                                </span>
                                 <span>Hotel</span>
                               </div>
-                              <div className="flex items-center gap-2 p-2 rounded-lg bg-slate-50 border border-slate-200/60 text-xs font-semibold text-slate-700">
-                                <span className="material-symbols-outlined text-sky-600 text-sm">directions_car</span>
+                              <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 10px", borderRadius: "8px", backgroundColor: "#f8fafc", border: "1px solid #e2e8f0", fontSize: "12px", fontWeight: 600, color: "#334155" }}>
+                                <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "#0284c7" }}>
+                                  directions_car
+                                </span>
                                 <span>Carro / Traslado</span>
                               </div>
-                              <div className="flex items-center gap-2 p-2 rounded-lg bg-slate-50 border border-slate-200/60 text-xs font-semibold text-slate-700">
-                                <span className="material-symbols-outlined text-sky-600 text-sm">health_and_safety</span>
+                              <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 10px", borderRadius: "8px", backgroundColor: "#f8fafc", border: "1px solid #e2e8f0", fontSize: "12px", fontWeight: 600, color: "#334155" }}>
+                                <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "#0284c7" }}>
+                                  health_and_safety
+                                </span>
                                 <span>Seguro Viagem</span>
                               </div>
-                              <div className="flex items-center gap-2 p-2 rounded-lg bg-slate-50 border border-slate-200/60 text-xs font-semibold text-slate-700 col-span-2 sm:col-span-1">
-                                <span className="material-symbols-outlined text-sky-600 text-sm">restaurant</span>
+                              <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 10px", borderRadius: "8px", backgroundColor: "#f8fafc", border: "1px solid #e2e8f0", fontSize: "12px", fontWeight: 600, color: "#334155" }}>
+                                <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "#0284c7" }}>
+                                  restaurant
+                                </span>
                                 <span>Diárias &amp; KM</span>
                               </div>
                             </div>
@@ -742,12 +1332,24 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
 
                           {/* Dica Geral / Dica de Produtividade */}
                           {passo.dica && passo.tipoEspecial !== "regra-fiscal" && (
-                            <div className="mt-3.5 p-3 rounded-xl bg-amber-50/80 border border-amber-200/80 flex items-start gap-3">
-                              <div className="w-6 h-6 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 mt-0.5">
-                                <span className="material-symbols-outlined text-sm">lightbulb</span>
-                              </div>
-                              <div className="text-xs text-amber-950 font-medium leading-relaxed">
-                                <span className="font-bold">Dica de Produtividade:</span> {passo.dica}
+                            <div
+                              style={{
+                                marginTop: "12px",
+                                padding: "10px 14px",
+                                borderRadius: "10px",
+                                backgroundColor: "#fffbeb",
+                                border: "1px solid #fde68a",
+                                display: "flex",
+                                alignItems: "flex-start",
+                                gap: "10px",
+                              }}
+                            >
+                              <span className="material-symbols-outlined" style={{ fontSize: "18px", color: "#d97706", marginTop: "1px" }}>
+                                lightbulb
+                              </span>
+                              <div style={{ fontSize: "12px", color: "#78350f", lineHeight: 1.5 }}>
+                                <strong style={{ fontWeight: 800, color: "#92400e" }}>Dica de Produtividade: </strong>
+                                {passo.dica}
                               </div>
                             </div>
                           )}
@@ -758,32 +1360,52 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                 </section>
 
                 {/* Additional Resources & Official Documents Section */}
-                <section className="mt-8 pt-6 border-t border-slate-200/80">
-                  <div className="flex items-center gap-2 mb-3.5">
-                    <span className="material-symbols-outlined text-slate-400 text-sm">attach_file</span>
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                <section style={{ marginTop: "32px", paddingTop: "24px", borderTop: "1px solid #e2e8f0" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "14px" }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "#94a3b8" }}>
+                      attach_file
+                    </span>
+                    <h4 style={{ margin: 0, fontSize: "11.5px", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.05em", color: "#64748b" }}>
                       Documentos e Políticas Vinculadas
                     </h4>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                      gap: "12px",
+                    }}
+                  >
                     <a
                       href="/politicas/NNOS-Politica-Viagens-Geral.pdf"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:border-sky-300 hover:bg-sky-50/40 transition-all group cursor-pointer"
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        padding: "12px 14px",
+                        borderRadius: "12px",
+                        border: "1px solid #e2e8f0",
+                        textDecoration: "none",
+                        backgroundColor: "#ffffff",
+                        transition: "all 0.15s ease",
+                      }}
                     >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center shrink-0">
-                          <span className="material-symbols-outlined text-base">picture_as_pdf</span>
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
+                        <div style={{ width: "32px", height: "32px", borderRadius: "8px", backgroundColor: "#fef2f2", color: "#dc2626", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                          <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
+                            picture_as_pdf
+                          </span>
                         </div>
-                        <div className="min-w-0">
-                          <div className="text-xs font-bold text-slate-800 truncate group-hover:text-[#0284c7]">
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontSize: "12px", fontWeight: 700, color: "#0f2a4a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                             Fluxograma Oficial
                           </div>
-                          <div className="text-[10px] text-slate-400">PDF • 1.4 MB</div>
+                          <div style={{ fontSize: "10.5px", color: "#94a3b8" }}>PDF • 1.4 MB</div>
                         </div>
                       </div>
-                      <span className="material-symbols-outlined text-xs text-slate-300 group-hover:text-[#0284c7] transition-colors">
+                      <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "#94a3b8" }}>
                         download
                       </span>
                     </a>
@@ -791,20 +1413,32 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                     <Link
                       href="/tabela-precos"
                       onClick={aoFechar}
-                      className="flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:border-sky-300 hover:bg-sky-50/40 transition-all group cursor-pointer"
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        padding: "12px 14px",
+                        borderRadius: "12px",
+                        border: "1px solid #e2e8f0",
+                        textDecoration: "none",
+                        backgroundColor: "#ffffff",
+                        transition: "all 0.15s ease",
+                      }}
                     >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                          <span className="material-symbols-outlined text-base">table_chart</span>
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
+                        <div style={{ width: "32px", height: "32px", borderRadius: "8px", backgroundColor: "#ecfdf5", color: "#059669", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                          <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
+                            table_chart
+                          </span>
                         </div>
-                        <div className="min-w-0">
-                          <div className="text-xs font-bold text-slate-800 truncate group-hover:text-[#0284c7]">
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontSize: "12px", fontWeight: 700, color: "#0f2a4a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                             Tabela Preços 2026
                           </div>
-                          <div className="text-[10px] text-slate-400">Tarifas homologadas</div>
+                          <div style={{ fontSize: "10.5px", color: "#94a3b8" }}>Tarifas homologadas</div>
                         </div>
                       </div>
-                      <span className="material-symbols-outlined text-xs text-slate-300 group-hover:text-[#0284c7] transition-colors">
+                      <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "#94a3b8" }}>
                         arrow_forward
                       </span>
                     </Link>
@@ -812,20 +1446,32 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                     <Link
                       href="/consultor/viagens"
                       onClick={aoFechar}
-                      className="flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:border-sky-300 hover:bg-sky-50/40 transition-all group cursor-pointer"
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        padding: "12px 14px",
+                        borderRadius: "12px",
+                        border: "1px solid #e2e8f0",
+                        textDecoration: "none",
+                        backgroundColor: "#ffffff",
+                        transition: "all 0.15s ease",
+                      }}
                     >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-8 h-8 rounded-lg bg-sky-50 text-[#0284c7] flex items-center justify-center shrink-0">
-                          <span className="material-symbols-outlined text-base">explore</span>
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
+                        <div style={{ width: "32px", height: "32px", borderRadius: "8px", backgroundColor: "#f0f9ff", color: "#0284c7", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                          <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
+                            explore
+                          </span>
                         </div>
-                        <div className="min-w-0">
-                          <div className="text-xs font-bold text-slate-800 truncate group-hover:text-[#0284c7]">
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontSize: "12px", fontWeight: 700, color: "#0f2a4a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                             Políticas de Viagem
                           </div>
-                          <div className="text-[10px] text-slate-400">Diretrizes de reembolso</div>
+                          <div style={{ fontSize: "10.5px", color: "#94a3b8" }}>Diretrizes de reembolso</div>
                         </div>
                       </div>
-                      <span className="material-symbols-outlined text-xs text-slate-300 group-hover:text-[#0284c7] transition-colors">
+                      <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "#94a3b8" }}>
                         arrow_forward
                       </span>
                     </Link>
@@ -834,30 +1480,48 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
 
                 {/* Regras Importantes & Perguntas Frequentes */}
                 {menuAtual.regrasImportantes && menuAtual.regrasImportantes.length > 0 && (
-                  <section className="mt-6 p-4 rounded-xl bg-sky-50/50 border border-sky-100">
-                    <div className="flex items-center gap-2 mb-2 text-sky-900 font-bold text-xs uppercase tracking-wider">
-                      <span className="material-symbols-outlined text-sky-600 text-sm">verified_user</span>
+                  <section
+                    style={{
+                      marginTop: "24px",
+                      padding: "16px",
+                      borderRadius: "12px",
+                      backgroundColor: "#f0f9ff",
+                      border: "1px solid #bae6fd",
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px", color: "#0369a1", fontWeight: 800, fontSize: "12px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                      <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
+                        verified_user
+                      </span>
                       <span>Regras &amp; Premissas Obrigatórias</span>
                     </div>
-                    <ul className="space-y-1.5 text-xs text-slate-600 pl-5 list-disc">
+                    <ul style={{ margin: 0, paddingLeft: "20px", fontSize: "12px", color: "#334155", lineHeight: 1.6 }}>
                       {menuAtual.regrasImportantes.map((r, i) => (
-                        <li key={i}>{r}</li>
+                        <li key={i} style={{ marginBottom: "4px" }}>
+                          {r}
+                        </li>
                       ))}
                     </ul>
                   </section>
                 )}
 
                 {menuAtual.faq && menuAtual.faq.length > 0 && (
-                  <section className="mt-6">
-                    <div className="flex items-center gap-2 mb-3 text-slate-700 font-bold text-xs uppercase tracking-wider">
-                      <span className="material-symbols-outlined text-amber-500 text-sm">quiz</span>
+                  <section style={{ marginTop: "24px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "12px", color: "#0f2a4a", fontWeight: 800, fontSize: "12px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                      <span className="material-symbols-outlined" style={{ fontSize: "17px", color: "#f59e0b" }}>
+                        quiz
+                      </span>
                       <span>Dúvidas Frequentes (FAQ)</span>
                     </div>
-                    <div className="space-y-2">
+                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                       {menuAtual.faq.map((f, i) => (
-                        <div key={i} className="p-3 rounded-xl bg-slate-50 border border-slate-200/80">
-                          <div className="font-bold text-xs text-slate-800 mb-1">{f.pergunta}</div>
-                          <div className="text-xs text-slate-600 leading-relaxed">{f.resposta}</div>
+                        <div key={i} style={{ padding: "12px 14px", borderRadius: "12px", backgroundColor: "#f8fafc", border: "1px solid #e2e8f0" }}>
+                          <div style={{ fontWeight: 700, fontSize: "12.5px", color: "#0f2a4a", marginBottom: "4px" }}>
+                            {f.pergunta}
+                          </div>
+                          <div style={{ fontSize: "12px", color: "#475569", lineHeight: 1.5 }}>
+                            {f.resposta}
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -869,19 +1533,53 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
             /* ======================================================== */
             /* ABA 2: AGENTE DE INTELIGÊNCIA ARTIFICIAL NATIVO          */
             /* ======================================================== */
-            <div className="flex-1 flex flex-col w-full h-full overflow-hidden bg-slate-50/60">
+            <div
+              style={{
+                flex: 1,
+                display: "flex",
+                flexDirection: "column",
+                width: "100%",
+                height: "100%",
+                overflow: "hidden",
+                backgroundColor: "#f8fafc",
+              }}
+            >
               {/* Sub-Header: Status do Agente Online */}
-              <div className="px-6 py-2.5 bg-white border-b border-slate-200/80 flex items-center justify-between shrink-0">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-full bg-[#0284c7] text-white flex items-center justify-center shrink-0">
-                    <span className="material-symbols-outlined text-base">smart_toy</span>
+              <div
+                style={{
+                  padding: "10px 24px",
+                  backgroundColor: "#ffffff",
+                  borderBottom: "1px solid #e2e8f0",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  flexShrink: 0,
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <div
+                    style={{
+                      width: "28px",
+                      height: "28px",
+                      borderRadius: "50%",
+                      backgroundColor: "#0284c7",
+                      color: "#ffffff",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: "17px" }}>
+                      smart_toy
+                    </span>
                   </div>
-                  <div className="text-xs">
-                    <strong className="text-slate-900">Guia Virtual NNÓS</strong>
-                    <span className="mx-1.5 text-slate-300">•</span>
-                    <span className="text-emerald-600 font-bold">Assistente Online</span>
-                    <span className="hidden sm:inline mx-2 text-slate-300"> </span>
-                    <span className="hidden sm:inline text-slate-500 text-[11px]">
+                  <div style={{ fontSize: "12px" }}>
+                    <strong style={{ color: "#0f2a4a" }}>Guia Virtual NNÓS</strong>
+                    <span style={{ margin: "0 6px", color: "#cbd5e1" }}>•</span>
+                    <span style={{ color: "#10b981", fontWeight: 700 }}>Assistente Online</span>
+                    <span style={{ margin: "0 8px", color: "#cbd5e1" }}> </span>
+                    <span style={{ color: "#64748b", fontSize: "11.5px" }}>
                       Treinado nas regras de negócio, tabelas de preços, políticas de viagens e fluxos do sistema.
                     </span>
                   </div>
@@ -899,59 +1597,146 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                       },
                     ])
                   }
-                  className="text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1 transition-colors cursor-pointer"
+                  style={{
+                    fontSize: "12px",
+                    color: "#64748b",
+                    background: "none",
+                    border: "none",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px",
+                    cursor: "pointer",
+                  }}
                   title="Reiniciar chat"
                 >
-                  <span className="material-symbols-outlined text-sm">refresh</span>
+                  <span className="material-symbols-outlined" style={{ fontSize: "15px" }}>
+                    refresh
+                  </span>
                   <span>Limpar Conversa</span>
                 </button>
               </div>
 
               {/* Área de Conversa com Scroll */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scroll-thin">
+              <div
+                style={{
+                  flex: 1,
+                  overflowY: "auto",
+                  padding: "24px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "16px",
+                }}
+              >
                 {historicoChat.map((msg) => {
                   const ehUsuario = msg.autor === "usuario";
                   return (
                     <div
                       key={msg.id}
-                      className={`flex flex-col ${ehUsuario ? "items-end" : "items-start"}`}
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: ehUsuario ? "flex-end" : "flex-start",
+                      }}
                     >
-                      <div className={`flex items-start gap-2.5 max-w-[85%] ${ehUsuario ? "flex-row-reverse" : "flex-row"}`}>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "flex-start",
+                          gap: "10px",
+                          maxWidth: "85%",
+                          flexDirection: ehUsuario ? "row-reverse" : "row",
+                        }}
+                      >
                         {/* Avatar */}
                         {ehUsuario ? (
-                          <div className="w-8 h-8 rounded-full bg-[#0b2545] text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-sm">
+                          <div
+                            style={{
+                              width: "32px",
+                              height: "32px",
+                              borderRadius: "50%",
+                              backgroundColor: "#0b2545",
+                              color: "#ffffff",
+                              fontWeight: 700,
+                              fontSize: "11px",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              flexShrink: 0,
+                            }}
+                          >
                             EU
                           </div>
                         ) : (
-                          <div className="w-8 h-8 rounded-full bg-[#0284c7] text-white flex items-center justify-center shrink-0 shadow-sm shadow-sky-600/30">
-                            <span className="material-symbols-outlined text-base">smart_toy</span>
+                          <div
+                            style={{
+                              width: "32px",
+                              height: "32px",
+                              borderRadius: "50%",
+                              backgroundColor: "#0284c7",
+                              color: "#ffffff",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              flexShrink: 0,
+                              boxShadow: "0 2px 6px rgba(2, 132, 199, 0.3)",
+                            }}
+                          >
+                            <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
+                              smart_toy
+                            </span>
                           </div>
                         )}
 
                         {/* Balão de Mensagem */}
                         <div
-                          className={`rounded-2xl p-4 shadow-xs text-xs sm:text-[13px] ${
-                            ehUsuario
-                              ? "bg-[#0b2545] text-white rounded-tr-xs"
-                              : "bg-white text-slate-800 border border-slate-200/90 rounded-tl-xs"
-                          }`}
+                          style={{
+                            borderRadius: "16px",
+                            padding: "14px 18px",
+                            fontSize: "13px",
+                            lineHeight: 1.5,
+                            backgroundColor: ehUsuario ? "#0b2545" : "#ffffff",
+                            color: ehUsuario ? "#ffffff" : "#334155",
+                            border: ehUsuario ? "none" : "1px solid #e2e8f0",
+                            boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+                          }}
                         >
                           {ehUsuario ? (
-                            <div className="whitespace-pre-wrap">{msg.texto}</div>
+                            <div style={{ whiteSpace: "pre-wrap" }}>{msg.texto}</div>
                           ) : (
                             <ChatMessageContent texto={msg.texto} />
                           )}
 
                           {/* Link de Rota Sugerida */}
                           {msg.rotaSugerida && (
-                            <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-end">
+                            <div
+                              style={{
+                                marginTop: "12px",
+                                paddingTop: "10px",
+                                borderTop: "1px solid #f1f5f9",
+                                display: "flex",
+                                justifyContent: "flex-end",
+                              }}
+                            >
                               <Link
                                 href={msg.rotaSugerida}
                                 onClick={aoFechar}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0284c7] hover:bg-[#0369a1] text-white font-semibold text-xs transition-colors"
+                                style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "6px",
+                                  padding: "6px 12px",
+                                  borderRadius: "8px",
+                                  backgroundColor: "#0284c7",
+                                  color: "#ffffff",
+                                  fontSize: "12px",
+                                  fontWeight: 700,
+                                  textDecoration: "none",
+                                }}
                               >
                                 <span>{msg.rotuloRota || "Acessar Módulo"}</span>
-                                <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                                <span className="material-symbols-outlined" style={{ fontSize: "15px" }}>
+                                  arrow_forward
+                                </span>
                               </Link>
                             </div>
                           )}
@@ -959,7 +1744,15 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                       </div>
 
                       {/* Horário */}
-                      <span className="text-[10px] text-slate-400 mt-1 px-11">
+                      <span
+                        style={{
+                          fontSize: "10px",
+                          color: "#94a3b8",
+                          marginTop: "4px",
+                          paddingLeft: ehUsuario ? 0 : "42px",
+                          paddingRight: ehUsuario ? "42px" : 0,
+                        }}
+                      >
                         {msg.dataHora}
                       </span>
                     </div>
@@ -968,15 +1761,36 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
 
                 {/* Indicador de Digitação / Carregamento */}
                 {carregandoIA && (
-                  <div className="flex items-start gap-2.5 max-w-[85%]">
-                    <div className="w-8 h-8 rounded-full bg-[#0284c7] text-white flex items-center justify-center shrink-0 shadow-sm">
-                      <span className="material-symbols-outlined text-base">smart_toy</span>
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", maxWidth: "85%" }}>
+                    <div
+                      style={{
+                        width: "32px",
+                        height: "32px",
+                        borderRadius: "50%",
+                        backgroundColor: "#0284c7",
+                        color: "#ffffff",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexShrink: 0,
+                      }}
+                    >
+                      <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
+                        smart_toy
+                      </span>
                     </div>
-                    <div className="bg-white border border-slate-200/90 rounded-2xl rounded-tl-xs p-3.5 shadow-xs flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-[#0284c7] animate-bounce"></span>
-                      <span className="w-2 h-2 rounded-full bg-[#0284c7] animate-bounce [animation-delay:0.2s]"></span>
-                      <span className="w-2 h-2 rounded-full bg-[#0284c7] animate-bounce [animation-delay:0.4s]"></span>
-                      <span className="text-xs text-slate-500 font-medium ml-1.5">Consultando base de conhecimento...</span>
+                    <div
+                      style={{
+                        backgroundColor: "#ffffff",
+                        border: "1px solid #e2e8f0",
+                        borderRadius: "16px",
+                        padding: "12px 16px",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                      }}
+                    >
+                      <span style={{ fontSize: "12px", color: "#64748b" }}>Consultando base de conhecimento...</span>
                     </div>
                   </div>
                 )}
@@ -985,8 +1799,28 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
               </div>
 
               {/* Sugestões Rápidas */}
-              <div className="px-6 py-2 bg-slate-50/80 border-t border-slate-200/60 flex items-center gap-2 overflow-x-auto shrink-0 custom-scroll-thin">
-                <span className="text-[10.5px] font-extrabold text-amber-600 uppercase tracking-wider shrink-0 flex items-center gap-1">
+              <div
+                style={{
+                  padding: "8px 24px",
+                  backgroundColor: "#ffffff",
+                  borderTop: "1px solid #e2e8f0",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  overflowX: "auto",
+                  flexShrink: 0,
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: "10.5px",
+                    fontWeight: 800,
+                    color: "#f59e0b",
+                    letterSpacing: "0.05em",
+                    textTransform: "uppercase",
+                    flexShrink: 0,
+                  }}
+                >
                   ⚡ SUGESTÕES:
                 </span>
                 {sugestoesRapidas.map((sugestao, idx) => (
@@ -994,7 +1828,19 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                     key={idx}
                     type="button"
                     onClick={() => handleEnviarPergunta(sugestao)}
-                    className="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-700 text-[11px] font-medium hover:border-sky-300 hover:text-[#0284c7] transition-all shrink-0 cursor-pointer shadow-2xs"
+                    style={{
+                      padding: "5px 12px",
+                      borderRadius: "20px",
+                      backgroundColor: "#f8fafc",
+                      border: "1px solid #e2e8f0",
+                      color: "#334155",
+                      fontSize: "11px",
+                      fontWeight: 500,
+                      cursor: "pointer",
+                      whiteSpace: "nowrap",
+                      flexShrink: 0,
+                      transition: "all 0.15s ease",
+                    }}
                   >
                     {sugestao}
                   </button>
@@ -1002,48 +1848,93 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
               </div>
 
               {/* Input e Envio da Pergunta */}
-              <div className="p-4 sm:px-6 bg-white border-t border-slate-200/80 shrink-0">
+              <div
+                style={{
+                  padding: "14px 24px",
+                  backgroundColor: "#ffffff",
+                  borderTop: "1px solid #f1f5f9",
+                  flexShrink: 0,
+                }}
+              >
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
                     handleEnviarPergunta();
                   }}
-                  className="flex items-center gap-2.5"
+                  style={{ display: "flex", alignItems: "center", gap: "10px" }}
                 >
-                  <div className="relative flex-1 flex items-center">
+                  <div style={{ position: "relative", flex: 1, display: "flex", alignItems: "center" }}>
                     <input
                       type="text"
                       placeholder="Digite sua dúvida sobre qualquer processo ou tela do sistema..."
                       value={inputPergunta}
                       onChange={(e) => setInputPergunta(e.target.value)}
                       disabled={carregandoIA}
-                      className="w-full pl-4 pr-10 py-2.5 rounded-xl border border-slate-200 bg-slate-50/70 text-slate-800 text-xs sm:text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-[#0284c7] transition-all font-medium"
+                      style={{
+                        width: "100%",
+                        padding: "11px 40px 11px 16px",
+                        borderRadius: "12px",
+                        border: "1px solid #e2e8f0",
+                        backgroundColor: "#ffffff",
+                        color: "#0f2a4a",
+                        fontSize: "13px",
+                        outline: "none",
+                      }}
                     />
                     <button
                       type="button"
-                      aria-label="Anexo"
-                      className="absolute right-2 text-slate-400 hover:text-slate-600 p-1 rounded cursor-pointer"
+                      style={{
+                        position: "absolute",
+                        right: "10px",
+                        border: "none",
+                        background: "none",
+                        cursor: "pointer",
+                        color: "#94a3b8",
+                        display: "flex",
+                        alignItems: "center",
+                        padding: "4px",
+                      }}
                       title="Anexar arquivo"
                     >
-                      <span className="material-symbols-outlined text-base">attach_file</span>
+                      <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
+                        attach_file
+                      </span>
                     </button>
                   </div>
 
                   <button
                     type="submit"
                     disabled={!inputPergunta.trim() || carregandoIA}
-                    className={`px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all cursor-pointer ${
-                      inputPergunta.trim() && !carregandoIA
-                        ? "bg-[#0b2545] text-white hover:bg-[#0f2a4a] shadow-sm"
-                        : "bg-slate-200 text-slate-400 cursor-not-allowed"
-                    }`}
+                    style={{
+                      padding: "10px 22px",
+                      borderRadius: "10px",
+                      backgroundColor: inputPergunta.trim() && !carregandoIA ? "#0b2545" : "#cbd5e1",
+                      color: "#ffffff",
+                      fontSize: "13px",
+                      fontWeight: 700,
+                      border: "none",
+                      cursor: inputPergunta.trim() && !carregandoIA ? "pointer" : "not-allowed",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      boxShadow: inputPergunta.trim() && !carregandoIA ? "0 2px 6px rgba(11, 37, 69, 0.25)" : "none",
+                    }}
                   >
                     <span>Perguntar</span>
-                    <span className="material-symbols-outlined text-sm">send</span>
+                    <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
+                      send
+                    </span>
                   </button>
                 </form>
 
-                <div className="text-[10px] text-slate-400 text-center mt-2">
+                <div
+                  style={{
+                    fontSize: "10.5px",
+                    color: "#94a3b8",
+                    textAlign: "center",
+                    marginTop: "8px",
+                  }}
+                >
                   O assistente IA utiliza as diretrizes oficiais de projetos, contratos e controladoria da NNÓS Consultoria.
                 </div>
               </div>
@@ -1055,19 +1946,53 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
         {/* RODAPÉ DO MODAL (VISÍVEL NO GUIA DE PROCESSOS)            */}
         {/* ======================================================== */}
         {abaAtiva === "GUIA" && (
-          <footer className="px-6 sm:px-8 py-3 bg-slate-50 border-t border-slate-200/90 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-3 shrink-0 select-none">
-            <div className="flex items-center gap-2.5">
-              <span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-emerald-200"></span>
-              <span className="font-medium text-slate-700">Base Homologada • Diretrizes Oficiais NNÓS Consultoria</span>
+          <footer
+            style={{
+              padding: "12px 28px",
+              backgroundColor: "#f8fafc",
+              borderTop: "1px solid #e2e8f0",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              fontSize: "12px",
+              color: "#64748b",
+              flexShrink: 0,
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <span
+                style={{
+                  width: "8px",
+                  height: "8px",
+                  borderRadius: "50%",
+                  backgroundColor: "#10b981",
+                  boxShadow: "0 0 0 3px rgba(16, 185, 129, 0.2)",
+                }}
+              />
+              <span style={{ fontWeight: 600, color: "#334155" }}>
+                Base Homologada • Diretrizes Oficiais NNÓS Consultoria
+              </span>
             </div>
-            <div className="flex items-center gap-4">
-              <span className="text-slate-400 hidden md:inline">Última revisão de processos: Competência Vigente 2026</span>
+            <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+              <span style={{ color: "#94a3b8" }}>Última revisão de processos: Competência Vigente 2026</span>
               <button
                 type="button"
                 onClick={() => setAbaAtiva("IA")}
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0284c7] hover:text-[#0369a1] transition-colors hover:underline cursor-pointer"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  fontSize: "12px",
+                  fontWeight: 700,
+                  color: "#0284c7",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                }}
               >
-                <span className="material-symbols-outlined text-sm">chat</span>
+                <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
+                  chat
+                </span>
                 <span>Falar com Agente de IA</span>
               </button>
             </div>
