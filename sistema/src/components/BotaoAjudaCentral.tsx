@@ -39,16 +39,16 @@ export default function BotaoAjudaCentral({
             onClick={() => abrirModal("IA")}
             style={{
               height: "46px",
-              padding: "0 18px",
+              padding: "0 18px 0 10px",
               borderRadius: "23px",
               backgroundColor: "#0284c7",
               color: "#ffffff",
-              border: "1px solid rgba(255, 255, 255, 0.2)",
+              border: "1px solid rgba(255, 255, 255, 0.25)",
               boxShadow: "0 8px 24px rgba(2, 132, 199, 0.4)",
               cursor: "pointer",
               display: "flex",
               alignItems: "center",
-              gap: "8px",
+              gap: "10px",
               fontSize: "13px",
               fontWeight: 700,
               transition: "transform 0.15s ease, box-shadow 0.15s ease",
@@ -57,9 +57,26 @@ export default function BotaoAjudaCentral({
             onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.04)")}
             onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
           >
-            <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>
-              smart_toy
-            </span>
+            <div
+              style={{
+                width: "28px",
+                height: "28px",
+                borderRadius: "50%",
+                backgroundColor: "#ffffff",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "3px",
+                boxShadow: "0 2px 4px rgba(0,0,0,0.15)",
+                flexShrink: 0,
+              }}
+            >
+              <img
+                src="/logo-coruja.png"
+                alt="Logo NNÓS"
+                style={{ width: "20px", height: "20px", objectFit: "contain" }}
+              />
+            </div>
             <span>Ajuda & IA</span>
           </button>
         </div>
@@ -84,19 +101,22 @@ export default function BotaoAjudaCentral({
             height: "36px",
             borderRadius: "10px",
             border: "1px solid var(--border)",
-            backgroundColor: "var(--surface)",
+            backgroundColor: "#ffffff",
             color: "var(--primary)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             cursor: "pointer",
             transition: "all 0.15s ease",
+            padding: "6px",
           }}
           title="Ajuda e Manual de Processos"
         >
-          <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>
-            help
-          </span>
+          <img
+            src="/logo-coruja.png"
+            alt="Logo NNÓS"
+            style={{ width: "22px", height: "22px", objectFit: "contain" }}
+          />
         </button>
 
         <AjudaCentralModal
@@ -118,8 +138,8 @@ export default function BotaoAjudaCentral({
         style={{
           display: "inline-flex",
           alignItems: "center",
-          gap: "6px",
-          padding: "6px 12px",
+          gap: "7px",
+          padding: "5px 12px 5px 6px",
           borderRadius: "10px",
           border: "1px solid rgba(2, 132, 199, 0.35)",
           backgroundColor: "rgba(2, 132, 199, 0.08)",
@@ -139,9 +159,26 @@ export default function BotaoAjudaCentral({
           e.currentTarget.style.color = "#0284c7";
         }}
       >
-        <span className="material-symbols-outlined" style={{ fontSize: "17px" }}>
-          help
-        </span>
+        <div
+          style={{
+            width: "22px",
+            height: "22px",
+            borderRadius: "50%",
+            backgroundColor: "#ffffff",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "2px",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.12)",
+            flexShrink: 0,
+          }}
+        >
+          <img
+            src="/logo-coruja.png"
+            alt="Logo NNÓS"
+            style={{ width: "16px", height: "16px", objectFit: "contain" }}
+          />
+        </div>
         <span>Ajuda</span>
       </button>
 

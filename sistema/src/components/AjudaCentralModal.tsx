@@ -20,6 +20,202 @@ interface AjudaCentralModalProps {
   abaInicial?: "GUIA" | "IA";
 }
 
+// Processa texto inline para negrito (**texto**), itálico (*texto*) e código (`texto`)
+function processarTrechosInline(texto: string): React.ReactNode[] {
+  if (!texto) return [];
+
+  // Divide mantendo os delimitadores
+  const partes = texto.split(/(\*\*\*.*?\*\*\*|\*\*.*?\*\*|`.*?`|\*.*?\*)/g);
+
+  return partes.map((parte, i) => {
+    if (!parte) return null;
+
+    // Negrito com itálico ***texto***
+    if (parte.startsWith("***") && parte.endsWith("***") && parte.length >= 6) {
+      return (
+        <strong key={i} style={{ fontWeight: 800, color: "inherit", fontStyle: "italic" }}>
+          {parte.slice(3, -3)}
+        </strong>
+      );
+    }
+
+    // Negrito **texto** -> Converte em <strong> real sem asteriscos
+    if (parte.startsWith("**") && parte.endsWith("**") && parte.length >= 4) {
+      return (
+        <strong key={i} style={{ fontWeight: 800, color: "inherit" }}>
+          {parte.slice(2, -2)}
+        </strong>
+      );
+    }
+
+    // Código inline `texto`
+    if (parte.startsWith("`") && parte.endsWith("`") && parte.length >= 2) {
+      return (
+        <code
+          key={i}
+          style={{
+            padding: "2px 6px",
+            borderRadius: "5px",
+            backgroundColor: "rgba(2, 132, 199, 0.12)",
+            color: "#0284c7",
+            fontFamily: "monospace",
+            fontSize: "12px",
+            fontWeight: 600,
+          }}
+        >
+          {parte.slice(1, -1)}
+        </code>
+      );
+    }
+
+    // Itálico *texto*
+    if (parte.startsWith("*") && parte.endsWith("*") && parte.length >= 2) {
+      return (
+        <em key={i} style={{ fontStyle: "italic" }}>
+          {parte.slice(1, -1)}
+        </em>
+      );
+    }
+
+    return parte;
+  });
+}
+
+// Renderizador estruturado de Markdown para o Chat
+function formatarTextoMarkdown(texto: string): React.ReactNode {
+  if (!texto) return null;
+
+  const linhas = texto.split("\n");
+  const elementos: React.ReactNode[] = [];
+
+  linhas.forEach((linha, idx) => {
+    const trimmed = linha.trim();
+
+    // 1. Linha vazia
+    if (!trimmed) {
+      elementos.push(<div key={`espaco-${idx}`} style={{ height: "6px" }} />);
+      return;
+    }
+
+    // 2. Cabeçalho H3 (### Titulo)
+    if (trimmed.startsWith("### ")) {
+      const conteudo = trimmed.replace(/^###\s+/, "");
+      elementos.push(
+        <div
+          key={`h3-${idx}`}
+          style={{
+            fontSize: "14.5px",
+            fontWeight: 800,
+            color: "var(--primary)",
+            margin: "8px 0 4px 0",
+            paddingBottom: "3px",
+            borderBottom: "1px solid rgba(2, 132, 199, 0.15)",
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
+          }}
+        >
+          {processarTrechosInline(conteudo)}
+        </div>
+      );
+      return;
+    }
+
+    // 3. Citação / Dica (> texto)
+    if (trimmed.startsWith("> ")) {
+      const conteudo = trimmed.replace(/^>\s*/, "");
+      elementos.push(
+        <div
+          key={`quote-${idx}`}
+          style={{
+            margin: "8px 0",
+            padding: "8px 12px",
+            backgroundColor: "rgba(2, 132, 199, 0.08)",
+            borderLeft: "3px solid #0284c7",
+            borderRadius: "0 8px 8px 0",
+            fontSize: "12px",
+            color: "var(--on-surface-variant)",
+            lineHeight: 1.5,
+          }}
+        >
+          {processarTrechosInline(conteudo)}
+        </div>
+      );
+      return;
+    }
+
+    // 4. Lista numerada (1. item, 2. item)
+    const matchNumerado = trimmed.match(/^(\d+)\.\s+(.*)$/);
+    if (matchNumerado) {
+      const num = matchNumerado[1];
+      const conteudo = matchNumerado[2];
+      elementos.push(
+        <div
+          key={`num-${idx}`}
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            gap: "8px",
+            margin: "4px 0",
+            fontSize: "12.5px",
+            lineHeight: 1.5,
+          }}
+        >
+          <span
+            style={{
+              fontWeight: 800,
+              color: "#0284c7",
+              minWidth: "18px",
+            }}
+          >
+            {num}.
+          </span>
+          <div style={{ flex: 1 }}>{processarTrechosInline(conteudo)}</div>
+        </div>
+      );
+      return;
+    }
+
+    // 5. Lista com bullet (- item ou * item)
+    if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
+      const conteudo = trimmed.slice(2);
+      elementos.push(
+        <div
+          key={`bullet-${idx}`}
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            gap: "8px",
+            margin: "3px 0 3px 6px",
+            fontSize: "12.5px",
+            lineHeight: 1.5,
+          }}
+        >
+          <span style={{ color: "#0284c7", fontWeight: 700 }}>•</span>
+          <div style={{ flex: 1 }}>{processarTrechosInline(conteudo)}</div>
+        </div>
+      );
+      return;
+    }
+
+    // 6. Parágrafo padrão
+    elementos.push(
+      <p
+        key={`p-${idx}`}
+        style={{
+          margin: "4px 0",
+          fontSize: "13px",
+          lineHeight: 1.55,
+        }}
+      >
+        {processarTrechosInline(linha)}
+      </p>
+    );
+  });
+
+  return elementos;
+}
+
 export default function AjudaCentralModal({
   aberto,
   aoFechar,
@@ -205,22 +401,27 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            {/* Ícone com Fundo Branco Nítido e Logomarca Oficial da NNÓS */}
             <div
               style={{
                 width: "42px",
                 height: "42px",
                 borderRadius: "12px",
-                background: "linear-gradient(135deg, #0284c7 0%, #0f2a4a 100%)",
+                backgroundColor: "#ffffff",
+                border: "1px solid rgba(2, 132, 199, 0.25)",
+                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                color: "#ffffff",
-                boxShadow: "0 4px 12px rgba(2, 132, 199, 0.35)",
+                padding: "6px",
+                flexShrink: 0,
               }}
             >
-              <span className="material-symbols-outlined" style={{ fontSize: "24px" }}>
-                support_agent
-              </span>
+              <img
+                src="/logo-coruja.png"
+                alt="Logo Coruja NNÓS"
+                style={{ width: "28px", height: "28px", objectFit: "contain" }}
+              />
             </div>
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -291,6 +492,7 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                 Guia de Processos
               </button>
 
+              {/* Botão da Aba com a Logomarca da NNÓS indicada pela Seta */}
               <button
                 type="button"
                 onClick={() => setAbaAtiva("IA")}
@@ -303,17 +505,34 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                   cursor: "pointer",
                   display: "flex",
                   alignItems: "center",
-                  gap: "6px",
+                  gap: "7px",
                   transition: "all 0.15s ease",
                   backgroundColor: abaAtiva === "IA" ? "#0284c7" : "transparent",
                   color: abaAtiva === "IA" ? "#ffffff" : "var(--on-surface-variant)",
                   boxShadow: abaAtiva === "IA" ? "0 2px 8px rgba(2, 132, 199, 0.3)" : "none",
                 }}
               >
-                <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
-                  smart_toy
-                </span>
-                Agente de IA NNÓS
+                <div
+                  style={{
+                    width: "20px",
+                    height: "20px",
+                    borderRadius: "50%",
+                    backgroundColor: "#ffffff",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: "2px",
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
+                    flexShrink: 0,
+                  }}
+                >
+                  <img
+                    src="/logo-coruja.png"
+                    alt="Logo NNÓS"
+                    style={{ width: "16px", height: "16px", objectFit: "contain" }}
+                  />
+                </div>
+                <span>Agente de IA NNÓS</span>
               </button>
             </div>
 
@@ -767,7 +986,7 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                 backgroundColor: "var(--surface-container-lowest, #ffffff)",
               }}
             >
-              {/* Banner do Agente */}
+              {/* Banner do Agente com Fundo Branco Nítido e Logo da NNÓS */}
               <div
                 style={{
                   padding: "12px 20px",
@@ -782,18 +1001,24 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                 <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                   <div
                     style={{
-                      width: "30px",
-                      height: "30px",
+                      width: "32px",
+                      height: "32px",
                       borderRadius: "50%",
-                      backgroundColor: "#0284c7",
-                      color: "#ffffff",
+                      backgroundColor: "#ffffff",
+                      border: "1px solid rgba(2, 132, 199, 0.25)",
+                      boxShadow: "0 2px 6px rgba(0,0,0,0.06)",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      fontSize: "16px",
+                      padding: "4px",
+                      flexShrink: 0,
                     }}
                   >
-                    🤖
+                    <img
+                      src="/logo-coruja.png"
+                      alt="Logo NNÓS"
+                      style={{ width: "22px", height: "22px", objectFit: "contain" }}
+                    />
                   </div>
                   <div>
                     <div style={{ fontSize: "12.5px", fontWeight: 700, color: "var(--primary)" }}>
@@ -860,26 +1085,32 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                         alignItems: "flex-start",
                         gap: "10px",
                         alignSelf: isUsuario ? "flex-end" : "flex-start",
-                        maxWidth: "82%",
+                        maxWidth: "84%",
                       }}
                     >
+                      {/* Avatar do Agente com Fundo Branco Nítido e Coruja Oficial */}
                       {!isUsuario && (
                         <div
                           style={{
-                            width: "32px",
-                            height: "32px",
+                            width: "34px",
+                            height: "34px",
                             borderRadius: "50%",
-                            backgroundColor: "#0284c7",
-                            color: "#ffffff",
+                            backgroundColor: "#ffffff",
+                            border: "1.5px solid rgba(2, 132, 199, 0.3)",
+                            boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
-                            fontSize: "14px",
+                            padding: "4px",
                             flexShrink: 0,
                             marginTop: "2px",
                           }}
                         >
-                          🦉
+                          <img
+                            src="/logo-coruja.png"
+                            alt="Coruja NNÓS"
+                            style={{ width: "24px", height: "24px", objectFit: "contain" }}
+                          />
                         </div>
                       )}
 
@@ -893,11 +1124,11 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                           boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
                           fontSize: "13px",
                           lineHeight: 1.55,
-                          whiteSpace: "pre-wrap",
                           wordBreak: "break-word",
                         }}
                       >
-                        <div>{msg.texto}</div>
+                        {/* Renderização Formatada: Converte **negrito**, ### títulos e > citações em elementos HTML reais */}
+                        <div>{formatarTextoMarkdown(msg.texto)}</div>
 
                         {msg.rotaSugerida && (
                           <div style={{ marginTop: "10px", paddingTop: "8px", borderTop: "1px dashed rgba(2, 132, 199, 0.3)" }}>
@@ -976,9 +1207,25 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                       color: "var(--on-surface-variant)",
                     }}
                   >
-                    <span className="material-symbols-outlined" style={{ fontSize: "18px", color: "#0284c7", animation: "spin 1.5s linear infinite" }}>
-                      sync
-                    </span>
+                    <div
+                      style={{
+                        width: "24px",
+                        height: "24px",
+                        borderRadius: "50%",
+                        backgroundColor: "#ffffff",
+                        border: "1px solid rgba(2, 132, 199, 0.3)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        padding: "2px",
+                      }}
+                    >
+                      <img
+                        src="/logo-coruja.png"
+                        alt="Coruja"
+                        style={{ width: "16px", height: "16px", objectFit: "contain" }}
+                      />
+                    </div>
                     <span>O Agente NNÓS está analisando sua pergunta...</span>
                   </div>
                 )}
