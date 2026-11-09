@@ -11,8 +11,8 @@ export default function ConsultorViagensPage() {
 
   const [busca, setBusca] = useState("");
   const [filtroStatus, setFiltroStatus] = useState("TODOS");
-  const [anoSelecionado, setAnoSelecionado] = useState(2026);
-  const [mesSelecionado, setMesSelecionado] = useState<number | null>(null);
+  const [anoSelecionado, setAnoSelecionado] = useState<number>(() => new Date().getFullYear());
+  const [mesSelecionado, setMesSelecionado] = useState<number | null>(() => new Date().getMonth() + 1);
   const [cardsExpandidos, setCardsExpandidos] = useState<Set<string>>(new Set());
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [aprovandoId, setAprovandoId] = useState<string | null>(null);
@@ -100,7 +100,15 @@ export default function ConsultorViagensPage() {
     { num: 12, rotulo: "Dez" },
   ];
 
-  const viagensOriginais = dadosConsultor?.viagens || [];
+  const viagensOriginais = useMemo(() => {
+    return (dadosConsultor?.viagens || []).filter((v: any) => {
+      const nec = v.necessidades || {};
+      const temNec = Boolean(nec.aereo || nec.hotel || nec.carro || nec.seguro);
+      const tot = Number(v.totalRealizado || v.totalContratado || v.totalCotado || v.custoAlimentacaoDiaria || v.totalViagem || 0);
+      const temCategorias = Array.isArray(v.categorias) && v.categorias.some((c: any) => c.necessaria || (c.alternativas && c.alternativas.length > 0));
+      return temNec || tot > 0 || temCategorias;
+    });
+  }, [dadosConsultor?.viagens]);
 
   // Anos disponíveis dinamicamente baseados nas viagens reais do consultor
   const anosDisponiveis = useMemo(() => {
@@ -178,7 +186,12 @@ export default function ConsultorViagensPage() {
     const paraAprovar = viagensCompetencia.filter((v: any) => (v.status || "").toUpperCase().includes("APROV") && !(v.status || "").toUpperCase().includes("COMPRA")).length;
     const paraComprar = viagensCompetencia.filter((v: any) => (v.status || "").toUpperCase().includes("COMPRA") || (v.status || "").toUpperCase().includes("CONTRATACAO")).length;
     const vouchersEnviados = viagensCompetencia.filter((v: any) => (v.status || "").toUpperCase().includes("VOUCHER")).length;
-    const concluidas = viagensCompetencia.filter((v: any) => (v.status || "").toUpperCase().includes("CONCLU")).length;
+    const concluidas = viagensCompetencia.filter((v: any) => {
+      const nec = v.necessidades || {};
+      const temNec = Boolean(nec.aereo || nec.hotel || nec.carro || nec.seguro);
+      const tot = Number(v.totalRealizado || v.totalContratado || v.totalCotado || v.custoAlimentacaoDiaria || v.totalViagem || 0);
+      return (temNec || tot > 0) && (v.status || "").toUpperCase().includes("CONCLU");
+    }).length;
 
     return { total, emCotacao, paraAprovar, paraComprar, vouchersEnviados, concluidas };
   }, [viagensCompetencia]);
@@ -640,8 +653,11 @@ export default function ConsultorViagensPage() {
                 0
               );
 
+              const nec = v.necessidades || {};
+              const temDemandaLogistica = Boolean(nec.aereo || nec.hotel || nec.carro || nec.seguro) || totalViagem > 0 || (Array.isArray(v.categorias) && v.categorias.some((c: any) => c.necessaria || (c.alternativas && c.alternativas.length > 0));
+
               const statusStr = String(v.status || "CONCLUIDO").toUpperCase();
-              const isConcluido = statusStr.includes("CONCLU");
+              const isConcluido = statusStr.includes("CONCLU") && temDemandaLogistica;
               const isVouchers = statusStr.includes("VOUCHER");
 
               return (
@@ -693,17 +709,29 @@ export default function ConsultorViagensPage() {
                               fontWeight: 700,
                               padding: "2px 8px",
                               borderRadius: "999px",
-                              backgroundColor: isConcluido ? "#dcfce7" : isVouchers ? "rgba(0, 168, 150, 0.12)" : "#fef3c7",
-                              color: isConcluido ? "#15803d" : isVouchers ? "#00a896" : "#b45309",
+                              backgroundColor: !temDemandaLogistica
+                                ? "var(--surface-container-high)"
+                                : isConcluido
+                                ? "#dcfce7"
+                                : isVouchers
+                                ? "rgba(0, 168, 150, 0.12)"
+                                : "#fef3c7",
+                              color: !temDemandaLogistica
+                                ? "var(--on-surface-variant)"
+                                : isConcluido
+                                ? "#15803d"
+                                : isVouchers
+                                ? "#00a896"
+                                : "#b45309",
                               display: "inline-flex",
                               alignItems: "center",
                               gap: "4px",
                             }}
                           >
                             <span className="material-symbols-outlined" style={{ fontSize: "12px" }}>
-                              {isConcluido ? "check_circle" : "info"}
+                              {!temDemandaLogistica ? "do_not_disturb_on" : isConcluido ? "check_circle" : "info"}
                             </span>
-                            {isConcluido ? "Concluído 100%" : isVouchers ? "Vouchers Enviados" : v.status}
+                            {!temDemandaLogistica ? "Não Requer Logística" : isConcluido ? "Concluído 100%" : isVouchers ? "Vouchers Enviados" : v.status}
                           </span>
                         </div>
                         <div style={{ fontSize: "12px", color: "var(--on-surface-variant)", marginTop: "2px" }}>
@@ -843,8 +871,8 @@ export default function ConsultorViagensPage() {
                         <div style={{ fontSize: "15px", fontWeight: 800, color: "#ffffff", marginTop: "4px" }}>
                           {brl(totalViagem)}
                         </div>
-                        <span style={{ fontSize: "10px", color: "#93c5fd" }}>
-                          100% Sincronizado
+                        <span style={{ fontSize: "10px", color: !temDemandaLogistica ? "#94a3b8" : "#93c5fd" }}>
+                          {!temDemandaLogistica ? "Não Aplicável" : "100% Sincronizado"}
                         </span>
                       </div>
 

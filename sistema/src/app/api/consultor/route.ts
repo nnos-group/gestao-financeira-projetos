@@ -104,13 +104,21 @@ export async function GET(req: NextRequest) {
       return !!n && (n === nomeBusca || n.includes(nomeBusca) || nomeBusca.includes(n));
     };
 
-    // 3. Buscar Viagens do Consultor
+    // 3. Buscar Viagens do Consultor (Apenas demandas reais com logística requerida ou custos)
     let viagens: any[] = [];
     try {
       const vPath = path.resolve(process.cwd(), "src/lib/viagens-solicitacoes-base.json");
       if (fs.existsSync(vPath)) {
         const vList = JSON.parse(fs.readFileSync(vPath, "utf-8"));
-        viagens = vList.filter((v: any) => nomeConfere(v.consultor));
+        viagens = vList
+          .filter((v: any) => nomeConfere(v.consultor))
+          .filter((v: any) => {
+            const nec = v.necessidades || {};
+            const temNec = Boolean(nec.aereo || nec.hotel || nec.carro || nec.seguro);
+            const tot = Number(v.totalRealizado || v.totalContratado || v.totalCotado || v.custoAlimentacaoDiaria || v.totalViagem || 0);
+            const temCat = Array.isArray(v.categorias) && v.categorias.some((c: any) => c.necessaria || (c.alternativas && c.alternativas.length > 0));
+            return temNec || tot > 0 || temCat;
+          });
       }
     } catch (e) {
       console.warn("Aviso ao buscar viagens:", e);
