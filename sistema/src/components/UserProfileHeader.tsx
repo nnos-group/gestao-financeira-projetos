@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { usePerfilAcesso } from "@/contexts/PerfilAcessoContext";
+import BotaoAjudaCentral from "@/components/BotaoAjudaCentral";
 
 interface UsuarioAtivoInfo {
   id?: string;
@@ -282,6 +283,9 @@ export default function UserProfileHeader() {
   return (
     <>
       <div style={{ display: "inline-flex", alignItems: "center", gap: "10px" }}>
+        {/* Botão Oficial de Ajuda & Agente de IA */}
+        <BotaoAjudaCentral />
+
         <button
           type="button"
           onClick={handleLogout}

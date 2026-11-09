@@ -3,6 +3,7 @@
 import React from "react";
 import ThemeToggle from "@/components/ThemeToggle";
 import ModernDropdown from "@/components/ModernDropdown";
+import BotaoAjudaCentral from "@/components/BotaoAjudaCentral";
 import { useConsultor } from "@/contexts/ConsultorContext";
 
 interface ConsultorHeaderProps {
@@ -86,6 +87,7 @@ export default function ConsultorHeader({ tituloPagina = "Visão Geral" }: Consu
 
       {/* Ações do Header */}
       <div className="header-actions" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        <BotaoAjudaCentral />
         <ThemeToggle />
 
         {/* Perfil do Consultor Simulado */}
