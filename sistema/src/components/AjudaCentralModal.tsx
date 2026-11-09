@@ -607,21 +607,27 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
               >
                 <div
                   style={{
-                    width: "16px",
-                    height: "16px",
+                    width: "18px",
+                    height: "18px",
                     borderRadius: "50%",
                     backgroundColor: "#ffffff",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    padding: "1.5px",
+                    overflow: "hidden",
                     flexShrink: 0,
                   }}
                 >
                   <img
                     src="/logo-coruja.png"
                     alt="NNÓS"
-                    style={{ width: "13px", height: "13px", objectFit: "contain", display: "block" }}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "contain",
+                      display: "block",
+                      transform: "scale(1.18)",
+                    }}
                   />
                 </div>
                 <span>Agente de IA NNÓS</span>

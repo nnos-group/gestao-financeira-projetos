@@ -66,15 +66,20 @@ export default function BotaoAjudaCentral({
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                padding: "3px",
-                boxShadow: "0 2px 4px rgba(0,0,0,0.15)",
+                overflow: "hidden",
                 flexShrink: 0,
               }}
             >
               <img
                 src="/logo-coruja.png"
                 alt="Logo NNÓS"
-                style={{ width: "20px", height: "20px", objectFit: "contain" }}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "contain",
+                  display: "block",
+                  transform: "scale(1.18)",
+                }}
               />
             </div>
             <span>Ajuda & IA</span>
@@ -168,15 +173,20 @@ export default function BotaoAjudaCentral({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            padding: "2px",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.12)",
+            overflow: "hidden",
             flexShrink: 0,
           }}
         >
           <img
             src="/logo-coruja.png"
             alt="Logo NNÓS"
-            style={{ width: "16px", height: "16px", objectFit: "contain" }}
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "contain",
+              display: "block",
+              transform: "scale(1.18)",
+            }}
           />
         </div>
         <span>Ajuda</span>
