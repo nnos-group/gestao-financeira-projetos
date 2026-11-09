@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
+import { usePerfilAcesso } from "@/contexts/PerfilAcessoContext";
 import { LISTA_PROCESSOS_AJUDA, ProcessoMenu } from "@/lib/ajuda-processos-base";
 
 interface MensagemChat {
@@ -263,6 +264,11 @@ export default function AjudaCentralModal({
   aoFechar,
   abaInicial = "GUIA",
 }: AjudaCentralModalProps) {
+  const { perfilAtivoId } = usePerfilAcesso();
+  const rotaViagens = perfilAtivoId === "CONSULTOR" ? "/consultor/viagens" : "/viagens";
+  const rotuloViagens = perfilAtivoId === "CONSULTOR" ? "Minhas Viagens" : "Viagens & Logística";
+  const subtituloViagens = perfilAtivoId === "CONSULTOR" ? "Vouchers & Diretrizes" : "Gestão, Cotações & Diretrizes";
+
   const [mounted, setMounted] = useState(false);
   const [abaAtiva, setAbaAtiva] = useState<"GUIA" | "IA">(abaInicial);
   const [termoBusca, setTermoBusca] = useState("");
@@ -1383,7 +1389,7 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                     }}
                   >
                     <a
-                      href="/politicas/NNOS-Politica-Viagens-Geral.pdf"
+                      href="/politicas/politica-nnos.pdf"
                       target="_blank"
                       rel="noopener noreferrer"
                       style={{
@@ -1406,13 +1412,13 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                         </div>
                         <div style={{ minWidth: 0 }}>
                           <div style={{ fontSize: "12px", fontWeight: 700, color: "#0f2a4a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                            Fluxograma Oficial
+                            Fluxograma &amp; Diretrizes
                           </div>
-                          <div style={{ fontSize: "10.5px", color: "#94a3b8" }}>PDF • 1.4 MB</div>
+                          <div style={{ fontSize: "10.5px", color: "#94a3b8" }}>PDF Oficial • 2.4 MB</div>
                         </div>
                       </div>
                       <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "#94a3b8" }}>
-                        download
+                        open_in_new
                       </span>
                     </a>
 
@@ -1450,7 +1456,7 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                     </Link>
 
                     <Link
-                      href="/consultor/viagens"
+                      href={rotaViagens}
                       onClick={aoFechar}
                       style={{
                         display: "flex",
@@ -1472,9 +1478,9 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                         </div>
                         <div style={{ minWidth: 0 }}>
                           <div style={{ fontSize: "12px", fontWeight: 700, color: "#0f2a4a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                            Políticas de Viagem
+                            {rotuloViagens}
                           </div>
-                          <div style={{ fontSize: "10.5px", color: "#94a3b8" }}>Diretrizes de reembolso</div>
+                          <div style={{ fontSize: "10.5px", color: "#94a3b8" }}>{subtituloViagens}</div>
                         </div>
                       </div>
                       <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "#94a3b8" }}>

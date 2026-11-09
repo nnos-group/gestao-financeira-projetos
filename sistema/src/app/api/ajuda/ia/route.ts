@@ -341,73 +341,91 @@ DIRETRIZES FUNDAMENTAIS DO NEGÓCIO:
 BASE DE CONHECIMENTO OFICIAL DOS PROCESSOS DO SISTEMA:
 ${contextoBase}`;
 
-        // Modelos Gemini suportados: gemini-1.5-flash e gemini-2.0-flash
-        const modelo = process.env.GEMINI_MODEL || "gemini-1.5-flash";
-        const geminiRes = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${apiKey}`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              contents: [
-                {
-                  role: "user",
-                  parts: [{ text: `${promptSistema}\n\nPergunta do usuário: ${pergunta}` }],
+        // Modelos Gemini suportados: gemini-1.5-flash, gemini-2.0-flash, gemini-1.5-pro
+        const modelosParaTentar = [
+          process.env.GEMINI_MODEL || "gemini-1.5-flash",
+          "gemini-2.0-flash",
+          "gemini-1.5-pro",
+        ];
+
+        let respostaGemini: string | undefined;
+
+        for (const modelo of modelosParaTentar) {
+          try {
+            const geminiRes = await fetch(
+              `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${apiKey}`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "x-goog-api-key": apiKey,
                 },
-              ],
-              generationConfig: {
-                temperature: 0.2,
-                topP: 0.8,
-                maxOutputTokens: 1024,
-              },
-            }),
-          }
-        );
+                body: JSON.stringify({
+                  contents: [
+                    {
+                      role: "user",
+                      parts: [{ text: `${promptSistema}\n\nPergunta do usuário: ${pergunta}` }],
+                    },
+                  ],
+                  generationConfig: {
+                    temperature: 0.2,
+                    topP: 0.8,
+                    maxOutputTokens: 1024,
+                  },
+                }),
+              }
+            );
 
-        if (geminiRes.ok) {
-          const geminiData = await geminiRes.json();
-          const respostaGemini = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (respostaGemini) {
-            // Tenta inferir rota sugerida com base na resposta do Gemini
-            let rotaSugerida: string | undefined;
-            let rotuloRota: string | undefined;
-
-            if (respostaGemini.includes("/pagamentos")) {
-              rotaSugerida = "/pagamentos";
-              rotuloRota = "Ir para Pagamentos & Contas";
-            } else if (respostaGemini.includes("/medicao")) {
-              rotaSugerida = "/medicao";
-              rotuloRota = "Ir para Boletim de Medição (BM)";
-            } else if (respostaGemini.includes("/viagens")) {
-              rotaSugerida = "/viagens";
-              rotuloRota = "Acessar Viagens & Logística";
-            } else if (respostaGemini.includes("/pessoas")) {
-              rotaSugerida = "/pessoas";
-              rotuloRota = "Ir para Cadastro de Pessoas";
-            } else if (respostaGemini.includes("/faturamento")) {
-              rotaSugerida = "/faturamento";
-              rotuloRota = "Ir para Faturamento";
-            } else if (respostaGemini.includes("/projetos")) {
-              rotaSugerida = "/projetos";
-              rotuloRota = "Ir para Projetos & Atividades";
-            } else if (respostaGemini.includes("/relatorios")) {
-              rotaSugerida = "/relatorios";
-              rotuloRota = "Abrir Relatórios";
-            } else if (respostaGemini.includes("/admin")) {
-              rotaSugerida = "/admin";
-              rotuloRota = "Ir para Administração";
+            if (geminiRes.ok) {
+              const geminiData = await geminiRes.json();
+              respostaGemini = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text;
+              if (respostaGemini) break;
+            } else {
+              const errText = await geminiRes.text();
+              console.warn(`Resposta não-OK da API Gemini (${modelo}):`, errText);
             }
-
-            return NextResponse.json({
-              resposta: respostaGemini,
-              rotaSugerida,
-              rotuloRota,
-              fonte: "gemini_ai",
-            });
+          } catch (mErr) {
+            console.warn(`Erro na chamada do modelo ${modelo}:`, mErr);
           }
-        } else {
-          const errText = await geminiRes.text();
-          console.warn("Resposta não-OK da API Gemini, usando motor nativo:", errText);
+        }
+
+        if (respostaGemini) {
+          // Tenta inferir rota sugerida com base na resposta do Gemini
+          let rotaSugerida: string | undefined;
+          let rotuloRota: string | undefined;
+
+          if (respostaGemini.includes("/pagamentos")) {
+            rotaSugerida = "/pagamentos";
+            rotuloRota = "Ir para Pagamentos & Contas";
+          } else if (respostaGemini.includes("/medicao")) {
+            rotaSugerida = "/medicao";
+            rotuloRota = "Ir para Boletim de Medição (BM)";
+          } else if (respostaGemini.includes("/viagens")) {
+            rotaSugerida = "/viagens";
+            rotuloRota = "Acessar Viagens & Logística";
+          } else if (respostaGemini.includes("/pessoas")) {
+            rotaSugerida = "/pessoas";
+            rotuloRota = "Ir para Cadastro de Pessoas";
+          } else if (respostaGemini.includes("/faturamento")) {
+            rotaSugerida = "/faturamento";
+            rotuloRota = "Ir para Faturamento";
+          } else if (respostaGemini.includes("/projetos")) {
+            rotaSugerida = "/projetos";
+            rotuloRota = "Ir para Projetos & Atividades";
+          } else if (respostaGemini.includes("/relatorios")) {
+            rotaSugerida = "/relatorios";
+            rotuloRota = "Abrir Relatórios";
+          } else if (respostaGemini.includes("/admin")) {
+            rotaSugerida = "/admin";
+            rotuloRota = "Ir para Administração";
+          }
+
+          return NextResponse.json({
+            resposta: respostaGemini,
+            rotaSugerida,
+            rotuloRota,
+            fonte: "gemini_ai",
+          });
         }
       } catch (geminiError) {
         console.warn("Aviso ao conectar ao Gemini, utilizando motor nativo:", geminiError);

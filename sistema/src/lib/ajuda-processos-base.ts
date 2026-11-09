@@ -411,7 +411,7 @@ export const LISTA_PROCESSOS_AJUDA: ProcessoMenu[] = [
   },
   {
     id: "relatorios",
-    menuNome: "Central de DRE",
+    menuNome: "Central de Relatórios",
     subtitulo: "Margem e rentabilidade",
     tempoLeitura: "4 min de leitura",
     rota: "/relatorios",
