@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePerfilAcesso } from "@/contexts/PerfilAcessoContext";
 import { LISTA_PROCESSOS_AJUDA, ProcessoMenu } from "@/lib/ajuda-processos-base";
+import { POLITICAS_VIAGEM } from "@/lib/politicas-viagem";
 
 interface MensagemChat {
   id: string;
@@ -264,7 +265,7 @@ export default function AjudaCentralModal({
   aoFechar,
   abaInicial = "GUIA",
 }: AjudaCentralModalProps) {
-  const { perfilAtivoId } = usePerfilAcesso();
+  const { perfilAtivoId, temAcessoModulo } = usePerfilAcesso();
   const rotaViagens = perfilAtivoId === "CONSULTOR" ? "/consultor/viagens" : "/viagens";
   const rotuloViagens = perfilAtivoId === "CONSULTOR" ? "Minhas Viagens" : "Viagens & Logística";
   const subtituloViagens = perfilAtivoId === "CONSULTOR" ? "Vouchers & Diretrizes" : "Gestão, Cotações & Diretrizes";
@@ -274,6 +275,8 @@ export default function AjudaCentralModal({
   const [termoBusca, setTermoBusca] = useState("");
   const [categoriaFiltro, setCategoriaFiltro] = useState<"TODOS" | "Operacional" | "Financeiro" | "Gestão">("TODOS");
   const [menuSelecionadoId, setMenuSelecionadoId] = useState<string>("projetos");
+  const [modalPoliticasAberto, setModalPoliticasAberto] = useState(false);
+  const [modalFluxogramaAberto, setModalFluxogramaAberto] = useState(false);
 
   // Estado do Chat de IA
   const [historicoChat, setHistoricoChat] = useState<MensagemChat[]>([
@@ -311,6 +314,14 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape" && aberto) {
+        if (modalPoliticasAberto) {
+          setModalPoliticasAberto(false);
+          return;
+        }
+        if (modalFluxogramaAberto) {
+          setModalFluxogramaAberto(false);
+          return;
+        }
         aoFechar();
       }
       if ((e.metaKey || e.ctrlKey) && e.key === "k" && aberto && abaAtiva === "GUIA") {
@@ -321,35 +332,51 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [aberto, aoFechar, abaAtiva]);
+  }, [aberto, aoFechar, abaAtiva, modalPoliticasAberto, modalFluxogramaAberto]);
 
-  if (!mounted || !aberto) return null;
+  // Módulos corporativos permitidos conforme perfil RBAC ativo (Print 5)
+  const processosPermitidos = useMemo(() => {
+    return LISTA_PROCESSOS_AJUDA.filter((p) => {
+      if (perfilAtivoId === "ADMIN") return true;
+      return temAcessoModulo(p.id) || temAcessoModulo(p.rota);
+    });
+  }, [perfilAtivoId, temAcessoModulo]);
 
-  // Filtragem dos menus de processos
-  const processosFiltrados = LISTA_PROCESSOS_AJUDA.filter((p) => {
-    // Filtro por categoria
-    if (categoriaFiltro === "Operacional" && p.categoria !== "Operacional") return false;
-    if (categoriaFiltro === "Financeiro" && p.categoria !== "Financeiro") return false;
-    if (categoriaFiltro === "Gestão" && p.categoria !== "Gestão & Diretoria" && p.categoria !== "Segurança") return false;
+  // Se o menu selecionado anteriormente não for permitido para o novo perfil, seleciona o primeiro permitido
+  useEffect(() => {
+    if (processosPermitidos.length > 0 && !processosPermitidos.some((p) => p.id === menuSelecionadoId)) {
+      setMenuSelecionadoId(processosPermitidos[0].id);
+    }
+  }, [processosPermitidos, menuSelecionadoId]);
 
-    // Filtro por termo de busca
-    if (!termoBusca.trim()) return true;
-    const t = termoBusca.toLowerCase();
-    return (
-      p.menuNome.toLowerCase().includes(t) ||
-      (p.subtitulo && p.subtitulo.toLowerCase().includes(t)) ||
-      p.descricaoGeral.toLowerCase().includes(t) ||
-      p.categoria.toLowerCase().includes(t) ||
-      p.passos.some((step) => step.titulo.toLowerCase().includes(t) || step.descricao.toLowerCase().includes(t)) ||
-      p.regrasImportantes.some((r) => r.toLowerCase().includes(t)) ||
-      p.faq.some((f) => f.pergunta.toLowerCase().includes(t) || f.resposta.toLowerCase().includes(t))
-    );
-  });
+  // Filtragem dos menus de processos por busca e categoria
+  const processosFiltrados = useMemo(() => {
+    return processosPermitidos.filter((p) => {
+      // Filtro por categoria
+      if (categoriaFiltro === "Operacional" && p.categoria !== "Operacional") return false;
+      if (categoriaFiltro === "Financeiro" && p.categoria !== "Financeiro") return false;
+      if (categoriaFiltro === "Gestão" && p.categoria !== "Gestão & Diretoria" && p.categoria !== "Segurança") return false;
 
-  const menuAtual: ProcessoMenu =
-    LISTA_PROCESSOS_AJUDA.find((p) => p.id === menuSelecionadoId) ||
-    processosFiltrados[0] ||
-    LISTA_PROCESSOS_AJUDA[0];
+      // Filtro por termo de busca
+      if (!termoBusca.trim()) return true;
+      const t = termoBusca.toLowerCase();
+      return (
+        p.menuNome.toLowerCase().includes(t) ||
+        (p.subtitulo && p.subtitulo.toLowerCase().includes(t)) ||
+        p.descricaoGeral.toLowerCase().includes(t) ||
+        p.categoria.toLowerCase().includes(t) ||
+        p.passos.some((step) => step.titulo.toLowerCase().includes(t) || step.descricao.toLowerCase().includes(t)) ||
+        p.regrasImportantes.some((r) => r.toLowerCase().includes(t)) ||
+        p.faq.some((f) => f.pergunta.toLowerCase().includes(t) || f.resposta.toLowerCase().includes(t))
+      );
+    });
+  }, [processosPermitidos, categoriaFiltro, termoBusca]);
+
+  const menuAtual: ProcessoMenu = useMemo(() => {
+    const achado = processosFiltrados.find((p) => p.id === menuSelecionadoId);
+    if (achado) return achado;
+    return processosFiltrados[0] || processosPermitidos[0] || LISTA_PROCESSOS_AJUDA[0];
+  }, [processosFiltrados, processosPermitidos, menuSelecionadoId]);
 
   // Envio de pergunta para o Agente de IA
   const handleEnviarPergunta = async (textoPersonalizado?: string) => {
@@ -761,7 +788,7 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                         color: categoriaFiltro === "TODOS" ? "#ffffff" : "#475569",
                       }}
                     >
-                      Todos ({LISTA_PROCESSOS_AJUDA.length})
+                      Todos ({processosPermitidos.length})
                     </button>
                     <button
                       type="button"
@@ -1388,10 +1415,10 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                       gap: "12px",
                     }}
                   >
-                    <a
-                      href="/politicas/politica-nnos.pdf"
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    {/* Card 1: Fluxograma Oficial de Processos (Abre Modal Visual do Fluxo) */}
+                    <button
+                      type="button"
+                      onClick={() => setModalFluxogramaAberto(true)}
                       style={{
                         display: "flex",
                         alignItems: "center",
@@ -1399,29 +1426,39 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                         padding: "12px 14px",
                         borderRadius: "12px",
                         border: "1px solid #e2e8f0",
-                        textDecoration: "none",
                         backgroundColor: "#ffffff",
+                        cursor: "pointer",
                         transition: "all 0.15s ease",
+                        textAlign: "left",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = "#0284c7";
+                        e.currentTarget.style.boxShadow = "0 2px 8px rgba(2, 132, 199, 0.12)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = "#e2e8f0";
+                        e.currentTarget.style.boxShadow = "none";
                       }}
                     >
                       <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
-                        <div style={{ width: "32px", height: "32px", borderRadius: "8px", backgroundColor: "#fef2f2", color: "#dc2626", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <div style={{ width: "32px", height: "32px", borderRadius: "8px", backgroundColor: "#f0fdf4", color: "#16a34a", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                           <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
-                            picture_as_pdf
+                            account_tree
                           </span>
                         </div>
                         <div style={{ minWidth: 0 }}>
                           <div style={{ fontSize: "12px", fontWeight: 700, color: "#0f2a4a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                            Fluxograma &amp; Diretrizes
+                            Fluxograma Oficial
                           </div>
-                          <div style={{ fontSize: "10.5px", color: "#94a3b8" }}>PDF Oficial • 2.4 MB</div>
+                          <div style={{ fontSize: "10.5px", color: "#94a3b8" }}>Macrofluxo End-to-End</div>
                         </div>
                       </div>
                       <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "#94a3b8" }}>
-                        open_in_new
+                        visibility
                       </span>
-                    </a>
+                    </button>
 
+                    {/* Card 2: Tabela de Preços Homologada */}
                     <Link
                       href="/tabela-precos"
                       onClick={aoFechar}
@@ -1435,6 +1472,14 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                         textDecoration: "none",
                         backgroundColor: "#ffffff",
                         transition: "all 0.15s ease",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = "#059669";
+                        e.currentTarget.style.boxShadow = "0 2px 8px rgba(5, 150, 105, 0.12)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = "#e2e8f0";
+                        e.currentTarget.style.boxShadow = "none";
                       }}
                     >
                       <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
@@ -1455,9 +1500,10 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                       </span>
                     </Link>
 
-                    <Link
-                      href={rotaViagens}
-                      onClick={aoFechar}
+                    {/* Card 3: Políticas de Viagem (Abre o Painel Oficial do Print 3) */}
+                    <button
+                      type="button"
+                      onClick={() => setModalPoliticasAberto(true)}
                       style={{
                         display: "flex",
                         alignItems: "center",
@@ -1465,28 +1511,37 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                         padding: "12px 14px",
                         borderRadius: "12px",
                         border: "1px solid #e2e8f0",
-                        textDecoration: "none",
                         backgroundColor: "#ffffff",
+                        cursor: "pointer",
                         transition: "all 0.15s ease",
+                        textAlign: "left",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = "#0284c7";
+                        e.currentTarget.style.boxShadow = "0 2px 8px rgba(2, 132, 199, 0.12)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = "#e2e8f0";
+                        e.currentTarget.style.boxShadow = "none";
                       }}
                     >
                       <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
                         <div style={{ width: "32px", height: "32px", borderRadius: "8px", backgroundColor: "#f0f9ff", color: "#0284c7", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                           <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
-                            explore
+                            menu_book
                           </span>
                         </div>
                         <div style={{ minWidth: 0 }}>
                           <div style={{ fontSize: "12px", fontWeight: 700, color: "#0f2a4a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                            {rotuloViagens}
+                            Políticas de Viagem
                           </div>
-                          <div style={{ fontSize: "10.5px", color: "#94a3b8" }}>{subtituloViagens}</div>
+                          <div style={{ fontSize: "10.5px", color: "#94a3b8" }}>4 Políticas &amp; Reembolso</div>
                         </div>
                       </div>
                       <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "#94a3b8" }}>
-                        arrow_forward
+                        open_in_new
                       </span>
-                    </Link>
+                    </button>
                   </div>
                 </section>
 
@@ -2009,6 +2064,616 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
               </button>
             </div>
           </footer>
+        )}
+        {/* ======================================================== */}
+        {/* SUBMODAL: POLÍTICAS DE VIAGEM & REEMBOLSO (PRINT 3)       */}
+        {/* ======================================================== */}
+        {modalPoliticasAberto && (
+          <div
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: "rgba(15, 23, 42, 0.7)",
+              backdropFilter: "blur(4px)",
+              zIndex: 100020,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "20px",
+            }}
+            onClick={() => setModalPoliticasAberto(false)}
+          >
+            <div
+              style={{
+                width: "100%",
+                maxWidth: "880px",
+                maxHeight: "90vh",
+                overflowY: "auto",
+                backgroundColor: "#ffffff",
+                borderRadius: "20px",
+                boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+                border: "1px solid #e2e8f0",
+                display: "flex",
+                flexDirection: "column",
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header do Submodal */}
+              <div
+                style={{
+                  padding: "18px 24px",
+                  borderBottom: "1px solid #f1f5f9",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  backgroundColor: "#ffffff",
+                  position: "sticky",
+                  top: 0,
+                  zIndex: 2,
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                  <div
+                    style={{
+                      width: "38px",
+                      height: "38px",
+                      borderRadius: "10px",
+                      backgroundColor: "#fef3c7",
+                      color: "#d97706",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: "22px" }}>
+                      menu_book
+                    </span>
+                  </div>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 800, color: "#0f2a4a" }}>
+                      Políticas de Viagem &amp; Reembolso
+                    </h3>
+                    <p style={{ margin: "2px 0 0 0", fontSize: "11.5px", color: "#64748b" }}>
+                      Diretrizes oficiais homologadas para consultores, instrutores e liderança
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setModalPoliticasAberto(false)}
+                  style={{
+                    width: "32px",
+                    height: "32px",
+                    borderRadius: "50%",
+                    border: "none",
+                    backgroundColor: "#f1f5f9",
+                    color: "#64748b",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                    transition: "all 0.15s ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = "#e2e8f0";
+                    e.currentTarget.style.color = "#0f2a4a";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "#f1f5f9";
+                    e.currentTarget.style.color = "#64748b";
+                  }}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
+                    close
+                  </span>
+                </button>
+              </div>
+
+              {/* Conteúdo do Submodal (Idêntico ao Print 3) */}
+              <div style={{ padding: "24px" }}>
+                {/* Alerta Mandatório de Negócio */}
+                <div
+                  style={{
+                    padding: "14px 18px",
+                    borderRadius: "12px",
+                    backgroundColor: "#fffbeb",
+                    border: "1px solid #fde68a",
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: "12px",
+                    marginBottom: "20px",
+                  }}
+                >
+                  <span className="material-symbols-outlined" style={{ color: "#d97706", fontSize: "20px", marginTop: "1px", flexShrink: 0 }}>
+                    warning
+                  </span>
+                  <div style={{ fontSize: "12.5px", color: "#78350f", lineHeight: 1.55 }}>
+                    <strong style={{ fontWeight: 800, color: "#92400e" }}>Atenção: </strong>
+                    O viajante precisa verificar previamente para qual empresa estará prestando o serviço/viagem.{" "}
+                    <strong>Se a empresa contratante não possuir política de viagem própria, a diretriz oficial mandatória utilizada é a da NNÓS Consultoria.</strong>
+                  </div>
+                </div>
+
+                {/* Título da Seção de Miniaturas */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px", flexWrap: "wrap", gap: "8px" }}>
+                  <span style={{ fontSize: "12px", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.5px", color: "#78350f", display: "flex", alignItems: "center", gap: "6px" }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: "17px", color: "#d97706" }}>
+                      menu_book
+                    </span>
+                    Políticas de Viagem &amp; Reembolso (Clique na miniatura para abrir o PDF):
+                  </span>
+                  <span style={{ fontSize: "11px", fontWeight: 700, color: "#92400e", backgroundColor: "#fef3c7", padding: "3px 8px", borderRadius: "6px" }}>
+                    4 Documentos Oficiais
+                  </span>
+                </div>
+
+                {/* Grade das 4 Miniaturas das Políticas (Layout do Print 3) */}
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                    gap: "14px",
+                  }}
+                >
+                  {POLITICAS_VIAGEM.map((pol) => (
+                    <a
+                      key={pol.id}
+                      href={pol.pdfUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        textDecoration: "none",
+                        backgroundColor: "#ffffff",
+                        borderRadius: "12px",
+                        border: "1px solid #e2e8f0",
+                        padding: "10px",
+                        display: "flex",
+                        flexDirection: "column",
+                        transition: "all 0.2s ease",
+                        cursor: "pointer",
+                        boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = "#0d9488";
+                        e.currentTarget.style.transform = "translateY(-3px)";
+                        e.currentTarget.style.boxShadow = "0 8px 16px rgba(0,0,0,0.12)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = "#e2e8f0";
+                        e.currentTarget.style.transform = "none";
+                        e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.06)";
+                      }}
+                      title={`Clique para abrir o PDF oficial da ${pol.titulo}`}
+                    >
+                      {/* Miniatura do Cabeçalho com Badge PDF */}
+                      <div style={{ position: "relative", width: "100%", height: "115px", borderRadius: "8px", overflow: "hidden", backgroundColor: "#f1f5f9", marginBottom: "10px" }}>
+                        <img
+                          src={pol.miniaturaUrl}
+                          alt={pol.titulo}
+                          style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "top" }}
+                        />
+                        <div
+                          style={{
+                            position: "absolute",
+                            bottom: "6px",
+                            right: "6px",
+                            backgroundColor: "rgba(15, 23, 42, 0.85)",
+                            color: "#ffffff",
+                            fontSize: "9.5px",
+                            fontWeight: 800,
+                            padding: "2px 6px",
+                            borderRadius: "4px",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "3px",
+                            backdropFilter: "blur(2px)",
+                          }}
+                        >
+                          <span className="material-symbols-outlined" style={{ fontSize: "11px", color: "#f87171" }}>
+                            picture_as_pdf
+                          </span>
+                          <span>PDF</span>
+                        </div>
+                      </div>
+
+                      {/* Tag do Cliente / Regra Geral */}
+                      <span
+                        style={{
+                          fontSize: "10.5px",
+                          fontWeight: 800,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.03em",
+                          color: pol.corTag || "#0d9488",
+                          marginBottom: "4px",
+                          lineHeight: 1.3,
+                        }}
+                      >
+                        {pol.tag}
+                      </span>
+
+                      {/* Nome da Empresa */}
+                      <span style={{ fontSize: "12px", fontWeight: 700, color: "#0f2a4a", marginBottom: "8px" }}>
+                        {pol.empresa}
+                      </span>
+
+                      {/* Botão de Abertura */}
+                      <div
+                        style={{
+                          marginTop: "auto",
+                          paddingTop: "8px",
+                          borderTop: "1px solid #f1f5f9",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          fontSize: "11px",
+                          fontWeight: 700,
+                          color: "#0d9488",
+                        }}
+                      >
+                        <span>Abrir PDF</span>
+                        <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>
+                          open_in_new
+                        </span>
+                      </div>
+                    </a>
+                  ))}
+                </div>
+              </div>
+
+              {/* Rodapé do Submodal */}
+              <div
+                style={{
+                  padding: "14px 24px",
+                  borderTop: "1px solid #f1f5f9",
+                  backgroundColor: "#f8fafc",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  borderRadius: "0 0 20px 20px",
+                }}
+              >
+                <span style={{ fontSize: "11.5px", color: "#64748b" }}>
+                  Documentos válidos para o exercício 2026
+                </span>
+                <Link
+                  href={rotaViagens}
+                  onClick={() => {
+                    setModalPoliticasAberto(false);
+                    aoFechar();
+                  }}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    padding: "8px 16px",
+                    borderRadius: "10px",
+                    backgroundColor: "#0284c7",
+                    color: "#ffffff",
+                    fontSize: "12.5px",
+                    fontWeight: 700,
+                    textDecoration: "none",
+                    boxShadow: "0 2px 6px rgba(2, 132, 199, 0.25)",
+                  }}
+                >
+                  <span>Acessar {rotuloViagens}</span>
+                  <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
+                    arrow_forward
+                  </span>
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ======================================================== */}
+        {/* SUBMODAL: FLUXOGRAMA OFICIAL DE PROCESSOS (MACRO-FLUXO)   */}
+        {/* ======================================================== */}
+        {modalFluxogramaAberto && (
+          <div
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: "rgba(15, 23, 42, 0.7)",
+              backdropFilter: "blur(4px)",
+              zIndex: 100020,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "20px",
+            }}
+            onClick={() => setModalFluxogramaAberto(false)}
+          >
+            <div
+              style={{
+                width: "100%",
+                maxWidth: "960px",
+                maxHeight: "92vh",
+                overflowY: "auto",
+                backgroundColor: "#ffffff",
+                borderRadius: "20px",
+                boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+                border: "1px solid #e2e8f0",
+                display: "flex",
+                flexDirection: "column",
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header do Submodal */}
+              <div
+                style={{
+                  padding: "18px 24px",
+                  borderBottom: "1px solid #f1f5f9",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  backgroundColor: "#ffffff",
+                  position: "sticky",
+                  top: 0,
+                  zIndex: 2,
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                  <div
+                    style={{
+                      width: "38px",
+                      height: "38px",
+                      borderRadius: "10px",
+                      backgroundColor: "#f0fdf4",
+                      color: "#16a34a",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: "22px" }}>
+                      account_tree
+                    </span>
+                  </div>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 800, color: "#0f2a4a" }}>
+                      Fluxograma Oficial de Processos • NNÓS
+                    </h3>
+                    <p style={{ margin: "2px 0 0 0", fontSize: "11.5px", color: "#64748b" }}>
+                      Ciclo de Vida Integrado: Planejamento, Logística, Medição, Faturamento e Controladoria
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setModalFluxogramaAberto(false)}
+                  style={{
+                    width: "32px",
+                    height: "32px",
+                    borderRadius: "50%",
+                    border: "none",
+                    backgroundColor: "#f1f5f9",
+                    color: "#64748b",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                  }}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
+                    close
+                  </span>
+                </button>
+              </div>
+
+              {/* Corpo do Fluxograma com 7 Etapas */}
+              <div style={{ padding: "24px" }}>
+                <div
+                  style={{
+                    padding: "12px 16px",
+                    borderRadius: "10px",
+                    backgroundColor: "#f0f9ff",
+                    border: "1px solid #bae6fd",
+                    color: "#0369a1",
+                    fontSize: "12.5px",
+                    lineHeight: 1.5,
+                    marginBottom: "24px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px",
+                  }}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: "20px", color: "#0284c7" }}>
+                    info
+                  </span>
+                  <span>
+                    Todas as etapas abaixo são interconectadas em tempo real. As alterações refletem imediatamente na agenda do instrutor, no faturamento contra o cliente e no DRE gerencial.
+                  </span>
+                </div>
+
+                {/* Grade dos 7 Passos Sequenciais */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  {[
+                    {
+                      passo: 1,
+                      titulo: "Planejamento da Turma & Atribuição de Instrutor",
+                      modulo: "Projetos & Atividades",
+                      rota: "/projetos",
+                      icone: "assignment",
+                      cor: "#0284c7",
+                      descricao: "O Líder de Projeto registra a turma, seleciona a concessionária/localidade, define a carga horária (8h, 24h ou 40h) e aloca o consultor responsável.",
+                      tags: ["Carga Horária", "Tarifa Tabela", "Alocação"],
+                    },
+                    {
+                      passo: 2,
+                      titulo: "Cotação, Aprovação & Logística de Viagem",
+                      modulo: "Viagens & Logística",
+                      rota: "/viagens",
+                      icone: "flight",
+                      cor: "#0d9488",
+                      descricao: "Se a atividade requer deslocamento, a Agência Fátima lança as cotações de aéreo, hotel e traslado. O Líder de Projeto aprova a matriz de custos e os vouchers são emitidos.",
+                      tags: ["Cotação Agência", "Aprovação Líder", "Vouchers"],
+                    },
+                    {
+                      passo: 3,
+                      titulo: "Execução pelo Instrutor & Prestação de Contas",
+                      modulo: "Portal do Consultor",
+                      rota: "/consultor",
+                      icone: "person_pin_circle",
+                      cor: "#8b5cf6",
+                      descricao: "O consultor executa o treinamento na cidade-base, consulta passagens/hotel e registra despesas de deslocamento e alimentação pelo aplicativo VExpenses.",
+                      tags: ["Agenda", "VExpenses", "Prestação Contas"],
+                    },
+                    {
+                      passo: 4,
+                      titulo: "Boletim de Medição (BM) & Assinatura Zoho Sign",
+                      modulo: "BM - Boletim de Medição",
+                      rota: "/medicao",
+                      icone: "receipt_long",
+                      cor: "#f59e0b",
+                      descricao: "O sistema consolida as horas, aplica automaticamente o acréscimo fiscal de 6% para sócios com NF, a Controladoria homologa e dispara para assinatura digital via Zoho Sign.",
+                      tags: ["Acréscimo 6% Sócio", "Homologação", "Zoho Sign"],
+                    },
+                    {
+                      passo: 5,
+                      titulo: "Faturamento contra o Cliente Contratante",
+                      modulo: "Faturamento",
+                      rota: "/faturamento",
+                      icone: "receipt",
+                      cor: "#10b981",
+                      descricao: "A Controladoria emite a Nota Fiscal formal (NFSe) contra a montadora/cliente contratante com retenção/alíquota padrão de 12,25% de tributos corporativos.",
+                      tags: ["NFSe Cliente", "Dedução 12,25%", "Cobrança"],
+                    },
+                    {
+                      passo: 6,
+                      titulo: "Pagamentos & Quitação a Prestadores e Fornecedores",
+                      modulo: "Pagamentos & Contas",
+                      rota: "/pagamentos",
+                      icone: "payments",
+                      cor: "#ec4899",
+                      descricao: "Após o BM assinado e as notas de despesas aprovadas, o Financeiro liquida os repasses aos consultores via chave PIX e quita as faturas da agência de viagens.",
+                      tags: ["Liquidação PIX", "Baixa BM", "Fornecedores"],
+                    },
+                    {
+                      passo: 7,
+                      titulo: "Demonstrativo de Resultado (DRE) & Central de Relatórios",
+                      modulo: "Central de Relatórios",
+                      rota: "/relatorios",
+                      icone: "bar_chart",
+                      cor: "#6366f1",
+                      descricao: "Todas as receitas faturadas, impostos e custos operacionais alimentam em tempo real o DRE Gerencial, o Painel por Líder de Projeto e o Ranking de Rentabilidade.",
+                      tags: ["DRE Gerencial", "Painel por Líder", "Margem Líquida"],
+                    },
+                  ].map((p) => (
+                    <div
+                      key={p.passo}
+                      style={{
+                        display: "flex",
+                        alignItems: "flex-start",
+                        gap: "16px",
+                        padding: "16px 18px",
+                        backgroundColor: "#f8fafc",
+                        borderRadius: "14px",
+                        border: "1px solid #e2e8f0",
+                        position: "relative",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: "36px",
+                          height: "36px",
+                          borderRadius: "50%",
+                          backgroundColor: p.cor,
+                          color: "#ffffff",
+                          fontSize: "14px",
+                          fontWeight: 800,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0,
+                          boxShadow: `0 2px 8px ${p.cor}40`,
+                        }}
+                      >
+                        {p.passo}
+                      </div>
+
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", flexWrap: "wrap", marginBottom: "4px" }}>
+                          <h4 style={{ margin: 0, fontSize: "14px", fontWeight: 800, color: "#0f2a4a" }}>
+                            {p.titulo}
+                          </h4>
+                          <span
+                            style={{
+                              fontSize: "11px",
+                              fontWeight: 700,
+                              color: p.cor,
+                              backgroundColor: "#ffffff",
+                              padding: "2px 8px",
+                              borderRadius: "6px",
+                              border: "1px solid #e2e8f0",
+                            }}
+                          >
+                            {p.modulo}
+                          </span>
+                        </div>
+                        <p style={{ margin: "0 0 8px 0", fontSize: "12.5px", color: "#475569", lineHeight: 1.5 }}>
+                          {p.descricao}
+                        </p>
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                          {p.tags.map((t, tIdx) => (
+                            <span
+                              key={tIdx}
+                              style={{
+                                fontSize: "10px",
+                                fontWeight: 600,
+                                padding: "2px 6px",
+                                borderRadius: "4px",
+                                backgroundColor: "#ffffff",
+                                color: "#64748b",
+                                border: "1px solid #e2e8f0",
+                              }}
+                            >
+                              {t}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Rodapé do Submodal */}
+              <div
+                style={{
+                  padding: "14px 24px",
+                  borderTop: "1px solid #f1f5f9",
+                  backgroundColor: "#f8fafc",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "flex-end",
+                  borderRadius: "0 0 20px 20px",
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setModalFluxogramaAberto(false)}
+                  style={{
+                    padding: "8px 18px",
+                    borderRadius: "10px",
+                    backgroundColor: "#0f2a4a",
+                    color: "#ffffff",
+                    fontSize: "12.5px",
+                    fontWeight: 700,
+                    border: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  Entendido • Voltar ao Guia
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>
