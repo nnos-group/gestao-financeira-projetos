@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { LISTA_PROCESSOS_AJUDA, ProcessoMenu } from "@/lib/ajuda-processos-base";
+import { LISTA_PROCESSOS_AJUDA } from "@/lib/ajuda-processos-base";
 
 interface MensagemChat {
   id: string;
@@ -24,39 +24,35 @@ interface AjudaCentralModalProps {
 function processarTrechosInline(texto: string): React.ReactNode[] {
   if (!texto) return [];
 
-  // Divide mantendo os delimitadores
   const partes = texto.split(/(\*\*\*.*?\*\*\*|\*\*.*?\*\*|`.*?`|\*.*?\*)/g);
 
   return partes.map((parte, i) => {
     if (!parte) return null;
 
-    // Negrito com itálico ***texto***
     if (parte.startsWith("***") && parte.endsWith("***") && parte.length >= 6) {
       return (
-        <strong key={i} style={{ fontWeight: 800, color: "inherit", fontStyle: "italic" }}>
+        <strong key={i} style={{ fontWeight: 700, color: "inherit", fontStyle: "italic" }}>
           {parte.slice(3, -3)}
         </strong>
       );
     }
 
-    // Negrito **texto** -> Converte em <strong> real sem asteriscos
     if (parte.startsWith("**") && parte.endsWith("**") && parte.length >= 4) {
       return (
-        <strong key={i} style={{ fontWeight: 800, color: "inherit" }}>
+        <strong key={i} style={{ fontWeight: 700, color: "inherit" }}>
           {parte.slice(2, -2)}
         </strong>
       );
     }
 
-    // Código inline `texto`
     if (parte.startsWith("`") && parte.endsWith("`") && parte.length >= 2) {
       return (
         <code
           key={i}
           style={{
             padding: "2px 6px",
-            borderRadius: "5px",
-            backgroundColor: "rgba(2, 132, 199, 0.12)",
+            borderRadius: "4px",
+            backgroundColor: "rgba(2, 132, 199, 0.08)",
             color: "#0284c7",
             fontFamily: "monospace",
             fontSize: "12px",
@@ -68,7 +64,6 @@ function processarTrechosInline(texto: string): React.ReactNode[] {
       );
     }
 
-    // Itálico *texto*
     if (parte.startsWith("*") && parte.endsWith("*") && parte.length >= 2) {
       return (
         <em key={i} style={{ fontStyle: "italic" }}>
@@ -81,41 +76,133 @@ function processarTrechosInline(texto: string): React.ReactNode[] {
   });
 }
 
-// Renderizador estruturado de Markdown para o Chat
-function formatarTextoMarkdown(texto: string): React.ReactNode {
+// Renderizador estruturado e visualmente polido do Chat de IA (Fiel ao design aprovado)
+function ChatMessageContent({ texto }: { texto: string }) {
   if (!texto) return null;
 
   const linhas = texto.split("\n");
-  const elementos: React.ReactNode[] = [];
+  const blocos: React.ReactNode[] = [];
+  let listaNumeradaTemp: { num: string; conteudo: string }[] = [];
+
+  const flushListaNumerada = (chaveBase: string) => {
+    if (listaNumeradaTemp.length === 0) return;
+
+    blocos.push(
+      <div
+        key={`box-passos-${chaveBase}`}
+        style={{
+          marginTop: "12px",
+          marginBottom: "12px",
+          padding: "14px 16px",
+          backgroundColor: "#f8fafc",
+          borderRadius: "12px",
+          border: "1px solid #e2e8f0",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
+            fontSize: "11px",
+            fontWeight: 800,
+            color: "#0284c7",
+            letterSpacing: "0.05em",
+            textTransform: "uppercase",
+            marginBottom: "12px",
+          }}
+        >
+          <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
+            format_list_bulleted
+          </span>
+          <span>PASSO A PASSO NO SISTEMA:</span>
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          {listaNumeradaTemp.map((item, idx) => (
+            <div
+              key={`item-${idx}`}
+              style={{
+                display: "flex",
+                alignItems: "flex-start",
+                gap: "10px",
+                fontSize: "12.5px",
+                lineHeight: 1.5,
+                color: "#334155",
+              }}
+            >
+              <div
+                style={{
+                  width: "22px",
+                  height: "22px",
+                  borderRadius: "6px",
+                  backgroundColor: "#ffffff",
+                  border: "1px solid #cbd5e1",
+                  color: "#475569",
+                  fontSize: "11.5px",
+                  fontWeight: 700,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                  marginTop: "1px",
+                }}
+              >
+                {item.num}
+              </div>
+              <div style={{ flex: 1 }}>{processarTrechosInline(item.conteudo)}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+
+    listaNumeradaTemp = [];
+  };
 
   linhas.forEach((linha, idx) => {
     const trimmed = linha.trim();
 
     // 1. Linha vazia
     if (!trimmed) {
-      elementos.push(<div key={`espaco-${idx}`} style={{ height: "6px" }} />);
+      flushListaNumerada(`espaco-${idx}`);
       return;
     }
 
     // 2. Cabeçalho H3 (### Titulo)
     if (trimmed.startsWith("### ")) {
+      flushListaNumerada(`h3-${idx}`);
       const conteudo = trimmed.replace(/^###\s+/, "");
-      elementos.push(
+      blocos.push(
         <div
           key={`h3-${idx}`}
           style={{
-            fontSize: "14.5px",
-            fontWeight: 800,
-            color: "var(--primary)",
-            margin: "8px 0 4px 0",
-            paddingBottom: "3px",
-            borderBottom: "1px solid rgba(2, 132, 199, 0.15)",
             display: "flex",
             alignItems: "center",
-            gap: "6px",
+            gap: "8px",
+            margin: "4px 0 10px 0",
           }}
         >
-          {processarTrechosInline(conteudo)}
+          <div
+            style={{
+              width: "24px",
+              height: "24px",
+              borderRadius: "6px",
+              backgroundColor: "#e0f2fe",
+              color: "#0284c7",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
+              description
+            </span>
+          </div>
+          <h4 style={{ margin: 0, fontSize: "14px", fontWeight: 800, color: "#0f2a4a" }}>
+            {processarTrechosInline(conteudo)}
+          </h4>
         </div>
       );
       return;
@@ -123,18 +210,19 @@ function formatarTextoMarkdown(texto: string): React.ReactNode {
 
     // 3. Citação / Dica (> texto)
     if (trimmed.startsWith("> ")) {
+      flushListaNumerada(`quote-${idx}`);
       const conteudo = trimmed.replace(/^>\s*/, "");
-      elementos.push(
+      blocos.push(
         <div
           key={`quote-${idx}`}
           style={{
-            margin: "8px 0",
+            margin: "10px 0",
             padding: "8px 12px",
-            backgroundColor: "rgba(2, 132, 199, 0.08)",
+            backgroundColor: "#f0f9ff",
             borderLeft: "3px solid #0284c7",
             borderRadius: "0 8px 8px 0",
             fontSize: "12px",
-            color: "var(--on-surface-variant)",
+            color: "#0369a1",
             lineHeight: 1.5,
           }}
         >
@@ -144,42 +232,23 @@ function formatarTextoMarkdown(texto: string): React.ReactNode {
       return;
     }
 
-    // 4. Lista numerada (1. item, 2. item)
+    // 4. Lista numerada (1. item, 2. item) -> Acumula para o box estilizado
     const matchNumerado = trimmed.match(/^(\d+)\.\s+(.*)$/);
     if (matchNumerado) {
-      const num = matchNumerado[1];
-      const conteudo = matchNumerado[2];
-      elementos.push(
-        <div
-          key={`num-${idx}`}
-          style={{
-            display: "flex",
-            alignItems: "flex-start",
-            gap: "8px",
-            margin: "4px 0",
-            fontSize: "12.5px",
-            lineHeight: 1.5,
-          }}
-        >
-          <span
-            style={{
-              fontWeight: 800,
-              color: "#0284c7",
-              minWidth: "18px",
-            }}
-          >
-            {num}.
-          </span>
-          <div style={{ flex: 1 }}>{processarTrechosInline(conteudo)}</div>
-        </div>
-      );
+      listaNumeradaTemp.push({
+        num: matchNumerado[1],
+        conteudo: matchNumerado[2],
+      });
       return;
     }
+
+    // Qualquer outra linha dá flush na lista numerada anterior
+    flushListaNumerada(`texto-${idx}`);
 
     // 5. Lista com bullet (- item ou * item)
     if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
       const conteudo = trimmed.slice(2);
-      elementos.push(
+      blocos.push(
         <div
           key={`bullet-${idx}`}
           style={{
@@ -189,6 +258,7 @@ function formatarTextoMarkdown(texto: string): React.ReactNode {
             margin: "3px 0 3px 6px",
             fontSize: "12.5px",
             lineHeight: 1.5,
+            color: "#334155",
           }}
         >
           <span style={{ color: "#0284c7", fontWeight: 700 }}>•</span>
@@ -199,13 +269,14 @@ function formatarTextoMarkdown(texto: string): React.ReactNode {
     }
 
     // 6. Parágrafo padrão
-    elementos.push(
+    blocos.push(
       <p
         key={`p-${idx}`}
         style={{
-          margin: "4px 0",
+          margin: "4px 0 8px 0",
           fontSize: "13px",
           lineHeight: 1.55,
+          color: "#334155",
         }}
       >
         {processarTrechosInline(linha)}
@@ -213,7 +284,8 @@ function formatarTextoMarkdown(texto: string): React.ReactNode {
     );
   });
 
-  return elementos;
+  flushListaNumerada("final");
+  return <div>{blocos}</div>;
 }
 
 export default function AjudaCentralModal({
@@ -236,7 +308,7 @@ export default function AjudaCentralModal({
 Estou aqui para orientar você no uso de qualquer tela, fluxo financeiro, operacional ou regra de negócio do sistema.
 
 Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
-      dataHora: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+      dataHora: "13:22",
     },
   ]);
   const [inputPergunta, setInputPergunta] = useState("");
@@ -295,11 +367,13 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
     const texto = (textoPersonalizado || inputPergunta).trim();
     if (!texto || carregandoIA) return;
 
+    const agora = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+
     const novaMsgUsuario: MensagemChat = {
       id: `usr-${Date.now()}`,
       autor: "usuario",
       texto,
-      dataHora: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+      dataHora: agora,
     };
 
     setHistoricoChat((prev) => [...prev, novaMsgUsuario]);
@@ -347,13 +421,12 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
     }
   };
 
-  const perguntasRapidas = [
+  const sugestoesRapidas = [
     "Como emitir um Boletim de Medição (BM)?",
     "Como funciona a aprovação de Viagens & Logística?",
     "Como aplicar o acréscimo de 6% para Sócios?",
     "Onde consulto o Painel Financeiro por Líder?",
     "Como cadastrar um novo consultor parceiro PJ?",
-    "Quais as políticas de viagem da NNÓS, CNH e Iveco?",
   ];
 
   const modalConteudo = (
@@ -362,7 +435,7 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
       style={{
         position: "fixed",
         inset: 0,
-        backgroundColor: "rgba(6, 13, 30, 0.72)",
+        backgroundColor: "rgba(11, 26, 44, 0.72)",
         backdropFilter: "blur(8px)",
         zIndex: 99999,
         display: "flex",
@@ -378,58 +451,58 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
           maxWidth: "1140px",
           height: "90vh",
           maxHeight: "860px",
-          backgroundColor: "var(--surface)",
+          backgroundColor: "#ffffff",
           borderRadius: "20px",
           boxShadow: "0 25px 60px -15px rgba(0, 0, 0, 0.45)",
-          border: "1px solid var(--border)",
+          border: "1px solid rgba(226, 232, 240, 0.8)",
           display: "flex",
           flexDirection: "column",
           overflow: "hidden",
           animation: "modalFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
         }}
       >
-        {/* Cabeçalho do Modal */}
+        {/* ======================================================== */}
+        {/* CABEÇALHO DO MODAL (Fiel ao Design do Usuário)            */}
+        {/* ======================================================== */}
         <div
           style={{
             padding: "16px 24px",
-            borderBottom: "1px solid var(--border)",
-            background: "linear-gradient(135deg, rgba(2, 132, 199, 0.08) 0%, rgba(15, 42, 74, 0.04) 100%)",
+            borderBottom: "1px solid #e2e8f0",
+            backgroundColor: "#ffffff",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
             flexShrink: 0,
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            {/* Ícone com Fundo Branco Nítido e Logomarca Oficial da NNÓS */}
+          {/* Lado Esquerdo: Ícone de Suporte, Título e Tag */}
+          <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
             <div
               style={{
                 width: "42px",
                 height: "42px",
-                borderRadius: "12px",
-                backgroundColor: "#ffffff",
-                border: "1px solid rgba(2, 132, 199, 0.25)",
-                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)",
+                borderRadius: "50%",
+                backgroundColor: "#0284c7",
+                color: "#ffffff",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                padding: "6px",
+                boxShadow: "0 4px 12px rgba(2, 132, 199, 0.3)",
                 flexShrink: 0,
               }}
             >
-              <img
-                src="/logo-coruja.png"
-                alt="Logo Coruja NNÓS"
-                style={{ width: "28px", height: "28px", objectFit: "contain" }}
-              />
+              <span className="material-symbols-outlined" style={{ fontSize: "22px" }}>
+                headphones
+              </span>
             </div>
+
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                 <h2
                   style={{
                     fontSize: "17px",
                     fontWeight: 800,
-                    color: "var(--primary)",
+                    color: "#0f2a4a",
                     margin: 0,
                     letterSpacing: "-0.01em",
                   }}
@@ -438,131 +511,123 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                 </h2>
                 <span
                   style={{
-                    fontSize: "10.5px",
+                    fontSize: "11px",
                     fontWeight: 700,
-                    padding: "2px 8px",
+                    padding: "2px 10px",
                     borderRadius: "20px",
                     backgroundColor: "#e0f2fe",
-                    color: "#0369a1",
-                    border: "1px solid rgba(2, 132, 199, 0.2)",
+                    color: "#0284c7",
+                    border: "1px solid rgba(2, 132, 199, 0.25)",
                   }}
                 >
                   Suporte Integrado
                 </span>
               </div>
-              <p style={{ margin: "2px 0 0 0", fontSize: "12px", color: "var(--on-surface-variant)" }}>
+              <p style={{ margin: "2px 0 0 0", fontSize: "12px", color: "#64748b" }}>
                 Mapeamento completo dos menus, passo a passo operacional e inteligência artificial para dúvidas.
               </p>
             </div>
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            {/* Seletor de Abas no Topo */}
-            <div
+          {/* Lado Direito: Abas e Fechar */}
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            {/* Botão Guia de Processos */}
+            <button
+              type="button"
+              onClick={() => setAbaAtiva("GUIA")}
               style={{
+                padding: "8px 16px",
+                fontSize: "12.5px",
+                fontWeight: abaAtiva === "GUIA" ? 700 : 600,
+                borderRadius: "10px",
+                border: "none",
+                cursor: "pointer",
                 display: "flex",
-                backgroundColor: "var(--surface-container-high, #f1f5f9)",
-                padding: "3px",
-                borderRadius: "12px",
-                border: "1px solid var(--border)",
+                alignItems: "center",
+                gap: "6px",
+                transition: "all 0.15s ease",
+                backgroundColor: abaAtiva === "GUIA" ? "#0b2545" : "transparent",
+                color: abaAtiva === "GUIA" ? "#ffffff" : "#475569",
               }}
             >
-              <button
-                type="button"
-                onClick={() => setAbaAtiva("GUIA")}
-                style={{
-                  padding: "6px 14px",
-                  fontSize: "12.5px",
-                  fontWeight: 700,
-                  borderRadius: "9px",
-                  border: "none",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  transition: "all 0.15s ease",
-                  backgroundColor: abaAtiva === "GUIA" ? "#0284c7" : "transparent",
-                  color: abaAtiva === "GUIA" ? "#ffffff" : "var(--on-surface-variant)",
-                  boxShadow: abaAtiva === "GUIA" ? "0 2px 8px rgba(2, 132, 199, 0.3)" : "none",
-                }}
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
-                  menu_book
-                </span>
-                Guia de Processos
-              </button>
+              <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
+                menu_book
+              </span>
+              <span>Guia de Processos</span>
+            </button>
 
-              {/* Botão da Aba com a Logomarca da NNÓS indicada pela Seta */}
-              <button
-                type="button"
-                onClick={() => setAbaAtiva("IA")}
+            {/* Botão Agente de IA NNÓS (Ativo com fundo escuro e logo em destaque) */}
+            <button
+              type="button"
+              onClick={() => setAbaAtiva("IA")}
+              style={{
+                padding: "8px 16px",
+                fontSize: "12.5px",
+                fontWeight: 700,
+                borderRadius: "10px",
+                border: "none",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                transition: "all 0.15s ease",
+                backgroundColor: abaAtiva === "IA" ? "#0b2545" : "transparent",
+                color: abaAtiva === "IA" ? "#ffffff" : "#475569",
+                boxShadow: abaAtiva === "IA" ? "0 2px 8px rgba(11, 37, 69, 0.25)" : "none",
+              }}
+            >
+              <div
                 style={{
-                  padding: "6px 14px",
-                  fontSize: "12.5px",
-                  fontWeight: 700,
-                  borderRadius: "9px",
-                  border: "none",
-                  cursor: "pointer",
+                  width: "18px",
+                  height: "18px",
+                  borderRadius: "50%",
+                  backgroundColor: "#ffffff",
                   display: "flex",
                   alignItems: "center",
-                  gap: "7px",
-                  transition: "all 0.15s ease",
-                  backgroundColor: abaAtiva === "IA" ? "#0284c7" : "transparent",
-                  color: abaAtiva === "IA" ? "#ffffff" : "var(--on-surface-variant)",
-                  boxShadow: abaAtiva === "IA" ? "0 2px 8px rgba(2, 132, 199, 0.3)" : "none",
+                  justifyContent: "center",
+                  padding: "1.5px",
+                  flexShrink: 0,
                 }}
               >
-                <div
-                  style={{
-                    width: "20px",
-                    height: "20px",
-                    borderRadius: "50%",
-                    backgroundColor: "#ffffff",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    padding: "2px",
-                    boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
-                    flexShrink: 0,
-                  }}
-                >
-                  <img
-                    src="/logo-coruja.png"
-                    alt="Logo NNÓS"
-                    style={{ width: "16px", height: "16px", objectFit: "contain" }}
-                  />
-                </div>
-                <span>Agente de IA NNÓS</span>
-              </button>
-            </div>
+                <img
+                  src="/logo-coruja.png"
+                  alt="Logo NNÓS"
+                  style={{ width: "14px", height: "14px", objectFit: "contain" }}
+                />
+              </div>
+              <span>Agente de IA NNÓS</span>
+            </button>
 
             {/* Botão Fechar */}
             <button
               type="button"
               onClick={aoFechar}
               style={{
-                width: "36px",
-                height: "36px",
+                width: "34px",
+                height: "34px",
                 borderRadius: "10px",
-                border: "1px solid var(--border)",
-                backgroundColor: "var(--surface)",
-                color: "var(--on-surface-variant)",
+                border: "1px solid #e2e8f0",
+                backgroundColor: "#ffffff",
+                color: "#64748b",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 cursor: "pointer",
                 transition: "all 0.15s ease",
+                marginLeft: "4px",
               }}
               title="Fechar (Esc)"
             >
-              <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>
+              <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
                 close
               </span>
             </button>
           </div>
         </div>
 
-        {/* Corpo do Modal */}
+        {/* ======================================================== */}
+        {/* CORPO DO MODAL: GUIA DE PROCESSOS OU AGENTE DE IA        */}
+        {/* ======================================================== */}
         <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
           {abaAtiva === "GUIA" ? (
             /* ======================================================== */
@@ -573,15 +638,15 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
               <div
                 style={{
                   width: "310px",
-                  borderRight: "1px solid var(--border)",
+                  borderRight: "1px solid #e2e8f0",
                   display: "flex",
                   flexDirection: "column",
-                  backgroundColor: "var(--surface-container-low, rgba(0,0,0,0.015))",
+                  backgroundColor: "#f8fafc",
                   flexShrink: 0,
                 }}
               >
                 {/* Campo de Busca Rápida */}
-                <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--border)" }}>
+                <div style={{ padding: "14px 16px", borderBottom: "1px solid #e2e8f0" }}>
                   <div
                     style={{
                       position: "relative",
@@ -595,7 +660,7 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                         position: "absolute",
                         left: "10px",
                         fontSize: "18px",
-                        color: "var(--on-surface-variant)",
+                        color: "#94a3b8",
                       }}
                     >
                       search
@@ -610,9 +675,9 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                         padding: "8px 12px 8px 34px",
                         fontSize: "12px",
                         borderRadius: "10px",
-                        border: "1px solid var(--border)",
-                        backgroundColor: "var(--surface)",
-                        color: "var(--on-surface)",
+                        border: "1px solid #e2e8f0",
+                        backgroundColor: "#ffffff",
+                        color: "#0f2a4a",
                         outline: "none",
                       }}
                     />
@@ -626,7 +691,7 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                           border: "none",
                           background: "none",
                           cursor: "pointer",
-                          color: "var(--on-surface-variant)",
+                          color: "#94a3b8",
                           padding: "2px",
                         }}
                       >
@@ -644,7 +709,7 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                     style={{
                       fontSize: "10.5px",
                       fontWeight: 700,
-                      color: "var(--on-surface-variant)",
+                      color: "#94a3b8",
                       textTransform: "uppercase",
                       letterSpacing: "0.05em",
                       padding: "4px 8px 8px 8px",
@@ -666,7 +731,7 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                             borderRadius: "10px",
                             border: ativo ? "1px solid #0284c7" : "1px solid transparent",
                             backgroundColor: ativo ? "#e0f2fe" : "transparent",
-                            color: ativo ? "#0369a1" : "var(--on-surface)",
+                            color: ativo ? "#0369a1" : "#334155",
                             display: "flex",
                             alignItems: "center",
                             gap: "10px",
@@ -679,7 +744,7 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                             className="material-symbols-outlined"
                             style={{
                               fontSize: "18px",
-                              color: ativo ? "#0284c7" : "var(--on-surface-variant)",
+                              color: ativo ? "#0284c7" : "#64748b",
                             }}
                           >
                             {proc.icone}
@@ -699,7 +764,7 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                             <div
                               style={{
                                 fontSize: "10px",
-                                color: ativo ? "#0369a1" : "var(--on-surface-variant)",
+                                color: ativo ? "#0369a1" : "#64748b",
                                 opacity: 0.85,
                               }}
                             >
@@ -720,7 +785,7 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                         style={{
                           padding: "24px 12px",
                           textAlign: "center",
-                          color: "var(--on-surface-variant)",
+                          color: "#64748b",
                           fontSize: "12px",
                         }}
                       >
@@ -732,7 +797,7 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
               </div>
 
               {/* Coluna da Direita: Conteúdo Passo a Passo do Menu Selecionado */}
-              <div style={{ flex: 1, overflowY: "auto", padding: "24px 28px" }}>
+              <div style={{ flex: 1, overflowY: "auto", padding: "24px 28px", backgroundColor: "#ffffff" }}>
                 {/* Cabeçalho do Processo */}
                 <div
                   style={{
@@ -741,7 +806,7 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                     justifyContent: "space-between",
                     gap: "16px",
                     paddingBottom: "16px",
-                    borderBottom: "1px solid var(--border)",
+                    borderBottom: "1px solid #e2e8f0",
                   }}
                 >
                   <div>
@@ -752,7 +817,7 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                       >
                         {menuAtual.icone}
                       </span>
-                      <h3 style={{ fontSize: "20px", fontWeight: 800, color: "var(--primary)", margin: 0 }}>
+                      <h3 style={{ fontSize: "20px", fontWeight: 800, color: "#0f2a4a", margin: 0 }}>
                         {menuAtual.menuNome}
                       </h3>
                       <span
@@ -769,11 +834,11 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                       </span>
                     </div>
 
-                    <p style={{ margin: "4px 0", fontSize: "13px", color: "var(--on-surface-variant)", lineHeight: 1.5 }}>
+                    <p style={{ margin: "4px 0", fontSize: "13px", color: "#475569", lineHeight: 1.5 }}>
                       {menuAtual.descricaoGeral}
                     </p>
 
-                    <div style={{ marginTop: "6px", fontSize: "11.5px", color: "var(--on-surface-variant)" }}>
+                    <div style={{ marginTop: "6px", fontSize: "11.5px", color: "#64748b" }}>
                       <strong>Público recomendado:</strong> {menuAtual.publicoAlvo}
                     </div>
                   </div>
@@ -810,7 +875,7 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                     style={{
                       fontSize: "14px",
                       fontWeight: 800,
-                      color: "var(--primary)",
+                      color: "#0f2a4a",
                       margin: "0 0 16px 0",
                       display: "flex",
                       alignItems: "center",
@@ -833,8 +898,8 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                           gap: "14px",
                           padding: "14px 16px",
                           borderRadius: "12px",
-                          backgroundColor: "var(--surface-container-lowest, rgba(2, 132, 199, 0.02))",
-                          border: "1px solid var(--border)",
+                          backgroundColor: "#f8fafc",
+                          border: "1px solid #e2e8f0",
                         }}
                       >
                         <div
@@ -857,10 +922,10 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                         </div>
 
                         <div style={{ flex: 1 }}>
-                          <h5 style={{ margin: "0 0 4px 0", fontSize: "13.5px", fontWeight: 700, color: "var(--primary)" }}>
+                          <h5 style={{ margin: "0 0 4px 0", fontSize: "13.5px", fontWeight: 700, color: "#0f2a4a" }}>
                             {passo.titulo}
                           </h5>
-                          <p style={{ margin: "0", fontSize: "12.5px", color: "var(--on-surface-variant)", lineHeight: 1.5 }}>
+                          <p style={{ margin: "0", fontSize: "12.5px", color: "#475569", lineHeight: 1.5 }}>
                             {passo.descricao}
                           </p>
                           {passo.dica && (
@@ -917,56 +982,13 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                         </span>
                         Regras & Premissas Obrigatórias
                       </h4>
-                      <ul style={{ margin: 0, paddingLeft: "18px", fontSize: "12px", color: "var(--on-surface-variant)", lineHeight: 1.6 }}>
+                      <ul style={{ margin: 0, paddingLeft: "18px", fontSize: "12px", color: "#475569", lineHeight: 1.6 }}>
                         {menuAtual.regrasImportantes.map((regra, idx) => (
                           <li key={idx} style={{ marginBottom: "4px" }}>
                             {regra}
                           </li>
                         ))}
                       </ul>
-                    </div>
-                  </div>
-                )}
-
-                {/* Perguntas Frequentes (FAQ) */}
-                {menuAtual.faq && menuAtual.faq.length > 0 && (
-                  <div style={{ marginTop: "24px" }}>
-                    <h4
-                      style={{
-                        fontSize: "14px",
-                        fontWeight: 800,
-                        color: "var(--primary)",
-                        margin: "0 0 12px 0",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "6px",
-                      }}
-                    >
-                      <span className="material-symbols-outlined" style={{ fontSize: "18px", color: "#0284c7" }}>
-                        help
-                      </span>
-                      Dúvidas Frequentes do Módulo
-                    </h4>
-
-                    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                      {menuAtual.faq.map((item, idx) => (
-                        <div
-                          key={idx}
-                          style={{
-                            padding: "12px 14px",
-                            borderRadius: "10px",
-                            backgroundColor: "var(--surface)",
-                            border: "1px solid var(--border)",
-                          }}
-                        >
-                          <div style={{ fontSize: "12.5px", fontWeight: 700, color: "var(--primary)", marginBottom: "4px" }}>
-                            ❓ {item.pergunta}
-                          </div>
-                          <div style={{ fontSize: "12px", color: "var(--on-surface-variant)", lineHeight: 1.5 }}>
-                            {item.resposta}
-                          </div>
-                        </div>
-                      ))}
                     </div>
                   </div>
                 )}
@@ -983,15 +1005,15 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                 width: "100%",
                 height: "100%",
                 overflow: "hidden",
-                backgroundColor: "var(--surface-container-lowest, #ffffff)",
+                backgroundColor: "#f8fafc",
               }}
             >
-              {/* Banner do Agente com Fundo Branco Nítido e Logo da NNÓS */}
+              {/* Sub-Header: Status do Agente Online */}
               <div
                 style={{
-                  padding: "12px 20px",
-                  backgroundColor: "rgba(2, 132, 199, 0.05)",
-                  borderBottom: "1px solid var(--border)",
+                  padding: "10px 24px",
+                  backgroundColor: "#ffffff",
+                  borderBottom: "1px solid #e2e8f0",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
@@ -1001,32 +1023,30 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                 <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                   <div
                     style={{
-                      width: "32px",
-                      height: "32px",
+                      width: "28px",
+                      height: "28px",
                       borderRadius: "50%",
-                      backgroundColor: "#ffffff",
-                      border: "1px solid rgba(2, 132, 199, 0.25)",
-                      boxShadow: "0 2px 6px rgba(0,0,0,0.06)",
+                      backgroundColor: "#0284c7",
+                      color: "#ffffff",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      padding: "4px",
                       flexShrink: 0,
                     }}
                   >
-                    <img
-                      src="/logo-coruja.png"
-                      alt="Logo NNÓS"
-                      style={{ width: "22px", height: "22px", objectFit: "contain" }}
-                    />
+                    <span className="material-symbols-outlined" style={{ fontSize: "17px" }}>
+                      smart_toy
+                    </span>
                   </div>
-                  <div>
-                    <div style={{ fontSize: "12.5px", fontWeight: 700, color: "var(--primary)" }}>
-                      Guia Virtual NNÓS • Assistente Inteligente
-                    </div>
-                    <div style={{ fontSize: "11px", color: "var(--on-surface-variant)" }}>
+
+                  <div style={{ fontSize: "12px" }}>
+                    <strong style={{ color: "#0f2a4a" }}>Guia Virtual NNÓS</strong>
+                    <span style={{ margin: "0 6px", color: "#cbd5e1" }}>•</span>
+                    <span style={{ color: "#10b981", fontWeight: 700 }}>Assistente Online</span>
+                    <span style={{ margin: "0 8px", color: "#cbd5e1" }}> </span>
+                    <span style={{ color: "#64748b", fontSize: "11.5px" }}>
                       Treinado nas regras de negócio, tabelas de preços, políticas de viagens e fluxos do sistema.
-                    </div>
+                    </span>
                   </div>
                 </div>
 
@@ -1043,24 +1063,25 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                     ])
                   }
                   style={{
-                    padding: "4px 10px",
-                    borderRadius: "8px",
-                    border: "1px solid var(--border)",
-                    backgroundColor: "transparent",
-                    color: "var(--on-surface-variant)",
-                    fontSize: "11px",
-                    fontWeight: 600,
+                    padding: "4px 8px",
+                    background: "transparent",
+                    border: "none",
+                    color: "#64748b",
+                    fontSize: "11.5px",
                     cursor: "pointer",
                     display: "flex",
                     alignItems: "center",
                     gap: "4px",
+                    transition: "color 0.15s ease",
                   }}
-                  title="Limpar histórico de mensagens"
+                  onMouseEnter={(e) => (e.currentTarget.style.color = "#0f2a4a")}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = "#64748b")}
+                  title="Reiniciar conversa"
                 >
-                  <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: "15px" }}>
                     restart_alt
                   </span>
-                  Limpar Chat
+                  <span>Limpar Conversa</span>
                 </button>
               </div>
 
@@ -1069,10 +1090,10 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                 style={{
                   flex: 1,
                   overflowY: "auto",
-                  padding: "20px 24px",
+                  padding: "24px 28px",
                   display: "flex",
                   flexDirection: "column",
-                  gap: "16px",
+                  gap: "18px",
                 }}
               >
                 {historicoChat.map((msg) => {
@@ -1083,98 +1104,103 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                       style={{
                         display: "flex",
                         alignItems: "flex-start",
-                        gap: "10px",
+                        gap: "12px",
                         alignSelf: isUsuario ? "flex-end" : "flex-start",
-                        maxWidth: "84%",
+                        maxWidth: isUsuario ? "70%" : "82%",
                       }}
                     >
-                      {/* Avatar do Agente com Fundo Branco Nítido e Coruja Oficial */}
+                      {/* Avatar do Agente com Robô Ciano */}
                       {!isUsuario && (
                         <div
                           style={{
                             width: "34px",
                             height: "34px",
                             borderRadius: "50%",
-                            backgroundColor: "#ffffff",
-                            border: "1.5px solid rgba(2, 132, 199, 0.3)",
-                            boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
+                            backgroundColor: "#0284c7",
+                            color: "#ffffff",
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
-                            padding: "4px",
                             flexShrink: 0,
                             marginTop: "2px",
+                            boxShadow: "0 2px 6px rgba(2, 132, 199, 0.25)",
                           }}
                         >
-                          <img
-                            src="/logo-coruja.png"
-                            alt="Coruja NNÓS"
-                            style={{ width: "24px", height: "24px", objectFit: "contain" }}
-                          />
+                          <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>
+                            smart_toy
+                          </span>
                         </div>
                       )}
 
-                      <div
-                        style={{
-                          backgroundColor: isUsuario ? "#0284c7" : "var(--surface)",
-                          color: isUsuario ? "#ffffff" : "var(--on-surface)",
-                          padding: "12px 16px",
-                          borderRadius: isUsuario ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
-                          border: isUsuario ? "none" : "1px solid var(--border)",
-                          boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-                          fontSize: "13px",
-                          lineHeight: 1.55,
-                          wordBreak: "break-word",
-                        }}
-                      >
-                        {/* Renderização Formatada: Converte **negrito**, ### títulos e > citações em elementos HTML reais */}
-                        <div>{formatarTextoMarkdown(msg.texto)}</div>
-
-                        {msg.rotaSugerida && (
-                          <div style={{ marginTop: "10px", paddingTop: "8px", borderTop: "1px dashed rgba(2, 132, 199, 0.3)" }}>
-                            <Link
-                              href={msg.rotaSugerida}
-                              onClick={aoFechar}
-                              style={{
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: "6px",
-                                backgroundColor: "#0284c7",
-                                color: "#ffffff",
-                                padding: "6px 12px",
-                                borderRadius: "8px",
-                                fontSize: "11.5px",
-                                fontWeight: 700,
-                                textDecoration: "none",
-                              }}
-                            >
-                              <span>{msg.rotuloRota || "Abrir Tela Sugerida"}</span>
-                              <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>
-                                open_in_new
-                              </span>
-                            </Link>
-                          </div>
-                        )}
-
+                      <div style={{ display: "flex", flexDirection: "column" }}>
                         <div
                           style={{
-                            fontSize: "10px",
-                            color: isUsuario ? "rgba(255,255,255,0.7)" : "var(--on-surface-variant)",
-                            textAlign: "right",
-                            marginTop: "6px",
+                            backgroundColor: isUsuario ? "#0b2545" : "#ffffff",
+                            color: isUsuario ? "#ffffff" : "#1e293b",
+                            padding: "14px 18px",
+                            borderRadius: isUsuario ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
+                            border: isUsuario ? "none" : "1px solid #e2e8f0",
+                            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)",
+                            fontSize: "13px",
+                            lineHeight: 1.55,
+                            wordBreak: "break-word",
+                          }}
+                        >
+                          {/* Conteúdo Renderizado com Caixa de Passos e Negritos Nativos */}
+                          <ChatMessageContent texto={msg.texto} />
+
+                          {/* Link de Rota Sugerida */}
+                          {msg.rotaSugerida && (
+                            <div style={{ marginTop: "12px", paddingTop: "10px", borderTop: "1px dashed #e2e8f0" }}>
+                              <Link
+                                href={msg.rotaSugerida}
+                                onClick={aoFechar}
+                                style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "6px",
+                                  backgroundColor: "#0284c7",
+                                  color: "#ffffff",
+                                  padding: "7px 14px",
+                                  borderRadius: "8px",
+                                  fontSize: "12px",
+                                  fontWeight: 700,
+                                  textDecoration: "none",
+                                  boxShadow: "0 2px 6px rgba(2, 132, 199, 0.25)",
+                                }}
+                              >
+                                <span>{msg.rotuloRota || "Abrir Tela Sugerida"}</span>
+                                <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>
+                                  open_in_new
+                                </span>
+                              </Link>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Horário da Mensagem */}
+                        <div
+                          style={{
+                            fontSize: "10.5px",
+                            color: "#94a3b8",
+                            marginTop: "4px",
+                            paddingLeft: isUsuario ? "0" : "4px",
+                            paddingRight: isUsuario ? "4px" : "0",
+                            textAlign: isUsuario ? "right" : "left",
                           }}
                         >
                           {msg.dataHora}
                         </div>
                       </div>
 
+                      {/* Avatar do Usuário */}
                       {isUsuario && (
                         <div
                           style={{
-                            width: "32px",
-                            height: "32px",
+                            width: "34px",
+                            height: "34px",
                             borderRadius: "50%",
-                            backgroundColor: "var(--primary)",
+                            backgroundColor: "#0b2545",
                             color: "#ffffff",
                             display: "flex",
                             alignItems: "center",
@@ -1199,33 +1225,18 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                       alignItems: "center",
                       gap: "10px",
                       alignSelf: "flex-start",
-                      backgroundColor: "var(--surface)",
+                      backgroundColor: "#ffffff",
                       padding: "10px 16px",
                       borderRadius: "16px",
-                      border: "1px solid var(--border)",
+                      border: "1px solid #e2e8f0",
                       fontSize: "12.5px",
-                      color: "var(--on-surface-variant)",
+                      color: "#64748b",
+                      boxShadow: "0 2px 6px rgba(0,0,0,0.04)",
                     }}
                   >
-                    <div
-                      style={{
-                        width: "24px",
-                        height: "24px",
-                        borderRadius: "50%",
-                        backgroundColor: "#ffffff",
-                        border: "1px solid rgba(2, 132, 199, 0.3)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        padding: "2px",
-                      }}
-                    >
-                      <img
-                        src="/logo-coruja.png"
-                        alt="Coruja"
-                        style={{ width: "16px", height: "16px", objectFit: "contain" }}
-                      />
-                    </div>
+                    <span className="material-symbols-outlined" style={{ fontSize: "18px", color: "#0284c7", animation: "spin 1.5s linear infinite" }}>
+                      sync
+                    </span>
                     <span>O Agente NNÓS está analisando sua pergunta...</span>
                   </div>
                 )}
@@ -1233,12 +1244,14 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                 <div ref={chatBottomRef} />
               </div>
 
-              {/* Sugestões Rápidas de Perguntas */}
+              {/* ======================================================== */}
+              {/* BARRA DE SUGESTÕES (Fiel ao design com ícone de raio)    */}
+              {/* ======================================================== */}
               <div
                 style={{
-                  padding: "10px 20px 6px 20px",
-                  borderTop: "1px solid var(--border)",
-                  backgroundColor: "var(--surface)",
+                  padding: "10px 24px 6px 24px",
+                  backgroundColor: "#ffffff",
+                  borderTop: "1px solid #e2e8f0",
                   display: "flex",
                   alignItems: "center",
                   gap: "8px",
@@ -1247,40 +1260,63 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                   flexShrink: 0,
                 }}
               >
-                <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--on-surface-variant)" }}>
-                  Sugestões:
-                </span>
-                {perguntasRapidas.map((p, idx) => (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px",
+                    fontSize: "11px",
+                    fontWeight: 800,
+                    color: "#f59e0b",
+                    letterSpacing: "0.04em",
+                    marginRight: "4px",
+                  }}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: "15px" }}>
+                    bolt
+                  </span>
+                  <span>SUGESTÕES:</span>
+                </div>
+
+                {sugestoesRapidas.map((sugestao, idx) => (
                   <button
                     key={idx}
                     type="button"
-                    onClick={() => handleEnviarPergunta(p)}
+                    onClick={() => handleEnviarPergunta(sugestao)}
                     disabled={carregandoIA}
                     style={{
-                      padding: "4px 10px",
-                      borderRadius: "14px",
-                      border: "1px solid var(--border)",
-                      backgroundColor: "var(--surface-container-high, #f8fafc)",
-                      color: "var(--primary)",
+                      padding: "5px 12px",
+                      borderRadius: "16px",
+                      border: "1px solid #e2e8f0",
+                      backgroundColor: "#ffffff",
+                      color: "#334155",
                       fontSize: "11.5px",
                       cursor: "pointer",
                       transition: "all 0.15s ease",
                       flexShrink: 0,
                     }}
-                    onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#0284c7")}
-                    onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = "#0284c7";
+                      e.currentTarget.style.color = "#0284c7";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = "#e2e8f0";
+                      e.currentTarget.style.color = "#334155";
+                    }}
                   >
-                    {p}
+                    {sugestao}
                   </button>
                 ))}
               </div>
 
-              {/* Campo de Digitação e Envio */}
+              {/* ======================================================== */}
+              {/* BARRA DE INPUT E ENVIO (Fiel ao design)                  */}
+              {/* ======================================================== */}
               <div
                 style={{
-                  padding: "12px 20px 16px 20px",
-                  borderTop: "1px solid var(--border)",
-                  backgroundColor: "var(--surface)",
+                  padding: "12px 24px 14px 24px",
+                  backgroundColor: "#ffffff",
+                  borderTop: "1px solid #f1f5f9",
                   flexShrink: 0,
                 }}
               >
@@ -1291,31 +1327,57 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                   }}
                   style={{ display: "flex", alignItems: "center", gap: "10px" }}
                 >
-                  <input
-                    type="text"
-                    placeholder="Digite sua dúvida sobre qualquer processo ou tela do sistema..."
-                    value={inputPergunta}
-                    onChange={(e) => setInputPergunta(e.target.value)}
-                    disabled={carregandoIA}
-                    style={{
-                      flex: 1,
-                      padding: "10px 14px",
-                      borderRadius: "12px",
-                      border: "1px solid var(--border)",
-                      backgroundColor: "var(--surface-container-low, #f8fafc)",
-                      color: "var(--on-surface)",
-                      fontSize: "13px",
-                      outline: "none",
-                    }}
-                  />
+                  <div style={{ position: "relative", flex: 1, display: "flex", alignItems: "center" }}>
+                    <input
+                      type="text"
+                      placeholder="Digite sua dúvida sobre qualquer processo ou tela do sistema..."
+                      value={inputPergunta}
+                      onChange={(e) => setInputPergunta(e.target.value)}
+                      disabled={carregandoIA}
+                      style={{
+                        width: "100%",
+                        padding: "11px 40px 11px 16px",
+                        borderRadius: "12px",
+                        border: "1px solid #e2e8f0",
+                        backgroundColor: "#ffffff",
+                        color: "#0f2a4a",
+                        fontSize: "13px",
+                        outline: "none",
+                        transition: "border-color 0.15s ease",
+                      }}
+                      onFocus={(e) => (e.currentTarget.style.borderColor = "#0284c7")}
+                      onBlur={(e) => (e.currentTarget.style.borderColor = "#e2e8f0")}
+                    />
 
+                    <button
+                      type="button"
+                      style={{
+                        position: "absolute",
+                        right: "10px",
+                        border: "none",
+                        background: "none",
+                        cursor: "pointer",
+                        color: "#94a3b8",
+                        display: "flex",
+                        alignItems: "center",
+                        padding: "4px",
+                      }}
+                      title="Anexar arquivo"
+                    >
+                      <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
+                        attach_file
+                      </span>
+                    </button>
+                  </div>
+
+                  {/* Botão Perguntar Azul Escuro */}
                   <button
                     type="submit"
                     disabled={!inputPergunta.trim() || carregandoIA}
                     style={{
-                      padding: "10px 18px",
-                      borderRadius: "12px",
-                      backgroundColor: inputPergunta.trim() && !carregandoIA ? "#0284c7" : "var(--border)",
+                      padding: "10px 22px",
+                      borderRadius: "10px",
+                      backgroundColor: inputPergunta.trim() && !carregandoIA ? "#0b2545" : "#cbd5e1",
                       color: "#ffffff",
                       fontSize: "13px",
                       fontWeight: 700,
@@ -1323,8 +1385,7 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                       cursor: inputPergunta.trim() && !carregandoIA ? "pointer" : "not-allowed",
                       display: "flex",
                       alignItems: "center",
-                      gap: "6px",
-                      boxShadow: inputPergunta.trim() ? "0 2px 8px rgba(2, 132, 199, 0.3)" : "none",
+                      gap: "8px",
                       transition: "all 0.15s ease",
                     }}
                   >
@@ -1334,6 +1395,18 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                     </span>
                   </button>
                 </form>
+
+                {/* Mensagem de Rodapé */}
+                <div
+                  style={{
+                    fontSize: "10.5px",
+                    color: "#94a3b8",
+                    textAlign: "center",
+                    marginTop: "8px",
+                  }}
+                >
+                  O assistente IA utiliza as diretrizes oficiais de projetos, contratos e controladoria da NNÓS Consultoria.
+                </div>
               </div>
             </div>
           )}
