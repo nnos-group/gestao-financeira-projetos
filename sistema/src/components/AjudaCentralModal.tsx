@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { LISTA_PROCESSOS_AJUDA } from "@/lib/ajuda-processos-base";
+import { LISTA_PROCESSOS_AJUDA, ProcessoMenu } from "@/lib/ajuda-processos-base";
 
 interface MensagemChat {
   id: string;
@@ -31,7 +31,7 @@ function processarTrechosInline(texto: string): React.ReactNode[] {
 
     if (parte.startsWith("***") && parte.endsWith("***") && parte.length >= 6) {
       return (
-        <strong key={i} style={{ fontWeight: 700, color: "inherit", fontStyle: "italic" }}>
+        <strong key={i} className="font-bold text-inherit italic">
           {parte.slice(3, -3)}
         </strong>
       );
@@ -39,7 +39,7 @@ function processarTrechosInline(texto: string): React.ReactNode[] {
 
     if (parte.startsWith("**") && parte.endsWith("**") && parte.length >= 4) {
       return (
-        <strong key={i} style={{ fontWeight: 700, color: "inherit" }}>
+        <strong key={i} className="font-bold text-inherit">
           {parte.slice(2, -2)}
         </strong>
       );
@@ -49,15 +49,7 @@ function processarTrechosInline(texto: string): React.ReactNode[] {
       return (
         <code
           key={i}
-          style={{
-            padding: "2px 6px",
-            borderRadius: "4px",
-            backgroundColor: "rgba(2, 132, 199, 0.08)",
-            color: "#0284c7",
-            fontFamily: "monospace",
-            fontSize: "12px",
-            fontWeight: 600,
-          }}
+          className="px-1.5 py-0.5 rounded bg-sky-50 text-sky-700 font-mono text-xs font-semibold"
         >
           {parte.slice(1, -1)}
         </code>
@@ -66,7 +58,7 @@ function processarTrechosInline(texto: string): React.ReactNode[] {
 
     if (parte.startsWith("*") && parte.endsWith("*") && parte.length >= 2) {
       return (
-        <em key={i} style={{ fontStyle: "italic" }}>
+        <em key={i} className="italic">
           {parte.slice(1, -1)}
         </em>
       );
@@ -90,150 +82,38 @@ function ChatMessageContent({ texto }: { texto: string }) {
     blocos.push(
       <div
         key={`box-passos-${chaveBase}`}
-        style={{
-          marginTop: "12px",
-          marginBottom: "12px",
-          padding: "14px 16px",
-          backgroundColor: "#f8fafc",
-          borderRadius: "12px",
-          border: "1px solid #e2e8f0",
-        }}
+        className="my-3 p-3.5 bg-slate-50 rounded-xl border border-slate-200"
       >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "6px",
-            fontSize: "11px",
-            fontWeight: 800,
-            color: "#0284c7",
-            letterSpacing: "0.05em",
-            textTransform: "uppercase",
-            marginBottom: "12px",
-          }}
-        >
-          <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
-            format_list_bulleted
-          </span>
+        <div className="flex items-center gap-1.5 text-[11px] font-extrabold text-[#0284c7] tracking-wider uppercase mb-3">
+          <span className="material-symbols-outlined text-base">format_list_bulleted</span>
           <span>PASSO A PASSO NO SISTEMA:</span>
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+        <div className="flex flex-col gap-2.5">
           {listaNumeradaTemp.map((item, idx) => (
-            <div
-              key={`item-${idx}`}
-              style={{
-                display: "flex",
-                alignItems: "flex-start",
-                gap: "10px",
-                fontSize: "12.5px",
-                lineHeight: 1.5,
-                color: "#334155",
-              }}
-            >
-              <div
-                style={{
-                  width: "22px",
-                  height: "22px",
-                  borderRadius: "6px",
-                  backgroundColor: "#ffffff",
-                  border: "1px solid #cbd5e1",
-                  color: "#475569",
-                  fontSize: "11.5px",
-                  fontWeight: 700,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                  marginTop: "1px",
-                }}
-              >
+            <div key={`item-${idx}`} className="flex items-start gap-2.5 text-[12.5px] leading-relaxed text-slate-700">
+              <div className="w-5 h-5 rounded-md bg-white border border-slate-300 text-slate-600 text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
                 {item.num}
               </div>
-              <div style={{ flex: 1 }}>{processarTrechosInline(item.conteudo)}</div>
+              <div className="flex-1 min-w-0">{processarTrechosInline(item.conteudo)}</div>
             </div>
           ))}
         </div>
       </div>
     );
-
     listaNumeradaTemp = [];
   };
 
-  linhas.forEach((linha, idx) => {
-    const trimmed = linha.trim();
+  linhas.forEach((linhaOriginal, index) => {
+    const linha = linhaOriginal.trim();
 
-    // 1. Linha vazia
-    if (!trimmed) {
-      flushListaNumerada(`espaco-${idx}`);
+    if (!linha) {
+      flushListaNumerada(`blank-${index}`);
       return;
     }
 
-    // 2. Cabeçalho H3 (### Titulo)
-    if (trimmed.startsWith("### ")) {
-      flushListaNumerada(`h3-${idx}`);
-      const conteudo = trimmed.replace(/^###\s+/, "");
-      blocos.push(
-        <div
-          key={`h3-${idx}`}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            margin: "4px 0 10px 0",
-          }}
-        >
-          <div
-            style={{
-              width: "24px",
-              height: "24px",
-              borderRadius: "6px",
-              backgroundColor: "#e0f2fe",
-              color: "#0284c7",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-            }}
-          >
-            <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
-              description
-            </span>
-          </div>
-          <h4 style={{ margin: 0, fontSize: "14px", fontWeight: 800, color: "#0f2a4a" }}>
-            {processarTrechosInline(conteudo)}
-          </h4>
-        </div>
-      );
-      return;
-    }
-
-    // 3. Citação / Dica (> texto)
-    if (trimmed.startsWith("> ")) {
-      flushListaNumerada(`quote-${idx}`);
-      const conteudo = trimmed.replace(/^>\s*/, "");
-      blocos.push(
-        <div
-          key={`quote-${idx}`}
-          style={{
-            margin: "10px 0",
-            padding: "8px 12px",
-            backgroundColor: "#f0f9ff",
-            borderLeft: "3px solid #0284c7",
-            borderRadius: "0 8px 8px 0",
-            fontSize: "12px",
-            color: "#0369a1",
-            lineHeight: 1.5,
-          }}
-        >
-          {processarTrechosInline(conteudo)}
-        </div>
-      );
-      return;
-    }
-
-    // 4. Lista numerada (1. item, 2. item) -> Acumula para o box estilizado
-    const matchNumerado = trimmed.match(/^(\d+)\.\s+(.*)$/);
+    // Identifica itens numerados (ex: "1. Acesse o menu...")
+    const matchNumerado = linha.match(/^(\d+)[\.\)]\s*(.*)$/);
     if (matchNumerado) {
       listaNumeradaTemp.push({
         num: matchNumerado[1],
@@ -242,49 +122,45 @@ function ChatMessageContent({ texto }: { texto: string }) {
       return;
     }
 
-    // Qualquer outra linha dá flush na lista numerada anterior
-    flushListaNumerada(`texto-${idx}`);
+    flushListaNumerada(`antes-${index}`);
 
-    // 5. Lista com bullet (- item ou * item)
-    if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
-      const conteudo = trimmed.slice(2);
+    // Título H3 / Marcador ###
+    if (linha.startsWith("###")) {
+      const conteudo = linha.replace(/^###\s*/, "").replace(/^[📁📋💼🛫\s]+/, "");
       blocos.push(
-        <div
-          key={`bullet-${idx}`}
-          style={{
-            display: "flex",
-            alignItems: "flex-start",
-            gap: "8px",
-            margin: "3px 0 3px 6px",
-            fontSize: "12.5px",
-            lineHeight: 1.5,
-            color: "#334155",
-          }}
-        >
-          <span style={{ color: "#0284c7", fontWeight: 700 }}>•</span>
-          <div style={{ flex: 1 }}>{processarTrechosInline(conteudo)}</div>
+        <div key={`h3-${index}`} className="flex items-center gap-2 mt-2 mb-2 text-slate-900 font-extrabold text-sm sm:text-base">
+          <span className="material-symbols-outlined text-[#0284c7] text-lg">article</span>
+          <span>{processarTrechosInline(conteudo)}</span>
         </div>
       );
       return;
     }
 
-    // 6. Parágrafo padrão
+    // Card de Dica / Aviso (ex: "> Dica: ...")
+    if (linha.startsWith(">")) {
+      const conteudo = linha.replace(/^>\s*/, "").replace(/^[*_]+Dica:[*_]+\s*/i, "");
+      blocos.push(
+        <div key={`quote-${index}`} className="my-2.5 p-3 rounded-xl bg-amber-50/80 border border-amber-200/80 flex items-start gap-2.5">
+          <span className="material-symbols-outlined text-amber-600 text-base shrink-0 mt-0.5">lightbulb</span>
+          <div className="text-xs text-amber-950 font-medium leading-relaxed">
+            <strong className="font-bold text-amber-900">Dica: </strong>
+            {processarTrechosInline(conteudo)}
+          </div>
+        </div>
+      );
+      return;
+    }
+
+    // Parágrafo regular
     blocos.push(
-      <p
-        key={`p-${idx}`}
-        style={{
-          margin: "4px 0 8px 0",
-          fontSize: "13px",
-          lineHeight: 1.55,
-          color: "#334155",
-        }}
-      >
+      <p key={`p-${index}`} className="my-1 text-[13px] leading-relaxed text-slate-700">
         {processarTrechosInline(linha)}
       </p>
     );
   });
 
   flushListaNumerada("final");
+
   return <div>{blocos}</div>;
 }
 
@@ -295,8 +171,9 @@ export default function AjudaCentralModal({
 }: AjudaCentralModalProps) {
   const [mounted, setMounted] = useState(false);
   const [abaAtiva, setAbaAtiva] = useState<"GUIA" | "IA">(abaInicial);
-  const [menuSelecionadoId, setMenuSelecionadoId] = useState<string>("projetos");
   const [termoBusca, setTermoBusca] = useState("");
+  const [categoriaFiltro, setCategoriaFiltro] = useState<"TODOS" | "Operacional" | "Financeiro" | "Gestão">("TODOS");
+  const [menuSelecionadoId, setMenuSelecionadoId] = useState<string>("projetos");
 
   // Estado do Chat de IA
   const [historicoChat, setHistoricoChat] = useState<MensagemChat[]>([
@@ -330,25 +207,37 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
     }
   }, [historicoChat, abaAtiva]);
 
-  // Fechar com a tecla ESC
+  // Fechar com a tecla ESC e atalho Cmd+K
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape" && aberto) {
         aoFechar();
       }
+      if ((e.metaKey || e.ctrlKey) && e.key === "k" && aberto && abaAtiva === "GUIA") {
+        e.preventDefault();
+        const searchInput = document.getElementById("input-busca-modulos");
+        searchInput?.focus();
+      }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [aberto, aoFechar]);
+  }, [aberto, aoFechar, abaAtiva]);
 
   if (!mounted || !aberto) return null;
 
   // Filtragem dos menus de processos
   const processosFiltrados = LISTA_PROCESSOS_AJUDA.filter((p) => {
+    // Filtro por categoria
+    if (categoriaFiltro === "Operacional" && p.categoria !== "Operacional") return false;
+    if (categoriaFiltro === "Financeiro" && p.categoria !== "Financeiro") return false;
+    if (categoriaFiltro === "Gestão" && p.categoria !== "Gestão & Diretoria" && p.categoria !== "Segurança") return false;
+
+    // Filtro por termo de busca
     if (!termoBusca.trim()) return true;
     const t = termoBusca.toLowerCase();
     return (
       p.menuNome.toLowerCase().includes(t) ||
+      (p.subtitulo && p.subtitulo.toLowerCase().includes(t)) ||
       p.descricaoGeral.toLowerCase().includes(t) ||
       p.categoria.toLowerCase().includes(t) ||
       p.passos.some((step) => step.titulo.toLowerCase().includes(t) || step.descricao.toLowerCase().includes(t)) ||
@@ -357,7 +246,7 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
     );
   });
 
-  const menuAtual =
+  const menuAtual: ProcessoMenu =
     LISTA_PROCESSOS_AJUDA.find((p) => p.id === menuSelecionadoId) ||
     processosFiltrados[0] ||
     LISTA_PROCESSOS_AJUDA[0];
@@ -429,622 +318,570 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
     "Como cadastrar um novo consultor parceiro PJ?",
   ];
 
+  // Helper de cores por categoria de módulo
+  const getCategoriaIconStyle = (cat: string, id: string) => {
+    if (id === "tabela-precos") return "bg-amber-50 text-amber-600 border border-amber-100";
+    if (id === "relatorios") return "bg-indigo-50 text-indigo-600 border border-indigo-100";
+    if (id === "centro-de-custo") return "bg-purple-50 text-purple-600 border border-purple-100";
+    if (cat === "Financeiro") return "bg-emerald-50 text-emerald-600 border border-emerald-100";
+    if (cat === "Operacional") return "bg-sky-50 text-sky-600 border border-sky-100";
+    if (cat === "Consultoria") return "bg-sky-50 text-sky-600 border border-sky-100";
+    return "bg-slate-100 text-slate-600 border border-slate-200";
+  };
+
   const modalConteudo = (
     <div
       onClick={aoFechar}
-      style={{
-        position: "fixed",
-        inset: 0,
-        backgroundColor: "rgba(11, 26, 44, 0.72)",
-        backdropFilter: "blur(8px)",
-        zIndex: 99999,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "16px",
-      }}
+      className="fixed inset-0 bg-[#071322]/75 backdrop-blur-md z-[99999] flex items-center justify-center p-2 sm:p-4 md:p-6"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        style={{
-          width: "100%",
-          maxWidth: "1140px",
-          height: "90vh",
-          maxHeight: "860px",
-          backgroundColor: "#ffffff",
-          borderRadius: "20px",
-          boxShadow: "0 25px 60px -15px rgba(0, 0, 0, 0.45)",
-          border: "1px solid rgba(226, 232, 240, 0.8)",
-          display: "flex",
-          flexDirection: "column",
-          overflow: "hidden",
-          animation: "modalFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
-        }}
+        className="relative w-full max-w-[1240px] h-[93vh] max-h-[890px] bg-white rounded-2xl lg:rounded-3xl shadow-2xl border border-white/60 ring-1 ring-slate-900/10 flex flex-col overflow-hidden animate-fadeIn"
       >
         {/* ======================================================== */}
         {/* CABEÇALHO DO MODAL (Fiel ao Design do Usuário)            */}
         {/* ======================================================== */}
-        <div
-          style={{
-            padding: "16px 24px",
-            borderBottom: "1px solid #e2e8f0",
-            backgroundColor: "#ffffff",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            flexShrink: 0,
-          }}
-        >
-          {/* Lado Esquerdo: Ícone de Suporte, Título e Tag */}
-          <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-            <div
-              style={{
-                width: "42px",
-                height: "42px",
-                borderRadius: "50%",
-                backgroundColor: "#0284c7",
-                color: "#ffffff",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                boxShadow: "0 4px 12px rgba(2, 132, 199, 0.3)",
-                flexShrink: 0,
-              }}
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: "22px" }}>
-                headphones
+        <header className="px-6 sm:px-8 py-4 bg-white border-b border-slate-200/90 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 select-none shrink-0 relative z-10">
+          {/* Título, Ícone e Tag de Versão */}
+          <div className="flex items-center gap-3.5">
+            <div className="relative flex items-center justify-center">
+              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#0f2a4a] via-[#0369a1] to-[#0284c7] text-white flex items-center justify-center shadow-lg shadow-sky-900/20 ring-4 ring-sky-50">
+                <span className="material-symbols-outlined text-xl">menu_book</span>
+              </div>
+              <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-sky-500 border-2 border-white"></span>
               </span>
             </div>
-
             <div>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <h2
-                  style={{
-                    fontSize: "17px",
-                    fontWeight: 800,
-                    color: "#0f2a4a",
-                    margin: 0,
-                    letterSpacing: "-0.01em",
-                  }}
-                >
-                  Central de Ajuda & Agente de IA NNÓS
-                </h2>
-                <span
-                  style={{
-                    fontSize: "11px",
-                    fontWeight: 700,
-                    padding: "2px 10px",
-                    borderRadius: "20px",
-                    backgroundColor: "#e0f2fe",
-                    color: "#0284c7",
-                    border: "1px solid rgba(2, 132, 199, 0.25)",
-                  }}
-                >
-                  Suporte Integrado
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <h1 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
+                  Central de Ajuda &amp; Agente de IA NNÓS
+                </h1>
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-sky-50 text-[#0284c7] border border-sky-200/70">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#0284c7]"></span>
+                  v4.18 • Suporte Integrado
                 </span>
               </div>
-              <p style={{ margin: "2px 0 0 0", fontSize: "12px", color: "#64748b" }}>
+              <p className="text-xs text-slate-500 font-normal mt-0.5">
                 Mapeamento completo dos menus, passo a passo operacional e inteligência artificial para dúvidas.
               </p>
             </div>
           </div>
 
-          {/* Lado Direito: Abas e Fechar */}
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            {/* Botão Guia de Processos */}
-            <button
-              type="button"
-              onClick={() => setAbaAtiva("GUIA")}
-              style={{
-                padding: "8px 16px",
-                fontSize: "12.5px",
-                fontWeight: abaAtiva === "GUIA" ? 700 : 600,
-                borderRadius: "10px",
-                border: "none",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                transition: "all 0.15s ease",
-                backgroundColor: abaAtiva === "GUIA" ? "#0b2545" : "transparent",
-                color: abaAtiva === "GUIA" ? "#ffffff" : "#475569",
-              }}
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
-                menu_book
-              </span>
-              <span>Guia de Processos</span>
-            </button>
-
-            {/* Botão Agente de IA NNÓS (Ativo com fundo escuro e logo em destaque) */}
-            <button
-              type="button"
-              onClick={() => setAbaAtiva("IA")}
-              style={{
-                padding: "8px 16px",
-                fontSize: "12.5px",
-                fontWeight: 700,
-                borderRadius: "10px",
-                border: "none",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                transition: "all 0.15s ease",
-                backgroundColor: abaAtiva === "IA" ? "#0b2545" : "transparent",
-                color: abaAtiva === "IA" ? "#ffffff" : "#475569",
-                boxShadow: abaAtiva === "IA" ? "0 2px 8px rgba(11, 37, 69, 0.25)" : "none",
-              }}
-            >
-              <div
-                style={{
-                  width: "18px",
-                  height: "18px",
-                  borderRadius: "50%",
-                  backgroundColor: "#ffffff",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  padding: "1.5px",
-                  flexShrink: 0,
-                }}
+          {/* Segmented Control Tabs & Ação Fechar */}
+          <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+            <div className="inline-flex p-1 bg-slate-100/90 rounded-xl border border-slate-200/80 text-xs font-semibold shadow-inner" role="tablist">
+              {/* Aba 1: Guia de Processos */}
+              <button
+                type="button"
+                role="tab"
+                aria-selected={abaAtiva === "GUIA"}
+                onClick={() => setAbaAtiva("GUIA")}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all cursor-pointer ${
+                  abaAtiva === "GUIA"
+                    ? "bg-[#0284c7] text-white shadow-sm hover:bg-[#0369a1]"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/70 font-medium"
+                }`}
               >
-                <img
-                  src="/logo-coruja.png"
-                  alt="Logo NNÓS"
-                  style={{ width: "14px", height: "14px", objectFit: "contain" }}
-                />
-              </div>
-              <span>Agente de IA NNÓS</span>
-            </button>
+                <span className="material-symbols-outlined text-sm">menu_book</span>
+                <span>Guia de Processos</span>
+              </button>
+
+              {/* Aba 2: Agente de IA NNÓS */}
+              <button
+                type="button"
+                role="tab"
+                aria-selected={abaAtiva === "IA"}
+                onClick={() => setAbaAtiva("IA")}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all cursor-pointer ${
+                  abaAtiva === "IA"
+                    ? "bg-[#0b2545] text-white font-bold shadow-sm"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/70 font-medium"
+                }`}
+              >
+                <div className="w-4 h-4 rounded-full bg-white flex items-center justify-center p-0.5 shrink-0">
+                  <img src="/logo-coruja.png" alt="NNÓS" className="w-3.5 h-3.5 object-contain" />
+                </div>
+                <span>Agente de IA NNÓS</span>
+              </button>
+            </div>
+
+            <div className="h-6 w-px bg-slate-200 hidden sm:block"></div>
 
             {/* Botão Fechar */}
             <button
               type="button"
               onClick={aoFechar}
-              style={{
-                width: "34px",
-                height: "34px",
-                borderRadius: "10px",
-                border: "1px solid #e2e8f0",
-                backgroundColor: "#ffffff",
-                color: "#64748b",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: "pointer",
-                transition: "all 0.15s ease",
-                marginLeft: "4px",
-              }}
-              title="Fechar (Esc)"
+              aria-label="Fechar janela"
+              className="w-9 h-9 rounded-xl border border-slate-200/90 text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center transition-all hover:rotate-90 duration-200 cursor-pointer"
             >
-              <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
-                close
-              </span>
+              <span className="material-symbols-outlined text-lg">close</span>
             </button>
           </div>
-        </div>
+        </header>
 
         {/* ======================================================== */}
         {/* CORPO DO MODAL: GUIA DE PROCESSOS OU AGENTE DE IA        */}
         {/* ======================================================== */}
-        <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
+        <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-slate-50/60">
           {abaAtiva === "GUIA" ? (
             /* ======================================================== */
-            /* ABA 1: GUIA PASSO A PASSO DE PROCESSOS POR MENU          */
+            /* ABA 1: GUIA PASSO A PASSO (FIEL AO DESIGN DO MOCKUP)     */
             /* ======================================================== */
-            <div style={{ display: "flex", width: "100%", height: "100%", overflow: "hidden" }}>
-              {/* Coluna da Esquerda: Lista de Menus e Busca */}
-              <div
-                style={{
-                  width: "310px",
-                  borderRight: "1px solid #e2e8f0",
-                  display: "flex",
-                  flexDirection: "column",
-                  backgroundColor: "#f8fafc",
-                  flexShrink: 0,
-                }}
-              >
+            <div className="flex-1 flex flex-col md:flex-row overflow-hidden w-full h-full">
+              {/* Barra Lateral Esquerda: Módulos Corporativos */}
+              <aside className="w-full md:w-[330px] lg:w-[350px] border-r border-slate-200/90 bg-white flex flex-col shrink-0">
                 {/* Campo de Busca Rápida */}
-                <div style={{ padding: "14px 16px", borderBottom: "1px solid #e2e8f0" }}>
-                  <div
-                    style={{
-                      position: "relative",
-                      display: "flex",
-                      alignItems: "center",
-                    }}
-                  >
-                    <span
-                      className="material-symbols-outlined"
-                      style={{
-                        position: "absolute",
-                        left: "10px",
-                        fontSize: "18px",
-                        color: "#94a3b8",
-                      }}
-                    >
+                <div className="p-3.5 border-b border-slate-100">
+                  <div className="relative flex items-center">
+                    <span className="material-symbols-outlined absolute left-3 text-slate-400 text-sm pointer-events-none">
                       search
                     </span>
                     <input
+                      id="input-busca-modulos"
                       type="text"
-                      placeholder="Filtrar menu, processo ou regra..."
+                      placeholder="Buscar módulos, regras ou telas..."
                       value={termoBusca}
                       onChange={(e) => setTermoBusca(e.target.value)}
-                      style={{
-                        width: "100%",
-                        padding: "8px 12px 8px 34px",
-                        fontSize: "12px",
-                        borderRadius: "10px",
-                        border: "1px solid #e2e8f0",
-                        backgroundColor: "#ffffff",
-                        color: "#0f2a4a",
-                        outline: "none",
-                      }}
+                      className="w-full pl-9 pr-14 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50/70 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-[#0284c7] transition-all font-medium"
                     />
-                    {termoBusca && (
-                      <button
-                        type="button"
-                        onClick={() => setTermoBusca("")}
-                        style={{
-                          position: "absolute",
-                          right: "8px",
-                          border: "none",
-                          background: "none",
-                          cursor: "pointer",
-                          color: "#94a3b8",
-                          padding: "2px",
-                        }}
-                      >
-                        <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
-                          cancel
-                        </span>
-                      </button>
-                    )}
+                    <div className="absolute right-2.5 flex items-center pointer-events-none">
+                      <kbd className="px-1.5 py-0.5 text-[10px] font-semibold text-slate-400 bg-white border border-slate-200 rounded-md shadow-xs">
+                        ⌘K
+                      </kbd>
+                    </div>
+                  </div>
+
+                  {/* Pílulas de Filtro por Categoria */}
+                  <div className="flex items-center gap-1.5 mt-2.5 overflow-x-auto pb-0.5 custom-scroll-thin">
+                    <button
+                      type="button"
+                      onClick={() => setCategoriaFiltro("TODOS")}
+                      className={`px-2.5 py-1 text-[11px] rounded-lg shrink-0 transition-colors cursor-pointer ${
+                        categoriaFiltro === "TODOS"
+                          ? "bg-[#0f2a4a] text-white font-semibold shadow-xs"
+                          : "bg-slate-100 text-slate-600 hover:bg-slate-200/80 font-medium"
+                      }`}
+                    >
+                      Todos ({LISTA_PROCESSOS_AJUDA.length})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCategoriaFiltro("Operacional")}
+                      className={`px-2.5 py-1 text-[11px] rounded-lg shrink-0 transition-colors cursor-pointer ${
+                        categoriaFiltro === "Operacional"
+                          ? "bg-[#0f2a4a] text-white font-semibold shadow-xs"
+                          : "bg-slate-100 text-slate-600 hover:bg-slate-200/80 font-medium"
+                      }`}
+                    >
+                      Operacional
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCategoriaFiltro("Financeiro")}
+                      className={`px-2.5 py-1 text-[11px] rounded-lg shrink-0 transition-colors cursor-pointer ${
+                        categoriaFiltro === "Financeiro"
+                          ? "bg-[#0f2a4a] text-white font-semibold shadow-xs"
+                          : "bg-slate-100 text-slate-600 hover:bg-slate-200/80 font-medium"
+                      }`}
+                    >
+                      Financeiro
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCategoriaFiltro("Gestão")}
+                      className={`px-2.5 py-1 text-[11px] rounded-lg shrink-0 transition-colors cursor-pointer ${
+                        categoriaFiltro === "Gestão"
+                          ? "bg-[#0f2a4a] text-white font-semibold shadow-xs"
+                          : "bg-slate-100 text-slate-600 hover:bg-slate-200/80 font-medium"
+                      }`}
+                    >
+                      Gestão
+                    </button>
                   </div>
                 </div>
 
-                {/* Lista de Menus Disponíveis */}
-                <div style={{ flex: 1, overflowY: "auto", padding: "10px 12px" }}>
-                  <div
-                    style={{
-                      fontSize: "10.5px",
-                      fontWeight: 700,
-                      color: "#94a3b8",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.05em",
-                      padding: "4px 8px 8px 8px",
-                    }}
-                  >
-                    Mapeamento de Menus ({processosFiltrados.length})
-                  </div>
+                {/* Cabeçalho da Seção */}
+                <div className="px-4 py-2 bg-slate-50/70 border-b border-slate-100 flex items-center justify-between text-[11px] font-bold text-slate-500 tracking-wider uppercase">
+                  <span>MÓDULOS CORPORATIVOS</span>
+                  <span className="text-[10px] text-slate-400 font-semibold lowercase">
+                    {processosFiltrados.length} itens
+                  </span>
+                </div>
 
-                  <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                    {processosFiltrados.map((proc) => {
-                      const ativo = proc.id === menuAtual.id;
-                      return (
-                        <button
-                          key={proc.id}
-                          type="button"
-                          onClick={() => setMenuSelecionadoId(proc.id)}
-                          style={{
-                            padding: "9px 12px",
-                            borderRadius: "10px",
-                            border: ativo ? "1px solid #0284c7" : "1px solid transparent",
-                            backgroundColor: ativo ? "#e0f2fe" : "transparent",
-                            color: ativo ? "#0369a1" : "#334155",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "10px",
-                            textAlign: "left",
-                            cursor: "pointer",
-                            transition: "all 0.15s ease",
-                          }}
-                        >
-                          <span
-                            className="material-symbols-outlined"
-                            style={{
-                              fontSize: "18px",
-                              color: ativo ? "#0284c7" : "#64748b",
-                            }}
+                {/* Lista Tátil dos Módulos */}
+                <nav aria-label="Lista de Menus" className="flex-1 overflow-y-auto p-2.5 space-y-1.5 custom-scroll-thin">
+                  {processosFiltrados.map((proc) => {
+                    const ativo = proc.id === menuAtual.id;
+                    const catPill =
+                      proc.categoria === "Financeiro"
+                        ? "bg-emerald-50 text-emerald-700 border border-emerald-200/60"
+                        : proc.categoria === "Gestão & Diretoria"
+                        ? "bg-purple-50 text-purple-700 border border-purple-200/60"
+                        : proc.categoria === "Consultoria"
+                        ? "bg-sky-50 text-sky-700 border border-sky-200/60"
+                        : proc.categoria === "Segurança"
+                        ? "bg-slate-100 text-slate-700"
+                        : "bg-sky-50 text-sky-700 border border-sky-200/60";
+
+                    return (
+                      <button
+                        key={proc.id}
+                        type="button"
+                        onClick={() => setMenuSelecionadoId(proc.id)}
+                        className={`w-full text-left relative group flex items-center justify-between p-2.5 rounded-xl transition-all cursor-pointer overflow-hidden ${
+                          ativo
+                            ? "bg-sky-50/90 text-sky-900 border border-sky-200/90 shadow-sm"
+                            : "hover:bg-slate-100/80 border border-transparent"
+                        }`}
+                      >
+                        {ativo && (
+                          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-7 bg-[#0284c7] rounded-r-md"></div>
+                        )}
+                        <div className={`flex items-center gap-3 min-w-0 ${ativo ? "pl-1.5" : ""}`}>
+                          <div
+                            className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                              ativo
+                                ? "bg-gradient-to-br from-sky-500 to-[#0284c7] text-white shadow-sm shadow-sky-500/25"
+                                : getCategoriaIconStyle(proc.categoria, proc.id)
+                            }`}
                           >
-                            {proc.icone}
-                          </span>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div
-                              style={{
-                                fontSize: "12.5px",
-                                fontWeight: ativo ? 700 : 600,
-                                whiteSpace: "nowrap",
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                              }}
-                            >
-                              {proc.menuNome}
-                            </div>
-                            <div
-                              style={{
-                                fontSize: "10px",
-                                color: ativo ? "#0369a1" : "#64748b",
-                                opacity: 0.85,
-                              }}
-                            >
-                              {proc.categoria}
+                            <span className="material-symbols-outlined text-lg">{proc.icone}</span>
+                          </div>
+                          <div className="min-w-0">
+                            <div className="text-xs font-bold text-slate-900 truncate">{proc.menuNome}</div>
+                            <div className={`text-[10px] truncate ${ativo ? "text-sky-700 font-medium" : "text-slate-500"}`}>
+                              {proc.subtitulo || `${proc.passos.length} etapas no fluxo`}
                             </div>
                           </div>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                          <span
+                            className={`px-1.5 py-0.5 rounded text-[9px] font-semibold ${
+                              ativo ? "bg-sky-200/60 text-sky-800 font-bold" : catPill
+                            }`}
+                          >
+                            {proc.categoria.split(" ")[0]}
+                          </span>
                           {ativo && (
-                            <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "#0284c7" }}>
-                              chevron_right
-                            </span>
+                            <span className="material-symbols-outlined text-[13px] text-[#0284c7]">arrow_forward</span>
                           )}
-                        </button>
-                      );
-                    })}
+                        </div>
+                      </button>
+                    );
+                  })}
 
-                    {processosFiltrados.length === 0 && (
-                      <div
-                        style={{
-                          padding: "24px 12px",
-                          textAlign: "center",
-                          color: "#64748b",
-                          fontSize: "12px",
-                        }}
-                      >
-                        Nenhum menu encontrado para "{termoBusca}".
+                  {processosFiltrados.length === 0 && (
+                    <div className="p-6 text-center text-xs text-slate-400">
+                      Nenhum módulo encontrado para "{termoBusca}".
+                    </div>
+                  )}
+                </nav>
+              </aside>
+
+              {/* Coluna da Direita: Visualização Detalhada do Passo a Passo (Main) */}
+              <main className="flex-1 flex flex-col overflow-y-auto bg-white p-6 sm:p-8 lg:p-10 custom-scroll-thin">
+                {/* Module Feature Header Banner */}
+                <section className="border-b border-slate-100 pb-7 mb-7">
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-sky-50 to-blue-100/80 border border-sky-200/90 text-[#0284c7] flex items-center justify-center shadow-sm shrink-0">
+                        <span className="material-symbols-outlined text-2xl">{menuAtual.icone}</span>
                       </div>
-                    )}
-                  </div>
-                </div>
-              </div>
+                      <div>
+                        <div className="flex items-center gap-2.5 flex-wrap">
+                          <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+                            {menuAtual.menuNome}
+                          </h2>
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold bg-sky-50 text-[#0284c7] border border-sky-200/70">
+                            Módulo Principal
+                          </span>
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200/70">
+                            {menuAtual.categoria}
+                          </span>
+                          <span className="inline-flex items-center gap-1 text-xs text-slate-400 font-medium ml-1">
+                            <span className="material-symbols-outlined text-[13px]">schedule</span>
+                            {menuAtual.tempoLeitura || `${Math.max(2, menuAtual.passos.length)} min de leitura`}
+                          </span>
+                        </div>
+                        <p className="mt-2 text-xs sm:text-sm text-slate-600 leading-relaxed max-w-3xl">
+                          {menuAtual.descricaoGeral}
+                        </p>
+                      </div>
+                    </div>
 
-              {/* Coluna da Direita: Conteúdo Passo a Passo do Menu Selecionado */}
-              <div style={{ flex: 1, overflowY: "auto", padding: "24px 28px", backgroundColor: "#ffffff" }}>
-                {/* Cabeçalho do Processo */}
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "flex-start",
-                    justifyContent: "space-between",
-                    gap: "16px",
-                    paddingBottom: "16px",
-                    borderBottom: "1px solid #e2e8f0",
-                  }}
-                >
-                  <div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
-                      <span
-                        className="material-symbols-outlined"
-                        style={{ fontSize: "24px", color: "#0284c7" }}
+                    {/* Botão de Ação Direto para o Módulo */}
+                    <div className="shrink-0 flex items-center">
+                      <Link
+                        href={menuAtual.rota}
+                        onClick={aoFechar}
+                        className="inline-flex items-center justify-center gap-2.5 px-4.5 py-2.5 rounded-xl bg-[#0284c7] hover:bg-[#0369a1] text-white text-xs sm:text-sm font-semibold transition-all shadow-md shadow-sky-600/20 group hover:shadow-lg cursor-pointer"
                       >
-                        {menuAtual.icone}
+                        <span>Abrir Módulo de {menuAtual.menuNome.split(" - ")[0].split(" & ")[0]}</span>
+                        <span className="material-symbols-outlined text-xs transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
+                          open_in_new
+                        </span>
+                      </Link>
+                    </div>
+                  </div>
+
+                  {/* Metadata Pill Bar: Público Recomendado */}
+                  <div className="mt-4 pt-4 border-t border-slate-100 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                    <span className="font-bold text-slate-700 flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-sky-600 text-sm">how_to_reg</span>
+                      Público recomendado:
+                    </span>
+                    {menuAtual.publicoAlvo.split(",").map((p, idx) => (
+                      <span key={idx} className="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 font-medium">
+                        {p.trim()}
                       </span>
-                      <h3 style={{ fontSize: "20px", fontWeight: 800, color: "#0f2a4a", margin: 0 }}>
-                        {menuAtual.menuNome}
+                    ))}
+                  </div>
+                </section>
+
+                {/* Stepper Timeline Section */}
+                <section className="space-y-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2.5">
+                      <span className="flex h-2 w-2 rounded-full bg-[#0284c7]"></span>
+                      <h3 className="text-sm sm:text-base font-bold text-slate-900 tracking-tight">
+                        Trilha Operacional Passo a Passo
                       </h3>
-                      <span
-                        style={{
-                          fontSize: "11px",
-                          fontWeight: 700,
-                          padding: "2px 8px",
-                          borderRadius: "12px",
-                          backgroundColor: "#f1f5f9",
-                          color: "#475569",
-                        }}
-                      >
-                        {menuAtual.categoria}
-                      </span>
                     </div>
-
-                    <p style={{ margin: "4px 0", fontSize: "13px", color: "#475569", lineHeight: 1.5 }}>
-                      {menuAtual.descricaoGeral}
-                    </p>
-
-                    <div style={{ marginTop: "6px", fontSize: "11.5px", color: "#64748b" }}>
-                      <strong>Público recomendado:</strong> {menuAtual.publicoAlvo}
-                    </div>
+                    <span className="text-xs font-semibold text-slate-400">
+                      {menuAtual.passos.length} etapas sequenciais
+                    </span>
                   </div>
 
-                  <Link
-                    href={menuAtual.rota}
-                    onClick={aoFechar}
-                    style={{
-                      padding: "8px 14px",
-                      borderRadius: "10px",
-                      backgroundColor: "#0284c7",
-                      color: "#ffffff",
-                      fontSize: "12px",
-                      fontWeight: 700,
-                      textDecoration: "none",
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "6px",
-                      boxShadow: "0 2px 8px rgba(2, 132, 199, 0.25)",
-                      whiteSpace: "nowrap",
-                      flexShrink: 0,
-                    }}
-                  >
-                    <span>Ir para {menuAtual.menuNome}</span>
-                    <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
-                      arrow_forward
-                    </span>
-                  </Link>
-                </div>
-
-                {/* Passo a Passo Numerado */}
-                <div style={{ marginTop: "24px" }}>
-                  <h4
-                    style={{
-                      fontSize: "14px",
-                      fontWeight: 800,
-                      color: "#0f2a4a",
-                      margin: "0 0 16px 0",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "6px",
-                    }}
-                  >
-                    <span className="material-symbols-outlined" style={{ fontSize: "18px", color: "#0284c7" }}>
-                      format_list_numbered
-                    </span>
-                    Passo a Passo do Processo
-                  </h4>
-
-                  <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                  {/* Stepper Container com Linha de Gradiente Contínua */}
+                  <div className="relative pl-8 space-y-6 before:absolute before:left-4 before:top-4 before:bottom-4 before:w-0.5 before:bg-gradient-to-b before:from-sky-500 before:via-sky-300 before:to-slate-200">
                     {menuAtual.passos.map((passo) => (
-                      <div
-                        key={passo.numero}
-                        style={{
-                          display: "flex",
-                          alignItems: "flex-start",
-                          gap: "14px",
-                          padding: "14px 16px",
-                          borderRadius: "12px",
-                          backgroundColor: "#f8fafc",
-                          border: "1px solid #e2e8f0",
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: "28px",
-                            height: "28px",
-                            borderRadius: "50%",
-                            backgroundColor: "#0284c7",
-                            color: "#ffffff",
-                            fontSize: "13px",
-                            fontWeight: 800,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            flexShrink: 0,
-                            boxShadow: "0 2px 6px rgba(2, 132, 199, 0.3)",
-                          }}
-                        >
+                      <div key={passo.numero} className="relative group">
+                        {/* Stepper Node Circular */}
+                        <div className="absolute -left-8 top-1 flex items-center justify-center w-8 h-8 rounded-full bg-[#0284c7] text-white font-bold text-xs shadow-md shadow-sky-600/30 ring-4 ring-white z-10">
                           {passo.numero}
                         </div>
 
-                        <div style={{ flex: 1 }}>
-                          <h5 style={{ margin: "0 0 4px 0", fontSize: "13.5px", fontWeight: 700, color: "#0f2a4a" }}>
-                            {passo.titulo}
-                          </h5>
-                          <p style={{ margin: "0", fontSize: "12.5px", color: "#475569", lineHeight: 1.5 }}>
+                        {/* Card do Passo */}
+                        <div className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-xs hover:border-slate-300 transition-all">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                            <h4 className="text-sm sm:text-base font-bold text-slate-900">{passo.titulo}</h4>
+                            {passo.tags && (
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                {passo.tags.map((tag, tIdx) => (
+                                  <span
+                                    key={tIdx}
+                                    className="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-600"
+                                  >
+                                    {tag}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                          <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
                             {passo.descricao}
                           </p>
-                          {passo.dica && (
-                            <div
-                              style={{
-                                marginTop: "8px",
-                                padding: "6px 10px",
-                                borderRadius: "8px",
-                                backgroundColor: "rgba(245, 158, 11, 0.1)",
-                                border: "1px solid rgba(245, 158, 11, 0.25)",
-                                fontSize: "11.5px",
-                                color: "#b45309",
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "6px",
-                              }}
-                            >
-                              <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>
-                                lightbulb
-                              </span>
-                              <span>{passo.dica}</span>
+
+                          {/* Widget Especial: Grade de Campos (Step 2 Projetos) */}
+                          {passo.tipoEspecial === "campo-grid" && (
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-3 mt-3 border-t border-slate-100">
+                              <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200/60">
+                                <span className="text-[10px] uppercase font-bold text-slate-400 block">Localidade</span>
+                                <span className="text-xs font-semibold text-slate-800">Concessionária &amp; Cidade</span>
+                              </div>
+                              <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200/60">
+                                <span className="text-[10px] uppercase font-bold text-slate-400 block">Período Previsto</span>
+                                <span className="text-xs font-semibold text-slate-800">Data Início e Término</span>
+                              </div>
+                              <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200/60">
+                                <span className="text-[10px] uppercase font-bold text-slate-400 block">Carga Horária</span>
+                                <span className="text-xs font-semibold text-slate-800">Módulos de 8h, 24h ou 40h</span>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Widget Especial: Regra Fiscal Sócio Consultor (Step 3 Projetos) */}
+                          {passo.tipoEspecial === "regra-fiscal" && (
+                            <div className="mt-3.5 p-3 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 flex items-start gap-3 shadow-xs">
+                              <div className="w-6 h-6 rounded-lg bg-amber-500 text-white flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold">
+                                %
+                              </div>
+                              <div className="text-xs text-amber-950 leading-relaxed">
+                                <span className="font-bold text-amber-900">Regra Fiscal Sócio Consultor:</span> Caso o instrutor alocado seja registrado na modalidade <strong className="font-semibold text-amber-950">Sócio Consultor emitindo Nota Fiscal (NF)</strong>, o sistema calcula e acrescenta automaticamente <strong className="font-semibold text-amber-950">+6% sobre o repasse bruto</strong> para fins de equilíbrio tributário.
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Widget Especial: Grade de Modais de Logística (Step 4 Projetos) */}
+                          {passo.tipoEspecial === "logistica-grid" && (
+                            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 pt-3 mt-3 border-t border-slate-100">
+                              <div className="flex items-center gap-2 p-2 rounded-lg bg-slate-50 border border-slate-200/60 text-xs font-semibold text-slate-700">
+                                <span className="material-symbols-outlined text-sky-600 text-sm">flight</span>
+                                <span>Aéreo</span>
+                              </div>
+                              <div className="flex items-center gap-2 p-2 rounded-lg bg-slate-50 border border-slate-200/60 text-xs font-semibold text-slate-700">
+                                <span className="material-symbols-outlined text-sky-600 text-sm">hotel</span>
+                                <span>Hotel</span>
+                              </div>
+                              <div className="flex items-center gap-2 p-2 rounded-lg bg-slate-50 border border-slate-200/60 text-xs font-semibold text-slate-700">
+                                <span className="material-symbols-outlined text-sky-600 text-sm">directions_car</span>
+                                <span>Carro / Traslado</span>
+                              </div>
+                              <div className="flex items-center gap-2 p-2 rounded-lg bg-slate-50 border border-slate-200/60 text-xs font-semibold text-slate-700">
+                                <span className="material-symbols-outlined text-sky-600 text-sm">health_and_safety</span>
+                                <span>Seguro Viagem</span>
+                              </div>
+                              <div className="flex items-center gap-2 p-2 rounded-lg bg-slate-50 border border-slate-200/60 text-xs font-semibold text-slate-700 col-span-2 sm:col-span-1">
+                                <span className="material-symbols-outlined text-sky-600 text-sm">restaurant</span>
+                                <span>Diárias &amp; KM</span>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Dica Geral / Dica de Produtividade */}
+                          {passo.dica && passo.tipoEspecial !== "regra-fiscal" && (
+                            <div className="mt-3.5 p-3 rounded-xl bg-amber-50/80 border border-amber-200/80 flex items-start gap-3">
+                              <div className="w-6 h-6 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 mt-0.5">
+                                <span className="material-symbols-outlined text-sm">lightbulb</span>
+                              </div>
+                              <div className="text-xs text-amber-950 font-medium leading-relaxed">
+                                <span className="font-bold">Dica de Produtividade:</span> {passo.dica}
+                              </div>
                             </div>
                           )}
                         </div>
                       </div>
                     ))}
                   </div>
-                </div>
+                </section>
 
-                {/* Regras Importantes do Negócio */}
-                {menuAtual.regrasImportantes && menuAtual.regrasImportantes.length > 0 && (
-                  <div style={{ marginTop: "24px" }}>
-                    <div
-                      style={{
-                        padding: "16px",
-                        borderRadius: "12px",
-                        backgroundColor: "rgba(2, 132, 199, 0.05)",
-                        border: "1px solid rgba(2, 132, 199, 0.2)",
-                      }}
-                    >
-                      <h4
-                        style={{
-                          fontSize: "13px",
-                          fontWeight: 800,
-                          color: "#0369a1",
-                          margin: "0 0 10px 0",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "6px",
-                        }}
-                      >
-                        <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
-                          verified_user
-                        </span>
-                        Regras & Premissas Obrigatórias
-                      </h4>
-                      <ul style={{ margin: 0, paddingLeft: "18px", fontSize: "12px", color: "#475569", lineHeight: 1.6 }}>
-                        {menuAtual.regrasImportantes.map((regra, idx) => (
-                          <li key={idx} style={{ marginBottom: "4px" }}>
-                            {regra}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
+                {/* Additional Resources & Official Documents Section */}
+                <section className="mt-8 pt-6 border-t border-slate-200/80">
+                  <div className="flex items-center gap-2 mb-3.5">
+                    <span className="material-symbols-outlined text-slate-400 text-sm">attach_file</span>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                      Documentos e Políticas Vinculadas
+                    </h4>
                   </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <a
+                      href="/politicas/NNOS-Politica-Viagens-Geral.pdf"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:border-sky-300 hover:bg-sky-50/40 transition-all group cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center shrink-0">
+                          <span className="material-symbols-outlined text-base">picture_as_pdf</span>
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-xs font-bold text-slate-800 truncate group-hover:text-[#0284c7]">
+                            Fluxograma Oficial
+                          </div>
+                          <div className="text-[10px] text-slate-400">PDF • 1.4 MB</div>
+                        </div>
+                      </div>
+                      <span className="material-symbols-outlined text-xs text-slate-300 group-hover:text-[#0284c7] transition-colors">
+                        download
+                      </span>
+                    </a>
+
+                    <Link
+                      href="/tabela-precos"
+                      onClick={aoFechar}
+                      className="flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:border-sky-300 hover:bg-sky-50/40 transition-all group cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                          <span className="material-symbols-outlined text-base">table_chart</span>
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-xs font-bold text-slate-800 truncate group-hover:text-[#0284c7]">
+                            Tabela Preços 2026
+                          </div>
+                          <div className="text-[10px] text-slate-400">Tarifas homologadas</div>
+                        </div>
+                      </div>
+                      <span className="material-symbols-outlined text-xs text-slate-300 group-hover:text-[#0284c7] transition-colors">
+                        arrow_forward
+                      </span>
+                    </Link>
+
+                    <Link
+                      href="/consultor/viagens"
+                      onClick={aoFechar}
+                      className="flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:border-sky-300 hover:bg-sky-50/40 transition-all group cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-8 h-8 rounded-lg bg-sky-50 text-[#0284c7] flex items-center justify-center shrink-0">
+                          <span className="material-symbols-outlined text-base">explore</span>
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-xs font-bold text-slate-800 truncate group-hover:text-[#0284c7]">
+                            Políticas de Viagem
+                          </div>
+                          <div className="text-[10px] text-slate-400">Diretrizes de reembolso</div>
+                        </div>
+                      </div>
+                      <span className="material-symbols-outlined text-xs text-slate-300 group-hover:text-[#0284c7] transition-colors">
+                        arrow_forward
+                      </span>
+                    </Link>
+                  </div>
+                </section>
+
+                {/* Regras Importantes & Perguntas Frequentes */}
+                {menuAtual.regrasImportantes && menuAtual.regrasImportantes.length > 0 && (
+                  <section className="mt-6 p-4 rounded-xl bg-sky-50/50 border border-sky-100">
+                    <div className="flex items-center gap-2 mb-2 text-sky-900 font-bold text-xs uppercase tracking-wider">
+                      <span className="material-symbols-outlined text-sky-600 text-sm">verified_user</span>
+                      <span>Regras &amp; Premissas Obrigatórias</span>
+                    </div>
+                    <ul className="space-y-1.5 text-xs text-slate-600 pl-5 list-disc">
+                      {menuAtual.regrasImportantes.map((r, i) => (
+                        <li key={i}>{r}</li>
+                      ))}
+                    </ul>
+                  </section>
                 )}
-              </div>
+
+                {menuAtual.faq && menuAtual.faq.length > 0 && (
+                  <section className="mt-6">
+                    <div className="flex items-center gap-2 mb-3 text-slate-700 font-bold text-xs uppercase tracking-wider">
+                      <span className="material-symbols-outlined text-amber-500 text-sm">quiz</span>
+                      <span>Dúvidas Frequentes (FAQ)</span>
+                    </div>
+                    <div className="space-y-2">
+                      {menuAtual.faq.map((f, i) => (
+                        <div key={i} className="p-3 rounded-xl bg-slate-50 border border-slate-200/80">
+                          <div className="font-bold text-xs text-slate-800 mb-1">{f.pergunta}</div>
+                          <div className="text-xs text-slate-600 leading-relaxed">{f.resposta}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                )}
+              </main>
             </div>
           ) : (
             /* ======================================================== */
             /* ABA 2: AGENTE DE INTELIGÊNCIA ARTIFICIAL NATIVO          */
             /* ======================================================== */
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                width: "100%",
-                height: "100%",
-                overflow: "hidden",
-                backgroundColor: "#f8fafc",
-              }}
-            >
+            <div className="flex-1 flex flex-col w-full h-full overflow-hidden bg-slate-50/60">
               {/* Sub-Header: Status do Agente Online */}
-              <div
-                style={{
-                  padding: "10px 24px",
-                  backgroundColor: "#ffffff",
-                  borderBottom: "1px solid #e2e8f0",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  flexShrink: 0,
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  <div
-                    style={{
-                      width: "28px",
-                      height: "28px",
-                      borderRadius: "50%",
-                      backgroundColor: "#0284c7",
-                      color: "#ffffff",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      flexShrink: 0,
-                    }}
-                  >
-                    <span className="material-symbols-outlined" style={{ fontSize: "17px" }}>
-                      smart_toy
-                    </span>
+              <div className="px-6 py-2.5 bg-white border-b border-slate-200/80 flex items-center justify-between shrink-0">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-full bg-[#0284c7] text-white flex items-center justify-center shrink-0">
+                    <span className="material-symbols-outlined text-base">smart_toy</span>
                   </div>
-
-                  <div style={{ fontSize: "12px" }}>
-                    <strong style={{ color: "#0f2a4a" }}>Guia Virtual NNÓS</strong>
-                    <span style={{ margin: "0 6px", color: "#cbd5e1" }}>•</span>
-                    <span style={{ color: "#10b981", fontWeight: 700 }}>Assistente Online</span>
-                    <span style={{ margin: "0 8px", color: "#cbd5e1" }}> </span>
-                    <span style={{ color: "#64748b", fontSize: "11.5px" }}>
+                  <div className="text-xs">
+                    <strong className="text-slate-900">Guia Virtual NNÓS</strong>
+                    <span className="mx-1.5 text-slate-300">•</span>
+                    <span className="text-emerald-600 font-bold">Assistente Online</span>
+                    <span className="hidden sm:inline mx-2 text-slate-300"> </span>
+                    <span className="hidden sm:inline text-slate-500 text-[11px]">
                       Treinado nas regras de negócio, tabelas de preços, políticas de viagens e fluxos do sistema.
                     </span>
                   </div>
@@ -1055,362 +892,187 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                   onClick={() =>
                     setHistoricoChat([
                       {
-                        id: "msg-inicio",
+                        id: `msg-${Date.now()}`,
                         autor: "ia",
-                        texto: "Conversa reiniciada. Em que posso te orientar agora?",
+                        texto: "Conversa reiniciada. Como posso ajudar com os processos do sistema hoje?",
                         dataHora: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
                       },
                     ])
                   }
-                  style={{
-                    padding: "4px 8px",
-                    background: "transparent",
-                    border: "none",
-                    color: "#64748b",
-                    fontSize: "11.5px",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "4px",
-                    transition: "color 0.15s ease",
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = "#0f2a4a")}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = "#64748b")}
-                  title="Reiniciar conversa"
+                  className="text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1 transition-colors cursor-pointer"
+                  title="Reiniciar chat"
                 >
-                  <span className="material-symbols-outlined" style={{ fontSize: "15px" }}>
-                    restart_alt
-                  </span>
+                  <span className="material-symbols-outlined text-sm">refresh</span>
                   <span>Limpar Conversa</span>
                 </button>
               </div>
 
-              {/* Área das Mensagens com Scroll */}
-              <div
-                style={{
-                  flex: 1,
-                  overflowY: "auto",
-                  padding: "24px 28px",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "18px",
-                }}
-              >
+              {/* Área de Conversa com Scroll */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scroll-thin">
                 {historicoChat.map((msg) => {
-                  const isUsuario = msg.autor === "usuario";
+                  const ehUsuario = msg.autor === "usuario";
                   return (
                     <div
                       key={msg.id}
-                      style={{
-                        display: "flex",
-                        alignItems: "flex-start",
-                        gap: "12px",
-                        alignSelf: isUsuario ? "flex-end" : "flex-start",
-                        maxWidth: isUsuario ? "70%" : "82%",
-                      }}
+                      className={`flex flex-col ${ehUsuario ? "items-end" : "items-start"}`}
                     >
-                      {/* Avatar do Agente com Robô Ciano */}
-                      {!isUsuario && (
-                        <div
-                          style={{
-                            width: "34px",
-                            height: "34px",
-                            borderRadius: "50%",
-                            backgroundColor: "#0284c7",
-                            color: "#ffffff",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            flexShrink: 0,
-                            marginTop: "2px",
-                            boxShadow: "0 2px 6px rgba(2, 132, 199, 0.25)",
-                          }}
-                        >
-                          <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>
-                            smart_toy
-                          </span>
-                        </div>
-                      )}
+                      <div className={`flex items-start gap-2.5 max-w-[85%] ${ehUsuario ? "flex-row-reverse" : "flex-row"}`}>
+                        {/* Avatar */}
+                        {ehUsuario ? (
+                          <div className="w-8 h-8 rounded-full bg-[#0b2545] text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-sm">
+                            EU
+                          </div>
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-[#0284c7] text-white flex items-center justify-center shrink-0 shadow-sm shadow-sky-600/30">
+                            <span className="material-symbols-outlined text-base">smart_toy</span>
+                          </div>
+                        )}
 
-                      <div style={{ display: "flex", flexDirection: "column" }}>
+                        {/* Balão de Mensagem */}
                         <div
-                          style={{
-                            backgroundColor: isUsuario ? "#0b2545" : "#ffffff",
-                            color: isUsuario ? "#ffffff" : "#1e293b",
-                            padding: "14px 18px",
-                            borderRadius: isUsuario ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
-                            border: isUsuario ? "none" : "1px solid #e2e8f0",
-                            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)",
-                            fontSize: "13px",
-                            lineHeight: 1.55,
-                            wordBreak: "break-word",
-                          }}
+                          className={`rounded-2xl p-4 shadow-xs text-xs sm:text-[13px] ${
+                            ehUsuario
+                              ? "bg-[#0b2545] text-white rounded-tr-xs"
+                              : "bg-white text-slate-800 border border-slate-200/90 rounded-tl-xs"
+                          }`}
                         >
-                          {/* Conteúdo Renderizado com Caixa de Passos e Negritos Nativos */}
-                          <ChatMessageContent texto={msg.texto} />
+                          {ehUsuario ? (
+                            <div className="whitespace-pre-wrap">{msg.texto}</div>
+                          ) : (
+                            <ChatMessageContent texto={msg.texto} />
+                          )}
 
                           {/* Link de Rota Sugerida */}
                           {msg.rotaSugerida && (
-                            <div style={{ marginTop: "12px", paddingTop: "10px", borderTop: "1px dashed #e2e8f0" }}>
+                            <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-end">
                               <Link
                                 href={msg.rotaSugerida}
                                 onClick={aoFechar}
-                                style={{
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  gap: "6px",
-                                  backgroundColor: "#0284c7",
-                                  color: "#ffffff",
-                                  padding: "7px 14px",
-                                  borderRadius: "8px",
-                                  fontSize: "12px",
-                                  fontWeight: 700,
-                                  textDecoration: "none",
-                                  boxShadow: "0 2px 6px rgba(2, 132, 199, 0.25)",
-                                }}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0284c7] hover:bg-[#0369a1] text-white font-semibold text-xs transition-colors"
                               >
-                                <span>{msg.rotuloRota || "Abrir Tela Sugerida"}</span>
-                                <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>
-                                  open_in_new
-                                </span>
+                                <span>{msg.rotuloRota || "Acessar Módulo"}</span>
+                                <span className="material-symbols-outlined text-sm">arrow_forward</span>
                               </Link>
                             </div>
                           )}
                         </div>
-
-                        {/* Horário da Mensagem */}
-                        <div
-                          style={{
-                            fontSize: "10.5px",
-                            color: "#94a3b8",
-                            marginTop: "4px",
-                            paddingLeft: isUsuario ? "0" : "4px",
-                            paddingRight: isUsuario ? "4px" : "0",
-                            textAlign: isUsuario ? "right" : "left",
-                          }}
-                        >
-                          {msg.dataHora}
-                        </div>
                       </div>
 
-                      {/* Avatar do Usuário */}
-                      {isUsuario && (
-                        <div
-                          style={{
-                            width: "34px",
-                            height: "34px",
-                            borderRadius: "50%",
-                            backgroundColor: "#0b2545",
-                            color: "#ffffff",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            fontSize: "12px",
-                            fontWeight: 700,
-                            flexShrink: 0,
-                            marginTop: "2px",
-                          }}
-                        >
-                          EU
-                        </div>
-                      )}
+                      {/* Horário */}
+                      <span className="text-[10px] text-slate-400 mt-1 px-11">
+                        {msg.dataHora}
+                      </span>
                     </div>
                   );
                 })}
 
+                {/* Indicador de Digitação / Carregamento */}
                 {carregandoIA && (
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "10px",
-                      alignSelf: "flex-start",
-                      backgroundColor: "#ffffff",
-                      padding: "10px 16px",
-                      borderRadius: "16px",
-                      border: "1px solid #e2e8f0",
-                      fontSize: "12.5px",
-                      color: "#64748b",
-                      boxShadow: "0 2px 6px rgba(0,0,0,0.04)",
-                    }}
-                  >
-                    <span className="material-symbols-outlined" style={{ fontSize: "18px", color: "#0284c7", animation: "spin 1.5s linear infinite" }}>
-                      sync
-                    </span>
-                    <span>O Agente NNÓS está analisando sua pergunta...</span>
+                  <div className="flex items-start gap-2.5 max-w-[85%]">
+                    <div className="w-8 h-8 rounded-full bg-[#0284c7] text-white flex items-center justify-center shrink-0 shadow-sm">
+                      <span className="material-symbols-outlined text-base">smart_toy</span>
+                    </div>
+                    <div className="bg-white border border-slate-200/90 rounded-2xl rounded-tl-xs p-3.5 shadow-xs flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-[#0284c7] animate-bounce"></span>
+                      <span className="w-2 h-2 rounded-full bg-[#0284c7] animate-bounce [animation-delay:0.2s]"></span>
+                      <span className="w-2 h-2 rounded-full bg-[#0284c7] animate-bounce [animation-delay:0.4s]"></span>
+                      <span className="text-xs text-slate-500 font-medium ml-1.5">Consultando base de conhecimento...</span>
+                    </div>
                   </div>
                 )}
 
                 <div ref={chatBottomRef} />
               </div>
 
-              {/* ======================================================== */}
-              {/* BARRA DE SUGESTÕES (Fiel ao design com ícone de raio)    */}
-              {/* ======================================================== */}
-              <div
-                style={{
-                  padding: "10px 24px 6px 24px",
-                  backgroundColor: "#ffffff",
-                  borderTop: "1px solid #e2e8f0",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  overflowX: "auto",
-                  whiteSpace: "nowrap",
-                  flexShrink: 0,
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "4px",
-                    fontSize: "11px",
-                    fontWeight: 800,
-                    color: "#f59e0b",
-                    letterSpacing: "0.04em",
-                    marginRight: "4px",
-                  }}
-                >
-                  <span className="material-symbols-outlined" style={{ fontSize: "15px" }}>
-                    bolt
-                  </span>
-                  <span>SUGESTÕES:</span>
-                </div>
-
+              {/* Sugestões Rápidas */}
+              <div className="px-6 py-2 bg-slate-50/80 border-t border-slate-200/60 flex items-center gap-2 overflow-x-auto shrink-0 custom-scroll-thin">
+                <span className="text-[10.5px] font-extrabold text-amber-600 uppercase tracking-wider shrink-0 flex items-center gap-1">
+                  ⚡ SUGESTÕES:
+                </span>
                 {sugestoesRapidas.map((sugestao, idx) => (
                   <button
                     key={idx}
                     type="button"
                     onClick={() => handleEnviarPergunta(sugestao)}
-                    disabled={carregandoIA}
-                    style={{
-                      padding: "5px 12px",
-                      borderRadius: "16px",
-                      border: "1px solid #e2e8f0",
-                      backgroundColor: "#ffffff",
-                      color: "#334155",
-                      fontSize: "11.5px",
-                      cursor: "pointer",
-                      transition: "all 0.15s ease",
-                      flexShrink: 0,
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = "#0284c7";
-                      e.currentTarget.style.color = "#0284c7";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = "#e2e8f0";
-                      e.currentTarget.style.color = "#334155";
-                    }}
+                    className="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-700 text-[11px] font-medium hover:border-sky-300 hover:text-[#0284c7] transition-all shrink-0 cursor-pointer shadow-2xs"
                   >
                     {sugestao}
                   </button>
                 ))}
               </div>
 
-              {/* ======================================================== */}
-              {/* BARRA DE INPUT E ENVIO (Fiel ao design)                  */}
-              {/* ======================================================== */}
-              <div
-                style={{
-                  padding: "12px 24px 14px 24px",
-                  backgroundColor: "#ffffff",
-                  borderTop: "1px solid #f1f5f9",
-                  flexShrink: 0,
-                }}
-              >
+              {/* Input e Envio da Pergunta */}
+              <div className="p-4 sm:px-6 bg-white border-t border-slate-200/80 shrink-0">
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
                     handleEnviarPergunta();
                   }}
-                  style={{ display: "flex", alignItems: "center", gap: "10px" }}
+                  className="flex items-center gap-2.5"
                 >
-                  <div style={{ position: "relative", flex: 1, display: "flex", alignItems: "center" }}>
+                  <div className="relative flex-1 flex items-center">
                     <input
                       type="text"
                       placeholder="Digite sua dúvida sobre qualquer processo ou tela do sistema..."
                       value={inputPergunta}
                       onChange={(e) => setInputPergunta(e.target.value)}
                       disabled={carregandoIA}
-                      style={{
-                        width: "100%",
-                        padding: "11px 40px 11px 16px",
-                        borderRadius: "12px",
-                        border: "1px solid #e2e8f0",
-                        backgroundColor: "#ffffff",
-                        color: "#0f2a4a",
-                        fontSize: "13px",
-                        outline: "none",
-                        transition: "border-color 0.15s ease",
-                      }}
-                      onFocus={(e) => (e.currentTarget.style.borderColor = "#0284c7")}
-                      onBlur={(e) => (e.currentTarget.style.borderColor = "#e2e8f0")}
+                      className="w-full pl-4 pr-10 py-2.5 rounded-xl border border-slate-200 bg-slate-50/70 text-slate-800 text-xs sm:text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-[#0284c7] transition-all font-medium"
                     />
-
                     <button
                       type="button"
-                      style={{
-                        position: "absolute",
-                        right: "10px",
-                        border: "none",
-                        background: "none",
-                        cursor: "pointer",
-                        color: "#94a3b8",
-                        display: "flex",
-                        alignItems: "center",
-                        padding: "4px",
-                      }}
+                      aria-label="Anexo"
+                      className="absolute right-2 text-slate-400 hover:text-slate-600 p-1 rounded cursor-pointer"
                       title="Anexar arquivo"
                     >
-                      <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
-                        attach_file
-                      </span>
+                      <span className="material-symbols-outlined text-base">attach_file</span>
                     </button>
                   </div>
 
-                  {/* Botão Perguntar Azul Escuro */}
                   <button
                     type="submit"
                     disabled={!inputPergunta.trim() || carregandoIA}
-                    style={{
-                      padding: "10px 22px",
-                      borderRadius: "10px",
-                      backgroundColor: inputPergunta.trim() && !carregandoIA ? "#0b2545" : "#cbd5e1",
-                      color: "#ffffff",
-                      fontSize: "13px",
-                      fontWeight: 700,
-                      border: "none",
-                      cursor: inputPergunta.trim() && !carregandoIA ? "pointer" : "not-allowed",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      transition: "all 0.15s ease",
-                    }}
+                    className={`px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all cursor-pointer ${
+                      inputPergunta.trim() && !carregandoIA
+                        ? "bg-[#0b2545] text-white hover:bg-[#0f2a4a] shadow-sm"
+                        : "bg-slate-200 text-slate-400 cursor-not-allowed"
+                    }`}
                   >
                     <span>Perguntar</span>
-                    <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
-                      send
-                    </span>
+                    <span className="material-symbols-outlined text-sm">send</span>
                   </button>
                 </form>
 
-                {/* Mensagem de Rodapé */}
-                <div
-                  style={{
-                    fontSize: "10.5px",
-                    color: "#94a3b8",
-                    textAlign: "center",
-                    marginTop: "8px",
-                  }}
-                >
+                <div className="text-[10px] text-slate-400 text-center mt-2">
                   O assistente IA utiliza as diretrizes oficiais de projetos, contratos e controladoria da NNÓS Consultoria.
                 </div>
               </div>
             </div>
           )}
         </div>
+
+        {/* ======================================================== */}
+        {/* RODAPÉ DO MODAL (VISÍVEL NO GUIA DE PROCESSOS)            */}
+        {/* ======================================================== */}
+        {abaAtiva === "GUIA" && (
+          <footer className="px-6 sm:px-8 py-3 bg-slate-50 border-t border-slate-200/90 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-3 shrink-0 select-none">
+            <div className="flex items-center gap-2.5">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-emerald-200"></span>
+              <span className="font-medium text-slate-700">Base Homologada • Diretrizes Oficiais NNÓS Consultoria</span>
+            </div>
+            <div className="flex items-center gap-4">
+              <span className="text-slate-400 hidden md:inline">Última revisão de processos: Competência Vigente 2026</span>
+              <button
+                type="button"
+                onClick={() => setAbaAtiva("IA")}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0284c7] hover:text-[#0369a1] transition-colors hover:underline cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-sm">chat</span>
+                <span>Falar com Agente de IA</span>
+              </button>
+            </div>
+          </footer>
+        )}
       </div>
     </div>
   );

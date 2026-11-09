@@ -3,11 +3,15 @@ export interface PassoProcesso {
   titulo: string;
   descricao: string;
   dica?: string;
+  tags?: string[];
+  tipoEspecial?: "campo-grid" | "regra-fiscal" | "logistica-grid" | "padrao";
 }
 
 export interface ProcessoMenu {
   id: string;
   menuNome: string;
+  subtitulo?: string;
+  tempoLeitura?: string;
   rota: string;
   icone: string;
   categoria: "Operacional" | "Financeiro" | "Gestão & Diretoria" | "Consultoria" | "Segurança";
@@ -22,38 +26,42 @@ export const LISTA_PROCESSOS_AJUDA: ProcessoMenu[] = [
   {
     id: "projetos",
     menuNome: "Projetos & Atividades",
+    subtitulo: "4 processos • Turmas & Logística",
+    tempoLeitura: "3 min de leitura",
     rota: "/projetos",
-    icone: "assignment",
+    icone: "folder_open",
     categoria: "Operacional",
     descricaoGeral: "Planejamento centralizado de turmas, alocação de consultores, controle de faturamento, custos de logística, notas de débito e acompanhamento de margem de contribuição.",
-    publicoAlvo: "Líderes de Projeto, Coordenação, Financeiro e Administradores",
+    publicoAlvo: "Líderes de Projeto, Coordenação Operacional, Financeiro, Administradores",
     passos: [
       {
         numero: 1,
-        titulo: "Filtrar por Competência e Projeto",
-        descricao: "Utilize os seletores de Ano e Mês no topo da tela para carregar as turmas da competência desejada. Você pode filtrar também por Centro de Custo, Projeto, Instrutor, Concessionária ou Cidade.",
-        dica: "As datas sempre são apresentadas no formato brasileiro (DD/MM/AAAA)."
+        titulo: "Filtrar Competência & Atribuir Contexto",
+        descricao: "Utilize os seletores de Ano e Mês no topo da tela para carregar as turmas da competência desejada. Refine a visualização por Centro de Custo, Projeto, Instrutor, Concessionária ou Cidade para obter a grade de execução em tempo real.",
+        dica: "As datas no sistema são apresentadas no formato brasileiro (DD/MM/AAAA) e os filtros aplicam atualização instantânea sem recarregar a página.",
+        tags: ["Ano / Mês", "Centro de Custo", "Projeto"]
       },
       {
         numero: 2,
-        titulo: "Cadastrar Nova Atividade ou Turma",
-        descricao: "Clique no botão '+ Nova Atividade'. Selecione o Centro de Custo, o Projeto, a Concessionária/Localidade, as datas de início e fim e a carga horária (ex: 40h).",
+        titulo: "Cadastrar Atividade e Definir Carga Horária",
+        descricao: "Clique no botão superior '+ Nova Atividade'. Preencha a entidade demandante e selecione a localidade da concessionária e a carga horária planejada.",
+        tags: ["Botão '+ Nova Atividade'"],
+        tipoEspecial: "campo-grid"
       },
       {
         numero: 3,
-        titulo: "Alocar Instrutor e Definir Tarifa",
-        descricao: "Selecione o consultor responsável. O sistema preenche automaticamente o perfil (Júnior, Pleno, Sênior, Especialista) e os valores de faturamento e repasse com base na Tabela de Preços oficial.",
-        dica: "Se o instrutor for Sócio Consultor emitindo NF, o sistema calcula automaticamente o acréscimo de 6% sobre o repasse bruto."
+        titulo: "Alocação de Consultor & Tabela de Preços",
+        descricao: "Ao selecionar o consultor responsável, a plataforma identifica automaticamente o nível de senioridade homologado e calcula as tarifas de faturamento cliente e repasse do profissional conforme a Tabela de Preços oficial.",
+        dica: "Caso o instrutor alocado seja registrado na modalidade Sócio Consultor emitindo Nota Fiscal (NF), o sistema calcula e acrescenta automaticamente +6% sobre o repasse bruto para fins de equilíbrio tributário.",
+        tags: ["Júnior", "Pleno", "Sênior", "Especialista"],
+        tipoEspecial: "regra-fiscal"
       },
       {
         numero: 4,
-        titulo: "Configurar Logística e Despesas",
-        descricao: "Defina se a atividade precisa de logística (Aéreo, Hotel, Traslado/Carro, Seguro e Diárias). Ao marcar 'Precisa Logística? SIM', uma solicitação é gerada automaticamente para a Agência de Viagens.",
-      },
-      {
-        numero: 5,
-        titulo: "Acompanhar Margem e Confirmar",
-        descricao: "Verifique o card de resumo financeiro: Receita Faturar, Custo Consultores, Logística e Margem Operacional realizada antes de finalizar."
+        titulo: "Configurar Logística Operacional & Despesas",
+        descricao: "Defina se a atividade requer deslocamento. Ao marcar 'Precisa Logística? SIM', uma ordem de serviço vinculada é transmitida imediatamente para a cotação e emissão de vouchers.",
+        tags: ["Integração Agência Fátima"],
+        tipoEspecial: "logistica-grid"
       }
     ],
     regrasImportantes: [
@@ -75,38 +83,45 @@ export const LISTA_PROCESSOS_AJUDA: ProcessoMenu[] = [
   {
     id: "medicao",
     menuNome: "BM - Boletim de Medição",
+    subtitulo: "Validação mensal de horas",
+    tempoLeitura: "4 min de leitura",
     rota: "/medicao",
     icone: "receipt_long",
     categoria: "Financeiro",
     descricaoGeral: "Emissão individual e em massa de Boletins de Medição de consultores, controle de aprovação financeira, integração com Zoho Sign para assinatura digital e conciliação de pagamentos.",
-    publicoAlvo: "Financeiro, Controladoria, Líderes e Sócios Diretores",
+    publicoAlvo: "Financeiro, Controladoria, Líderes de Projeto, Sócios Diretores",
     passos: [
       {
         numero: 1,
         titulo: "Selecionar Competência e Consultor",
         descricao: "Escolha o mês de apuração e o consultor prestador de serviços. O sistema consolidará todas as atividades confirmadas realizadas no período.",
-        dica: "Utilize a aba 'Emissão em Massa' para gerar os BMs de todos os prestadores ativos em um único clique."
+        dica: "Utilize a aba 'Emissão em Massa' para gerar os BMs de todos os prestadores ativos em um único clique.",
+        tags: ["Competência", "Emissão em Massa"]
       },
       {
         numero: 2,
         titulo: "Conferir Horas, Tarifas e Despesas",
         descricao: "Verifique o total de horas executadas, o valor hora contratual, o repasse base e quaisquer adicionais (reembolsos de quilometragem, alimentação ou acréscimo de 6% NF sócio).",
+        tags: ["Horas Executadas", "Repasse Base", "Adicional 6%"]
       },
       {
         numero: 3,
         titulo: "Homologar Medição Financeira",
         descricao: "A equipe financeira valida a medição e os dados bancários/PIX do prestador cadastrado no módulo de Pessoas.",
+        tags: ["Validação PIX", "Controladoria"]
       },
       {
         numero: 4,
         titulo: "Disparar para Assinatura no Zoho Sign",
         descricao: "Clique em 'Disparar Zoho Sign'. O sistema envia automaticamente o documento PDF com os campos de assinatura para o e-mail do consultor e dos diretores responsáveis.",
-        dica: "O webhook do Zoho Sign atualiza em tempo real o status no sistema assim que o documento for assinado por todas as partes."
+        dica: "O webhook do Zoho Sign atualiza em tempo real o status no sistema assim que o documento for assinado por todas as partes.",
+        tags: ["Zoho Sign", "Webhook Ativo"]
       },
       {
         numero: 5,
         titulo: "Exportar Relatório e Enviar para Pagamento",
-        descricao: "Após a assinatura completa, o BM ganha status 'Homologado' e fica disponível para liquidação no módulo de Pagamentos."
+        descricao: "Após a assinatura completa, o BM ganha status 'Homologado' e fica disponível para liquidação no módulo de Pagamentos.",
+        tags: ["Status Homologado", "Liberação Pagamento"]
       }
     ],
     regrasImportantes: [
@@ -128,37 +143,44 @@ export const LISTA_PROCESSOS_AJUDA: ProcessoMenu[] = [
   {
     id: "viagens",
     menuNome: "Viagens & Logística",
+    subtitulo: "Emissão e vouchers Fátima",
+    tempoLeitura: "3 min de leitura",
     rota: "/viagens",
     icone: "flight",
     categoria: "Operacional",
     descricaoGeral: "Gestão completa do ciclo de viagens corporativas: solicitações geradas pelas atividades, cotações de passagens/hotéis pela agência parceira, aprovação pelo líder e emissão de vouchers.",
-    publicoAlvo: "Agência de Viagens, Líderes de Projeto, Viajantes e Financeiro",
+    publicoAlvo: "Agência de Viagens, Líderes de Projeto, Viajantes, Financeiro",
     passos: [
       {
         numero: 1,
         titulo: "Geração da Demanda de Viagem",
         descricao: "Criada automaticamente quando uma atividade em Projetos & Atividades marca 'Precisa Logística? SIM'. Os dados do viajante, datas e destino são carregados.",
+        tags: ["Demanda Automática", "Dados Viajante"]
       },
       {
         numero: 2,
         titulo: "Cotação pela Agência de Viagens",
         descricao: "A agência acessa a aba 'Agência de Viagens', visualiza as demandas pendentes e preenche as opções de voos, hotéis e tarifas conforme a política da empresa contratante.",
-        dica: "A agência deve respeitar a política indicada (CNH Training, Iveco Group ou Geral NNÓS)."
+        dica: "A agência deve respeitar a política indicada (CNH Training, Iveco Group ou Geral NNÓS).",
+        tags: ["Políticas Corporativas", "Prazos Cotação"]
       },
       {
         numero: 3,
         titulo: "Aprovação pelo Líder de Projeto",
         descricao: "O líder do projeto analisa a melhor opção cotada, verifica a aderência ao orçamento do contrato e clica em 'Aprovar Cotação'.",
+        tags: ["Orçamento Contratual", "Aprovação Líder"]
       },
       {
         numero: 4,
         titulo: "Emissão e Anexo de Vouchers",
         descricao: "A agência emite os bilhetes aéreos, vouchers de hotel e encaminha ao sistema com localizador, horário de voo e anexos em PDF.",
+        tags: ["Vouchers PDF", "Localizador"]
       },
       {
         numero: 5,
         titulo: "Notificação e Prestação de Contas",
-        descricao: "O consultor visualiza os vouchers no seu Portal e, após a viagem, faz a prestação de contas de eventuais despesas via aplicativo VExpenses ou formulário RDV."
+        descricao: "O consultor visualiza os vouchers no seu Portal e, após a viagem, faz a prestação de contas de eventuais despesas via aplicativo VExpenses ou formulário RDV.",
+        tags: ["VExpenses", "Prestação Contas"]
       }
     ],
     regrasImportantes: [
@@ -180,27 +202,32 @@ export const LISTA_PROCESSOS_AJUDA: ProcessoMenu[] = [
   {
     id: "centro-de-custo",
     menuNome: "Centro de Custo",
+    subtitulo: "Hierarquia e orçamento",
+    tempoLeitura: "2 min de leitura",
     rota: "/centro-de-custo",
     icone: "account_tree",
     categoria: "Gestão & Diretoria",
     descricaoGeral: "Estrutura organizacional de centros de custo, unidades de negócio (HRD, Dealer Development, Business Solutions, Outsourcing), líderes responsáveis e orçamentos.",
-    publicoAlvo: "Controladoria, Diretoria Executiva e Gestores de Área",
+    publicoAlvo: "Controladoria, Diretoria Executiva, Gestores de Área",
     passos: [
       {
         numero: 1,
         titulo: "Consultar a Árvore Corporativa",
         descricao: "Visualize os centros de custos ativos divididos por área de atuação e empresa contratante (ex: CNH, Iveco, UVA, Porsche).",
+        tags: ["Árvore Organizacional", "Unidades de Negócio"]
       },
       {
         numero: 2,
         titulo: "Cadastrar ou Editar Centro de Custo",
         descricao: "Defina o código do CC (ex: CC-010), o nome do projeto/contrato, a unidade de negócio e o líder gestor responsável.",
-        dica: "A vinculação correta do líder garante que os relatórios executivos do Painel por Líder exibam os dados precisos."
+        dica: "A vinculação correta do líder garante que os relatórios executivos do Painel por Líder exibam os dados precisos.",
+        tags: ["Código CC", "Líder Vinculado"]
       },
       {
         numero: 3,
         titulo: "Acompanhar Orçado vs Realizado",
-        descricao: "Analise a receita contratada, os custos acumulados e o saldo remanescente de horas e recursos alocados."
+        descricao: "Analise a receita contratada, os custos acumulados e o saldo remanescente de horas e recursos alocados.",
+        tags: ["Orçado vs Realizado", "Saldo Remanescente"]
       }
     ],
     regrasImportantes: [
@@ -217,22 +244,26 @@ export const LISTA_PROCESSOS_AJUDA: ProcessoMenu[] = [
   {
     id: "tabela-precos",
     menuNome: "Tabela de Preços",
+    subtitulo: "Tarifas por senioridade",
+    tempoLeitura: "2 min de leitura",
     rota: "/tabela-precos",
-    icone: "request_quote",
+    icone: "sell",
     categoria: "Financeiro",
     descricaoGeral: "Tarifário corporativo oficial da NNÓS, discriminando valores de venda/hora ao cliente e faixas de repasse por senioridade profissional.",
-    publicoAlvo: "Financeiro, Líderes de Projeto e Diretoria",
+    publicoAlvo: "Financeiro, Líderes de Projeto, Diretoria",
     passos: [
       {
         numero: 1,
         titulo: "Consultar Tarifas por Cliente",
         descricao: "Verifique o valor/hora faturado para cada contrato homologado.",
+        tags: ["Tarifa Venda / Hora", "Clientes Homologados"]
       },
       {
         numero: 2,
         titulo: "Consultar Faixas de Repasse",
         descricao: "Consulte as faixas de valor hora para cada perfil de consultor: Júnior, Pleno, Sênior, Especialista e Diretor de Projeto.",
-        dica: "As taxas servem como padrão automático na criação de turmas, podendo ser ajustadas conforme regras contratuais."
+        dica: "As taxas servem como padrão automático na criação de turmas, podendo ser ajustadas conforme regras contratuais.",
+        tags: ["Senioridade", "Faixas de Repasse"]
       }
     ],
     regrasImportantes: [
@@ -248,33 +279,39 @@ export const LISTA_PROCESSOS_AJUDA: ProcessoMenu[] = [
   },
   {
     id: "pessoas",
-    menuNome: "Pessoas & Prestadores de Serviços",
+    menuNome: "Pessoas & Prestadores",
+    subtitulo: "Sócios, PJ e CLT",
+    tempoLeitura: "3 min de leitura",
     rota: "/pessoas",
     icone: "group",
     categoria: "Operacional",
     descricaoGeral: "Cadastro centralizado de consultores parceiros (PJ), colaboradores CLT e sócios executivos. Controle de documentação, dados bancários, PIX, contratos e aeroportos base.",
-    publicoAlvo: "RH, Controladoria, Apoio Administrativo e Diretoria",
+    publicoAlvo: "RH, Controladoria, Apoio Administrativo, Diretoria",
     passos: [
       {
         numero: 1,
         titulo: "Buscar e Filtrar Integrantes",
         descricao: "Filtre por vínculo (Todos, Parceiros PJ, Funcionários CLT, Sócios), por perfil de senioridade ou busque por nome, CPF e CNPJ.",
+        tags: ["Vínculo Jurídico", "Filtro de Senioridade"]
       },
       {
         numero: 2,
         titulo: "Cadastrar Nova Pessoa",
         descricao: "Clique em 'Cadastrar Nova Pessoa'. Preencha os dados pessoais (Nome completo, CPF, Data de Nascimento, E-mail corporativo e Telefone/WhatsApp).",
-        dica: "Para prestadores parceiros, selecione o vínculo 'Parceiro (PJ)' e preencha a Razão Social e CNPJ."
+        dica: "Para prestadores parceiros, selecione o vínculo 'Parceiro (PJ)' e preencha a Razão Social e CNPJ.",
+        tags: ["Dados Pessoais", "Razão Social / CNPJ"]
       },
       {
         numero: 3,
         titulo: "Configurar Dados Fiscais e Logística",
         descricao: "Informe a Chave PIX oficial, Banco, Agência e Conta. Defina a Cidade Base e o Aeroporto Preferencial (ex: CNF, GRU, CWB) para facilitar a cotação de viagens.",
+        tags: ["Chave PIX", "Aeroporto Base"]
       },
       {
         numero: 4,
         titulo: "Salvar e Homologar",
-        descricao: "Revise os dados e clique em 'Salvar Integrante'. A pessoa estará apta para alocação em projetos e recebimento de BMs."
+        descricao: "Revise os dados e clique em 'Salvar Integrante'. A pessoa estará apta para alocação em projetos e recebimento de BMs.",
+        tags: ["Homologação Cadastral", "Liberação Alocação"]
       }
     ],
     regrasImportantes: [
@@ -291,27 +328,32 @@ export const LISTA_PROCESSOS_AJUDA: ProcessoMenu[] = [
   {
     id: "faturamento",
     menuNome: "Faturamento",
+    subtitulo: "Notas de débito & NFSe",
+    tempoLeitura: "3 min de leitura",
     rota: "/faturamento",
     icone: "receipt",
     categoria: "Financeiro",
     descricaoGeral: "Painel analítico e emissão de Notas Fiscais para clientes corporativos, apuração de impostos (12,25%), retenções na fonte e conciliação de recebimentos.",
-    publicoAlvo: "Financeiro, Fiscal e Diretoria",
+    publicoAlvo: "Financeiro, Fiscal, Diretoria",
     passos: [
       {
         numero: 1,
         titulo: "Consultar Turmas Prontas para Faturar",
         descricao: "Filtre por competência e cliente para visualizar todas as atividades concluídas com medição aprovada.",
+        tags: ["Turmas Concluídas", "Medição Aprovada"]
       },
       {
         numero: 2,
         titulo: "Registrar Emissão de Nota Fiscal",
         descricao: "Informe o Número da NF emitida, data de emissão e data de vencimento (conforme prazo contratual do cliente: 30, 45 ou 60 dias).",
-        dica: "O sistema deduz automaticamente a carga tributária estimada de 12,25% para cálculo da receita líquida."
+        dica: "O sistema deduz automaticamente a carga tributária estimada de 12,25% para cálculo da receita líquida.",
+        tags: ["Número NFSe", "Vencimento Contratual"]
       },
       {
         numero: 3,
         titulo: "Conciliar Recebimento",
-        descricao: "Ao identificar o crédito em conta corrente, registre a liquidação da NF, atualizando os relatórios financeiros de DRE."
+        descricao: "Ao identificar o crédito em conta corrente, registre a liquidação da NF, atualizando os relatórios financeiros de DRE.",
+        tags: ["Conciliação Bancária", "Atualização DRE"]
       }
     ],
     regrasImportantes: [
@@ -327,28 +369,33 @@ export const LISTA_PROCESSOS_AJUDA: ProcessoMenu[] = [
   },
   {
     id: "pagamentos",
-    menuNome: "Pagamentos & Contas a Pagar",
+    menuNome: "Pagamentos & Contas",
+    subtitulo: "Repasses e despesas",
+    tempoLeitura: "2 min de leitura",
     rota: "/pagamentos",
     icone: "payments",
     categoria: "Financeiro",
     descricaoGeral: "Programação e liquidação de contas a pagar: repasses de BMs a consultores, faturas de agências de viagens e fornecedores corporativos.",
-    publicoAlvo: "Financeiro e Tesouraria",
+    publicoAlvo: "Financeiro, Tesouraria",
     passos: [
       {
         numero: 1,
         titulo: "Filtrar por Vencimento e Status",
         descricao: "Consulte os compromissos financeiros ordenados por data de vencimento.",
+        tags: ["Data de Vencimento", "Status de Liquidação"]
       },
       {
         numero: 2,
         titulo: "Conferir Chave PIX e Comprovante",
         descricao: "Ao liquidar um pagamento de BM, utilize a chave PIX já validada no cadastro do consultor.",
+        tags: ["Validação PIX", "Comprovante"]
       },
       {
         numero: 3,
         titulo: "Marcar como Pago",
         descricao: "Clique em 'Confirmar Pagamento' e anexe o comprovante bancário caso necessário.",
-        dica: "O status do BM correspondente no Portal do Consultor é atualizado para 'PAGO'."
+        dica: "O status do BM correspondente no Portal do Consultor é atualizado para 'PAGO'.",
+        tags: ["Confirmação Baixa", "Portal do Consultor"]
       }
     ],
     regrasImportantes: [
@@ -364,33 +411,39 @@ export const LISTA_PROCESSOS_AJUDA: ProcessoMenu[] = [
   },
   {
     id: "relatorios",
-    menuNome: "Central de Relatórios & DRE",
+    menuNome: "Central de DRE",
+    subtitulo: "Margem e rentabilidade",
+    tempoLeitura: "4 min de leitura",
     rota: "/relatorios",
     icone: "bar_chart",
     categoria: "Gestão & Diretoria",
     descricaoGeral: "Demonstrativos consolidados em tempo real: DRE Gerencial, Relatório Financeiro YTD, Painel Executivo por Líder de Projeto, Contas a Pagar Campus BH UVA e Despesas de Prospecção.",
-    publicoAlvo: "Sócios Diretores, Líderes de Projeto e Controladoria",
+    publicoAlvo: "Sócios Diretores, Líderes de Projeto, Controladoria",
     passos: [
       {
         numero: 1,
         titulo: "Acessar o Painel de Relatórios 2026",
         descricao: "Selecione o demonstrativo que deseja consultar: DRE Gerencial, Painel por Líder, Campus BH UVA, Performance de Projetos ou Despesas de Prospecção.",
+        tags: ["DRE Gerencial", "Painel por Líder"]
       },
       {
         numero: 2,
         titulo: "Painel Financeiro por Líder de Projeto",
         descricao: "Demonstra o faturamento consolidado, custos operacionais, impostos tributários (12,25%), logística e a margem líquida realizada de cada gestor.",
-        dica: "As raias de projetos exibem a rentabilidade individual de cada contrato da carteira com leitura nativa em tempo real."
+        dica: "As raias de projetos exibem a rentabilidade individual de cada contrato da carteira com leitura nativa em tempo real.",
+        tags: ["Rentabilidade Líder", "Margem Operacional"]
       },
       {
         numero: 3,
         titulo: "Visualizar Ranking de Rentabilidade",
         descricao: "Acesse a aba 'Ranking de Rentabilidade' para comparar os Top 20 projetos mais lucrativos e identificar contratos que demandam correção de rota.",
+        tags: ["Top 20 Projetos", "Bottom 10 Alerta"]
       },
       {
         numero: 4,
         titulo: "Exportar Demonstrações",
-        descricao: "Utilize o botão de impressão/PDF ou exportação para gerar demonstrativos executivos para reuniões de diretoria."
+        descricao: "Utilize o botão de impressão/PDF ou exportação para gerar demonstrativos executivos para reuniões de diretoria.",
+        tags: ["Exportação PDF", "Apresentação Executiva"]
       }
     ],
     regrasImportantes: [
@@ -407,32 +460,38 @@ export const LISTA_PROCESSOS_AJUDA: ProcessoMenu[] = [
   {
     id: "consultor",
     menuNome: "Portal do Consultor",
+    subtitulo: "Agendas e lançamentos",
+    tempoLeitura: "3 min de leitura",
     rota: "/consultor",
     icone: "badge",
     categoria: "Consultoria",
     descricaoGeral: "Área exclusiva para consultores e instrutores acompanharem sua agenda de treinamentos confirmados, vouchers de viagens corporativas, histórico de BMs e status de pagamentos.",
-    publicoAlvo: "Consultores Parceiros, Sócios Especialistas e Instrutores",
+    publicoAlvo: "Consultores Parceiros, Sócios Especialistas, Instrutores",
     passos: [
       {
         numero: 1,
         titulo: "Consultar Minha Agenda",
         descricao: "Visualize seu calendário de turmas confirmadas, cliente, cidade e concessionária de atendimento.",
+        tags: ["Calendário de Turmas", "Concessionária"]
       },
       {
         numero: 2,
         titulo: "Minhas Viagens & Vouchers",
         descricao: "Acompanhe as viagens programadas. Ao entrar, o sistema aplica automaticamente o filtro da competência do mês atual.",
-        dica: "Clique em 'Ver Detalhes' para visualizar horários de voos, localizadores de passagens aéreas e confirmações de hotel."
+        dica: "Clique em 'Ver Detalhes' para visualizar horários de voos, localizadores de passagens aéreas e confirmações de hotel.",
+        tags: ["Vouchers Aéreos", "Hotel Confirmado"]
       },
       {
         numero: 3,
         titulo: "Consultar Políticas de Viagem",
         descricao: "No banner de Orientações, clique nas miniaturas oficiais para abrir o PDF das políticas: CNH Training, Iveco Group, NNÓS Consultoria ou Reembolso Vexpenses.",
+        tags: ["Miniaturas PDF", "Políticas Oficiais"]
       },
       {
         numero: 4,
         titulo: "Assinatura de BMs",
-        descricao: "Confira o resumo mensal de horas na aba 'Meus BMs' e acompanhe a homologação e pagamento na aba 'Meus Pagamentos'."
+        descricao: "Confira o resumo mensal de horas na aba 'Meus BMs' e acompanhe a homologação e pagamento na aba 'Meus Pagamentos'.",
+        tags: ["Assinatura Zoho", "Status Pagamento"]
       }
     ],
     regrasImportantes: [
@@ -448,7 +507,9 @@ export const LISTA_PROCESSOS_AJUDA: ProcessoMenu[] = [
   },
   {
     id: "admin",
-    menuNome: "Administração & Perfis de Acesso",
+    menuNome: "Perfis de Acesso",
+    subtitulo: "Auditoria & permissões",
+    tempoLeitura: "3 min de leitura",
     rota: "/admin",
     icone: "admin_panel_settings",
     categoria: "Segurança",
@@ -459,22 +520,26 @@ export const LISTA_PROCESSOS_AJUDA: ProcessoMenu[] = [
         numero: 1,
         titulo: "Gerenciar Usuários e Credenciais",
         descricao: "Cadastre novos usuários, redefina senhas ou vincule o usuário ao respectivo perfil (Admin, Diretoria, Líder, Financeiro, Agência, Sócio, Consultor).",
+        tags: ["Usuários Ativos", "Redefinição Senha"]
       },
       {
         numero: 2,
         titulo: "Configurar Matriz de Permissões (RBAC)",
         descricao: "Acesse a aba 'Matriz de Permissões' para habilitar ou restringir menus, abas e ações críticas (como homologar financeiro ou disparar Zoho Sign) por perfil.",
-        dica: "As alterações de perfis sincronizam automaticamente com a nuvem do Supabase."
+        dica: "As alterações de perfis sincronizam automaticamente com a nuvem do Supabase.",
+        tags: ["Matriz RBAC", "Sincronização Nuvem"]
       },
       {
         numero: 3,
         titulo: "Ativar Autenticação em Duas Etapas (2FA)",
         descricao: "Gere o QR Code compatível com o aplicativo Google Authenticator para garantir máxima segurança no acesso às contas administrativas.",
+        tags: ["2FA TOTP", "Google Authenticator"]
       },
       {
         numero: 4,
         titulo: "Consultar Logs de Auditoria",
-        descricao: "Acompanhe na aba 'Logs de Acesso' todos os eventos de login, logout, alterações de senhas e operações sensíveis com IP e dispositivo registrado."
+        descricao: "Acompanhe na aba 'Logs de Acesso' todos os eventos de login, logout, alterações de senhas e operações sensíveis com IP e dispositivo registrado.",
+        tags: ["Logs de Auditoria", "Rastreamento IP"]
       }
     ],
     regrasImportantes: [
@@ -489,4 +554,3 @@ export const LISTA_PROCESSOS_AJUDA: ProcessoMenu[] = [
     ]
   }
 ];
-
