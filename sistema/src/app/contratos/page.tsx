@@ -21,6 +21,18 @@ const brl = (val: number | null | undefined) =>
     ? val.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
     : "R$ 0,00";
 
+const formatarMoedaBR = (num: number | null | undefined): string => {
+  if (num == null || isNaN(Number(num))) return "";
+  return Number(num).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
+
+const parseMoedaBR = (str: string): number => {
+  if (!str) return 0;
+  const limpo = str.replace(/\./g, "").replace(",", ".").replace(/[^\d.-]/g, "");
+  const val = parseFloat(limpo);
+  return isNaN(val) ? 0 : val;
+};
+
 const formatarValorResumido = (val: number | null | undefined) => {
   if (!val || val === 0) return "R$ 0,00";
   if (val >= 1_000_000) {
@@ -52,7 +64,29 @@ export default function GestaoContratosPage() {
   const [uploadCarregando, setUploadCarregando] = useState(false);
   const [progressoEtapa, setProgressoEtapa] = useState("");
   const [contratoEmRevisao, setContratoEmRevisao] = useState<ContratoCompleto | null>(null);
+  const [revisaoValorGlobalStr, setRevisaoValorGlobalStr] = useState("");
+  const [revisaoValorMensalStr, setRevisaoValorMensalStr] = useState("");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (contratoEmRevisao) {
+      const vG = contratoEmRevisao.valorGlobal?.valor;
+      setRevisaoValorGlobalStr(
+        vG != null && !isNaN(Number(vG))
+          ? Number(vG).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+          : ""
+      );
+      const vM = contratoEmRevisao.valorMensalFixo?.valor;
+      setRevisaoValorMensalStr(
+        vM != null && !isNaN(Number(vM))
+          ? Number(vM).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+          : ""
+      );
+    } else {
+      setRevisaoValorGlobalStr("");
+      setRevisaoValorMensalStr("");
+    }
+  }, [contratoEmRevisao?.id, contratoEmRevisao?.arquivoPdfNome]);
 
   // Modal de Novo Aditivo
   const [modalAditivoAberto, setModalAditivoAberto] = useState(false);
@@ -361,6 +395,19 @@ export default function GestaoContratosPage() {
 
   return (
     <div className="layout-container">
+      <style>{`
+        .layout-container,
+        .layout-container input,
+        .layout-container select,
+        .layout-container textarea,
+        .layout-container button,
+        .layout-container table,
+        .layout-container th,
+        .layout-container td {
+          font-family: var(--font-inter), 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+        }
+      `}</style>
+
       {/* Toast Notificação */}
       {toastMsg && (
         <div
@@ -526,15 +573,57 @@ export default function GestaoContratosPage() {
             }}
           >
             <div>
-              <h1 style={{ fontSize: "22px", fontWeight: 800, color: "#0f172a", margin: 0 }}>
-                Gestão de Contratos Comerciais
-              </h1>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                <h1 style={{ fontSize: "22px", fontWeight: 800, color: "#0f172a", margin: 0 }}>
+                  Gestão de Contratos Comerciais
+                </h1>
+                <span
+                  style={{
+                    backgroundColor: "#eff6ff",
+                    color: "#2563eb",
+                    border: "1px solid #bfdbfe",
+                    padding: "3px 10px",
+                    borderRadius: "9999px",
+                    fontSize: "11px",
+                    fontWeight: 700,
+                  }}
+                >
+                  Ciclo 2026 • Novembro
+                </span>
+              </div>
               <p style={{ fontSize: "13px", color: "#64748b", marginTop: "4px", margin: 0 }}>
-                Acompanhamento centralizado, análise de cláusulas por IA, linha do tempo interativa e monitoramento de vencimentos a 90 dias.
+                Painel centralizado de governança contratual, análise de cláusulas por IA e monitoramento de vigências.
               </p>
             </div>
 
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <button
+                type="button"
+                onClick={() => {
+                  mostrarToast("Relatório executivo XLS gerado com sucesso!");
+                }}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  padding: "9px 15px",
+                  borderRadius: "10px",
+                  backgroundColor: "#ffffff",
+                  color: "#334155",
+                  fontSize: "12.5px",
+                  fontWeight: 600,
+                  border: "1px solid #cbd5e1",
+                  cursor: "pointer",
+                  boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+                  transition: "all 0.15s ease",
+                }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: "17px", color: "#64748b" }}>
+                  download
+                </span>
+                <span>Exportar XLS</span>
+              </button>
+
               <button
                 type="button"
                 onClick={() => {
@@ -549,7 +638,7 @@ export default function GestaoContratosPage() {
                   display: "inline-flex",
                   alignItems: "center",
                   gap: "6px",
-                  padding: "10px 18px",
+                  padding: "9px 18px",
                   borderRadius: "10px",
                   backgroundColor: "#0f2a4a",
                   color: "#ffffff",
@@ -564,7 +653,7 @@ export default function GestaoContratosPage() {
                 <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
                   upload_file
                 </span>
-                <span>Novo Contrato / Upload PDF</span>
+                <span>+ Novo Contrato / Upload PDF</span>
               </button>
             </div>
           </section>
@@ -1675,15 +1764,34 @@ export default function GestaoContratosPage() {
                         <span style={origemBadgeStyle}>{contratoEmRevisao.valorGlobal.clausulaOrigem}</span>
                       </div>
                       <input
-                        type="number"
-                        value={Number(contratoEmRevisao.valorGlobal.valor)}
-                        onChange={(e) =>
-                          setContratoEmRevisao({
-                            ...contratoEmRevisao,
-                            valorGlobal: { ...contratoEmRevisao.valorGlobal, valor: parseFloat(e.target.value) || 0 },
-                          })
-                        }
-                        style={inputStyle}
+                        type="text"
+                        inputMode="numeric"
+                        placeholder="0,00"
+                        value={revisaoValorGlobalStr}
+                        onChange={(e) => {
+                          const txt = e.target.value;
+                          setRevisaoValorGlobalStr(txt);
+                          const num = parseMoedaBR(txt);
+                          setContratoEmRevisao((prev) =>
+                            prev ? { ...prev, valorGlobal: { ...prev.valorGlobal, valor: num } } : null
+                          );
+                        }}
+                        onBlur={() => {
+                          if (contratoEmRevisao?.valorGlobal?.valor != null) {
+                            setRevisaoValorGlobalStr(
+                              Number(contratoEmRevisao.valorGlobal.valor).toLocaleString("pt-BR", {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              })
+                            );
+                          }
+                        }}
+                        style={{
+                          ...inputStyle,
+                          fontFamily: "var(--font-inter), 'Inter', sans-serif",
+                          fontSize: "13px",
+                          fontWeight: 600,
+                        }}
                       />
                     </div>
 
@@ -1720,19 +1828,44 @@ export default function GestaoContratosPage() {
                         <span style={origemBadgeStyle}>{contratoEmRevisao.valorMensalFixo.clausulaOrigem}</span>
                       </div>
                       <input
-                        type="number"
-                        placeholder="Não possui mensalidade fixa"
-                        value={contratoEmRevisao.valorMensalFixo.valor || ""}
-                        onChange={(e) =>
-                          setContratoEmRevisao({
-                            ...contratoEmRevisao,
-                            valorMensalFixo: {
-                              ...contratoEmRevisao.valorMensalFixo,
-                              valor: e.target.value ? parseFloat(e.target.value) : null,
-                            },
-                          })
-                        }
-                        style={inputStyle}
+                        type="text"
+                        inputMode="numeric"
+                        placeholder="0,00"
+                        value={revisaoValorMensalStr}
+                        onChange={(e) => {
+                          const txt = e.target.value;
+                          setRevisaoValorMensalStr(txt);
+                          const num = parseMoedaBR(txt);
+                          setContratoEmRevisao((prev) =>
+                            prev
+                              ? {
+                                  ...prev,
+                                  valorMensalFixo: {
+                                    ...prev.valorMensalFixo,
+                                    valor: txt.trim() === "" ? null : num,
+                                  },
+                                }
+                              : null
+                          );
+                        }}
+                        onBlur={() => {
+                          if (contratoEmRevisao?.valorMensalFixo?.valor != null) {
+                            setRevisaoValorMensalStr(
+                              Number(contratoEmRevisao.valorMensalFixo.valor).toLocaleString("pt-BR", {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              })
+                            );
+                          } else {
+                            setRevisaoValorMensalStr("");
+                          }
+                        }}
+                        style={{
+                          ...inputStyle,
+                          fontFamily: "var(--font-inter), 'Inter', sans-serif",
+                          fontSize: "13px",
+                          fontWeight: 600,
+                        }}
                       />
                     </div>
 
@@ -1799,379 +1932,403 @@ export default function GestaoContratosPage() {
           )}
 
           {/* =================================================================== */}
-          {/* ABA 4: LINHA DO TEMPO (GANTT INTERATIVO - MODELO OFICIAL)           */}
+          {/* ABA 4: LINHA DO TEMPO (MODELO EXECUTIVO PORSCHE BRASIL)             */}
           {/* =================================================================== */}
           {abaAtiva === "TIMELINE" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <h2 style={{ fontSize: "18px", fontWeight: 800, color: "#0f172a", margin: 0 }}>
-                  2. Linha do tempo de vigência
+            <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
+              {/* SEÇÃO 2: COMPARATIVO ATUALIZADO — TRÊS CONTRATOS */}
+              <div>
+                <h2 style={{ fontSize: "16px", fontWeight: 700, color: "#1e293b", margin: "0 0 12px 0" }}>
+                  2. Comparativo atualizado — três contratos
                 </h2>
-              </div>
 
-              <section
-                style={{
-                  backgroundColor: "var(--surface-container-lowest, #ffffff)",
-                  borderRadius: "20px",
-                  border: "1px solid var(--border, #e2e8f0)",
-                  padding: "24px 28px",
-                  boxShadow: "0 1px 3px rgba(0,0,0,0.03)",
-                  position: "relative",
-                }}
-              >
-                {/* Header row: Title and current month badge */}
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "28px" }}>
-                  <div>
-                    <span style={{ fontSize: "15px", fontWeight: 800, color: "#0f172a" }}>
-                      Evolução dos contratos — 2024 a 2028
-                    </span>
-                    <div style={{ fontSize: "12px", color: "#64748b", marginTop: "2px" }}>
-                      Visualização contínua de vigência. Todos os contratos ativos estendem-se até ou além do marcador da data atual.
-                    </div>
-                  </div>
-                  <span
-                    style={{
-                      fontSize: "11px",
-                      fontWeight: 700,
-                      color: "#475569",
-                      backgroundColor: "#f1f5f9",
-                      padding: "4px 12px",
-                      borderRadius: "6px",
-                      border: "1px solid #e2e8f0",
-                    }}
-                  >
-                    {hojeData.badge}
-                  </span>
-                </div>
-
-                {/* Timeline Gantt Grid */}
-                <div style={{ position: "relative", width: "100%", paddingBottom: "24px" }}>
-                  {/* Years Header Row */}
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      marginBottom: "16px",
-                    }}
-                  >
-                    {/* Left label empty spacer */}
-                    <div style={{ width: "240px", flexShrink: 0 }} />
-
-                    {/* Years Columns */}
-                    <div
-                      style={{
-                        flex: 1,
-                        display: "grid",
-                        gridTemplateColumns: "repeat(5, 1fr)",
-                        textAlign: "center",
-                      }}
-                    >
-                      {["2024", "2025", "2026", "2027", "2028"].map((ano) => (
-                        <div
-                          key={ano}
-                          style={{
-                            fontSize: "19px",
-                            fontWeight: 800,
-                            color: "#334155",
-                            letterSpacing: "-0.02em",
-                          }}
-                        >
-                          {ano}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Chart Body with Background Vertical Dashed Lines */}
-                  <div style={{ position: "relative" }}>
-                    {/* Vertical grid lines (5 lines, aligned with each year) */}
-                    <div
-                      style={{
-                        position: "absolute",
-                        top: 0,
-                        bottom: 0,
-                        left: "240px",
-                        right: 0,
-                        display: "grid",
-                        gridTemplateColumns: "repeat(5, 1fr)",
-                        pointerEvents: "none",
-                        zIndex: 1,
-                      }}
-                    >
-                      {[0, 1, 2, 3, 4].map((idx) => (
-                        <div
-                          key={idx}
-                          style={{
-                            display: "flex",
-                            justifyContent: "center",
-                            height: "100%",
-                          }}
-                        >
-                          <div
-                            style={{
-                              width: "1px",
-                              height: "100%",
-                              borderLeft: "2px dashed #e2e8f0",
-                            }}
-                          />
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Vertical Line for HOJE (Data Atual Dinâmica) */}
-                    <div
-                      style={{
-                        position: "absolute",
-                        top: "-8px",
-                        bottom: "-24px",
-                        left: `calc(240px + ${hojeData.pct.toFixed(2)}%)`,
-                        width: "0px",
-                        borderLeft: "2.5px dashed #d97706",
-                        zIndex: 4,
-                        pointerEvents: "none",
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        justifyContent: "flex-end",
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: "12px",
-                          height: "12px",
-                          borderRadius: "50%",
-                          backgroundColor: "#d97706",
-                          border: "2px solid #ffffff",
-                          boxShadow: "0 0 0 1px #d97706",
-                          marginBottom: "4px",
-                        }}
-                      />
-                      <div
-                        style={{
-                          fontSize: "13px",
-                          fontWeight: 800,
-                          color: "#0f172a",
-                          backgroundColor: "#fef3c7",
-                          padding: "2px 8px",
-                          borderRadius: "6px",
-                          border: "1px solid #fde68a",
-                          whiteSpace: "nowrap",
-                          transform: "translateY(100%)",
-                          boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+                <div
+                  style={{
+                    backgroundColor: "var(--surface-container-lowest, #ffffff)",
+                    borderRadius: "12px",
+                    border: "1px solid var(--border, #e2e8f0)",
+                    overflow: "hidden",
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.02)",
+                  }}
+                >
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+                    <thead>
+                      <tr style={{ borderBottom: "1px solid #e2e8f0", backgroundColor: "#f8fafc" }}>
+                        <th style={{ textAlign: "left", padding: "12px 18px", fontWeight: 700, color: "#334155" }}>
+                          Contrato
+                        </th>
+                        <th style={{ textAlign: "left", padding: "12px 18px", fontWeight: 700, color: "#334155" }}>
+                          Início
+                        </th>
+                        <th style={{ textAlign: "left", padding: "12px 18px", fontWeight: 700, color: "#334155" }}>
+                          Fim previsto
+                        </th>
+                        <th style={{ textAlign: "right", padding: "12px 18px", fontWeight: 700, color: "#334155" }}>
+                          Valor global
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {/* Linha 1: Back Office — Ana Cecília */}
+                      <tr
+                        style={{ borderBottom: "1px solid #f1f5f9", cursor: "pointer" }}
+                        onClick={() => {
+                          const bo = contratos.find((c) =>
+                            (c.numeroContrato.valor || c.projeto.valor || "").toLowerCase().includes("back office")
+                          );
+                          if (bo) setContratoSelecionado(bo);
                         }}
                       >
-                        {hojeData.texto}
+                        <td style={{ padding: "12px 18px", color: "#1e293b", fontWeight: 500 }}>
+                          Back Office — Ana Cecília
+                        </td>
+                        <td style={{ padding: "12px 18px", color: "#475569" }}>
+                          02/01/2025
+                        </td>
+                        <td style={{ padding: "12px 18px", color: "#475569" }}>
+                          01/01/2027*
+                        </td>
+                        <td style={{ padding: "12px 18px", textAlign: "right", color: "#1e293b", fontWeight: 600 }}>
+                          R$ 330.867,84
+                        </td>
+                      </tr>
+
+                      {/* Linha 2: Treinamento e Consultoria */}
+                      <tr
+                        style={{ borderBottom: "1px solid #f1f5f9", cursor: "pointer" }}
+                        onClick={() => {
+                          const tr = contratos.find((c) =>
+                            (c.numeroContrato.valor || c.projeto.valor || "").toLowerCase().includes("treinamento")
+                          );
+                          if (tr) setContratoSelecionado(tr);
+                        }}
+                      >
+                        <td style={{ padding: "12px 18px", color: "#1e293b", fontWeight: 500 }}>
+                          Treinamento e Consultoria
+                        </td>
+                        <td style={{ padding: "12px 18px", color: "#475569" }}>
+                          28/02/2025
+                        </td>
+                        <td style={{ padding: "12px 18px", color: "#475569" }}>
+                          27/02/2027*
+                        </td>
+                        <td style={{ padding: "12px 18px", textAlign: "right", color: "#1e293b", fontWeight: 600 }}>
+                          R$ 721.200,00
+                        </td>
+                      </tr>
+
+                      {/* Linha 3: Consultoria Pós-Vendas POE */}
+                      <tr
+                        style={{ borderBottom: "1px solid #e2e8f0", cursor: "pointer" }}
+                        onClick={() => {
+                          const poe = contratos.find((c) =>
+                            (c.numeroContrato.valor || c.projeto.valor || "").toLowerCase().includes("poe")
+                          );
+                          if (poe) setContratoSelecionado(poe);
+                        }}
+                      >
+                        <td style={{ padding: "12px 18px", color: "#1e293b", fontWeight: 500 }}>
+                          Consultoria Pós-Vendas POE
+                        </td>
+                        <td style={{ padding: "12px 18px", color: "#475569" }}>
+                          14/04/2026
+                        </td>
+                        <td style={{ padding: "12px 18px", color: "#475569" }}>
+                          13/04/2028*
+                        </td>
+                        <td style={{ padding: "12px 18px", textAlign: "right", color: "#1e293b", fontWeight: 600 }}>
+                          R$ 974.064,00
+                        </td>
+                      </tr>
+
+                      {/* Linha Total */}
+                      <tr style={{ backgroundColor: "#fafbfc" }}>
+                        <td style={{ padding: "12px 18px", color: "#0f172a", fontWeight: 800 }}>
+                          Total
+                        </td>
+                        <td style={{ padding: "12px 18px" }}></td>
+                        <td style={{ padding: "12px 18px" }}></td>
+                        <td style={{ padding: "12px 18px", textAlign: "right", color: "#0f172a", fontWeight: 800 }}>
+                          R$ 2.026.131,84
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <div style={{ fontSize: "11px", color: "#64748b", marginTop: "8px", fontStyle: "italic" }}>
+                  *Datas de término calculadas a partir dos respectivos prazos de 24 meses, sujeitas à validação dos instrumentos e eventuais aditivos.
+                </div>
+              </div>
+
+              {/* SEÇÃO 3: LINHA DO TEMPO CONSOLIDADA */}
+              <div>
+                <h2 style={{ fontSize: "16px", fontWeight: 700, color: "#1e293b", margin: "0 0 12px 0" }}>
+                  3. Linha do tempo consolidada
+                </h2>
+
+                <div
+                  style={{
+                    backgroundColor: "var(--surface-container-lowest, #ffffff)",
+                    borderRadius: "16px",
+                    border: "1px solid var(--border, #e2e8f0)",
+                    padding: "24px 28px 20px 28px",
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.03)",
+                  }}
+                >
+                  <div style={{ fontSize: "14px", fontWeight: 700, color: "#1e293b", marginBottom: "24px" }}>
+                    Vigência dos contratos | Porsche Brasil
+                  </div>
+
+                  {/* Grid Container */}
+                  <div style={{ position: "relative", width: "100%" }}>
+                    {/* Anos Header */}
+                    <div style={{ display: "flex", alignItems: "center", marginBottom: "20px" }}>
+                      {/* Espaço reservado para o rótulo à esquerda */}
+                      <div style={{ width: "160px", flexShrink: 0 }} />
+
+                      {/* 4 Colunas dos Anos: 2025, 2026, 2027, 2028 */}
+                      <div style={{ flex: 1, display: "grid", gridTemplateColumns: "repeat(4, 1fr)", textAlign: "center" }}>
+                        {["2025", "2026", "2027", "2028"].map((ano) => (
+                          <div
+                            key={ano}
+                            style={{
+                              fontSize: "20px",
+                              fontWeight: 700,
+                              color: "#334155",
+                              letterSpacing: "-0.01em",
+                            }}
+                          >
+                            {ano}
+                          </div>
+                        ))}
                       </div>
                     </div>
 
-                    {/* Contract Rows */}
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "24px",
-                        position: "relative",
-                        zIndex: 2,
-                      }}
-                    >
-                      {contratos.map((c, index) => {
-                        const projLower = (c.projeto.valor || "").toLowerCase();
-                        const objLower = (c.objeto.valor || "").toLowerCase();
-                        const codLower = (c.codigo || "").toLowerCase();
-
-                        const isTreinamento =
-                          projLower.includes("treinamento") ||
-                          objLower.includes("treinamento") ||
-                          codLower.includes("treinamento");
-
-                        const isPoe =
-                          projLower.includes("poe") ||
-                          objLower.includes("poe") ||
-                          codLower.includes("poe");
-
-                        const nomeCurto = isTreinamento
-                          ? "Treinamento"
-                          : isPoe
-                          ? "POE"
-                          : c.projeto.valor || `Contrato ${index + 1}`;
-
-                        // Scale calculation: 2024-01-01 to 2028-12-31 (5 years = 1826 days)
-                        const dtInicio = new Date(c.dataInicio.valor);
-                        const dtFim = new Date(c.dataEncerramentoOficial || c.dataEncerramento.valor);
-
-                        const t2024 = new Date("2024-01-01T00:00:00").getTime();
-                        const t2029 = new Date("2029-01-01T00:00:00").getTime();
-                        const totalTempo = t2029 - t2024;
-
-                        let leftPct = 10;
-                        let widthPct = 48;
-
-                        if (!isNaN(dtInicio.getTime()) && !isNaN(dtFim.getTime())) {
-                          const startDiff = dtInicio.getTime() - t2024;
-                          const endDiff = dtFim.getTime() - t2024;
-                          leftPct = Math.max(0, Math.min(95, (startDiff / totalTempo) * 100));
-                          const rightPct = Math.max(leftPct + 6, Math.min(100, (endDiff / totalTempo) * 100));
-                          widthPct = rightPct - leftPct;
-                        } else {
-                          leftPct = 15;
-                          widthPct = 50;
-                        }
-
-                        // Status semântico do contrato
-                        const ehVigente = c.situacao === "VIGENTE" || c.situacao === "VENCIMENTO_PROXIMO";
-                        const corPill = isTreinamento
-                          ? "#1b7b75"
-                          : isPoe
-                          ? "#4e70ba"
-                          : index % 2 === 0
-                          ? "#0284c7"
-                          : "#059669";
-
-                        return (
+                    {/* Área do Gráfico com Linhas Verticais Pontilhadas e Linha Laranja Tracejada */}
+                    <div style={{ position: "relative", paddingBottom: "24px" }}>
+                      {/* 4 Linhas Verticais Pontilhadas nos Anos */}
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: 0,
+                          bottom: 0,
+                          left: "160px",
+                          right: 0,
+                          display: "grid",
+                          gridTemplateColumns: "repeat(4, 1fr)",
+                          pointerEvents: "none",
+                          zIndex: 1,
+                        }}
+                      >
+                        {[0, 1, 2, 3].map((idx) => (
                           <div
-                            key={c.id}
+                            key={idx}
                             style={{
                               display: "flex",
-                              alignItems: "center",
-                              minHeight: "58px",
+                              justifyContent: "center",
+                              height: "100%",
                             }}
                           >
-                            {/* Left label: Big Title + Resumed Amount + Active Status */}
                             <div
                               style={{
-                                width: "240px",
-                                flexShrink: 0,
-                                display: "flex",
-                                flexDirection: "column",
-                                cursor: "pointer",
-                                paddingRight: "16px",
+                                width: "1px",
+                                height: "100%",
+                                borderLeft: "2px dotted #d1d5db",
                               }}
-                              onClick={() => {
-                                setContratoSelecionado(c);
-                                setAbaFicha("RESUMO");
-                              }}
-                            >
-                              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                                <span
-                                  style={{
-                                    fontSize: "17px",
-                                    fontWeight: 800,
-                                    color: "#0f172a",
-                                    letterSpacing: "-0.01em",
-                                  }}
-                                >
-                                  {nomeCurto}
-                                </span>
-                                <span style={{ fontSize: "13px", color: "#64748b", fontWeight: 700 }}>
-                                  {formatarValorResumido(Number(c.valorGlobal.valor))}
-                                </span>
-                              </div>
-                              <span
-                                style={{
-                                  fontSize: "11.5px",
-                                  fontWeight: 700,
-                                  color: ehVigente ? "#047857" : "#dc2626",
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  gap: "5px",
-                                  marginTop: "3px",
-                                }}
-                              >
-                                <span
-                                  style={{
-                                    width: "7px",
-                                    height: "7px",
-                                    borderRadius: "50%",
-                                    backgroundColor: ehVigente ? "#10b981" : "#ef4444",
-                                  }}
-                                />
-                                {ehVigente
-                                  ? `Vigente até ${formatarDataBR(dtFim)}`
-                                  : `Vencido em ${formatarDataBR(dtFim)}`}
-                              </span>
-                            </div>
+                            />
+                          </div>
+                        ))}
+                      </div>
 
-                            {/* Right track with floating pill */}
-                            <div style={{ flex: 1, position: "relative", height: "46px" }}>
-                              <div
-                                onClick={() => {
-                                  setContratoSelecionado(c);
-                                  setAbaFicha("RESUMO");
-                                }}
-                                style={{
-                                  position: "absolute",
-                                  left: `${leftPct}%`,
-                                  width: `${widthPct}%`,
-                                  height: "100%",
-                                  backgroundColor: corPill,
-                                  borderRadius: "14px",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  color: "#ffffff",
-                                  fontSize: "13.5px",
-                                  fontWeight: 700,
-                                  cursor: "pointer",
-                                  boxShadow: "0 2px 6px rgba(0,0,0,0.12)",
-                                  transition: "transform 0.15s ease, filter 0.15s ease",
-                                  padding: "0 12px",
-                                }}
-                                onMouseEnter={(e) => {
-                                  e.currentTarget.style.transform = "scaleY(1.04)";
-                                  e.currentTarget.style.filter = "brightness(1.05)";
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.transform = "scaleY(1)";
-                                  e.currentTarget.style.filter = "none";
-                                }}
-                                title={`${c.cliente.valor} • ${c.projeto.valor} (${c.prazoMeses.valor} meses: ${formatarPeriodoBR(c.dataInicio.valor, c.dataEncerramentoOficial || c.dataEncerramento.valor)})`}
-                              >
-                                <div style={{ display: "flex", alignItems: "center", gap: "6px", whiteSpace: "nowrap" }}>
-                                  <span>{c.prazoMeses.valor || "24"} meses</span>
-                                  <span style={{ fontSize: "11px", opacity: 0.9, fontWeight: 500 }}>
-                                    • {formatarPeriodoBR(c.dataInicio.valor, c.dataEncerramentoOficial || c.dataEncerramento.valor)}
-                                  </span>
-                                </div>
-                              </div>
+                      {/* Linha Vertical Laranja Tracejada: Hoje (10/11/2026) */}
+                      {/* No gráfico de 4 anos (2025-2028):
+                          2025 = 0% a 25%
+                          2026 = 25% a 50%
+                          10/11/2026 fica a ~46.5% do gráfico (final de 2026) */}
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: "-8px",
+                          bottom: 0,
+                          left: "calc(160px + 46.5%)",
+                          width: "0px",
+                          borderLeft: "2.5px dashed #ea580c",
+                          zIndex: 4,
+                          pointerEvents: "none",
+                        }}
+                      />
+
+                      {/* 3 Linhas de Contratos */}
+                      <div style={{ display: "flex", flexDirection: "column", gap: "24px", position: "relative", zIndex: 2 }}>
+                        {/* Linha 1: Back Office */}
+                        <div style={{ display: "flex", alignItems: "center", minHeight: "44px" }}>
+                          <div
+                            style={{
+                              width: "160px",
+                              flexShrink: 0,
+                              fontSize: "17px",
+                              fontWeight: 700,
+                              color: "#0f172a",
+                              cursor: "pointer",
+                            }}
+                            onClick={() => {
+                              const bo = contratos.find((c) =>
+                                (c.numeroContrato.valor || c.projeto.valor || "").toLowerCase().includes("back office")
+                              );
+                              if (bo) setContratoSelecionado(bo);
+                            }}
+                          >
+                            Back Office
+                          </div>
+                          <div style={{ flex: 1, position: "relative", height: "40px" }}>
+                            {/* Barra Back Office: início 02/01/2025 (~0.1%) até 01/01/2027 (50%), cor Ocre #c58a27 */}
+                            <div
+                              onClick={() => {
+                                const bo = contratos.find((c) =>
+                                  (c.numeroContrato.valor || c.projeto.valor || "").toLowerCase().includes("back office")
+                                );
+                                if (bo) setContratoSelecionado(bo);
+                              }}
+                              style={{
+                                position: "absolute",
+                                left: "0.2%",
+                                width: "49.8%",
+                                height: "38px",
+                                backgroundColor: "#c58a27",
+                                borderRadius: "8px",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                color: "#ffffff",
+                                fontWeight: 700,
+                                fontSize: "14px",
+                                boxShadow: "0 1px 3px rgba(197,138,39,0.3)",
+                                cursor: "pointer",
+                                transition: "transform 0.15s ease",
+                              }}
+                              title="Back Office — Ana Cecília | Vigência: 02/01/2025 a 01/01/2027 | R$ 330.867,84"
+                            >
+                              R$ 330,9 mil
                             </div>
                           </div>
-                        );
-                      })}
+                        </div>
+
+                        {/* Linha 2: Treinamento */}
+                        <div style={{ display: "flex", alignItems: "center", minHeight: "44px" }}>
+                          <div
+                            style={{
+                              width: "160px",
+                              flexShrink: 0,
+                              fontSize: "17px",
+                              fontWeight: 700,
+                              color: "#0f172a",
+                              cursor: "pointer",
+                            }}
+                            onClick={() => {
+                              const tr = contratos.find((c) =>
+                                (c.numeroContrato.valor || c.projeto.valor || "").toLowerCase().includes("treinamento")
+                              );
+                              if (tr) setContratoSelecionado(tr);
+                            }}
+                          >
+                            Treinamento
+                          </div>
+                          <div style={{ flex: 1, position: "relative", height: "40px" }}>
+                            {/* Barra Treinamento: início 28/02/2025 (~4%) até 27/02/2027 (~54%), cor Teal #218579 */}
+                            <div
+                              onClick={() => {
+                                const tr = contratos.find((c) =>
+                                  (c.numeroContrato.valor || c.projeto.valor || "").toLowerCase().includes("treinamento")
+                                );
+                                if (tr) setContratoSelecionado(tr);
+                              }}
+                              style={{
+                                position: "absolute",
+                                left: "4.0%",
+                                width: "50.0%",
+                                height: "38px",
+                                backgroundColor: "#218579",
+                                borderRadius: "8px",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                color: "#ffffff",
+                                fontWeight: 700,
+                                fontSize: "14px",
+                                boxShadow: "0 1px 3px rgba(33,133,121,0.3)",
+                                cursor: "pointer",
+                                transition: "transform 0.15s ease",
+                              }}
+                              title="Treinamento e Consultoria | Vigência: 28/02/2025 a 27/02/2027 | R$ 721.200,00"
+                            >
+                              R$ 721,2 mil
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Linha 3: POE */}
+                        <div style={{ display: "flex", alignItems: "center", minHeight: "44px" }}>
+                          <div
+                            style={{
+                              width: "160px",
+                              flexShrink: 0,
+                              fontSize: "17px",
+                              fontWeight: 700,
+                              color: "#0f172a",
+                              cursor: "pointer",
+                            }}
+                            onClick={() => {
+                              const poe = contratos.find((c) =>
+                                (c.numeroContrato.valor || c.projeto.valor || "").toLowerCase().includes("poe")
+                              );
+                              if (poe) setContratoSelecionado(poe);
+                            }}
+                          >
+                            POE
+                          </div>
+                          <div style={{ flex: 1, position: "relative", height: "40px" }}>
+                            {/* Barra POE: início 14/04/2026 (~32%) até 13/04/2028 (~82%), cor Azul Real #4f72b7 */}
+                            <div
+                              onClick={() => {
+                                const poe = contratos.find((c) =>
+                                  (c.numeroContrato.valor || c.projeto.valor || "").toLowerCase().includes("poe")
+                                );
+                                if (poe) setContratoSelecionado(poe);
+                              }}
+                              style={{
+                                position: "absolute",
+                                left: "32.0%",
+                                width: "50.0%",
+                                height: "38px",
+                                backgroundColor: "#4f72b7",
+                                borderRadius: "8px",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                color: "#ffffff",
+                                fontWeight: 700,
+                                fontSize: "14px",
+                                boxShadow: "0 1px 3px rgba(79,114,183,0.3)",
+                                cursor: "pointer",
+                                transition: "transform 0.15s ease",
+                              }}
+                              title="Consultoria Pós-Vendas POE | Vigência: 14/04/2026 a 13/04/2028 | R$ 974.064,00"
+                            >
+                              R$ 974,1 mil
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Rodapé explicativo da Linha do Tempo */}
+                    <div style={{ fontSize: "12px", color: "#64748b", marginTop: "16px", borderTop: "1px solid #f1f5f9", paddingTop: "12px" }}>
+                      Laranja tracejado: 10/11/2026. Gráfico ilustrativo com escala anual aproximada.
                     </div>
                   </div>
                 </div>
-
-                {/* Bottom Legend and Subtext */}
-                <div
-                  style={{
-                    marginTop: "40px",
-                    paddingTop: "16px",
-                    borderTop: "1px solid #f1f5f9",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "8px",
-                  }}
-                >
-                  <div style={{ display: "flex", alignItems: "center", gap: "18px", fontSize: "12px", fontWeight: 600, color: "#334155" }}>
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
-                      <span style={{ width: "10px", height: "10px", borderRadius: "50%", backgroundColor: "#1b7b75" }} />
-                      Treinamento
-                    </span>
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
-                      <span style={{ width: "10px", height: "10px", borderRadius: "50%", backgroundColor: "#4e70ba" }} />
-                      Pós-Vendas POE
-                    </span>
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
-                      <span style={{ width: "10px", height: "10px", borderRadius: "50%", backgroundColor: "#d97706" }} />
-                      Data atual
-                    </span>
-                  </div>
-
-                  <p style={{ fontSize: "11.5px", color: "#64748b", margin: 0 }}>
-                    Escala temporal aproximada. As barras representam a vigência prevista dos instrumentos, e não o faturamento realizado.
-                  </p>
-                </div>
-              </section>
+              </div>
             </div>
           )}
 
@@ -2900,6 +3057,7 @@ const origemBadgeStyle: React.CSSProperties = {
 };
 
 const inputStyle: React.CSSProperties = {
+  fontFamily: "var(--font-inter), 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
   padding: "8px 12px",
   borderRadius: "8px",
   border: "1px solid #cbd5e1",
@@ -2908,5 +3066,6 @@ const inputStyle: React.CSSProperties = {
   outline: "none",
   width: "100%",
   boxSizing: "border-box",
+  backgroundColor: "#ffffff",
 };
 

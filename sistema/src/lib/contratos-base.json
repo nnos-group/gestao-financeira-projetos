@@ -3,24 +3,24 @@
     "id": "CTR-2026-PGK6M",
     "codigo": "CTR-2026-PGK6M",
     "numeroContrato": {
-      "valor": "PO 1008715596",
+      "valor": "Back Office — Ana Cecília",
       "paginaOrigem": 1,
-      "clausulaOrigem": "Pedido de Compras",
-      "confianca": 0.9,
+      "clausulaOrigem": "Cabeçalho",
+      "confianca": 0.95,
       "naoLocalizado": false
     },
     "cliente": {
       "valor": "Porsche Brasil",
       "paginaOrigem": 1,
       "clausulaOrigem": "Qualificação das Partes",
-      "confianca": 0.9,
+      "confianca": 0.95,
       "naoLocalizado": false
     },
     "razaoSocialContratada": {
       "valor": "NNÓS Consultoria e Treinamento Ltda",
       "paginaOrigem": 1,
       "clausulaOrigem": "Qualificação das Partes",
-      "confianca": 0.9,
+      "confianca": 0.95,
       "naoLocalizado": false
     },
     "cnpjCliente": {
@@ -34,73 +34,73 @@
       "valor": "34.892.115/0001-44",
       "paginaOrigem": 1,
       "clausulaOrigem": "Qualificação das Partes",
-      "confianca": 0.9,
+      "confianca": 0.95,
       "naoLocalizado": false
     },
     "projeto": {
-      "valor": "Consultoria Pós-Vendas POE Porsche Brasil",
+      "valor": "Back Office — Ana Cecília",
       "paginaOrigem": 1,
       "clausulaOrigem": "Cláusula 1ª",
-      "confianca": 0.9,
+      "confianca": 0.95,
       "naoLocalizado": false
     },
     "objeto": {
-      "valor": "Prestação de serviços de consultoria, treinamento e gestão corporativa.",
+      "valor": "Prestação de serviços de consultoria e suporte corporativo de Back Office.",
       "paginaOrigem": 1,
       "clausulaOrigem": "Cláusula 1ª",
-      "confianca": 0.9,
+      "confianca": 0.95,
       "naoLocalizado": false
     },
     "responsavelInterno": {
       "valor": "Leonardo Campos",
       "paginaOrigem": 1,
       "clausulaOrigem": "Gestão do Contrato",
-      "confianca": 0.9,
+      "confianca": 0.95,
       "naoLocalizado": false
     },
     "responsavelCliente": {
-      "valor": "Não localizado no contrato",
+      "valor": "Ana Cecília",
       "paginaOrigem": 1,
       "clausulaOrigem": "Gestão do Contrato",
-      "confianca": 0,
-      "naoLocalizado": true
+      "confianca": 0.9,
+      "naoLocalizado": false
     },
     "tipoContrato": {
       "valor": "Contrato de Prestação de Serviços - Mensalidade Fixa",
       "paginaOrigem": 1,
       "clausulaOrigem": "Epígrafe",
-      "confianca": 0.9,
+      "confianca": 0.95,
       "naoLocalizado": false
     },
     "situacaoAssinatura": {
       "valor": "ASSINADO",
       "paginaOrigem": 1,
       "clausulaOrigem": "Assinaturas",
-      "confianca": 0.9,
+      "confianca": 0.95,
       "naoLocalizado": false
     },
     "dataAssinatura": {
-      "valor": "2024-12-04",
+      "valor": "2025-01-02",
       "paginaOrigem": 1,
       "clausulaOrigem": "Datação",
-      "confianca": 0.9,
+      "confianca": 0.95,
       "naoLocalizado": false
     },
     "dataInicio": {
-      "valor": "2024-11-12",
+      "valor": "2025-01-02",
       "paginaOrigem": 1,
       "clausulaOrigem": "Vigência Contratual",
-      "confianca": 0.9,
+      "confianca": 0.95,
       "naoLocalizado": false
     },
     "dataEncerramento": {
-      "valor": "2026-11-12",
+      "valor": "2027-01-01",
       "paginaOrigem": 1,
       "clausulaOrigem": "Vigência Contratual",
-      "confianca": 0.9,
+      "confianca": 0.95,
       "naoLocalizado": false
     },
-    "dataEncerramentoOficial": "2026-11-12",
+    "dataEncerramentoOficial": "2027-01-01",
     "prazoMeses": {
       "valor": 24,
       "paginaOrigem": 1,
