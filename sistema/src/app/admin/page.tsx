@@ -695,7 +695,7 @@ export default function AdminPage() {
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
-                  gap: "6px",
+                  gap: "7px",
                   padding: "8px 14px",
                   borderRadius: "8px",
                   border: "none",
@@ -706,8 +706,33 @@ export default function AdminPage() {
                   color: abaAtiva === "HOMOLOGACAO" ? "#ffffff" : "var(--on-surface-variant)",
                 }}
               >
-                <span className="material-symbols-outlined" style={{ fontSize: "17px" }}>forward_to_inbox</span>
+                <span className="material-symbols-outlined" style={{ fontSize: "17px", color: abaAtiva === "HOMOLOGACAO" ? "#93c5fd" : undefined }}>
+                  forward_to_inbox
+                </span>
                 <span>6. Homologação &amp; Convites</span>
+                <span style={{ position: "relative", display: "inline-flex", width: "8px", height: "8px" }}>
+                  <span
+                    style={{
+                      position: "absolute",
+                      width: "100%",
+                      height: "100%",
+                      borderRadius: "50%",
+                      backgroundColor: "#34d399",
+                      opacity: 0.75,
+                      animation: "ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite",
+                    }}
+                  />
+                  <span
+                    style={{
+                      position: "relative",
+                      display: "inline-flex",
+                      width: "8px",
+                      height: "8px",
+                      borderRadius: "50%",
+                      backgroundColor: "#10b981",
+                    }}
+                  />
+                </span>
               </button>
             </div>
 
