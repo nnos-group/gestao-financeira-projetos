@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import AjudaCentralModal from "@/components/AjudaCentralModal";
 
 interface BotaoAjudaCentralProps {
@@ -12,8 +13,15 @@ export default function BotaoAjudaCentral({
   variante = "header",
   abaPadrao = "GUIA",
 }: BotaoAjudaCentralProps) {
+  const pathname = usePathname();
   const [modalAberto, setModalAberto] = useState(false);
   const [abaSelecionada, setAbaSelecionada] = useState<"GUIA" | "IA">(abaPadrao);
+  const [visivel, setVisivel] = useState(true);
+
+  // Quando o usuário muda de tela (rota/pathname), o botão reaparece automaticamente
+  useEffect(() => {
+    setVisivel(true);
+  }, [pathname]);
 
   const abrirModal = (aba: "GUIA" | "IA" = "GUIA") => {
     setAbaSelecionada(aba);
@@ -21,6 +29,8 @@ export default function BotaoAjudaCentral({
   };
 
   if (variante === "flutuante") {
+    if (!visivel) return null;
+
     return (
       <>
         <div
@@ -31,7 +41,7 @@ export default function BotaoAjudaCentral({
             zIndex: 9998,
             display: "flex",
             alignItems: "center",
-            gap: "8px",
+            gap: "6px",
           }}
         >
           <button
@@ -83,6 +93,36 @@ export default function BotaoAjudaCentral({
               />
             </div>
             <span>Ajuda & IA</span>
+          </button>
+
+          {/* Botão para fechar/ocultar nesta tela (reaparece ao mudar de tela) */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setVisivel(false);
+            }}
+            title="Ocultar botão nesta tela (reaparece ao navegar para outra página)"
+            style={{
+              width: "26px",
+              height: "26px",
+              borderRadius: "50%",
+              backgroundColor: "#0f172a",
+              color: "#ffffff",
+              border: "1px solid rgba(255, 255, 255, 0.35)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+              transition: "transform 0.15s ease, background-color 0.15s ease",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#dc2626")}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#0f172a")}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>
+              close
+            </span>
           </button>
         </div>
 

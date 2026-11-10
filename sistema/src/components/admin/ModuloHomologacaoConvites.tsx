@@ -392,55 +392,175 @@ NNÓS Consultoria e Treinamento`;
   };
 
   return (
-    <div className="space-y-6" style={{ fontFamily: '"Plus Jakarta Sans", Inter, sans-serif' }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "20px", width: "100%", paddingBottom: "70px" }}>
       {/* =================================================================== */}
-      {/* 1. CARDS DE MÉTRICAS KPI                                            */}
+      {/* 1. CARDS DE MÉTRICAS KPI (ESTILOS PUROS EM LINHA)                   */}
       {/* =================================================================== */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <section
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))",
+          gap: "16px",
+          width: "100%",
+        }}
+      >
         {/* Metric 1: Total na Base */}
-        <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs flex items-center justify-between">
+        <div
+          style={{
+            backgroundColor: "var(--surface-container-lowest, #ffffff)",
+            borderRadius: "16px",
+            padding: "20px",
+            border: "1px solid var(--border, #e2e8f0)",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
           <div>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Total na Base</span>
-            <div className="text-3xl font-extrabold text-slate-900 mt-1">{contadores.total}</div>
-            <span className="text-xs font-medium text-slate-500 mt-0.5 inline-block">Usuários cadastrados</span>
+            <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#94a3b8" }}>
+              Total na Base
+            </span>
+            <div style={{ fontSize: "28px", fontWeight: 800, color: "#0f172a", marginTop: "4px" }}>
+              {contadores.total}
+            </div>
+            <span style={{ fontSize: "12px", color: "#64748b", marginTop: "2px", display: "inline-block" }}>
+              Usuários cadastrados
+            </span>
           </div>
-          <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-2xl shadow-xs">
+          <div
+            style={{
+              width: "48px",
+              height: "48px",
+              borderRadius: "14px",
+              backgroundColor: "#eff6ff",
+              color: "#2563eb",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
             <span className="material-symbols-outlined" style={{ fontSize: "24px" }}>group</span>
           </div>
         </div>
 
-        {/* Metric 2: Pendentes de Envio (Destaque Âmbar) */}
-        <div className="bg-white rounded-2xl p-5 border-l-4 border-amber-500 border-y border-r border-slate-200/80 shadow-xs flex items-center justify-between">
+        {/* Metric 2: Pendentes de Envio (Destaque Âmbar com Barra Lateral) */}
+        <div
+          style={{
+            backgroundColor: "var(--surface-container-lowest, #ffffff)",
+            borderRadius: "16px",
+            padding: "20px",
+            border: "1px solid var(--border, #e2e8f0)",
+            borderLeft: "4px solid #f59e0b",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
           <div>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-amber-600">Pendentes de Envio</span>
-            <div className="text-3xl font-extrabold text-amber-600 mt-1">{contadores.pendentes}</div>
-            <span className="text-xs font-medium text-slate-500 mt-0.5 inline-block">Aguardando disparo oficial</span>
+            <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#d97706" }}>
+              Pendentes de Envio
+            </span>
+            <div style={{ fontSize: "28px", fontWeight: 800, color: "#d97706", marginTop: "4px" }}>
+              {contadores.pendentes}
+            </div>
+            <span style={{ fontSize: "12px", color: "#64748b", marginTop: "2px", display: "inline-block" }}>
+              Aguardando disparo oficial
+            </span>
           </div>
-          <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-2xl">
+          <div
+            style={{
+              width: "48px",
+              height: "48px",
+              borderRadius: "14px",
+              backgroundColor: "#fffbeb",
+              color: "#d97706",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
             <span className="material-symbols-outlined" style={{ fontSize: "24px" }}>mail</span>
           </div>
         </div>
 
         {/* Metric 3: Convites Disparados */}
-        <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs flex items-center justify-between">
+        <div
+          style={{
+            backgroundColor: "var(--surface-container-lowest, #ffffff)",
+            borderRadius: "16px",
+            padding: "20px",
+            border: "1px solid var(--border, #e2e8f0)",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
           <div>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Convites Disparados</span>
-            <div className="text-3xl font-extrabold text-slate-700 mt-1">{contadores.enviados}</div>
-            <span className="text-xs font-medium text-slate-500 mt-0.5 inline-block">Aguardando 1º acesso</span>
+            <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#94a3b8" }}>
+              Convites Disparados
+            </span>
+            <div style={{ fontSize: "28px", fontWeight: 800, color: "#334155", marginTop: "4px" }}>
+              {contadores.enviados}
+            </div>
+            <span style={{ fontSize: "12px", color: "#64748b", marginTop: "2px", display: "inline-block" }}>
+              Aguardando 1º acesso
+            </span>
           </div>
-          <div className="w-12 h-12 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center text-2xl">
+          <div
+            style={{
+              width: "48px",
+              height: "48px",
+              borderRadius: "14px",
+              backgroundColor: "#f1f5f9",
+              color: "#64748b",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
             <span className="material-symbols-outlined" style={{ fontSize: "24px" }}>send</span>
           </div>
         </div>
 
         {/* Metric 4: Homologados */}
-        <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs flex items-center justify-between">
+        <div
+          style={{
+            backgroundColor: "var(--surface-container-lowest, #ffffff)",
+            borderRadius: "16px",
+            padding: "20px",
+            border: "1px solid var(--border, #e2e8f0)",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
           <div>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-600">Homologados</span>
-            <div className="text-3xl font-extrabold text-emerald-600 mt-1">{contadores.homologados}</div>
-            <span className="text-xs font-medium text-slate-500 mt-0.5 inline-block">Validação de perfil concluída</span>
+            <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#059669" }}>
+              Homologados
+            </span>
+            <div style={{ fontSize: "28px", fontWeight: 800, color: "#059669", marginTop: "4px" }}>
+              {contadores.homologados}
+            </div>
+            <span style={{ fontSize: "12px", color: "#64748b", marginTop: "2px", display: "inline-block" }}>
+              Validação de perfil concluída
+            </span>
           </div>
-          <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-2xl">
+          <div
+            style={{
+              width: "48px",
+              height: "48px",
+              borderRadius: "14px",
+              backgroundColor: "#ecfdf5",
+              color: "#059669",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
             <span className="material-symbols-outlined" style={{ fontSize: "24px" }}>verified</span>
           </div>
         </div>
@@ -449,170 +569,284 @@ NNÓS Consultoria e Treinamento`;
       {/* =================================================================== */}
       {/* 2. BANNER DE HOMOLOGAÇÃO ATIVA                                      */}
       {/* =================================================================== */}
-      <section className="bg-gradient-to-r from-blue-50/90 via-sky-50/50 to-white rounded-2xl border border-blue-200/80 p-4 sm:p-5 shadow-xs">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-start sm:items-center gap-3.5">
-            <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-600/20">
-              <span className="material-symbols-outlined" style={{ fontSize: "22px" }}>rocket_launch</span>
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h4 className="text-sm font-bold text-slate-900">Fase de Homologação Ativa • Exercício 2026</h4>
-                <span className="px-2 py-0.5 bg-blue-100 text-blue-800 text-[10px] font-extrabold rounded-md uppercase tracking-wider">
-                  Homologação Oficial
-                </span>
-              </div>
-              <p className="text-xs text-slate-600 mt-0.5">
-                Link de acesso ao ambiente:{" "}
-                <a
-                  className="font-bold text-blue-700 hover:underline"
-                  href={URL_OFICIAL_LOGIN}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {URL_OFICIAL_LOGIN}
-                </a>
-                <span className="hidden sm:inline mx-2 text-slate-300">|</span>
-                <span className="block sm:inline mt-1 sm:mt-0 text-slate-500">
-                  Canal de suporte &amp; apontamentos:{" "}
-                  <strong className="text-slate-700">Microsoft Teams da Equipe de Gestão NNÓS</strong>
-                </span>
-              </p>
-            </div>
+      <section
+        style={{
+          background: "linear-gradient(to right, #eff6ff 0%, #f0f9ff 50%, #ffffff 100%)",
+          borderRadius: "16px",
+          border: "1px solid #bfdbfe",
+          padding: "18px 22px",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.03)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: "16px",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "14px", flex: 1, minWidth: "280px" }}>
+          <div
+            style={{
+              width: "42px",
+              height: "42px",
+              borderRadius: "12px",
+              backgroundColor: "#2563eb",
+              color: "#ffffff",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+              boxShadow: "0 4px 12px rgba(37,99,235,0.25)",
+            }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: "22px" }}>rocket_launch</span>
           </div>
-          <div className="flex items-center gap-2">
-            <a
-              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-all shadow-sm shadow-blue-600/20"
-              href={URL_OFICIAL_LOGIN}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <span>Testar Link Oficial</span>
-              <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>open_in_new</span>
-            </a>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+              <h4 style={{ margin: 0, fontSize: "14px", fontWeight: 800, color: "#0f172a" }}>
+                Fase de Homologação Ativa • Exercício 2026
+              </h4>
+              <span
+                style={{
+                  fontSize: "10px",
+                  fontWeight: 800,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                  backgroundColor: "#dbeafe",
+                  color: "#1e40af",
+                  padding: "2px 8px",
+                  borderRadius: "6px",
+                }}
+              >
+                Homologação Oficial
+              </span>
+            </div>
+            <p style={{ margin: "4px 0 0 0", fontSize: "12px", color: "#475569", lineHeight: 1.5 }}>
+              Link oficial de acesso (Login):{" "}
+              <a
+                href={URL_OFICIAL_LOGIN}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ fontWeight: 700, color: "#1d4ed8", textDecoration: "none" }}
+              >
+                {URL_OFICIAL_LOGIN}
+              </a>{" "}
+              <span style={{ margin: "0 8px", color: "#cbd5e1" }}>|</span>{" "}
+              Canal de suporte e apontamentos:{" "}
+              <strong style={{ color: "#1e293b" }}>Microsoft Teams da Equipe de Gestão NNÓS</strong>
+            </p>
           </div>
         </div>
+        <a
+          href={URL_OFICIAL_LOGIN}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "6px",
+            padding: "9px 16px",
+            borderRadius: "10px",
+            backgroundColor: "#2563eb",
+            color: "#ffffff",
+            fontSize: "12px",
+            fontWeight: 700,
+            textDecoration: "none",
+            boxShadow: "0 2px 8px rgba(37,99,235,0.25)",
+          }}
+        >
+          <span>Testar Link Oficial</span>
+          <span className="material-symbols-outlined" style={{ fontSize: "15px" }}>open_in_new</span>
+        </a>
       </section>
 
       {/* =================================================================== */}
       {/* 3. BARRA DE FILTROS & AÇÕES EM MASSA                                */}
       {/* =================================================================== */}
-      <section className="bg-white rounded-2xl border border-slate-200 p-3.5 shadow-xs">
-        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
-          {/* Campo de Busca */}
-          <div className="relative flex-1">
-            <span
-              className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
-              style={{ fontSize: "18px" }}
-            >
-              search
-            </span>
-            <input
-              type="text"
-              value={busca}
-              onChange={(e) => {
-                setBusca(e.target.value);
-                setPaginaAtual(1);
-              }}
-              placeholder="Buscar por nome, login ou e-mail..."
-              className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 focus:bg-white focus:ring-2 focus:ring-blue-900/20 focus:border-blue-900 transition-all outline-none"
-            />
-          </div>
+      <section
+        style={{
+          backgroundColor: "var(--surface-container-lowest, #ffffff)",
+          borderRadius: "16px",
+          border: "1px solid var(--border, #e2e8f0)",
+          padding: "14px 18px",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.03)",
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: "12px",
+        }}
+      >
+        {/* Campo de Busca */}
+        <div style={{ position: "relative", flex: 1, minWidth: "240px" }}>
+          <span
+            className="material-symbols-outlined"
+            style={{
+              position: "absolute",
+              left: "12px",
+              top: "50%",
+              transform: "translateY(-50%)",
+              color: "#94a3b8",
+              fontSize: "18px",
+              pointerEvents: "none",
+            }}
+          >
+            search
+          </span>
+          <input
+            type="text"
+            value={busca}
+            onChange={(e) => {
+              setBusca(e.target.value);
+              setPaginaAtual(1);
+            }}
+            placeholder="Buscar por nome, login ou e-mail..."
+            style={{
+              width: "100%",
+              padding: "8px 12px 8px 38px",
+              backgroundColor: "#f8fafc",
+              border: "1px solid var(--border, #e2e8f0)",
+              borderRadius: "10px",
+              fontSize: "12px",
+              fontWeight: 500,
+              color: "var(--on-surface, #0f172a)",
+              outline: "none",
+            }}
+          />
+        </div>
 
-          {/* Filtros em Dropdown & Ações */}
-          <div className="flex flex-wrap items-center gap-2.5">
-            <ModernDropdown
-              value={filtroGrupo}
-              onChange={(val) => {
-                setFiltroGrupo(String(val));
-                setPaginaAtual(1);
-              }}
-              options={OPCOES_FILTRO_GRUPO}
-              icon="star"
-              minWidth={280}
-              searchable={false}
-            />
+        {/* Filtros em Dropdown & Ações */}
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+          <ModernDropdown
+            value={filtroGrupo}
+            onChange={(val) => {
+              setFiltroGrupo(String(val));
+              setPaginaAtual(1);
+            }}
+            options={OPCOES_FILTRO_GRUPO}
+            icon="star"
+            minWidth={280}
+            searchable={false}
+          />
 
-            <ModernDropdown
-              value={filtroStatus}
-              onChange={(val) => {
-                setFiltroStatus(String(val));
-                setPaginaAtual(1);
-              }}
-              options={OPCOES_FILTRO_STATUS}
-              icon="filter_list"
-              minWidth={240}
-              searchable={false}
-            />
+          <ModernDropdown
+            value={filtroStatus}
+            onChange={(val) => {
+              setFiltroStatus(String(val));
+              setPaginaAtual(1);
+            }}
+            options={OPCOES_FILTRO_STATUS}
+            icon="filter_list"
+            minWidth={240}
+            searchable={false}
+          />
 
-            {/* Botão Ver Pendentes Prioritários */}
-            <button
-              type="button"
-              onClick={() => {
-                setFiltroGrupo("LIDERES_E_AGENCIA");
-                setFiltroStatus("PENDENTE");
-                setPaginaAtual(1);
-                onToast("Filtrando grupo prioritário pendente de envio!");
-              }}
-              className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-white rounded-xl transition-all shadow-sm cursor-pointer"
-              style={{ backgroundColor: "#0f2a4a" }}
-            >
-              <span className="material-symbols-outlined text-amber-400" style={{ fontSize: "17px" }}>bolt</span>
-              <span>Ver Pendentes Prioritários</span>
-            </button>
+          {/* Botão Ver Pendentes Prioritários */}
+          <button
+            type="button"
+            onClick={() => {
+              setFiltroGrupo("LIDERES_E_AGENCIA");
+              setFiltroStatus("PENDENTE");
+              setPaginaAtual(1);
+              onToast("Filtrando grupo prioritário pendente de envio!");
+            }}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: "8px 14px",
+              borderRadius: "10px",
+              backgroundColor: "#0f2a4a",
+              color: "#ffffff",
+              fontSize: "12px",
+              fontWeight: 700,
+              border: "none",
+              cursor: "pointer",
+              boxShadow: "0 1px 3px rgba(15,42,74,0.15)",
+            }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "#fbbf24" }}>bolt</span>
+            <span>Ver Pendentes Prioritários</span>
+          </button>
 
-            {/* Botão Disparar Selecionados em Massa */}
-            <button
-              type="button"
-              onClick={handleDispararSelecionados}
-              disabled={selecionados.length === 0}
-              className={`inline-flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition-colors cursor-pointer ${
-                selecionados.length > 0
-                  ? "text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300"
-                  : "text-slate-400 bg-slate-100 border border-slate-200 opacity-60 cursor-not-allowed"
-              }`}
-            >
-              <span className="material-symbols-outlined text-emerald-600" style={{ fontSize: "17px" }}>send</span>
-              <span>Disparar Selecionados ({selecionados.length})</span>
-            </button>
-          </div>
+          {/* Botão Disparar Selecionados em Massa */}
+          <button
+            type="button"
+            onClick={handleDispararSelecionados}
+            disabled={selecionados.length === 0}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: "8px 14px",
+              borderRadius: "10px",
+              backgroundColor: selecionados.length > 0 ? "#ecfdf5" : "#f1f5f9",
+              color: selecionados.length > 0 ? "#047857" : "#94a3b8",
+              border: selecionados.length > 0 ? "1px solid #a7f3d0" : "1px solid #e2e8f0",
+              fontSize: "12px",
+              fontWeight: 700,
+              cursor: selecionados.length > 0 ? "pointer" : "not-allowed",
+              transition: "all 0.15s ease",
+            }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>send</span>
+            <span>Disparar Selecionados ({selecionados.length})</span>
+          </button>
         </div>
       </section>
 
       {/* =================================================================== */}
       {/* 4. TABELA DE HOMOLOGAÇÃO DE USUÁRIOS                                */}
       {/* =================================================================== */}
-      <section className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-        <div className="overflow-x-auto custom-scroll">
-          <table className="w-full text-left border-collapse" id="homologation-table">
+      <section
+        style={{
+          backgroundColor: "var(--surface-container-lowest, #ffffff)",
+          borderRadius: "16px",
+          border: "1px solid var(--border, #e2e8f0)",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.03)",
+          overflow: "hidden",
+        }}
+      >
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "12.5px" }}>
             <thead>
-              <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                <th className="py-3.5 pl-6 pr-3 w-10" scope="col">
+              <tr
+                style={{
+                  backgroundColor: "#f8fafc",
+                  borderBottom: "1px solid var(--border, #e2e8f0)",
+                  color: "#64748b",
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                <th style={{ padding: "14px 16px", width: "40px", textAlign: "center" }}>
                   <input
                     type="checkbox"
                     checked={todosPaginaSelecionados}
                     onChange={toggleSelecionarTodosPagina}
-                    className="w-4 h-4 rounded text-blue-900 border-slate-300 focus:ring-blue-900 cursor-pointer"
+                    style={{ cursor: "pointer", width: "15px", height: "15px" }}
                     title="Selecionar todos da página atual"
                   />
                 </th>
-                <th className="py-3.5 px-4" scope="col">Usuário / Identificação</th>
-                <th className="py-3.5 px-4" scope="col">Perfil Vinculado</th>
-                <th className="py-3.5 px-4" scope="col">Status de Homologação</th>
-                <th className="py-3.5 px-4" scope="col">Envio do Convite</th>
-                <th className="py-3.5 pr-6 pl-4 text-right" scope="col">Ações</th>
+                <th style={{ padding: "14px 16px" }}>Usuário / Identificação</th>
+                <th style={{ padding: "14px 16px" }}>Perfil Vinculado</th>
+                <th style={{ padding: "14px 16px" }}>Status de Homologação</th>
+                <th style={{ padding: "14px 16px" }}>Envio do Convite</th>
+                <th style={{ padding: "14px 20px", textAlign: "right" }}>Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 text-xs">
+            <tbody>
               {carregando ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-500">
+                  <td colSpan={6} style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>
                     Carregando base de usuários...
                   </td>
                 </tr>
               ) : usuariosPaginados.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-500">
+                  <td colSpan={6} style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>
                     Nenhum usuário encontrado para os filtros selecionados.
                   </td>
                 </tr>
@@ -639,51 +873,90 @@ NNÓS Consultoria e Treinamento`;
                   return (
                     <tr
                       key={u.id}
-                      className={`hover:bg-slate-50/70 transition-colors ${
-                        isChecked ? "bg-blue-50/30" : ""
-                      }`}
+                      style={{
+                        borderBottom: "1px solid #f1f5f9",
+                        backgroundColor: isChecked ? "rgba(239, 246, 255, 0.4)" : "transparent",
+                        transition: "background-color 0.15s ease",
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isChecked) e.currentTarget.style.backgroundColor = "#f8fafc";
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isChecked) e.currentTarget.style.backgroundColor = "transparent";
+                      }}
                     >
                       {/* Checkbox de Seleção */}
-                      <td className="py-3.5 pl-6 pr-3">
+                      <td style={{ padding: "14px 16px", textAlign: "center" }}>
                         <input
                           type="checkbox"
                           checked={isChecked}
                           onChange={() => toggleSelecionar(u.id)}
-                          className="w-4 h-4 rounded text-blue-900 border-slate-300 focus:ring-blue-900 cursor-pointer"
+                          style={{ cursor: "pointer", width: "15px", height: "15px" }}
                         />
                       </td>
 
                       {/* Usuário / Identificação */}
-                      <td className="py-3.5 px-4">
-                        <div className="flex items-center gap-3">
+                      <td style={{ padding: "14px 16px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                           <div
-                            className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs ring-2 ring-slate-100 shrink-0"
-                            style={{ backgroundColor: avatarColor.bg, color: avatarColor.color }}
+                            style={{
+                              width: "36px",
+                              height: "36px",
+                              borderRadius: "50%",
+                              backgroundColor: avatarColor.bg,
+                              color: avatarColor.color,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontWeight: 700,
+                              fontSize: "12px",
+                              flexShrink: 0,
+                              boxShadow: "0 0 0 2px #f1f5f9",
+                            }}
                           >
                             {obterIniciais(u.nome)}
                           </div>
                           <div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-bold text-slate-900 text-sm block">{u.nome}</span>
+                            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                              <span style={{ fontWeight: 700, color: "#0f172a", fontSize: "13.5px" }}>
+                                {u.nome}
+                              </span>
                               {ehPrioritario && (
-                                <span className="px-1.5 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-bold rounded">
+                                <span
+                                  style={{
+                                    backgroundColor: "#fef3c7",
+                                    color: "#92400e",
+                                    fontSize: "10px",
+                                    fontWeight: 700,
+                                    padding: "2px 6px",
+                                    borderRadius: "4px",
+                                  }}
+                                >
                                   Prioritário
                                 </span>
                               )}
                             </div>
-                            <span className="text-slate-400 text-xs block">{u.email}</span>
+                            <span style={{ fontSize: "11.5px", color: "#64748b", marginTop: "1px", display: "block" }}>
+                              {u.email}
+                            </span>
                           </div>
                         </div>
                       </td>
 
                       {/* Perfil Vinculado */}
-                      <td className="py-3.5 px-4">
+                      <td style={{ padding: "14px 16px" }}>
                         <span
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold border"
                           style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "6px",
+                            padding: "4px 10px",
+                            borderRadius: "6px",
+                            fontSize: "11.5px",
+                            fontWeight: 700,
                             backgroundColor: perfilObj.bgCor,
                             color: perfilObj.cor,
-                            borderColor: `${perfilObj.cor}33`,
+                            border: `1px solid ${perfilObj.cor}33`,
                           }}
                         >
                           <span className="material-symbols-outlined" style={{ fontSize: "15px" }}>
@@ -694,44 +967,96 @@ NNÓS Consultoria e Treinamento`;
                       </td>
 
                       {/* Status de Homologação */}
-                      <td className="py-3.5 px-4">
+                      <td style={{ padding: "14px 16px" }}>
                         {homoInfo.status === "HOMOLOGADO" && (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                          <span
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "6px",
+                              padding: "4px 10px",
+                              borderRadius: "999px",
+                              fontSize: "11px",
+                              fontWeight: 700,
+                              backgroundColor: "#ecfdf5",
+                              color: "#059669",
+                              border: "1px solid #a7f3d0",
+                            }}
+                          >
+                            <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#10b981" }} />
                             <span>Homologado</span>
                           </span>
                         )}
                         {homoInfo.status === "CONVITE_ENVIADO" && (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
-                            <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                          <span
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "6px",
+                              padding: "4px 10px",
+                              borderRadius: "999px",
+                              fontSize: "11px",
+                              fontWeight: 700,
+                              backgroundColor: "#eff6ff",
+                              color: "#1d4ed8",
+                              border: "1px solid #bfdbfe",
+                            }}
+                          >
+                            <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#3b82f6" }} />
                             <span>Convite Enviado</span>
                           </span>
                         )}
                         {homoInfo.status === "EM_VALIDACAO" && (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
-                            <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse"></span>
+                          <span
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "6px",
+                              padding: "4px 10px",
+                              borderRadius: "999px",
+                              fontSize: "11px",
+                              fontWeight: 700,
+                              backgroundColor: "#faf5ff",
+                              color: "#7e22ce",
+                              border: "1px solid #e9d5ff",
+                            }}
+                          >
+                            <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#a855f7" }} />
                             <span>Em Validação</span>
                           </span>
                         )}
                         {homoInfo.status === "PENDENTE" && (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200/80">
-                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                          <span
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "6px",
+                              padding: "4px 10px",
+                              borderRadius: "999px",
+                              fontSize: "11px",
+                              fontWeight: 700,
+                              backgroundColor: "#fffbeb",
+                              color: "#b45309",
+                              border: "1px solid #fde68a",
+                            }}
+                          >
+                            <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#f59e0b" }} />
                             <span>Pendente de Envio</span>
                           </span>
                         )}
                       </td>
 
                       {/* Envio do Convite */}
-                      <td className="py-3.5 px-4 text-slate-500 font-medium">
+                      <td style={{ padding: "14px 16px", color: "#64748b", fontSize: "11.5px" }}>
                         {homoInfo.conviteEnviadoEm ? (
-                          <div className="flex items-center gap-1 text-blue-700 font-semibold text-xs">
-                            <span className="material-symbols-outlined text-blue-600" style={{ fontSize: "16px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "#1d4ed8", fontWeight: 600 }}>
+                            <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "#2563eb" }}>
                               check_circle
                             </span>
                             <span>{homoInfo.conviteEnviadoEm}</span>
                           </div>
                         ) : (
-                          <span className="inline-flex items-center gap-1 text-slate-400">
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: "5px", color: "#94a3b8" }}>
                             <span className="material-symbols-outlined" style={{ fontSize: "15px" }}>schedule</span>
                             <span>Aguardando disparo</span>
                           </span>
@@ -739,17 +1064,29 @@ NNÓS Consultoria e Treinamento`;
                       </td>
 
                       {/* Ações */}
-                      <td className="py-3.5 pr-6 pl-4 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          {/* Botão Disparar -> Abre Modal com o E-mail formatado */}
+                      <td style={{ padding: "14px 20px", textAlign: "right" }}>
+                        <div style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
+                          {/* Botão Disparar -> Abre Modal Oficial */}
                           <button
                             type="button"
                             onClick={() => {
                               setUsuarioSelecionado(u);
                               setModalEmailAberto(true);
                             }}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 text-white font-semibold rounded-lg transition-colors text-xs shadow-2xs cursor-pointer"
-                            style={{ backgroundColor: "#0f2a4a" }}
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "5px",
+                              padding: "6px 14px",
+                              borderRadius: "8px",
+                              backgroundColor: "#0f2a4a",
+                              color: "#ffffff",
+                              fontSize: "12px",
+                              fontWeight: 700,
+                              border: "none",
+                              cursor: "pointer",
+                              boxShadow: "0 1px 3px rgba(15,42,74,0.2)",
+                            }}
                             title="Visualizar e enviar convite oficial"
                           >
                             <span className="material-symbols-outlined" style={{ fontSize: "15px" }}>send</span>
@@ -760,8 +1097,20 @@ NNÓS Consultoria e Treinamento`;
                           <button
                             type="button"
                             onClick={() => handleCopiarTexto(URL_OFICIAL_LOGIN, "Link Oficial da Tela de Login")}
-                            className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                            style={{
+                              padding: "6px",
+                              borderRadius: "8px",
+                              backgroundColor: "transparent",
+                              color: "#64748b",
+                              border: "none",
+                              cursor: "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
                             title="Copiar Link Oficial de Acesso"
+                            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f1f5f9")}
+                            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
                           >
                             <span className="material-symbols-outlined" style={{ fontSize: "17px" }}>content_copy</span>
                           </button>
@@ -780,8 +1129,20 @@ NNÓS Consultoria e Treinamento`;
                                   : "PENDENTE";
                               handleAtualizarStatus(u, proximo as any);
                             }}
-                            className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                            style={{
+                              padding: "6px",
+                              borderRadius: "8px",
+                              backgroundColor: "transparent",
+                              color: "#64748b",
+                              border: "none",
+                              cursor: "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
                             title="Alternar Status de Homologação"
+                            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f1f5f9")}
+                            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
                           >
                             <span className="material-symbols-outlined" style={{ fontSize: "17px" }}>sync</span>
                           </button>
@@ -796,23 +1157,41 @@ NNÓS Consultoria e Treinamento`;
         </div>
 
         {/* Rodapé da Tabela com Paginação */}
-        <div className="bg-white px-6 py-3 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
-          <p>
-            Exibindo <span className="font-bold text-slate-800">{usuariosFiltrados.length === 0 ? 0 : (paginaAtual - 1) * itensPorPagina + 1}</span> a{" "}
-            <span className="font-bold text-slate-800">{Math.min(paginaAtual * itensPorPagina, usuariosFiltrados.length)}</span> de{" "}
-            <span className="font-bold text-slate-800">{usuariosFiltrados.length}</span> usuários cadastrados
+        <div
+          style={{
+            backgroundColor: "#ffffff",
+            padding: "12px 20px",
+            borderTop: "1px solid var(--border, #e2e8f0)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: "12px",
+            fontSize: "12px",
+            color: "#64748b",
+          }}
+        >
+          <p style={{ margin: 0 }}>
+            Exibindo <span style={{ fontWeight: 700, color: "#0f172a" }}>{usuariosFiltrados.length === 0 ? 0 : (paginaAtual - 1) * itensPorPagina + 1}</span> a{" "}
+            <span style={{ fontWeight: 700, color: "#0f172a" }}>{Math.min(paginaAtual * itensPorPagina, usuariosFiltrados.length)}</span> de{" "}
+            <span style={{ fontWeight: 700, color: "#0f172a" }}>{usuariosFiltrados.length}</span> usuários cadastrados
           </p>
 
-          <div className="flex items-center gap-1.5">
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
             <button
               type="button"
               onClick={() => setPaginaAtual((p) => Math.max(1, p - 1))}
               disabled={paginaAtual <= 1}
-              className={`px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium ${
-                paginaAtual <= 1
-                  ? "text-slate-400 cursor-not-allowed"
-                  : "text-slate-700 hover:bg-slate-50 cursor-pointer"
-              }`}
+              style={{
+                padding: "6px 12px",
+                borderRadius: "8px",
+                border: "1px solid var(--border, #e2e8f0)",
+                backgroundColor: "#ffffff",
+                fontSize: "12px",
+                fontWeight: 600,
+                color: paginaAtual <= 1 ? "#cbd5e1" : "#475569",
+                cursor: paginaAtual <= 1 ? "not-allowed" : "pointer",
+              }}
             >
               Anterior
             </button>
@@ -822,11 +1201,16 @@ NNÓS Consultoria e Treinamento`;
                 key={num}
                 type="button"
                 onClick={() => setPaginaAtual(num)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer ${
-                  paginaAtual === num
-                    ? "bg-[#0f2a4a] text-white shadow-xs"
-                    : "border border-slate-200 text-slate-700 hover:bg-slate-50"
-                }`}
+                style={{
+                  padding: "6px 12px",
+                  borderRadius: "8px",
+                  fontSize: "12px",
+                  fontWeight: 700,
+                  border: paginaAtual === num ? "none" : "1px solid var(--border, #e2e8f0)",
+                  backgroundColor: paginaAtual === num ? "#0f2a4a" : "#ffffff",
+                  color: paginaAtual === num ? "#ffffff" : "#475569",
+                  cursor: "pointer",
+                }}
               >
                 {num}
               </button>
@@ -836,11 +1220,16 @@ NNÓS Consultoria e Treinamento`;
               type="button"
               onClick={() => setPaginaAtual((p) => Math.min(totalPaginas, p + 1))}
               disabled={paginaAtual >= totalPaginas}
-              className={`px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium ${
-                paginaAtual >= totalPaginas
-                  ? "text-slate-400 cursor-not-allowed"
-                  : "text-slate-700 hover:bg-slate-50 cursor-pointer"
-              }`}
+              style={{
+                padding: "6px 12px",
+                borderRadius: "8px",
+                border: "1px solid var(--border, #e2e8f0)",
+                backgroundColor: "#ffffff",
+                fontSize: "12px",
+                fontWeight: 600,
+                color: paginaAtual >= totalPaginas ? "#cbd5e1" : "#475569",
+                cursor: paginaAtual >= totalPaginas ? "not-allowed" : "pointer",
+              }}
             >
               Próximo
             </button>
@@ -849,11 +1238,21 @@ NNÓS Consultoria e Treinamento`;
       </section>
 
       {/* =================================================================== */}
-      {/* 5. MODAL DE PRÉVIA & DISPARO DO E-MAIL (DESIGN OFICIAL)              */}
+      {/* 5. MODAL DE PRÉVIA & DISPARO DO E-MAIL (DESIGN OFICIAL EXECUTIVO)   */}
       {/* =================================================================== */}
       {modalEmailAberto && usuarioSelecionado && (
         <div
-          className="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 md:p-6 z-50 animate-in fade-in duration-150"
+          style={{
+            position: "fixed",
+            inset: 0,
+            backgroundColor: "rgba(15, 23, 42, 0.45)",
+            backdropFilter: "blur(6px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "16px",
+            zIndex: 10000,
+          }}
           onClick={() => setModalEmailAberto(false)}
         >
           <section
@@ -861,34 +1260,90 @@ NNÓS Consultoria e Treinamento`;
             aria-modal="true"
             role="dialog"
             onClick={(e) => e.stopPropagation()}
-            className="bg-white w-full max-w-4xl max-h-[92vh] rounded-2xl shadow-2xl border border-slate-200/80 flex flex-col overflow-hidden animate-in zoom-in-95 duration-200"
+            style={{
+              width: "100%",
+              maxWidth: "880px",
+              maxHeight: "92vh",
+              backgroundColor: "#ffffff",
+              borderRadius: "20px",
+              boxShadow: "0 25px 50px -12px rgba(15, 42, 74, 0.25)",
+              border: "1px solid #e2e8f0",
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+            }}
           >
             {/* Header do Modal */}
-            <header className="px-6 py-4 border-b border-slate-100 bg-white flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3.5">
+            <header
+              style={{
+                padding: "18px 24px",
+                borderBottom: "1px solid #f1f5f9",
+                backgroundColor: "#ffffff",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: "16px",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
                 <div
-                  aria-hidden="true"
-                  className="w-11 h-11 rounded-xl bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-600 shadow-xs shrink-0"
+                  style={{
+                    width: "44px",
+                    height: "44px",
+                    borderRadius: "12px",
+                    backgroundColor: "#f0f9ff",
+                    border: "1px solid #bae6fd",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#0284c7",
+                    flexShrink: 0,
+                  }}
                 >
                   <span className="material-symbols-outlined" style={{ fontSize: "22px" }}>
                     mark_email_read
                   </span>
                 </div>
                 <div>
-                  <h1 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight flex items-center gap-2" id="modal-title">
-                    E-mail Oficial de Homologação <span className="text-slate-400 font-light">•</span> {usuarioSelecionado.nome}
+                  <h1
+                    id="modal-title"
+                    style={{
+                      margin: 0,
+                      fontSize: "17px",
+                      fontWeight: 800,
+                      color: "#0f172a",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <span>E-mail Oficial de Homologação</span>
+                    <span style={{ color: "#94a3b8", fontWeight: 300 }}>•</span>
+                    <span>{usuarioSelecionado.nome}</span>
                   </h1>
-                  <p className="text-xs sm:text-sm text-slate-500 font-medium mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <p style={{ margin: "4px 0 0 0", fontSize: "12.5px", color: "#64748b", display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
                     <span>
                       Destinatário:{" "}
-                      <a className="text-sky-700 hover:underline font-semibold" href={`mailto:${usuarioSelecionado.email}`}>
+                      <a href={`mailto:${usuarioSelecionado.email}`} style={{ color: "#0369a1", fontWeight: 600, textDecoration: "none" }}>
                         {usuarioSelecionado.email}
                       </a>
                     </span>
-                    <span className="text-slate-300">•</span>
-                    <span className="inline-flex items-center gap-1 font-semibold text-slate-700">
+                    <span style={{ color: "#cbd5e1" }}>•</span>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
                       Perfil:{" "}
-                      <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[11px] uppercase tracking-wider font-bold border border-slate-200">
+                      <span
+                        style={{
+                          backgroundColor: "#f1f5f9",
+                          color: "#334155",
+                          padding: "2px 8px",
+                          borderRadius: "6px",
+                          fontSize: "11px",
+                          fontWeight: 700,
+                          textTransform: "uppercase",
+                          border: "1px solid #e2e8f0",
+                        }}
+                      >
                         {usuarioSelecionado.perfilId}
                       </span>
                     </span>
@@ -900,7 +1355,18 @@ NNÓS Consultoria e Treinamento`;
               <button
                 type="button"
                 onClick={() => setModalEmailAberto(false)}
-                className="w-9 h-9 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 border border-transparent hover:border-slate-200 transition-colors cursor-pointer"
+                style={{
+                  width: "36px",
+                  height: "36px",
+                  borderRadius: "10px",
+                  border: "none",
+                  backgroundColor: "#f8fafc",
+                  color: "#64748b",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                }}
                 title="Fechar"
               >
                 <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>close</span>
@@ -908,52 +1374,67 @@ NNÓS Consultoria e Treinamento`;
             </header>
 
             {/* Corpo do E-mail (Visualização Estruturada em Cartão) */}
-            <div className="flex-1 overflow-y-auto px-6 sm:px-8 py-6 space-y-6 bg-slate-50/60 select-text text-slate-700 custom-scroll">
-              <article className="bg-white rounded-xl border border-slate-200/90 shadow-xs p-6 sm:p-8 space-y-6 text-sm leading-relaxed">
+            <div
+              style={{
+                flex: 1,
+                overflowY: "auto",
+                padding: "24px",
+                backgroundColor: "#f8fafc",
+              }}
+            >
+              <article
+                style={{
+                  backgroundColor: "#ffffff",
+                  borderRadius: "16px",
+                  border: "1px solid #e2e8f0",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.03)",
+                  padding: "28px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "20px",
+                  fontSize: "13.5px",
+                  lineHeight: "1.65",
+                  color: "#334155",
+                }}
+              >
                 {/* Linha do Assunto */}
-                <div className="pb-4 border-b border-slate-100 flex items-start gap-2.5">
-                  <span className="font-bold text-slate-900 shrink-0">Assunto:</span>
-                  <span className="font-semibold text-sky-950 flex items-center gap-1.5 flex-wrap">
+                <div style={{ paddingBottom: "14px", borderBottom: "1px solid #f1f5f9", display: "flex", alignItems: "baseline", gap: "10px" }}>
+                  <span style={{ fontWeight: 800, color: "#0f172a", flexShrink: 0 }}>Assunto:</span>
+                  <span style={{ fontWeight: 700, color: "#0c4a6e" }}>
                     {usuarioSelecionado.perfilId === "AGENCIA" ? (
-                      <>
-                        <span>✈️</span> Novo Módulo de Viagens &amp; Logística NNÓS{" "}
-                        <span className="text-slate-400 font-normal">|</span> Acesso para Homologação e Testes Operacionais
-                      </>
+                      <>✈️ Novo Módulo de Viagens &amp; Logística NNÓS | Acesso para Homologação e Testes Operacionais</>
                     ) : (
-                      <>
-                        <span>🚀</span> Boas-vindas ao novo Sistema NNÓS{" "}
-                        <span className="text-slate-400 font-normal">|</span> Convocação para Homologação e Validação de Processos
-                      </>
+                      <>🚀 Boas-vindas ao novo Sistema NNÓS | Convocação para Homologação e Validação de Processos</>
                     )}
                   </span>
                 </div>
 
                 {/* Saudação & Introdução */}
-                <div className="space-y-4 text-slate-700 leading-relaxed font-normal">
-                  <p className="font-semibold text-slate-900">
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px", color: "#334155" }}>
+                  <p style={{ margin: 0, fontWeight: 700, color: "#0f172a" }}>
                     Olá, {usuarioSelecionado.nome}, tudo bem?
                   </p>
                   {usuarioSelecionado.perfilId === "AGENCIA" ? (
                     <>
-                      <p>
-                        Gostaríamos de dar as boas-vindas ao novo módulo de <strong className="text-slate-900 font-semibold">Viagens &amp; Logística</strong> do sistema corporativo da NNÓS Consultoria!
+                      <p style={{ margin: 0 }}>
+                        Gostaríamos de dar as boas-vindas ao novo módulo de <strong style={{ color: "#0f172a" }}>Viagens &amp; Logística</strong> do sistema corporativo da NNÓS Consultoria!
                       </p>
-                      <p>
+                      <p style={{ margin: 0 }}>
                         Criamos uma área totalmente dedicada à agência para facilitar, agilizar e centralizar a nossa comunicação diária: desde o recebimento das ordens logísticas geradas pelas turmas até o lançamento de opções de cotação e upload dos vouchers definitivos aos viajantes.
                       </p>
-                      <p>
+                      <p style={{ margin: 0 }}>
                         Como parceiros estratégicos da nossa operação logística, convidamos vocês para testar a ferramenta com as demandas reais e nos apontar quaisquer ajustes necessários antes da entrada em produção.
                       </p>
                     </>
                   ) : (
                     <>
-                      <p>
-                        É com grande entusiasmo que convidamos você para fazer parte do primeiro grupo de validação do novo sistema <strong className="text-slate-900 font-semibold">NNÓS Gestão Financeira &amp; Projetos</strong>!
+                      <p style={{ margin: 0 }}>
+                        É com grande entusiasmo que convidamos você para fazer parte do primeiro grupo de validação do novo sistema <strong style={{ color: "#0f172a" }}>NNÓS Gestão Financeira &amp; Projetos</strong>!
                       </p>
-                      <p>
+                      <p style={{ margin: 0 }}>
                         Desenvolvemos esta plataforma para integrar e desburocratizar a gestão dos nossos treinamentos, concentrando em um único lugar o planejamento de turmas, a logística de viagens, a emissão de Boletins de Medição (BM) com assinaturas digitais via Zoho Sign e a rentabilidade da sua carteira em tempo real.
                       </p>
-                      <p>
+                      <p style={{ margin: 0 }}>
                         Estamos na reta final para a liberação em produção e o seu olhar operacional é fundamental para garantirmos que a ferramenta reflita com 100% de precisão os processos e a dinâmica real do nosso dia a dia.
                       </p>
                     </>
@@ -961,79 +1442,103 @@ NNÓS Consultoria e Treinamento`;
                 </div>
 
                 {/* Seção 1: Escopo de Validação Estruturado */}
-                <div className="bg-slate-50/90 rounded-xl p-5 border border-slate-200 space-y-3.5">
-                  <h2 className="text-xs uppercase tracking-wider font-bold text-slate-800 flex items-center gap-2">
-                    <span className="text-base leading-none">🎯</span>{" "}
-                    {usuarioSelecionado.perfilId === "AGENCIA"
-                      ? "FOCO PRINCIPAL DA VALIDAÇÃO PELA AGÊNCIA FÁTIMA:"
-                      : "O QUE PRECISAMOS QUE VOCÊ TESTE E VALIDE:"}
+                <div
+                  style={{
+                    backgroundColor: "#f8fafc",
+                    borderRadius: "14px",
+                    padding: "20px",
+                    border: "1px solid #e2e8f0",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "14px",
+                  }}
+                >
+                  <h2
+                    style={{
+                      margin: 0,
+                      fontSize: "12px",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.05em",
+                      fontWeight: 800,
+                      color: "#1e293b",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                    }}
+                  >
+                    <span>🎯</span>{" "}
+                    <span>
+                      {usuarioSelecionado.perfilId === "AGENCIA"
+                        ? "FOCO PRINCIPAL DA VALIDAÇÃO PELA AGÊNCIA FÁTIMA:"
+                        : "O QUE PRECISAMOS QUE VOCÊ TESTE E VALIDE:"}
+                    </span>
                   </h2>
 
                   {usuarioSelecionado.perfilId === "AGENCIA" ? (
-                    <ol className="space-y-3 text-slate-700 text-[13.5px]">
-                      <li className="flex items-start gap-2.5">
-                        <span className="font-bold text-sky-700 min-w-[18px]">1.</span>
+                    <ol style={{ margin: 0, paddingLeft: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "10px" }}>
+                      <li style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                        <span style={{ fontWeight: 800, color: "#0284c7", minWidth: "18px" }}>1.</span>
                         <div>
-                          <span className="font-semibold text-slate-900">Solicitações de Logística</span>{" "}
-                          <code className="text-xs font-mono bg-white px-1.5 py-0.5 rounded border border-slate-200 text-sky-800">/viagens</code>:
-                          Verifique se as informações transmitidas das turmas (origem, destino, concessionária, datas de ida/volta e necessidade de bagagem) estão claras e completas para cotação.
+                          <strong style={{ color: "#0f172a" }}>Solicitações de Logística</strong>{" "}
+                          <code style={{ fontSize: "11px", fontFamily: "monospace", backgroundColor: "#ffffff", padding: "2px 6px", borderRadius: "4px", border: "1px solid #e2e8f0", color: "#0369a1" }}>/viagens</code>:
+                          {" "}Verifique se as informações transmitidas das turmas (origem, destino, concessionária, datas de ida/volta e necessidade de bagagem) estão claras e completas para cotação.
                         </div>
                       </li>
-                      <li className="flex items-start gap-2.5">
-                        <span className="font-bold text-sky-700 min-w-[18px]">2.</span>
+                      <li style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                        <span style={{ fontWeight: 800, color: "#0284c7", minWidth: "18px" }}>2.</span>
                         <div>
-                          <span className="font-semibold text-slate-900">Matriz de Cotação</span>{" "}
-                          <code className="text-xs font-mono bg-white px-1.5 py-0.5 rounded border border-slate-200 text-sky-800">/viagens</code>:
-                          Teste a inserção das opções de voo, valores de hotel e traslados, avaliando se o formato atende a agilidade necessária no dia a dia.
+                          <strong style={{ color: "#0f172a" }}>Matriz de Cotação</strong>{" "}
+                          <code style={{ fontSize: "11px", fontFamily: "monospace", backgroundColor: "#ffffff", padding: "2px 6px", borderRadius: "4px", border: "1px solid #e2e8f0", color: "#0369a1" }}>/viagens</code>:
+                          {" "}Teste a inserção das opções de voo, valores de hotel e traslados, avaliando se o formato atende a agilidade necessária no dia a dia.
                         </div>
                       </li>
-                      <li className="flex items-start gap-2.5">
-                        <span className="font-bold text-sky-700 min-w-[18px]">3.</span>
+                      <li style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                        <span style={{ fontWeight: 800, color: "#0284c7", minWidth: "18px" }}>3.</span>
                         <div>
-                          <span className="font-semibold text-slate-900">Políticas de Viagem</span>:
-                          No card de Políticas de Viagem, vocês têm acesso direto aos PDFs oficiais (NNÓS, CNH Training, Iveco Group e Reembolso Vexpenses) para conferência rápida de limites de diárias e prestação de contas.
+                          <strong style={{ color: "#0f172a" }}>Políticas de Viagem</strong>:
+                          {" "}No card de Políticas de Viagem, vocês têm acesso direto aos PDFs oficiais (NNÓS, CNH Training, Iveco Group e Reembolso Vexpenses) para conferência rápida de limites de diárias e prestação de contas.
                         </div>
                       </li>
-                      <li className="flex items-start gap-2.5">
-                        <span className="font-bold text-sky-700 min-w-[18px]">4.</span>
+                      <li style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                        <span style={{ fontWeight: 800, color: "#0284c7", minWidth: "18px" }}>4.</span>
                         <div>
-                          <span className="font-semibold text-slate-900">Upload de Vouchers</span>:
-                          Teste o envio de vouchers em PDF para conferência do viajante.
+                          <strong style={{ color: "#0f172a" }}>Upload de Vouchers</strong>:
+                          {" "}Teste o envio de vouchers em PDF para conferência do viajante.
                         </div>
                       </li>
                     </ol>
                   ) : (
-                    <ol className="space-y-3 text-slate-700 text-[13.5px]">
-                      <li className="flex items-start gap-2.5">
-                        <span className="font-bold text-sky-700 min-w-[18px]">1.</span>
+                    <ol style={{ margin: 0, paddingLeft: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "10px" }}>
+                      <li style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                        <span style={{ fontWeight: 800, color: "#0284c7", minWidth: "18px" }}>1.</span>
                         <div>
-                          <span className="font-semibold text-slate-900">Projetos &amp; Atividades</span>{" "}
-                          <code className="text-xs font-mono bg-white px-1.5 py-0.5 rounded border border-slate-200 text-sky-800">/projetos</code>:
-                          Crie e consulte turmas da sua carteira, verifique as concessões/cidades, a carga horária (8h, 24h ou 40h) e a alocação de instrutores parceiros ou sócios (incluindo o acréscimo de 6% quando aplicável).
+                          <strong style={{ color: "#0f172a" }}>Projetos &amp; Atividades</strong>{" "}
+                          <code style={{ fontSize: "11px", fontFamily: "monospace", backgroundColor: "#ffffff", padding: "2px 6px", borderRadius: "4px", border: "1px solid #e2e8f0", color: "#0369a1" }}>/projetos</code>:
+                          {" "}Crie e consulte turmas da sua carteira, verifique as concessões/cidades, a carga horária (8h, 24h ou 40h) e a alocação de instrutores parceiros ou sócios (incluindo o acréscimo de 6% quando aplicável).
                         </div>
                       </li>
-                      <li className="flex items-start gap-2.5">
-                        <span className="font-bold text-sky-700 min-w-[18px]">2.</span>
+                      <li style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                        <span style={{ fontWeight: 800, color: "#0284c7", minWidth: "18px" }}>2.</span>
                         <div>
-                          <span className="font-semibold text-slate-900">Viagens &amp; Logística</span>{" "}
-                          <code className="text-xs font-mono bg-white px-1.5 py-0.5 rounded border border-slate-200 text-sky-800">/viagens</code>:
-                          Avalie as solicitações de deslocamento, confira as cotações lançadas pela Agência Fátima e o fluxo de aprovação técnica.
+                          <strong style={{ color: "#0f172a" }}>Viagens &amp; Logística</strong>{" "}
+                          <code style={{ fontSize: "11px", fontFamily: "monospace", backgroundColor: "#ffffff", padding: "2px 6px", borderRadius: "4px", border: "1px solid #e2e8f0", color: "#0369a1" }}>/viagens</code>:
+                          {" "}Avalie as solicitações de deslocamento, confira as cotações lançadas pela Agência Fátima e o fluxo de aprovação técnica.
                         </div>
                       </li>
-                      <li className="flex items-start gap-2.5">
-                        <span className="font-bold text-sky-700 min-w-[18px]">3.</span>
+                      <li style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                        <span style={{ fontWeight: 800, color: "#0284c7", minWidth: "18px" }}>3.</span>
                         <div>
-                          <span className="font-semibold text-slate-900">Boletins de Medição</span>{" "}
-                          <code className="text-xs font-mono bg-white px-1.5 py-0.5 rounded border border-slate-200 text-sky-800">/medicao</code>:
-                          Valide a conferência das horas apuradas da sua equipe e a experiência com o fluxo de assinatura digital (Zoho Sign).
+                          <strong style={{ color: "#0f172a" }}>Boletins de Medição</strong>{" "}
+                          <code style={{ fontSize: "11px", fontFamily: "monospace", backgroundColor: "#ffffff", padding: "2px 6px", borderRadius: "4px", border: "1px solid #e2e8f0", color: "#0369a1" }}>/medicao</code>:
+                          {" "}Valide a conferência das horas apuradas da sua equipe e a experiência com o fluxo de assinatura digital (Zoho Sign).
                         </div>
                       </li>
-                      <li className="flex items-start gap-2.5">
-                        <span className="font-bold text-sky-700 min-w-[18px]">4.</span>
+                      <li style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                        <span style={{ fontWeight: 800, color: "#0284c7", minWidth: "18px" }}>4.</span>
                         <div>
-                          <span className="font-semibold text-slate-900">Central de Relatórios</span>{" "}
-                          <code className="text-xs font-mono bg-white px-1.5 py-0.5 rounded border border-slate-200 text-sky-800">/relatorios</code>:
-                          Confira os demonstrativos, custos diretos e margem da sua unidade de negócio.
+                          <strong style={{ color: "#0f172a" }}>Central de Relatórios</strong>{" "}
+                          <code style={{ fontSize: "11px", fontFamily: "monospace", backgroundColor: "#ffffff", padding: "2px 6px", borderRadius: "4px", border: "1px solid #e2e8f0", color: "#0369a1" }}>/relatorios</code>:
+                          {" "}Confira os demonstrativos, custos diretos e margem da sua unidade de negócio.
                         </div>
                       </li>
                     </ol>
@@ -1041,41 +1546,63 @@ NNÓS Consultoria e Treinamento`;
                 </div>
 
                 {/* Seção 2: Credenciais de Acesso (Caixa Âmbar Destacada) */}
-                <div className="bg-amber-50/60 rounded-xl p-5 border border-amber-200/80 space-y-3">
-                  <h2 className="text-xs uppercase tracking-wider font-bold text-amber-950 flex items-center gap-2">
-                    <span className="text-base leading-none">🔑</span> SEUS DADOS DE ACESSO:
+                <div
+                  style={{
+                    backgroundColor: "#fffbeb",
+                    borderRadius: "14px",
+                    padding: "20px",
+                    border: "1px solid #fde68a",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "10px",
+                  }}
+                >
+                  <h2
+                    style={{
+                      margin: 0,
+                      fontSize: "12px",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.05em",
+                      fontWeight: 800,
+                      color: "#78350f",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                    }}
+                  >
+                    <span>🔑</span> SEUS DADOS DE ACESSO:
                   </h2>
-                  <div className="space-y-2 text-[13.5px] pl-1 font-medium">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-                      <span className="text-slate-600 font-normal">• Link Oficial (Tela de Login):</span>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px", fontSize: "13px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                      <span style={{ color: "#475569" }}>• Link Oficial (Tela de Login):</span>
                       <a
-                        className="text-sky-700 hover:text-sky-800 underline font-semibold inline-flex items-center gap-1"
                         href={URL_OFICIAL_LOGIN}
                         target="_blank"
                         rel="noopener noreferrer"
+                        style={{ color: "#0284c7", fontWeight: 700, textDecoration: "underline", display: "inline-flex", alignItems: "center", gap: "4px" }}
                       >
                         {URL_OFICIAL_LOGIN}
                         <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>open_in_new</span>
                       </a>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-slate-600 font-normal">• Seu Usuário / Login:</span>
-                      <span className="font-bold text-slate-900 bg-white px-2 py-0.5 rounded border border-amber-200/70 font-mono text-xs">
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span style={{ color: "#475569" }}>• Seu Usuário / Login:</span>
+                      <span style={{ fontWeight: 800, color: "#0f172a", backgroundColor: "#ffffff", padding: "2px 8px", borderRadius: "6px", border: "1px solid #fde68a", fontFamily: "monospace", fontSize: "12px" }}>
                         {usuarioSelecionado.login || (usuarioSelecionado.perfilId === "AGENCIA" ? "agencia.fatima" : "usuario")}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-slate-600 font-normal">• E-mail Cadastrado:</span>
-                      <span className="font-semibold text-slate-800">{usuarioSelecionado.email}</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span style={{ color: "#475569" }}>• E-mail Cadastrado:</span>
+                      <span style={{ fontWeight: 700, color: "#1e293b" }}>{usuarioSelecionado.email}</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-slate-600 font-normal">• Senha Inicial:</span>
-                      <span className="font-bold text-slate-900 bg-white px-2 py-0.5 rounded border border-amber-200/70 font-mono text-xs">
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span style={{ color: "#475569" }}>• Senha Inicial:</span>
+                      <span style={{ fontWeight: 800, color: "#0f172a", backgroundColor: "#ffffff", padding: "2px 8px", borderRadius: "6px", border: "1px solid #fde68a", fontFamily: "monospace", fontSize: "12px" }}>
                         {usuarioSelecionado.senha || (usuarioSelecionado.perfilId === "AGENCIA" ? "viagem2026" : "nnos2026")}
                       </span>
                     </div>
                     {usuarioSelecionado.perfilId === "AGENCIA" && (
-                      <p className="text-xs text-amber-900 mt-2 font-semibold">
+                      <p style={{ margin: "6px 0 0 0", fontSize: "12px", color: "#92400e", fontWeight: 600 }}>
                         * Nota: Ao efetuar o login com suas credenciais, seu acesso abrirá diretamente no módulo de Viagens &amp; Logística (/viagens).
                       </p>
                     )}
@@ -1083,49 +1610,102 @@ NNÓS Consultoria e Treinamento`;
                 </div>
 
                 {/* Seção 3: Suporte Integrado com Guia & Agente de IA */}
-                <div className="bg-sky-50/60 rounded-xl p-4 border border-sky-100 flex items-start gap-3 text-xs text-slate-700">
-                  <div className="w-8 h-8 rounded-lg bg-sky-600 text-white flex items-center justify-center shrink-0">
-                    <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>psychology</span>
+                <div
+                  style={{
+                    backgroundColor: "#f0f9ff",
+                    borderRadius: "14px",
+                    padding: "16px 18px",
+                    border: "1px solid #bae6fd",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "14px",
+                    fontSize: "12.5px",
+                    color: "#0369a1",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "36px",
+                      height: "36px",
+                      borderRadius: "10px",
+                      backgroundColor: "#0284c7",
+                      color: "#ffffff",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>psychology</span>
                   </div>
                   <div>
-                    <strong className="text-slate-900 block font-bold mb-0.5">Dúvidas? Utilize o Guia de Processos e o Agente de IA:</strong>
+                    <strong style={{ color: "#0f172a", display: "block", marginBottom: "2px" }}>
+                      Dúvidas? Utilize o Guia de Processos e o Agente de IA:
+                    </strong>
                     Dentro do sistema, clique no botão flutuante <strong>"Ajuda &amp; IA"</strong> (ícone da coruja) para consultar o passo a passo de todas as telas ou tirar dúvidas conceituais diretamente com a IA da NNÓS.
                   </div>
                 </div>
 
                 {/* Seção 4: Canal de Apontamentos & Assinatura */}
-                <div className="pt-2 border-t border-slate-100 text-xs text-slate-600 space-y-3">
-                  <p>
+                <div style={{ paddingTop: "10px", borderTop: "1px solid #f1f5f9", fontSize: "12.5px", color: "#475569", display: "flex", flexDirection: "column", gap: "10px" }}>
+                  <p style={{ margin: 0 }}>
                     Pedimos que qualquer processo divergente, sugestão ou ajuste seja enviado pelo canal de{" "}
-                    <strong className="text-slate-800">Microsoft Teams da Equipe de Gestão NNÓS</strong> ou respondendo a este e-mail indicando:
+                    <strong style={{ color: "#0f172a" }}>Microsoft Teams da Equipe de Gestão NNÓS</strong> ou respondendo a este e-mail indicando:
                   </p>
-                  <ul className="list-disc pl-5 space-y-1 text-slate-500">
+                  <ul style={{ margin: 0, paddingLeft: "20px", display: "flex", flexDirection: "column", gap: "4px", color: "#64748b" }}>
                     <li>Em qual tela você estava navegando;</li>
                     <li>O que ocorreu de diferente do seu processo real;</li>
                     <li>Sugestão de melhoria ou print da tela.</li>
                   </ul>
-                  <div className="pt-3">
-                    <p className="font-semibold text-slate-800">
+                  <div style={{ paddingTop: "10px" }}>
+                    <p style={{ margin: 0, fontWeight: 700, color: "#1e293b" }}>
                       {usuarioSelecionado.perfilId === "AGENCIA" ? "Atenciosamente," : "Um abraço,"}
                     </p>
-                    <p className="font-bold text-slate-900">Leonardo Campos &amp; Equipe de Gestão NNÓS</p>
-                    <p className="text-slate-400">NNÓS Consultoria e Treinamento</p>
+                    <p style={{ margin: "2px 0 0 0", fontWeight: 800, color: "#0f172a" }}>
+                      Leonardo Campos &amp; Equipe de Gestão NNÓS
+                    </p>
+                    <p style={{ margin: "1px 0 0 0", color: "#94a3b8", fontSize: "11.5px" }}>
+                      NNÓS Consultoria e Treinamento
+                    </p>
                   </div>
                 </div>
               </article>
             </div>
 
             {/* Rodapé do Modal com Ações Oficiais */}
-            <footer className="px-6 py-4 bg-white border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
+            <footer
+              style={{
+                padding: "16px 24px",
+                backgroundColor: "#ffffff",
+                borderTop: "1px solid #e2e8f0",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                flexWrap: "wrap",
+                gap: "12px",
+              }}
+            >
               {/* Ações Secundárias (Esquerda) */}
-              <div className="flex items-center flex-wrap gap-2.5">
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
                 <button
                   type="button"
                   onClick={() => {
                     const txt = gerarTextoEmailPuro(usuarioSelecionado);
                     handleCopiarTexto(txt, "Texto completo do e-mail");
                   }}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-sky-600 text-sky-700 hover:bg-sky-50 font-semibold text-xs transition-colors shadow-xs active:bg-sky-100 cursor-pointer"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    padding: "9px 16px",
+                    borderRadius: "10px",
+                    border: "1px solid #0284c7",
+                    backgroundColor: "#ffffff",
+                    color: "#0284c7",
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                  }}
                 >
                   <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>content_copy</span>
                   <span>Copiar Texto Completo</span>
@@ -1137,7 +1717,19 @@ NNÓS Consultoria e Treinamento`;
                       ? "Novo Módulo de Viagens & Logística NNÓS | Acesso para Homologação"
                       : "Boas-vindas ao novo Sistema NNÓS | Convocação para Homologação"
                   )}&body=${encodeURIComponent(gerarTextoEmailPuro(usuarioSelecionado))}`}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold text-xs transition-colors shadow-xs"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    padding: "9px 16px",
+                    borderRadius: "10px",
+                    border: "1px solid #cbd5e1",
+                    backgroundColor: "#ffffff",
+                    color: "#475569",
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    textDecoration: "none",
+                  }}
                 >
                   <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>open_in_new</span>
                   <span>Abrir no Aplicativo de E-mail</span>
@@ -1152,9 +1744,22 @@ NNÓS Consultoria e Treinamento`;
                     handleRegistrarDisparo(usuarioSelecionado);
                     setModalEmailAberto(false);
                   }}
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow-sm hover:shadow transition-all active:scale-[0.98] cursor-pointer"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    padding: "10px 20px",
+                    borderRadius: "10px",
+                    backgroundColor: "#059669",
+                    color: "#ffffff",
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    border: "none",
+                    cursor: "pointer",
+                    boxShadow: "0 2px 8px rgba(5,150,105,0.25)",
+                  }}
                 >
-                  <span className="material-symbols-outlined" style={{ fontSize: "17px" }}>check_circle</span>
+                  <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>check_circle</span>
                   <span>Registrar Envio &amp; Log</span>
                 </button>
               </div>
