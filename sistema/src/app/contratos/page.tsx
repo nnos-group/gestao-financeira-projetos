@@ -210,7 +210,7 @@ export default function GestaoContratosPage() {
     }
   };
 
-  // Cálculo dinâmico da data atual para o gráfico Gantt e indicadores
+  // Cálculo dinâmico da data atual para o gráfico Gantt (escala de 5 anos: 2024 a 2028)
   const hojeData = useMemo(() => {
     const d = new Date();
     const dia = String(d.getDate()).padStart(2, "0");
@@ -221,9 +221,9 @@ export default function GestaoContratosPage() {
     const mesesExt = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
     const badge = `${mesesExt[d.getMonth()]}/${d.getFullYear()}`;
 
-    const t2025 = new Date("2025-01-01T00:00:00").getTime();
+    const t2024 = new Date("2024-01-01T00:00:00").getTime();
     const t2029 = new Date("2029-01-01T00:00:00").getTime();
-    const pct = Math.max(0, Math.min(100, ((d.getTime() - t2025) / (t2029 - t2025)) * 100));
+    const pct = Math.max(0, Math.min(100, ((d.getTime() - t2024) / (t2029 - t2024)) * 100));
 
     return { texto, badge, pct };
   }, []);
@@ -1693,22 +1693,24 @@ export default function GestaoContratosPage() {
                         <span>Modalidade de Cobrança</span>
                         <span style={origemBadgeStyle}>{contratoEmRevisao.modalidadeCobranca.clausulaOrigem}</span>
                       </div>
-                      <select
+                      <ModernDropdown
                         value={contratoEmRevisao.modalidadeCobranca.valor}
-                        onChange={(e) =>
+                        onChange={(val) =>
                           setContratoEmRevisao({
                             ...contratoEmRevisao,
                             modalidadeCobranca: {
                               ...contratoEmRevisao.modalidadeCobranca,
-                              valor: e.target.value as ModalidadeCobranca,
+                              valor: String(val) as ModalidadeCobranca,
                             },
                           })
                         }
-                        style={inputStyle}
-                      >
-                        <option value="DEMANDA_SERVICOS">Serviços por Demanda (Sem mensalidade fixa)</option>
-                        <option value="MENSAL_FIXO">Mensalidade Fixa Garantida</option>
-                      </select>
+                        options={[
+                          { value: "MENSAL_FIXO", label: "Mensalidade Fixa Garantida" },
+                          { value: "DEMANDA_SERVICOS", label: "Serviços por Demanda (Sem mensalidade fixa)" },
+                        ]}
+                        icon="receipt_long"
+                        minWidth={280}
+                      />
                     </div>
 
                     {/* Campo Mensalidade Fixa */}
@@ -1819,16 +1821,21 @@ export default function GestaoContratosPage() {
               >
                 {/* Header row: Title and current month badge */}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "28px" }}>
-                  <span style={{ fontSize: "14px", fontWeight: 700, color: "#0f172a" }}>
-                    Evolução dos contratos — 2025 a 2028
-                  </span>
+                  <div>
+                    <span style={{ fontSize: "15px", fontWeight: 800, color: "#0f172a" }}>
+                      Evolução dos contratos — 2024 a 2028
+                    </span>
+                    <div style={{ fontSize: "12px", color: "#64748b", marginTop: "2px" }}>
+                      Visualização contínua de vigência. Todos os contratos ativos estendem-se até ou além do marcador da data atual.
+                    </div>
+                  </div>
                   <span
                     style={{
                       fontSize: "11px",
                       fontWeight: 700,
                       color: "#475569",
                       backgroundColor: "#f1f5f9",
-                      padding: "3px 10px",
+                      padding: "4px 12px",
                       borderRadius: "6px",
                       border: "1px solid #e2e8f0",
                     }}
@@ -1848,23 +1855,23 @@ export default function GestaoContratosPage() {
                     }}
                   >
                     {/* Left label empty spacer */}
-                    <div style={{ width: "200px", flexShrink: 0 }} />
+                    <div style={{ width: "240px", flexShrink: 0 }} />
 
                     {/* Years Columns */}
                     <div
                       style={{
                         flex: 1,
                         display: "grid",
-                        gridTemplateColumns: "repeat(4, 1fr)",
+                        gridTemplateColumns: "repeat(5, 1fr)",
                         textAlign: "center",
                       }}
                     >
-                      {["2025", "2026", "2027", "2028"].map((ano) => (
+                      {["2024", "2025", "2026", "2027", "2028"].map((ano) => (
                         <div
                           key={ano}
                           style={{
-                            fontSize: "20px",
-                            fontWeight: 700,
+                            fontSize: "19px",
+                            fontWeight: 800,
                             color: "#334155",
                             letterSpacing: "-0.02em",
                           }}
@@ -1877,21 +1884,21 @@ export default function GestaoContratosPage() {
 
                   {/* Chart Body with Background Vertical Dashed Lines */}
                   <div style={{ position: "relative" }}>
-                    {/* Vertical grid lines (4 lines, aligned with each year) */}
+                    {/* Vertical grid lines (5 lines, aligned with each year) */}
                     <div
                       style={{
                         position: "absolute",
                         top: 0,
                         bottom: 0,
-                        left: "200px",
+                        left: "240px",
                         right: 0,
                         display: "grid",
-                        gridTemplateColumns: "repeat(4, 1fr)",
+                        gridTemplateColumns: "repeat(5, 1fr)",
                         pointerEvents: "none",
                         zIndex: 1,
                       }}
                     >
-                      {[0, 1, 2, 3].map((idx) => (
+                      {[0, 1, 2, 3, 4].map((idx) => (
                         <div
                           key={idx}
                           style={{
@@ -1917,7 +1924,7 @@ export default function GestaoContratosPage() {
                         position: "absolute",
                         top: "-8px",
                         bottom: "-24px",
-                        left: `calc(200px + ${hojeData.pct.toFixed(2)}%)`,
+                        left: `calc(240px + ${hojeData.pct.toFixed(2)}%)`,
                         width: "0px",
                         borderLeft: "2.5px dashed #d97706",
                         zIndex: 4,
@@ -1942,10 +1949,15 @@ export default function GestaoContratosPage() {
                       <div
                         style={{
                           fontSize: "13px",
-                          fontWeight: 700,
+                          fontWeight: 800,
                           color: "#0f172a",
+                          backgroundColor: "#fef3c7",
+                          padding: "2px 8px",
+                          borderRadius: "6px",
+                          border: "1px solid #fde68a",
                           whiteSpace: "nowrap",
                           transform: "translateY(100%)",
+                          boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
                         }}
                       >
                         {hojeData.texto}
@@ -1983,6 +1995,30 @@ export default function GestaoContratosPage() {
                           ? "POE"
                           : c.projeto.valor || `Contrato ${index + 1}`;
 
+                        // Scale calculation: 2024-01-01 to 2028-12-31 (5 years = 1826 days)
+                        const dtInicio = new Date(c.dataInicio.valor);
+                        const dtFim = new Date(c.dataEncerramentoOficial || c.dataEncerramento.valor);
+
+                        const t2024 = new Date("2024-01-01T00:00:00").getTime();
+                        const t2029 = new Date("2029-01-01T00:00:00").getTime();
+                        const totalTempo = t2029 - t2024;
+
+                        let leftPct = 10;
+                        let widthPct = 48;
+
+                        if (!isNaN(dtInicio.getTime()) && !isNaN(dtFim.getTime())) {
+                          const startDiff = dtInicio.getTime() - t2024;
+                          const endDiff = dtFim.getTime() - t2024;
+                          leftPct = Math.max(0, Math.min(95, (startDiff / totalTempo) * 100));
+                          const rightPct = Math.max(leftPct + 6, Math.min(100, (endDiff / totalTempo) * 100));
+                          widthPct = rightPct - leftPct;
+                        } else {
+                          leftPct = 15;
+                          widthPct = 50;
+                        }
+
+                        // Status semântico do contrato
+                        const ehVigente = c.situacao === "VIGENTE" || c.situacao === "VENCIMENTO_PROXIMO";
                         const corPill = isTreinamento
                           ? "#1b7b75"
                           : isPoe
@@ -1991,67 +2027,67 @@ export default function GestaoContratosPage() {
                           ? "#0284c7"
                           : "#059669";
 
-                        // Scale calculation: 2025-01-01 to 2028-12-31 (4 years)
-                        const dtInicio = new Date(c.dataInicio.valor);
-                        const dtFim = new Date(c.dataEncerramentoOficial || c.dataEncerramento.valor);
-
-                        const t2025 = new Date("2025-01-01T00:00:00").getTime();
-                        const t2029 = new Date("2029-01-01T00:00:00").getTime();
-                        const totalTempo = t2029 - t2025;
-
-                        let leftPct = 10;
-                        let widthPct = 48;
-
-                        if (!isNaN(dtInicio.getTime()) && !isNaN(dtFim.getTime())) {
-                          const startDiff = dtInicio.getTime() - t2025;
-                          const spanDiff = dtFim.getTime() - dtInicio.getTime();
-                          leftPct = Math.max(0, Math.min(90, (startDiff / totalTempo) * 100));
-                          widthPct = Math.max(10, Math.min(100 - leftPct, (spanDiff / totalTempo) * 100));
-                        } else {
-                          if (isTreinamento) {
-                            leftPct = 8;
-                            widthPct = 50;
-                          } else {
-                            leftPct = 32;
-                            widthPct = 50;
-                          }
-                        }
-
                         return (
                           <div
                             key={c.id}
                             style={{
                               display: "flex",
                               alignItems: "center",
-                              minHeight: "56px",
+                              minHeight: "58px",
                             }}
                           >
-                            {/* Left label: Big Title + Resumed Amount */}
+                            {/* Left label: Big Title + Resumed Amount + Active Status */}
                             <div
                               style={{
-                                width: "200px",
+                                width: "240px",
                                 flexShrink: 0,
                                 display: "flex",
                                 flexDirection: "column",
                                 cursor: "pointer",
+                                paddingRight: "16px",
                               }}
                               onClick={() => {
                                 setContratoSelecionado(c);
                                 setAbaFicha("RESUMO");
                               }}
                             >
+                              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                                <span
+                                  style={{
+                                    fontSize: "17px",
+                                    fontWeight: 800,
+                                    color: "#0f172a",
+                                    letterSpacing: "-0.01em",
+                                  }}
+                                >
+                                  {nomeCurto}
+                                </span>
+                                <span style={{ fontSize: "13px", color: "#64748b", fontWeight: 700 }}>
+                                  {formatarValorResumido(Number(c.valorGlobal.valor))}
+                                </span>
+                              </div>
                               <span
                                 style={{
-                                  fontSize: "18px",
-                                  fontWeight: 800,
-                                  color: "#0f172a",
-                                  letterSpacing: "-0.01em",
+                                  fontSize: "11.5px",
+                                  fontWeight: 700,
+                                  color: ehVigente ? "#047857" : "#dc2626",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "5px",
+                                  marginTop: "3px",
                                 }}
                               >
-                                {nomeCurto}
-                              </span>
-                              <span style={{ fontSize: "14px", color: "#64748b", fontWeight: 500, marginTop: "2px" }}>
-                                {formatarValorResumido(Number(c.valorGlobal.valor))}
+                                <span
+                                  style={{
+                                    width: "7px",
+                                    height: "7px",
+                                    borderRadius: "50%",
+                                    backgroundColor: ehVigente ? "#10b981" : "#ef4444",
+                                  }}
+                                />
+                                {ehVigente
+                                  ? `Vigente até ${formatarDataBR(dtFim)}`
+                                  : `Vencido em ${formatarDataBR(dtFim)}`}
                               </span>
                             </div>
 
@@ -2073,11 +2109,12 @@ export default function GestaoContratosPage() {
                                   alignItems: "center",
                                   justifyContent: "center",
                                   color: "#ffffff",
-                                  fontSize: "15px",
+                                  fontSize: "13.5px",
                                   fontWeight: 700,
                                   cursor: "pointer",
                                   boxShadow: "0 2px 6px rgba(0,0,0,0.12)",
                                   transition: "transform 0.15s ease, filter 0.15s ease",
+                                  padding: "0 12px",
                                 }}
                                 onMouseEnter={(e) => {
                                   e.currentTarget.style.transform = "scaleY(1.04)";
@@ -2089,7 +2126,12 @@ export default function GestaoContratosPage() {
                                 }}
                                 title={`${c.cliente.valor} • ${c.projeto.valor} (${c.prazoMeses.valor} meses: ${formatarPeriodoBR(c.dataInicio.valor, c.dataEncerramentoOficial || c.dataEncerramento.valor)})`}
                               >
-                                <span>{c.prazoMeses.valor || "24"} meses</span>
+                                <div style={{ display: "flex", alignItems: "center", gap: "6px", whiteSpace: "nowrap" }}>
+                                  <span>{c.prazoMeses.valor || "24"} meses</span>
+                                  <span style={{ fontSize: "11px", opacity: 0.9, fontWeight: 500 }}>
+                                    • {formatarPeriodoBR(c.dataInicio.valor, c.dataEncerramentoOficial || c.dataEncerramento.valor)}
+                                  </span>
+                                </div>
                               </div>
                             </div>
                           </div>

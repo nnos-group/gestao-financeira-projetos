@@ -4,6 +4,7 @@ import {
   CampoRastreado,
   ModalidadeCobranca,
 } from "./contratos-types";
+import { formatarDataBR } from "./date-utils";
 
 interface ExtracaoInput {
   textoCompleto: string;
@@ -62,12 +63,14 @@ export function detectarInconsistencias(contrato: Partial<ContratoCompleto>): In
 
       // Se a divergência for maior que 5 dias (ex: fevereiro × março)
       if (diffDias > 5) {
-        const fmtCalculada = dFimCalculada.toISOString().split("T")[0];
+        const fmtInicio = formatarDataBR(inicioStr);
+        const fmtCalculada = formatarDataBR(dFimCalculada);
+        const fmtInformada = formatarDataBR(fimStr);
         inconsistencias.push({
           id: `INC-DATAS-${Date.now()}`,
           tipo: "DIVERGENCIA_DATAS",
           titulo: "ALERTA DE INCONSISTÊNCIA CONTRATUAL — Divergência entre Vigência e Encerramento",
-          descricao: `Identificada possível divergência entre a cláusula de vigência (${meses} meses a partir de ${inicioStr}, resultando em ${fmtCalculada}) e a data de encerramento informada no documento (${fimStr}). Diferença de aprox. ${diffDias} dias. Recomenda-se validação com o contratante.`,
+          descricao: `Identificada possível divergência entre a cláusula de vigência (${meses} meses a partir de ${fmtInicio}, resultando em ${fmtCalculada}) e a data de encerramento informada no documento (${fmtInformada}). Diferença de aprox. ${diffDias} dias. Recomenda-se validação com o contratante.`,
           clausulaA: String(contrato.prazoMeses?.clausulaOrigem || "Cláusula de Vigência"),
           paginaA: Number(contrato.prazoMeses?.paginaOrigem) || 2,
           clausulaB: String(contrato.dataEncerramento?.clausulaOrigem || "Cláusula de Encerramento"),
