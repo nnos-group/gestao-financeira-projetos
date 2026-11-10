@@ -72,13 +72,13 @@ export default function GestaoContratosPage() {
     if (contratoEmRevisao) {
       const vG = contratoEmRevisao.valorGlobal?.valor;
       setRevisaoValorGlobalStr(
-        vG != null && !isNaN(Number(vG))
+        vG != null && !isNaN(Number(vG)) && Number(vG) > 0
           ? Number(vG).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
           : ""
       );
       const vM = contratoEmRevisao.valorMensalFixo?.valor;
       setRevisaoValorMensalStr(
-        vM != null && !isNaN(Number(vM))
+        vM != null && !isNaN(Number(vM)) && Number(vM) > 0
           ? Number(vM).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
           : ""
       );
@@ -1689,31 +1689,33 @@ export default function GestaoContratosPage() {
                           <p style={{ margin: "4px 0 0 0" }}>{inc.descricao}</p>
                         </div>
                       ))}
-                      <div style={{ marginTop: "12px", display: "flex", alignItems: "center", gap: "10px" }}>
-                        <label style={{ fontSize: "12px", fontWeight: 700, color: "#78350f" }}>
-                          Data Oficial de Vencimento a Adotar:
-                        </label>
-                        <input
-                          type="date"
-                          value={contratoEmRevisao.dataEncerramentoOficial || contratoEmRevisao.dataEncerramento.valor}
-                          onChange={(e) =>
-                            setContratoEmRevisao({
-                              ...contratoEmRevisao,
-                              dataEncerramentoOficial: e.target.value,
-                            })
-                          }
-                          style={{
-                            padding: "6px 10px",
-                            borderRadius: "8px",
-                            border: "1px solid #d97706",
-                            fontSize: "12px",
-                            fontWeight: 700,
-                          }}
-                        />
-                        <span style={{ fontSize: "11px", color: "#92400e" }}>
-                          (O sistema não escolhe a data sozinho; confirme a data oficial para ativar os alertas de 90 dias)
-                        </span>
-                      </div>
+                      {contratoEmRevisao.inconsistencias.some((inc) => inc.tipo === "DIVERGENCIA_DATAS") && (
+                        <div style={{ marginTop: "12px", display: "flex", alignItems: "center", gap: "10px" }}>
+                          <label style={{ fontSize: "12px", fontWeight: 700, color: "#78350f" }}>
+                            Data Oficial de Vencimento a Adotar:
+                          </label>
+                          <input
+                            type="date"
+                            value={contratoEmRevisao.dataEncerramentoOficial || contratoEmRevisao.dataEncerramento?.valor || ""}
+                            onChange={(e) =>
+                              setContratoEmRevisao({
+                                ...contratoEmRevisao,
+                                dataEncerramentoOficial: e.target.value,
+                              })
+                            }
+                            style={{
+                              padding: "6px 10px",
+                              borderRadius: "8px",
+                              border: "1px solid #d97706",
+                              fontSize: "12px",
+                              fontWeight: 700,
+                            }}
+                          />
+                          <span style={{ fontSize: "11px", color: "#92400e" }}>
+                            (O sistema não escolhe a data sozinho; confirme a data oficial para ativar os alertas de 90 dias)
+                          </span>
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -1727,7 +1729,8 @@ export default function GestaoContratosPage() {
                       </div>
                       <input
                         type="text"
-                        value={String(contratoEmRevisao.numeroContrato.valor)}
+                        placeholder="Informe o número do contrato ou código"
+                        value={contratoEmRevisao.numeroContrato?.valor ? String(contratoEmRevisao.numeroContrato.valor) : ""}
                         onChange={(e) =>
                           setContratoEmRevisao({
                             ...contratoEmRevisao,
@@ -1746,7 +1749,8 @@ export default function GestaoContratosPage() {
                       </div>
                       <input
                         type="text"
-                        value={String(contratoEmRevisao.cliente.valor)}
+                        placeholder="Informe o cliente ou contratante"
+                        value={contratoEmRevisao.cliente?.valor ? String(contratoEmRevisao.cliente.valor) : ""}
                         onChange={(e) =>
                           setContratoEmRevisao({
                             ...contratoEmRevisao,
@@ -1765,7 +1769,8 @@ export default function GestaoContratosPage() {
                       </div>
                       <input
                         type="text"
-                        value={String(contratoEmRevisao.projeto.valor)}
+                        placeholder="Informe o nome do projeto"
+                        value={contratoEmRevisao.projeto?.valor ? String(contratoEmRevisao.projeto.valor) : ""}
                         onChange={(e) =>
                           setContratoEmRevisao({
                             ...contratoEmRevisao,
@@ -1896,7 +1901,7 @@ export default function GestaoContratosPage() {
                       </div>
                       <input
                         type="date"
-                        value={String(contratoEmRevisao.dataInicio.valor)}
+                        value={contratoEmRevisao.dataInicio?.valor ? String(contratoEmRevisao.dataInicio.valor) : ""}
                         onChange={(e) =>
                           setContratoEmRevisao({
                             ...contratoEmRevisao,
@@ -1915,7 +1920,7 @@ export default function GestaoContratosPage() {
                       </div>
                       <input
                         type="date"
-                        value={String(contratoEmRevisao.dataEncerramento.valor)}
+                        value={contratoEmRevisao.dataEncerramento?.valor ? String(contratoEmRevisao.dataEncerramento.valor) : ""}
                         onChange={(e) =>
                           setContratoEmRevisao({
                             ...contratoEmRevisao,
@@ -1934,7 +1939,8 @@ export default function GestaoContratosPage() {
                       </div>
                       <input
                         type="text"
-                        value={String(contratoEmRevisao.indiceReajuste.valor)}
+                        placeholder="Informe o índice de reajuste (ex: IPCA, IGP-M)"
+                        value={contratoEmRevisao.indiceReajuste?.valor ? String(contratoEmRevisao.indiceReajuste.valor) : ""}
                         onChange={(e) =>
                           setContratoEmRevisao({
                             ...contratoEmRevisao,

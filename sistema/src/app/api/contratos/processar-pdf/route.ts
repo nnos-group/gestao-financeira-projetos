@@ -27,9 +27,11 @@ export async function POST(req: NextRequest) {
 
       const pdfBase64 = buffer.toString("base64");
 
-      // 1. Tenta extrair com pdf-parse (compatível com v1 e v2 PDFParse class)
+      // 1. Tenta extrair com pdf-parse (usando createRequire para evitar conflito com bundler webpack)
       try {
-        const pdfModule: any = await import("pdf-parse");
+        const { createRequire } = await import("module");
+        const nodeRequire = createRequire(process.cwd());
+        const pdfModule: any = nodeRequire("pdf-parse");
         if (pdfModule?.PDFParse) {
           const parser = new pdfModule.PDFParse({ data: buffer });
           await parser.load();
