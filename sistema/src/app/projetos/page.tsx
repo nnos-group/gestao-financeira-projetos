@@ -287,6 +287,10 @@ export default async function ProjetosPage({
               <span className="material-symbols-outlined">flight</span>
               <span>Viagens & Logística</span>
             </Link>
+            <Link href="/contratos" className="nav-item">
+              <span className="material-symbols-outlined">history_edu</span>
+              <span>Gestão de Contratos</span>
+            </Link>
             <Link href="/centro-de-custo" className="nav-item">
               <span className="material-symbols-outlined">account_tree</span>
               <span>Centro de Custo</span>

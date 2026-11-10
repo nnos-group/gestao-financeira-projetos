@@ -164,6 +164,7 @@ export default function RelatoriosPage() {
             <Link href="/projetos" className="nav-item"><span className="material-symbols-outlined">assignment</span><span>Projetos &amp; Atividades</span></Link>
             <Link href="/medicao" className="nav-item"><span className="material-symbols-outlined">receipt_long</span><span>BM - Boletim de Medição</span></Link>
             <Link href="/viagens" className="nav-item"><span className="material-symbols-outlined">flight</span><span>Viagens &amp; Logística</span></Link>
+            <Link href="/contratos" className="nav-item"><span className="material-symbols-outlined">history_edu</span><span>Gestão de Contratos</span></Link>
             <Link href="/centro-de-custo" className="nav-item"><span className="material-symbols-outlined">account_tree</span><span>Centro de Custo</span></Link>
             <Link href="/tabela-precos" className="nav-item"><span className="material-symbols-outlined">request_quote</span><span>Tabela de Preços</span></Link>
             <Link href="/pessoas" className="nav-item"><span className="material-symbols-outlined">group</span><span>Pessoas</span></Link>

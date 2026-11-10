@@ -58,6 +58,16 @@
         "observacao": "Acesso a todas as abas: Agência, Líder de Projeto, Financeiro e Consultor."
       },
       {
+        "id": "contratos",
+        "nome": "Gestão de Contratos",
+        "rota": "/contratos",
+        "icone": "history_edu",
+        "visivel": true,
+        "nivel": "TOTAL",
+        "abaPadrao": "Dashboard de Contratos",
+        "observacao": "Centralização, inteligência artificial documental, linha do tempo Gantt e monitoramento de 90 dias."
+      },
+      {
         "id": "centro-de-custo",
         "nome": "Centro de Custo",
         "rota": "/centro-de-custo",
@@ -216,6 +226,16 @@
         "nivel": "EDITAR_APROVAR",
         "abaPadrao": "Visão Consolidada",
         "observacao": "Acompanhamento e aprovação de demandas logísticas e viagens."
+      },
+      {
+        "id": "contratos",
+        "nome": "Gestão de Contratos",
+        "rota": "/contratos",
+        "icone": "history_edu",
+        "visivel": true,
+        "nivel": "TOTAL",
+        "abaPadrao": "Dashboard de Contratos",
+        "observacao": "Visibilidade executiva da carteira comercial, receitas recorrentes e vencimentos."
       },
       {
         "id": "centro-de-custo",
@@ -393,6 +413,16 @@
         "observacao": "Pré-selecionado na aba Líder de Projeto para aprovar/recusar cotações da agência."
       },
       {
+        "id": "contratos",
+        "nome": "Gestão de Contratos",
+        "rota": "/contratos",
+        "icone": "history_edu",
+        "visivel": true,
+        "nivel": "VISUALIZAR",
+        "abaPadrao": "Contratos Cadastrados",
+        "observacao": "Consulta a contratos de sua carteira, escopo técnico, perfis e vigência."
+      },
+      {
         "id": "centro-de-custo",
         "nome": "Centro de Custo",
         "rota": "/centro-de-custo",
@@ -561,6 +591,16 @@
         "nivel": "EDITAR_APROVAR",
         "abaPadrao": "Aba: Financeiro (Auditoria RDV)",
         "observacao": "Pré-selecionado na aba Financeiro para auditoria de custos contratados vs. realizados."
+      },
+      {
+        "id": "contratos",
+        "nome": "Gestão de Contratos",
+        "rota": "/contratos",
+        "icone": "history_edu",
+        "visivel": true,
+        "nivel": "TOTAL",
+        "abaPadrao": "Dashboard de Contratos",
+        "observacao": "Controle financeiro de contratos, faturamento recorrente, reajustes e alertas."
       },
       {
         "id": "centro-de-custo",
