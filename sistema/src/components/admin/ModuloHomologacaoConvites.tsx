@@ -23,7 +23,8 @@ export interface RegistroHomologacao {
   apontamentos: string;
 }
 
-const URL_OFICIAL_SISTEMA = "https://gestao-financeira-projetos.vercel.app";
+const URL_OFICIAL_LOGIN = "https://gestao-financeira-projetos.vercel.app/login";
+const URL_OFICIAL_SISTEMA = URL_OFICIAL_LOGIN;
 
 const OPCOES_FILTRO_STATUS = [
   { value: "TODOS", label: "Todos os Status de Homologação" },
@@ -156,7 +157,7 @@ export default function ModuloHomologacaoConvites({ perfis, onToast }: Props) {
     const ehAgencia = user.perfilId === "AGENCIA" || user.email.includes("fcconsultoriadeviagens") || user.login.includes("agencia");
     const ehLider = user.perfilId === "LIDER";
     const ehFinanceiro = user.perfilId === "FINANCEIRO";
-    const linkAcesso = ehAgencia ? `${URL_OFICIAL_SISTEMA}/viagens` : URL_OFICIAL_SISTEMA;
+    const linkAcesso = URL_OFICIAL_LOGIN;
 
     if (ehAgencia) {
       return `Assunto: ✈️ Novo Módulo de Viagens & Logística NNÓS | Acesso para Homologação e Testes Operacionais
@@ -180,10 +181,11 @@ Como parceiros estratégicos da nossa operação logística, convidamos vocês p
 --------------------------------------------------
 🔑 SEUS DADOS DE ACESSO:
 --------------------------------------------------
-- Link Oficial: ${linkAcesso}
+- Link Oficial de Acesso (Tela de Login): ${linkAcesso}
 - Seu Usuário / Login: ${user.login || "agencia.fatima"}
 - E-mail: ${user.email}
 - Senha Inicial: ${user.senha || "viagem2026"}
+* Nota: Ao efetuar o login com suas credenciais, seu acesso abrirá diretamente no módulo de Viagens & Logística (/viagens).
 
 --------------------------------------------------
 🦉 DUVIDAS? UTILIZE O GUIA E O AGENTE DE IA:
@@ -193,12 +195,12 @@ Dentro do sistema, clique no botão "Ajuda & IA" (com o ícone da coruja) para c
 --------------------------------------------------
 📝 CANAL DE APONTAMENTOS E MELHORIAS:
 --------------------------------------------------
-Pedimos que qualquer processo divergente, sugestão ou ajuste seja enviado pelo canal de Microsoft Teams da Controladoria ou respondendo a este e-mail.
+Pedimos que qualquer processo divergente, sugestão ou ajuste seja enviado pelo canal de Microsoft Teams da Equipe de Gestão NNÓS ou respondendo a este e-mail.
 
 Muito obrigado pela parceria contínua!
 
 Atenciosamente,
-Leonardo Campos & Equipe de Controladoria
+Leonardo Campos & Equipe de Gestão NNÓS
 NNÓS Consultoria e Treinamento`;
     }
 
@@ -224,7 +226,7 @@ Estamos na reta final para a liberação em produção e o seu olhar operacional
 --------------------------------------------------
 🔑 SEUS DADOS DE ACESSO:
 --------------------------------------------------
-- Link Oficial: ${linkAcesso}
+- Link Oficial de Acesso (Tela de Login): ${linkAcesso}
 - Seu Usuário / Login: ${user.login}
 - E-mail Cadastrado: ${user.email}
 - Senha Inicial: ${user.senha || "nnos2026"}
@@ -239,7 +241,7 @@ No topo direito (ou no botão flutuante com o ícone da coruja), clique em "Ajud
 --------------------------------------------------
 📝 COMO ENVIAR SEUS APONTAMENTOS DE MELHORIA:
 --------------------------------------------------
-Pedimos que envie seus feedbacks, processos divergentes ou sugestões diretamente pelo canal de Microsoft Teams da Controladoria ou respondendo a este e-mail indicando:
+Pedimos que envie seus feedbacks, processos divergentes ou sugestões diretamente pelo canal de Microsoft Teams da Equipe de Gestão NNÓS ou respondendo a este e-mail indicando:
 1. Em qual tela você estava navegando;
 2. O que ocorreu de diferente do seu processo real;
 3. Sugestão de melhoria ou print da tela.
@@ -247,7 +249,7 @@ Pedimos que envie seus feedbacks, processos divergentes ou sugestões diretament
 Contamos muito com sua colaboração para colocarmos no ar o melhor sistema de gestão que a NNÓS já teve!
 
 Um abraço,
-Leonardo Campos & Diretoria Executiva
+Leonardo Campos & Equipe de Gestão NNÓS
 NNÓS Consultoria e Treinamento`;
   };
 
@@ -438,13 +440,13 @@ NNÓS Consultoria e Treinamento`;
               Fase de Homologação Ativa • Exercício 2026
             </div>
             <div style={{ fontSize: "12px", color: "#0369a1", marginTop: "2px" }}>
-              Link oficial de acesso: <strong>{URL_OFICIAL_SISTEMA}</strong> | Canal de suporte e apontamentos: <strong>Microsoft Teams da Controladoria</strong>
+              Link oficial de acesso (Login): <strong>{URL_OFICIAL_LOGIN}</strong> | Canal de suporte e apontamentos: <strong>Microsoft Teams da Equipe de Gestão NNÓS</strong>
             </div>
           </div>
         </div>
 
         <a
-          href={URL_OFICIAL_SISTEMA}
+          href={URL_OFICIAL_LOGIN}
           target="_blank"
           rel="noopener noreferrer"
           style={{
@@ -993,3 +995,4 @@ NNÓS Consultoria e Treinamento`;
     </div>
   );
 }
+

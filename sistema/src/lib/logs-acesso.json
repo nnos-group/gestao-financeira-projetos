@@ -1,5 +1,19 @@
 [
   {
+    "id": "log-1794259240202-797",
+    "dataHora": "2026-11-09T21:20:40.202Z",
+    "usuarioLogin": "beatriz.picorelli",
+    "usuarioNome": "Beatriz Picorelli",
+    "usuarioEmail": "beatriz.picorelli@nnos.com.br",
+    "perfilId": "LIDER",
+    "evento": "CONVITE_HOMOLOGACAO",
+    "metodo": "Módulo Homologação & Convites",
+    "status": "SUCESSO",
+    "ip": "189.40.112.84",
+    "dispositivo": "Windows • Navegador Corporativo",
+    "detalhes": "Status de homologação alterado para CONVITE_ENVIADO por Leonardo Campos."
+  },
+  {
     "id": "log-1794232857545-112",
     "dataHora": "2026-11-09T14:00:57.545Z",
     "usuarioLogin": "leonardo.campos",
