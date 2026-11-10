@@ -2,12 +2,10 @@ import fs from "fs";
 import path from "path";
 import {
   ContratoCompleto,
-  AlertaContratual,
   SituacaoContratual,
-  InconsistenciaContratual,
   SeveridadeAlerta,
 } from "./contratos-types";
-import { formatarDataBR, formatarDataHoraBR } from "./date-utils";
+import { formatarDataHoraBR } from "./date-utils";
 
 const DATA_FILE = path.join(process.cwd(), "src/lib/contratos-base.json");
 
@@ -631,7 +629,7 @@ export function processarSituacaoEAlertas(contratos: ContratoCompleto[]): Contra
     }
 
     // Calcula os Alertas do Ciclo de Vida (não gera alerta se já rescindido ou encerrado)
-    let alertasAtualizados = [...(c.alertas || [])];
+    const alertasAtualizados = [...(c.alertas || [])];
 
     if (novaSituacao !== "ENCERRADO" && novaSituacao !== "RESCINDIDO") {
       // Marcos oficiais: 90, 60, 30, 15, 0 dias

@@ -1,4 +1,11 @@
 {
+  "name": "gestao-financeira-projetos",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "npm --prefix sistema run dev",
+    "build": "npm --prefix sistema run build",
+    "start": "npm --prefix sistema run start"
+  },
   "dependencies": {
     "google-auth-library": "^11.2.0"
   }

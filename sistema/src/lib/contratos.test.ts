@@ -3,8 +3,8 @@ import {
   calcularMetricasDashboard,
   gerarContratosIniciais,
   processarSituacaoEAlertas,
-} from "./contratos-service.ts";
-import { detectarInconsistencias } from "./contratos-ia-extractor.ts";
+} from "./contratos-service";
+import { detectarInconsistencias } from "./contratos-ia-extractor";
 
 function assert(cond: boolean, msg: string) {
   if (!cond) {

@@ -25,15 +25,14 @@ export async function POST(req: NextRequest) {
       const arrayBuffer = await file.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
 
-      // Tenta extrair texto com pdf-parse
+      // Tenta extrair texto com pdf-parse se disponível, caso contrário decodifica buffer
       try {
-        // @ts-ignore
-        const pdfParse = (await import("pdf-parse")).default || (await import("pdf-parse"));
+        const pdfModule: any = await import("pdf-parse");
+        const pdfParse = pdfModule?.default || pdfModule;
         const pdfData = await pdfParse(buffer);
         textoCompleto = pdfData?.text || "";
       } catch (parseErr) {
-        console.warn("Aviso ao extrair texto com pdf-parse:", parseErr);
-        // Fallback básico caso o PDF seja digitalizado ou o binário tenha proteção simples
+        console.warn("Aviso ao extrair texto com pdf-parse, utilizando decodificador direto:", parseErr);
         textoCompleto = buffer.toString("utf-8").replace(/[^\x20-\x7E\xA0-\xFF\n\r]/g, " ");
       }
     } else {

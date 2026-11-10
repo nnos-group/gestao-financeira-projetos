@@ -1,0 +1,793 @@
+[
+  {
+    "id": "CTR-2026-UTVN4",
+    "codigo": "CTR-2026-UTVN4",
+    "numeroContrato": {
+      "valor": "Treinamento e Consultoia Nnós - Assinatura solicitada em Pr",
+      "paginaOrigem": 1,
+      "clausulaOrigem": "Cabeçalho",
+      "confianca": 0.9,
+      "naoLocalizado": false
+    },
+    "cliente": {
+      "valor": "Porsche Brasil",
+      "paginaOrigem": 1,
+      "clausulaOrigem": "Qualificação das Partes",
+      "confianca": 0.9,
+      "naoLocalizado": false
+    },
+    "razaoSocialContratada": {
+      "valor": "NNÓS Consultoria e Treinamento Ltda",
+      "paginaOrigem": 1,
+      "clausulaOrigem": "Qualificação das Partes",
+      "confianca": 0.9,
+      "naoLocalizado": false
+    },
+    "cnpjCliente": {
+      "valor": "Não localizado no contrato",
+      "paginaOrigem": 1,
+      "clausulaOrigem": "Qualificação das Partes",
+      "confianca": 0,
+      "naoLocalizado": true
+    },
+    "cnpjContratada": {
+      "valor": "34.892.115/0001-44",
+      "paginaOrigem": 1,
+      "clausulaOrigem": "Qualificação das Partes",
+      "confianca": 0.9,
+      "naoLocalizado": false
+    },
+    "projeto": {
+      "valor": "Projeto Corporativo Porsche Brasil",
+      "paginaOrigem": 1,
+      "clausulaOrigem": "Cláusula 1ª",
+      "confianca": 0.9,
+      "naoLocalizado": false
+    },
+    "objeto": {
+      "valor": "Prestação de serviços de consultoria, treinamento e gestão corporativa.",
+      "paginaOrigem": 1,
+      "clausulaOrigem": "Cláusula 1ª",
+      "confianca": 0.9,
+      "naoLocalizado": false
+    },
+    "responsavelInterno": {
+      "valor": "Leonardo Campos",
+      "paginaOrigem": 1,
+      "clausulaOrigem": "Gestão do Contrato",
+      "confianca": 0.9,
+      "naoLocalizado": false
+    },
+    "responsavelCliente": {
+      "valor": "Não localizado no contrato",
+      "paginaOrigem": 1,
+      "clausulaOrigem": "Gestão do Contrato",
+      "confianca": 0,
+      "naoLocalizado": true
+    },
+    "tipoContrato": {
+      "valor": "Contrato de Prestação de Serviços por Demanda",
+      "paginaOrigem": 1,
+      "clausulaOrigem": "Epígrafe",
+      "confianca": 0.9,
+      "naoLocalizado": false
+    },
+    "situacaoAssinatura": {
+      "valor": "ASSINADO",
+      "paginaOrigem": 1,
+      "clausulaOrigem": "Assinaturas",
+      "confianca": 0.9,
+      "naoLocalizado": false
+    },
+    "dataAssinatura": {
+      "valor": "2025-02-28",
+      "paginaOrigem": 1,
+      "clausulaOrigem": "Datação",
+      "confianca": 0.9,
+      "naoLocalizado": false
+    },
+    "dataInicio": {
+      "valor": "2025-02-28",
+      "paginaOrigem": 2,
+      "clausulaOrigem": "Cláusula de Vigência",
+      "confianca": 0.9,
+      "naoLocalizado": false
+    },
+    "dataEncerramento": {
+      "valor": "2027-02-27",
+      "paginaOrigem": 2,
+      "clausulaOrigem": "Cláusula de Encerramento",
+      "confianca": 0.9,
+      "naoLocalizado": false
+    },
+    "dataEncerramentoOficial": "2027-02-27",
+    "prazoMeses": {
+      "valor": 24,
+      "paginaOrigem": 2,
+      "clausulaOrigem": "Cláusula de Vigência",
+      "confianca": 0.9,
+      "naoLocalizado": false
+    },
+    "possibilidadeRenovacao": {
+      "valor": true,
+      "paginaOrigem": 3,
+      "clausulaOrigem": "Cláusula de Prorrogação",
+      "confianca": 0.9,
+      "naoLocalizado": false
+    },
+    "condicoesProrrogacao": {
+      "valor": "Mediante termo aditivo com aviso prévio.",
+      "paginaOrigem": 3,
+      "clausulaOrigem": "Cláusula de Prorrogação",
+      "confianca": 0.9,
+      "naoLocalizado": false
+    },
+    "avisoPrevioDias": {
+      "valor": 60,
+      "paginaOrigem": 4,
+      "clausulaOrigem": "Cláusula de Rescisão",
+      "confianca": 0.9,
+      "naoLocalizado": false
+    },
+    "condicoesRescisao": {
+      "valor": "Aviso prévio formal de 60 dias sem penalidades para rescisão imotivada.",
+      "paginaOrigem": 4,
+      "clausulaOrigem": "Cláusula de Rescisão",
+      "confianca": 0.9,
+      "naoLocalizado": false
+    },
+    "renovacaoAutomatica": {
+      "valor": false,
+      "paginaOrigem": 3,
+      "clausulaOrigem": "Cláusula de Vigência",
+      "confianca": 0.9,
+      "naoLocalizado": false
+    },
+    "valorGlobal": {
+      "valor": 0,
+      "paginaOrigem": 3,
+      "clausulaOrigem": "Cláusula do Preço",
+      "confianca": 0.9,
+      "naoLocalizado": false
+    },
+    "valorMensalFixo": {
+      "valor": "Não localizado no contrato",
+      "paginaOrigem": 3,
+      "clausulaOrigem": "Cláusula de Remuneração",
+      "confianca": 0,
+      "naoLocalizado": true
+    },
+    "valorAnualEstimado": {
+      "valor": 0,
+      "paginaOrigem": 3,
+      "clausulaOrigem": "Preço Anual",
+      "confianca": 0.9,
+      "naoLocalizado": false
+    },
+    "modalidadeCobranca": {
+      "valor": "DEMANDA_SERVICOS",
+      "paginaOrigem": 3,
+      "clausulaOrigem": "Cláusula do Faturamento",
+      "confianca": 0.9,
+      "naoLocalizado": false
+    },
+    "periodicidadeFaturamento": {
+      "valor": "Mensal",
+      "paginaOrigem": 4,
+      "clausulaOrigem": "Cláusula de Faturamento",
+      "confianca": 0.9,
+      "naoLocalizado": false
+    },
+    "condicoesPagamento": {
+      "valor": "30 dias após emissão da NFSe",
+      "paginaOrigem": 4,
+      "clausulaOrigem": "Condições de Pagamento",
+      "confianca": 0.9,
+      "naoLocalizado": false
+    },
+    "indiceReajuste": {
+      "valor": "Não localizado no contrato",
+      "paginaOrigem": 4,
+      "clausulaOrigem": "Cláusula de Reajuste",
+      "confianca": 0,
+      "naoLocalizado": true
+    },
+    "dataBaseReajuste": {
+      "valor": "Anual",
+      "paginaOrigem": 4,
+      "clausulaOrigem": "Cláusula de Reajuste",
+      "confianca": 0.9,
+      "naoLocalizado": false
+    },
+    "regrasAtualizacaoPrecos": {
+      "valor": "Atualização monetária anual conforme variação acumulada do índice contratado.",
+      "paginaOrigem": 4,
+      "clausulaOrigem": "Cláusula de Reajuste",
+      "confianca": 0.9,
+      "naoLocalizado": false
+    },
+    "multasPenalidades": {
+      "valor": "Multa de 2% por atraso de pagamento.",
+      "paginaOrigem": 5,
+      "clausulaOrigem": "Penalidades",
+      "confianca": 0.9,
+      "naoLocalizado": false
+    },
+    "composicaoPerfis": [],
+    "obrigacoesPrincipais": {
+      "valor": "Prestar os serviços com excelência e manter equipe técnica qualificada.",
+      "paginaOrigem": 2,
+      "clausulaOrigem": "Obrigações da Contratada",
+      "confianca": 0.9,
+      "naoLocalizado": false
+    },
+    "clausulaConfidencialidade": {
+      "valor": true,
+      "paginaOrigem": 5,
+      "clausulaOrigem": "Sigilo e Confidencialidade",
+      "confianca": 0.9,
+      "naoLocalizado": false
+    },
+    "condicoesExclusividade": {
+      "valor": "Não exclusiva",
+      "paginaOrigem": 5,
+      "clausulaOrigem": "Disposições Gerais",
+      "confianca": 0.9,
+      "naoLocalizado": false
+    },
+    "permiteSubcontratacao": {
+      "valor": true,
+      "paginaOrigem": 2,
+      "clausulaOrigem": "Obrigações",
+      "confianca": 0.9,
+      "naoLocalizado": false
+    },
+    "responsabilidadesEspecificas": {
+      "valor": "Emissão de relatórios e controle de horas/atividades.",
+      "paginaOrigem": 2,
+      "clausulaOrigem": "Escopo",
+      "confianca": 0.9,
+      "naoLocalizado": false
+    },
+    "riscosIdentificados": [
+      {
+        "risco": "Verificar se a demanda estimada pelo cliente se confirmará no período.",
+        "severidade": "MEDIO",
+        "clausula": "Cláusula de Demanda"
+      }
+    ],
+    "anexos": [
+      "Anexo I - Escopo Técnico"
+    ],
+    "situacao": "VIGENTE",
+    "statusRenovacao": "NAO_INICIADA",
+    "inconsistencias": [
+      {
+        "id": "INC-REAJUSTE-1794320967464",
+        "tipo": "REAJUSTE_SEM_INDICE",
+        "titulo": "Reajuste Contratual sem Índice Oficial Definido",
+        "descricao": "O contrato prevê atualização periódica de valores, porém o índice de correção monetária (ex: IPCA, IGP-M, INPC) não foi especificado de forma conclusiva.",
+        "clausulaA": "Cláusula de Reajuste",
+        "paginaA": 4,
+        "resolvida": false
+      }
+    ],
+    "aditivos": [],
+    "alertas": [],
+    "arquivoPdfNome": "Treinamento e Consultoia_Nnós_-_Assinatura_solicitada_em_Pr.pdf",
+    "arquivoPdfTamanhoBytes": 10424559,
+    "origemExtracao": "OCR_LOCAL",
+    "criadoEm": "2026-11-10T14:29:27.463Z",
+    "atualizadoEm": "2026-11-10T14:30:26.398Z",
+    "criadoPor": "Auditor IA NNÓS"
+  },
+  {
+    "id": "CTR-2025-PORSCHE-001",
+    "codigo": "CTR-PORSCHE-TREINAMENTO",
+    "numeroContrato": {
+      "valor": "POR-NNOS-2025/082",
+      "paginaOrigem": 1,
+      "clausulaOrigem": "Preâmbulo / Cláusula 1ª",
+      "confianca": 0.98
+    },
+    "cliente": {
+      "valor": "Porsche Brasil",
+      "paginaOrigem": 1,
+      "clausulaOrigem": "Qualificação das Partes",
+      "confianca": 1
+    },
+    "razaoSocialContratada": {
+      "valor": "NNÓS Consultoria e Treinamento Ltda",
+      "paginaOrigem": 1,
+      "clausulaOrigem": "Qualificação das Partes",
+      "confianca": 1
+    },
+    "cnpjCliente": {
+      "valor": "00.370.470/0001-08",
+      "paginaOrigem": 1,
+      "clausulaOrigem": "Qualificação das Partes",
+      "confianca": 0.95
+    },
+    "cnpjContratada": {
+      "valor": "34.892.115/0001-44",
+      "paginaOrigem": 1,
+      "clausulaOrigem": "Qualificação das Partes",
+      "confianca": 1
+    },
+    "projeto": {
+      "valor": "Treinamento e Consultoria Porsche",
+      "paginaOrigem": 2,
+      "clausulaOrigem": "Cláusula 1ª - Do Objeto",
+      "confianca": 0.95
+    },
+    "objeto": {
+      "valor": "Prestação de serviços especializados de consultoria técnica, facilitação de workshops e treinamentos corporativos de capacitação para a rede Porsche Brasil.",
+      "paginaOrigem": 2,
+      "clausulaOrigem": "Cláusula 1ª - Do Objeto",
+      "confianca": 0.97
+    },
+    "responsavelInterno": {
+      "valor": "Leonardo Campos",
+      "paginaOrigem": 12,
+      "clausulaOrigem": "Cláusula 14ª - Dos Gestores do Contrato",
+      "confianca": 0.9
+    },
+    "responsavelCliente": {
+      "valor": "Gerência de Treinamento Porsche",
+      "paginaOrigem": 12,
+      "clausulaOrigem": "Cláusula 14ª - Dos Gestores do Contrato",
+      "confianca": 0.9
+    },
+    "tipoContrato": {
+      "valor": "Prestação de Serviços Especializados",
+      "paginaOrigem": 1,
+      "clausulaOrigem": "Epígrafe",
+      "confianca": 0.95
+    },
+    "situacaoAssinatura": {
+      "valor": "ASSINADO",
+      "paginaOrigem": 14,
+      "clausulaOrigem": "Termo de Encerramento e Assinaturas",
+      "confianca": 1
+    },
+    "dataAssinatura": {
+      "valor": "2025-02-28",
+      "paginaOrigem": 14,
+      "clausulaOrigem": "Datação Final",
+      "confianca": 0.98
+    },
+    "dataInicio": {
+      "valor": "2025-02-28",
+      "paginaOrigem": 3,
+      "clausulaOrigem": "Cláusula 3ª - Da Vigência (Item 3.1)",
+      "confianca": 0.95
+    },
+    "dataEncerramento": {
+      "valor": "2027-02-27",
+      "paginaOrigem": 3,
+      "clausulaOrigem": "Cláusula 3ª - Da Vigência (Item 3.2)",
+      "confianca": 0.88
+    },
+    "dataEncerramentoOficial": "2027-02-27",
+    "prazoMeses": {
+      "valor": 24,
+      "paginaOrigem": 3,
+      "clausulaOrigem": "Cláusula 3ª - Prazo Contratual",
+      "confianca": 0.99
+    },
+    "possibilidadeRenovacao": {
+      "valor": true,
+      "paginaOrigem": 4,
+      "clausulaOrigem": "Cláusula 3ª - Prorrogação mediante termo aditivo",
+      "confianca": 0.95
+    },
+    "condicoesProrrogacao": {
+      "valor": "Mediante celebração prévia de termo aditivo com manifestação expressa com até 60 dias de antecedência.",
+      "paginaOrigem": 4,
+      "clausulaOrigem": "Cláusula 3.3",
+      "confianca": 0.95
+    },
+    "avisoPrevioDias": {
+      "valor": 60,
+      "paginaOrigem": 5,
+      "clausulaOrigem": "Cláusula 7ª - Da Rescisão Sem Justa Causa",
+      "confianca": 0.95
+    },
+    "condicoesRescisao": {
+      "valor": "Rescisão motivada por descumprimento contratual imediata; rescisão imotivada mediante aviso prévio de 60 dias sem penalidades financeiras.",
+      "paginaOrigem": 5,
+      "clausulaOrigem": "Cláusula 7ª",
+      "confianca": 0.9
+    },
+    "renovacaoAutomatica": {
+      "valor": false,
+      "paginaOrigem": 4,
+      "clausulaOrigem": "Cláusula 3.4 - Vedada renovação tácita",
+      "confianca": 0.98
+    },
+    "valorGlobal": {
+      "valor": 721200,
+      "paginaOrigem": 6,
+      "clausulaOrigem": "Cláusula 5ª - Do Preço Global Estimado",
+      "confianca": 1
+    },
+    "valorMensalFixo": {
+      "valor": null,
+      "paginaOrigem": 6,
+      "clausulaOrigem": "Cláusula 5ª - Do Faturamento por Demanda Realizada",
+      "confianca": 1
+    },
+    "valorAnualEstimado": {
+      "valor": 360600,
+      "paginaOrigem": 6,
+      "clausulaOrigem": "Estimativa Anual Pro-Rata",
+      "confianca": 0.95
+    },
+    "modalidadeCobranca": {
+      "valor": "DEMANDA_SERVICOS",
+      "paginaOrigem": 6,
+      "clausulaOrigem": "Cláusula 5.2 - Medição Mensal por Atividades Executadas",
+      "confianca": 1
+    },
+    "periodicidadeFaturamento": {
+      "valor": "Mensal, conforme horas e turmas atestadas em Boletim de Medição",
+      "paginaOrigem": 7,
+      "clausulaOrigem": "Cláusula 6ª - Do Faturamento e BM",
+      "confianca": 0.95
+    },
+    "condicoesPagamento": {
+      "valor": "30 dias fora a dezena após aprovação do BM e emissão da NFSe",
+      "paginaOrigem": 7,
+      "clausulaOrigem": "Cláusula 6.3 - Condições de Liquidação",
+      "confianca": 0.95
+    },
+    "indiceReajuste": {
+      "valor": "IPCA / IBGE",
+      "paginaOrigem": 8,
+      "clausulaOrigem": "Cláusula 8ª - Do Reajuste Anual",
+      "confianca": 0.98
+    },
+    "dataBaseReajuste": {
+      "valor": "Fevereiro (a cada 12 meses de vigência)",
+      "paginaOrigem": 8,
+      "clausulaOrigem": "Cláusula 8.2",
+      "confianca": 0.95
+    },
+    "regrasAtualizacaoPrecos": {
+      "valor": "Aplicação da variação acumulada do IPCA no período de 12 meses ou índice oficial que venha a substituí-lo.",
+      "paginaOrigem": 8,
+      "clausulaOrigem": "Cláusula 8ª",
+      "confianca": 0.95
+    },
+    "multasPenalidades": {
+      "valor": "Multa moratória de 2% e juros de 1% ao mês por atraso injustificado.",
+      "paginaOrigem": 9,
+      "clausulaOrigem": "Cláusula 10ª - Das Penalidades",
+      "confianca": 0.9
+    },
+    "composicaoPerfis": [
+      {
+        "perfil": "Consultor Sênior / Instrutor Técnico",
+        "valorMensal": 30050,
+        "observacao": "Média mensal estimada sobre o valor global (faturamento conforme turmas realizadas)"
+      }
+    ],
+    "obrigacoesPrincipais": {
+      "valor": "Manter equipe qualificada, respeitar cronograma de treinamentos e emitir relatórios de avaliação após cada módulo.",
+      "paginaOrigem": 4,
+      "clausulaOrigem": "Cláusula 4ª - Das Obrigações da Contratada",
+      "confianca": 0.95
+    },
+    "clausulaConfidencialidade": {
+      "valor": true,
+      "paginaOrigem": 10,
+      "clausulaOrigem": "Cláusula 12ª - Do Sigilo e LGPD",
+      "confianca": 1
+    },
+    "condicoesExclusividade": {
+      "valor": "Não exclusiva. A contratada pode prestar serviços a outras montadoras, resguardado sigilo sobre informações estratégicas.",
+      "paginaOrigem": 11,
+      "clausulaOrigem": "Cláusula 13ª",
+      "confianca": 0.92
+    },
+    "permiteSubcontratacao": {
+      "valor": true,
+      "paginaOrigem": 4,
+      "clausulaOrigem": "Cláusula 4.4 - Autorizada subcontratação de consultores parceiros homologados",
+      "confianca": 0.95
+    },
+    "responsabilidadesEspecificas": {
+      "valor": "Fornecimento de apostilas digitais e suporte técnico aos participantes da rede autorizada.",
+      "paginaOrigem": 3,
+      "clausulaOrigem": "Anexo I - Escopo Técnico",
+      "confianca": 0.9
+    },
+    "riscosIdentificados": [
+      {
+        "risco": "Faturamento variável: receita depende exclusivamente da demanda de turmas convocadas pelo cliente.",
+        "severidade": "MEDIO",
+        "clausula": "Cláusula 5.2"
+      }
+    ],
+    "anexos": [
+      "Anexo I - Escopo Técnico de Treinamentos",
+      "Anexo II - Tabela de Tarifas por Carga Horária"
+    ],
+    "situacao": "VIGENTE",
+    "statusRenovacao": "NAO_INICIADA",
+    "inconsistencias": [
+      {
+        "id": "INC-POR-001",
+        "tipo": "DIVERGENCIA_DATAS",
+        "titulo": "Divergência de Encerramento (Fevereiro × Março de 2027)",
+        "descricao": "Identificada possível divergência entre a cláusula de vigência (24 meses a partir de 28/02/2025 = encerramento em 27/02/2027) e a solicitação contratual formal que indica encerramento em março de 2027. Recomenda-se validação com o contratante.",
+        "clausulaA": "Cláusula 3ª - Prazo de 24 meses contados de 28/02/2025",
+        "paginaA": 3,
+        "clausulaB": "Solicitação Contratual / Cronograma Anexo III (Março/2027)",
+        "paginaB": 15,
+        "resolvida": false
+      }
+    ],
+    "aditivos": [],
+    "alertas": [],
+    "arquivoPdfNome": "Contrato_Porsche_Brasil_Treinamento_2025.pdf",
+    "origemExtracao": "IA_GEMINI",
+    "criadoEm": "2025-02-28T10:00:00-03:00",
+    "atualizadoEm": "2026-11-10T10:00:00-03:00",
+    "criadoPor": "Leonardo Campos",
+    "aprovadoPor": "Leonardo Campos",
+    "aprovadoEm": "2025-02-28T14:30:00-03:00"
+  },
+  {
+    "id": "CTR-2026-PORSCHE-002",
+    "codigo": "CTR-PORSCHE-POS-VENDAS-POE",
+    "numeroContrato": {
+      "valor": "POR-POE-2026/014",
+      "paginaOrigem": 1,
+      "clausulaOrigem": "Preâmbulo",
+      "confianca": 0.99
+    },
+    "cliente": {
+      "valor": "Porsche Brasil",
+      "paginaOrigem": 1,
+      "clausulaOrigem": "Qualificação das Partes",
+      "confianca": 1
+    },
+    "razaoSocialContratada": {
+      "valor": "NNÓS Consultoria e Treinamento Ltda",
+      "paginaOrigem": 1,
+      "clausulaOrigem": "Qualificação das Partes",
+      "confianca": 1
+    },
+    "cnpjCliente": {
+      "valor": "00.370.470/0001-08",
+      "paginaOrigem": 1,
+      "clausulaOrigem": "Qualificação das Partes",
+      "confianca": 0.95
+    },
+    "cnpjContratada": {
+      "valor": "34.892.115/0001-44",
+      "paginaOrigem": 1,
+      "clausulaOrigem": "Qualificação das Partes",
+      "confianca": 1
+    },
+    "projeto": {
+      "valor": "Consultoria Pós-Vendas POE",
+      "paginaOrigem": 1,
+      "clausulaOrigem": "Cláusula 1ª - Do Objeto",
+      "confianca": 1
+    },
+    "objeto": {
+      "valor": "Prestação de serviços contínuos de consultoria operacional, auditoria de pós-vendas e suporte administrativo ao programa Porsche Operational Excellence (POE).",
+      "paginaOrigem": 2,
+      "clausulaOrigem": "Cláusula 1ª",
+      "confianca": 0.98
+    },
+    "responsavelInterno": {
+      "valor": "Leonardo Campos",
+      "paginaOrigem": 10,
+      "clausulaOrigem": "Cláusula 12ª - Da Gestão Contratual",
+      "confianca": 0.95
+    },
+    "responsavelCliente": {
+      "valor": "Diretoria de Pós-Vendas Porsche",
+      "paginaOrigem": 10,
+      "clausulaOrigem": "Cláusula 12ª",
+      "confianca": 0.9
+    },
+    "tipoContrato": {
+      "valor": "Prestação de Serviços com Mensalidade Fixa",
+      "paginaOrigem": 1,
+      "clausulaOrigem": "Epígrafe",
+      "confianca": 0.98
+    },
+    "situacaoAssinatura": {
+      "valor": "ASSINADO",
+      "paginaOrigem": 12,
+      "clausulaOrigem": "Folha de Assinaturas",
+      "confianca": 1
+    },
+    "dataAssinatura": {
+      "valor": "2026-04-14",
+      "paginaOrigem": 12,
+      "clausulaOrigem": "Data de Assinatura",
+      "confianca": 1
+    },
+    "dataInicio": {
+      "valor": "2026-04-14",
+      "paginaOrigem": 2,
+      "clausulaOrigem": "Cláusula 2ª - Início dos Serviços",
+      "confianca": 1
+    },
+    "dataEncerramento": {
+      "valor": "2028-04-13",
+      "paginaOrigem": 2,
+      "clausulaOrigem": "Cláusula 2ª - Prazo de 24 meses",
+      "confianca": 1
+    },
+    "dataEncerramentoOficial": "2028-04-13",
+    "prazoMeses": {
+      "valor": 24,
+      "paginaOrigem": 2,
+      "clausulaOrigem": "Cláusula 2.1",
+      "confianca": 1
+    },
+    "possibilidadeRenovacao": {
+      "valor": true,
+      "paginaOrigem": 3,
+      "clausulaOrigem": "Cláusula 2.3",
+      "confianca": 0.95
+    },
+    "condicoesProrrogacao": {
+      "valor": "Renovação por mútuo acordo mediante termo aditivo formalizado com antecedência mínima de 90 dias.",
+      "paginaOrigem": 3,
+      "clausulaOrigem": "Cláusula 2.3",
+      "confianca": 0.95
+    },
+    "avisoPrevioDias": {
+      "valor": 90,
+      "paginaOrigem": 6,
+      "clausulaOrigem": "Cláusula 9ª - Rescisão Imotivada",
+      "confianca": 0.98
+    },
+    "condicoesRescisao": {
+      "valor": "Aviso prévio obrigatório de 90 dias. Multa compensatória equivalente a 1 mensalidade caso desrespeitado o aviso prévio.",
+      "paginaOrigem": 6,
+      "clausulaOrigem": "Cláusula 9.2",
+      "confianca": 0.94
+    },
+    "renovacaoAutomatica": {
+      "valor": false,
+      "paginaOrigem": 3,
+      "clausulaOrigem": "Cláusula 2.4",
+      "confianca": 0.99
+    },
+    "valorGlobal": {
+      "valor": 974064,
+      "paginaOrigem": 4,
+      "clausulaOrigem": "Cláusula 4ª - Do Preço Total",
+      "confianca": 1
+    },
+    "valorMensalFixo": {
+      "valor": 40586,
+      "paginaOrigem": 4,
+      "clausulaOrigem": "Cláusula 4.1 - Da Remuneração Mensal Fixa",
+      "confianca": 1
+    },
+    "valorAnualEstimado": {
+      "valor": 487032,
+      "paginaOrigem": 4,
+      "clausulaOrigem": "Cálculo 12 parcelas mensais",
+      "confianca": 1
+    },
+    "modalidadeCobranca": {
+      "valor": "MENSAL_FIXO",
+      "paginaOrigem": 4,
+      "clausulaOrigem": "Cláusula 4.1",
+      "confianca": 1
+    },
+    "periodicidadeFaturamento": {
+      "valor": "Mensal e recorrente",
+      "paginaOrigem": 4,
+      "clausulaOrigem": "Cláusula 4.2",
+      "confianca": 1
+    },
+    "condicoesPagamento": {
+      "valor": "Todo dia 25 do mês subsequente à prestação dos serviços",
+      "paginaOrigem": 5,
+      "clausulaOrigem": "Cláusula 5ª",
+      "confianca": 0.95
+    },
+    "indiceReajuste": {
+      "valor": "IPCA / IBGE",
+      "paginaOrigem": 5,
+      "clausulaOrigem": "Cláusula 6ª - Do Reajuste",
+      "confianca": 0.98
+    },
+    "dataBaseReajuste": {
+      "valor": "Abril (anual)",
+      "paginaOrigem": 5,
+      "clausulaOrigem": "Cláusula 6.1",
+      "confianca": 0.95
+    },
+    "regrasAtualizacaoPrecos": {
+      "valor": "Reajuste anual pelo índice oficial acumulado nos 12 meses anteriores.",
+      "paginaOrigem": 5,
+      "clausulaOrigem": "Cláusula 6.2",
+      "confianca": 0.95
+    },
+    "multasPenalidades": {
+      "valor": "Multa de 2% e juros de 1% a.m. por inadimplemento.",
+      "paginaOrigem": 7,
+      "clausulaOrigem": "Cláusula 11ª",
+      "confianca": 0.9
+    },
+    "composicaoPerfis": [
+      {
+        "perfil": "Consultor Especialista Pós-Vendas",
+        "quantidade": 1,
+        "valorMensal": 26800,
+        "observacao": "Dedicação integral ao programa POE"
+      },
+      {
+        "perfil": "Assistente Administrativo / Operações",
+        "quantidade": 1,
+        "valorMensal": 13786,
+        "observacao": "Suporte aos relatórios e auditorias"
+      }
+    ],
+    "obrigacoesPrincipais": {
+      "valor": "Auditoria in loco em concessionárias Porsche, análise de processos de garantia e suporte ao portal POE.",
+      "paginaOrigem": 2,
+      "clausulaOrigem": "Cláusula 1ª e Anexo I",
+      "confianca": 0.98
+    },
+    "clausulaConfidencialidade": {
+      "valor": true,
+      "paginaOrigem": 8,
+      "clausulaOrigem": "Cláusula 13ª - Do Sigilo Profissional e LGPD",
+      "confianca": 1
+    },
+    "condicoesExclusividade": {
+      "valor": "Exclusividade de equipe alocada: profissionais dedicados não podem atuar simultaneamente em concorrentes diretos de luxo.",
+      "paginaOrigem": 9,
+      "clausulaOrigem": "Cláusula 14ª",
+      "confianca": 0.94
+    },
+    "permiteSubcontratacao": {
+      "valor": false,
+      "paginaOrigem": 3,
+      "clausulaOrigem": "Cláusula 3.2 - Vedada subcontratação sem anuência formal",
+      "confianca": 0.96
+    },
+    "responsabilidadesEspecificas": {
+      "valor": "Apresentação de relatório executivo mensal de conformidade à diretoria de pós-vendas.",
+      "paginaOrigem": 3,
+      "clausulaOrigem": "Cláusula 3.5",
+      "confianca": 0.9
+    },
+    "riscosIdentificados": [
+      {
+        "risco": "Vedação à subcontratação exige alocação direta de profissionais cadastrados.",
+        "severidade": "BAIXO",
+        "clausula": "Cláusula 3.2"
+      }
+    ],
+    "anexos": [
+      "Anexo I - Escopo POE 2026/2028",
+      "Anexo II - Acordo de Nível de Serviço (SLA)"
+    ],
+    "situacao": "VIGENTE",
+    "statusRenovacao": "NAO_INICIADA",
+    "inconsistencias": [],
+    "aditivos": [],
+    "alertas": [],
+    "arquivoPdfNome": "Contrato_Porsche_Brasil_Pos_Vendas_POE_2026.pdf",
+    "origemExtracao": "IA_GEMINI",
+    "criadoEm": "2026-04-14T09:00:00-03:00",
+    "atualizadoEm": "2026-11-10T10:00:00-03:00",
+    "criadoPor": "Leonardo Campos",
+    "aprovadoPor": "Leonardo Campos",
+    "aprovadoEm": "2026-04-14T11:00:00-03:00"
+  }
+]
