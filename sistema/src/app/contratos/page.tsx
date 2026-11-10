@@ -88,6 +88,54 @@ export default function GestaoContratosPage() {
     }
   }, [contratoEmRevisao?.id, contratoEmRevisao?.arquivoPdfNome]);
 
+  // Filtro de Cliente na Linha do Tempo
+  const [filtroClienteTimeline, setFiltroClienteTimeline] = useState("Porsche Brasil");
+
+  // Modal de Edição de Contrato
+  const [modalEdicaoAberto, setModalEdicaoAberto] = useState(false);
+  const [contratoEditando, setContratoEditando] = useState<ContratoCompleto | null>(null);
+  const [editValorGlobalStr, setEditValorGlobalStr] = useState("");
+  const [editValorMensalStr, setEditValorMensalStr] = useState("");
+
+  const abrirModalEdicao = (c: ContratoCompleto) => {
+    setContratoEditando(JSON.parse(JSON.stringify(c)));
+    setEditValorGlobalStr(formatarMoedaBR(c.valorGlobal?.valor));
+    setEditValorMensalStr(c.valorMensalFixo?.valor != null ? formatarMoedaBR(c.valorMensalFixo.valor) : "");
+    setModalEdicaoAberto(true);
+  };
+
+  const handleSalvarEdicao = async () => {
+    if (!contratoEditando) return;
+    try {
+      const vG = parseMoedaBR(editValorGlobalStr);
+      const vM = editValorMensalStr.trim() !== "" ? parseMoedaBR(editValorMensalStr) : null;
+
+      const contratoAtualizado = {
+        ...contratoEditando,
+        valorGlobal: { ...contratoEditando.valorGlobal, valor: vG },
+        valorMensalFixo: { ...contratoEditando.valorMensalFixo, valor: vM },
+      };
+
+      const res = await fetch(`/api/contratos/${contratoAtualizado.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(contratoAtualizado),
+      });
+
+      const json = await res.json();
+      if (json.sucesso) {
+        mostrarToast("✅ Contrato atualizado com sucesso!");
+        setModalEdicaoAberto(false);
+        setContratoSelecionado(json.contrato);
+        await carregarDados();
+      } else {
+        mostrarToast("Erro ao atualizar contrato: " + json.erro);
+      }
+    } catch (e: any) {
+      mostrarToast("Erro na requisição: " + e.message);
+    }
+  };
+
   // Modal de Novo Aditivo
   const [modalAditivoAberto, setModalAditivoAberto] = useState(false);
   const [aditivoNumero, setAditivoNumero] = useState("01/2026");
@@ -154,6 +202,19 @@ export default function GestaoContratosPage() {
       return true;
     });
   }, [contratos, filtroCliente, filtroSituacao, filtroModalidade, buscaTexto]);
+
+  // Contratos filtrados na Linha do Tempo (Gantt) por Cliente Selecionado
+  const contratosTimeline = useMemo(() => {
+    return contratos.filter((c) => {
+      if (
+        filtroClienteTimeline !== "TODOS" &&
+        String(c.cliente?.valor || "").toLowerCase() !== filtroClienteTimeline.toLowerCase()
+      ) {
+        return false;
+      }
+      return true;
+    });
+  }, [contratos, filtroClienteTimeline]);
 
   // Métricas do Dashboard (Calculadas com rigor financeiro)
   const metricas = useMemo(() => {
@@ -573,57 +634,15 @@ export default function GestaoContratosPage() {
             }}
           >
             <div>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
-                <h1 style={{ fontSize: "22px", fontWeight: 800, color: "#0f172a", margin: 0 }}>
-                  Gestão de Contratos Comerciais
-                </h1>
-                <span
-                  style={{
-                    backgroundColor: "#eff6ff",
-                    color: "#2563eb",
-                    border: "1px solid #bfdbfe",
-                    padding: "3px 10px",
-                    borderRadius: "9999px",
-                    fontSize: "11px",
-                    fontWeight: 700,
-                  }}
-                >
-                  Ciclo 2026 • Novembro
-                </span>
-              </div>
+              <h1 style={{ fontSize: "22px", fontWeight: 800, color: "#0f172a", margin: 0 }}>
+                Gestão de Contratos Comerciais
+              </h1>
               <p style={{ fontSize: "13px", color: "#64748b", marginTop: "4px", margin: 0 }}>
                 Painel centralizado de governança contratual, análise de cláusulas por IA e monitoramento de vigências.
               </p>
             </div>
 
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <button
-                type="button"
-                onClick={() => {
-                  mostrarToast("Relatório executivo XLS gerado com sucesso!");
-                }}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  padding: "9px 15px",
-                  borderRadius: "10px",
-                  backgroundColor: "#ffffff",
-                  color: "#334155",
-                  fontSize: "12.5px",
-                  fontWeight: 600,
-                  border: "1px solid #cbd5e1",
-                  cursor: "pointer",
-                  boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
-                  transition: "all 0.15s ease",
-                }}
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: "17px", color: "#64748b" }}>
-                  download
-                </span>
-                <span>Exportar XLS</span>
-              </button>
-
               <button
                 type="button"
                 onClick={() => {
@@ -638,7 +657,7 @@ export default function GestaoContratosPage() {
                   display: "inline-flex",
                   alignItems: "center",
                   gap: "6px",
-                  padding: "9px 18px",
+                  padding: "10px 18px",
                   borderRadius: "10px",
                   backgroundColor: "#0f2a4a",
                   color: "#ffffff",
@@ -653,7 +672,7 @@ export default function GestaoContratosPage() {
                 <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
                   upload_file
                 </span>
-                <span>+ Novo Contrato / Upload PDF</span>
+                <span>Novo Contrato / Upload PDF</span>
               </button>
             </div>
           </section>
@@ -1932,14 +1951,52 @@ export default function GestaoContratosPage() {
           )}
 
           {/* =================================================================== */}
-          {/* ABA 4: LINHA DO TEMPO (MODELO EXECUTIVO PORSCHE BRASIL)             */}
+          {/* ABA 4: LINHA DO TEMPO (MODELO EXECUTIVO COM FILTRO DE CLIENTE)      */}
           {/* =================================================================== */}
           {abaAtiva === "TIMELINE" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
-              {/* SEÇÃO 2: COMPARATIVO ATUALIZADO — TRÊS CONTRATOS */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+              {/* Barra de Filtro de Cliente para a Linha do Tempo */}
+              <div
+                style={{
+                  backgroundColor: "var(--surface-container-lowest, #ffffff)",
+                  borderRadius: "14px",
+                  border: "1px solid var(--border, #e2e8f0)",
+                  padding: "16px 20px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  flexWrap: "wrap",
+                  gap: "12px",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.02)",
+                }}
+              >
+                <div>
+                  <h3 style={{ fontSize: "15px", fontWeight: 800, color: "#0f172a", margin: 0 }}>
+                    Análise Cronológica por Cliente
+                  </h3>
+                  <span style={{ fontSize: "12px", color: "#64748b" }}>
+                    Filtre para isolar e comparar todos os contratos vigentes do mesmo cliente.
+                  </span>
+                </div>
+
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <label style={{ fontSize: "12.5px", fontWeight: 700, color: "#334155" }}>
+                    Cliente:
+                  </label>
+                  <ModernDropdown
+                    value={filtroClienteTimeline}
+                    onChange={(val) => setFiltroClienteTimeline(String(val))}
+                    options={opcoesClientes}
+                    icon="business"
+                    minWidth={240}
+                  />
+                </div>
+              </div>
+
+              {/* SEÇÃO 2: COMPARATIVO ATUALIZADO */}
               <div>
                 <h2 style={{ fontSize: "16px", fontWeight: 700, color: "#1e293b", margin: "0 0 12px 0" }}>
-                  2. Comparativo atualizado — três contratos
+                  2. Comparativo atualizado — {contratosTimeline.length} contrato(s)
                 </h2>
 
                 <div
@@ -1969,89 +2026,58 @@ export default function GestaoContratosPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {/* Linha 1: Back Office — Ana Cecília */}
-                      <tr
-                        style={{ borderBottom: "1px solid #f1f5f9", cursor: "pointer" }}
-                        onClick={() => {
-                          const bo = contratos.find((c) =>
-                            (c.numeroContrato.valor || c.projeto.valor || "").toLowerCase().includes("back office")
-                          );
-                          if (bo) setContratoSelecionado(bo);
-                        }}
-                      >
-                        <td style={{ padding: "12px 18px", color: "#1e293b", fontWeight: 500 }}>
-                          Back Office — Ana Cecília
-                        </td>
-                        <td style={{ padding: "12px 18px", color: "#475569" }}>
-                          02/01/2025
-                        </td>
-                        <td style={{ padding: "12px 18px", color: "#475569" }}>
-                          01/01/2027*
-                        </td>
-                        <td style={{ padding: "12px 18px", textAlign: "right", color: "#1e293b", fontWeight: 600 }}>
-                          R$ 330.867,84
-                        </td>
-                      </tr>
+                      {contratosTimeline.length === 0 ? (
+                        <tr>
+                          <td colSpan={4} style={{ padding: "24px", textAlign: "center", color: "#64748b" }}>
+                            Nenhum contrato encontrado para o cliente selecionado.
+                          </td>
+                        </tr>
+                      ) : (
+                        contratosTimeline.map((c) => {
+                          const dtIni = c.dataInicio?.valor ? formatarDataBR(c.dataInicio.valor) : "-";
+                          const dtFim = formatarDataBR(c.dataEncerramentoOficial || c.dataEncerramento?.valor);
+                          const valG = brl(Number(c.valorGlobal?.valor));
+                          const nome = c.numeroContrato?.valor || c.projeto?.valor;
 
-                      {/* Linha 2: Treinamento e Consultoria */}
-                      <tr
-                        style={{ borderBottom: "1px solid #f1f5f9", cursor: "pointer" }}
-                        onClick={() => {
-                          const tr = contratos.find((c) =>
-                            (c.numeroContrato.valor || c.projeto.valor || "").toLowerCase().includes("treinamento")
+                          return (
+                            <tr
+                              key={c.id}
+                              style={{ borderBottom: "1px solid #f1f5f9", cursor: "pointer" }}
+                              onClick={() => setContratoSelecionado(c)}
+                              title="Clique para ver os detalhes do contrato"
+                            >
+                              <td style={{ padding: "12px 18px", color: "#1e293b", fontWeight: 500 }}>
+                                {nome}
+                              </td>
+                              <td style={{ padding: "12px 18px", color: "#475569" }}>
+                                {dtIni}
+                              </td>
+                              <td style={{ padding: "12px 18px", color: "#475569" }}>
+                                {dtFim}*
+                              </td>
+                              <td style={{ padding: "12px 18px", textAlign: "right", color: "#1e293b", fontWeight: 600 }}>
+                                {valG}
+                              </td>
+                            </tr>
                           );
-                          if (tr) setContratoSelecionado(tr);
-                        }}
-                      >
-                        <td style={{ padding: "12px 18px", color: "#1e293b", fontWeight: 500 }}>
-                          Treinamento e Consultoria
-                        </td>
-                        <td style={{ padding: "12px 18px", color: "#475569" }}>
-                          28/02/2025
-                        </td>
-                        <td style={{ padding: "12px 18px", color: "#475569" }}>
-                          27/02/2027*
-                        </td>
-                        <td style={{ padding: "12px 18px", textAlign: "right", color: "#1e293b", fontWeight: 600 }}>
-                          R$ 721.200,00
-                        </td>
-                      </tr>
-
-                      {/* Linha 3: Consultoria Pós-Vendas POE */}
-                      <tr
-                        style={{ borderBottom: "1px solid #e2e8f0", cursor: "pointer" }}
-                        onClick={() => {
-                          const poe = contratos.find((c) =>
-                            (c.numeroContrato.valor || c.projeto.valor || "").toLowerCase().includes("poe")
-                          );
-                          if (poe) setContratoSelecionado(poe);
-                        }}
-                      >
-                        <td style={{ padding: "12px 18px", color: "#1e293b", fontWeight: 500 }}>
-                          Consultoria Pós-Vendas POE
-                        </td>
-                        <td style={{ padding: "12px 18px", color: "#475569" }}>
-                          14/04/2026
-                        </td>
-                        <td style={{ padding: "12px 18px", color: "#475569" }}>
-                          13/04/2028*
-                        </td>
-                        <td style={{ padding: "12px 18px", textAlign: "right", color: "#1e293b", fontWeight: 600 }}>
-                          R$ 974.064,00
-                        </td>
-                      </tr>
+                        })
+                      )}
 
                       {/* Linha Total */}
-                      <tr style={{ backgroundColor: "#fafbfc" }}>
-                        <td style={{ padding: "12px 18px", color: "#0f172a", fontWeight: 800 }}>
-                          Total
-                        </td>
-                        <td style={{ padding: "12px 18px" }}></td>
-                        <td style={{ padding: "12px 18px" }}></td>
-                        <td style={{ padding: "12px 18px", textAlign: "right", color: "#0f172a", fontWeight: 800 }}>
-                          R$ 2.026.131,84
-                        </td>
-                      </tr>
+                      {contratosTimeline.length > 0 && (
+                        <tr style={{ backgroundColor: "#fafbfc" }}>
+                          <td style={{ padding: "12px 18px", color: "#0f172a", fontWeight: 800 }}>
+                            Total
+                          </td>
+                          <td style={{ padding: "12px 18px" }}></td>
+                          <td style={{ padding: "12px 18px" }}></td>
+                          <td style={{ padding: "12px 18px", textAlign: "right", color: "#0f172a", fontWeight: 800 }}>
+                            {brl(
+                              contratosTimeline.reduce((acc, cur) => acc + (Number(cur.valorGlobal?.valor) || 0), 0)
+                            )}
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -2077,15 +2103,15 @@ export default function GestaoContratosPage() {
                   }}
                 >
                   <div style={{ fontSize: "14px", fontWeight: 700, color: "#1e293b", marginBottom: "24px" }}>
-                    Vigência dos contratos | Porsche Brasil
+                    Vigência dos contratos | {filtroClienteTimeline === "TODOS" ? "Todos os Clientes" : filtroClienteTimeline}
                   </div>
 
                   {/* Grid Container */}
                   <div style={{ position: "relative", width: "100%" }}>
                     {/* Anos Header */}
                     <div style={{ display: "flex", alignItems: "center", marginBottom: "20px" }}>
-                      {/* Espaço reservado para o rótulo à esquerda */}
-                      <div style={{ width: "160px", flexShrink: 0 }} />
+                      {/* Espaço reservado para o rótulo à esquerda: 180px */}
+                      <div style={{ width: "180px", flexShrink: 0 }} />
 
                       {/* 4 Colunas dos Anos: 2025, 2026, 2027, 2028 */}
                       <div style={{ flex: 1, display: "grid", gridTemplateColumns: "repeat(4, 1fr)", textAlign: "center" }}>
@@ -2105,220 +2131,121 @@ export default function GestaoContratosPage() {
                       </div>
                     </div>
 
-                    {/* Área do Gráfico com Linhas Verticais Pontilhadas e Linha Laranja Tracejada */}
-                    <div style={{ position: "relative", paddingBottom: "24px" }}>
-                      {/* 4 Linhas Verticais Pontilhadas nos Anos */}
-                      <div
-                        style={{
-                          position: "absolute",
-                          top: 0,
-                          bottom: 0,
-                          left: "160px",
-                          right: 0,
-                          display: "grid",
-                          gridTemplateColumns: "repeat(4, 1fr)",
-                          pointerEvents: "none",
-                          zIndex: 1,
-                        }}
-                      >
-                        {[0, 1, 2, 3].map((idx) => (
-                          <div
-                            key={idx}
-                            style={{
-                              display: "flex",
-                              justifyContent: "center",
-                              height: "100%",
-                            }}
-                          >
+                    {/* Área do Gráfico */}
+                    <div style={{ display: "flex", width: "100%", position: "relative", paddingBottom: "24px" }}>
+                      {/* Coluna dos Rótulos dos Contratos à Esquerda */}
+                      <div style={{ width: "180px", flexShrink: 0, display: "flex", flexDirection: "column", gap: "24px" }}>
+                        {contratosTimeline.map((c) => {
+                          const nomeCurto = obterNomeCurto(c);
+                          return (
                             <div
+                              key={c.id}
+                              onClick={() => setContratoSelecionado(c)}
                               style={{
-                                width: "1px",
-                                height: "100%",
-                                borderLeft: "2px dotted #d1d5db",
+                                height: "40px",
+                                display: "flex",
+                                alignItems: "center",
+                                fontSize: "17px",
+                                fontWeight: 700,
+                                color: "#0f172a",
+                                cursor: "pointer",
                               }}
-                            />
-                          </div>
-                        ))}
+                              title="Clique para ver os detalhes"
+                            >
+                              {nomeCurto}
+                            </div>
+                          );
+                        })}
                       </div>
 
-                      {/* Linha Vertical Laranja Tracejada: Hoje (10/11/2026) */}
-                      {/* No gráfico de 4 anos (2025-2028):
-                          2025 = 0% a 25%
-                          2026 = 25% a 50%
-                          10/11/2026 fica a ~46.5% do gráfico (final de 2026) */}
-                      <div
-                        style={{
-                          position: "absolute",
-                          top: "-8px",
-                          bottom: 0,
-                          left: "calc(160px + 46.5%)",
-                          width: "0px",
-                          borderLeft: "2.5px dashed #ea580c",
-                          zIndex: 4,
-                          pointerEvents: "none",
-                        }}
-                      />
-
-                      {/* 3 Linhas de Contratos */}
-                      <div style={{ display: "flex", flexDirection: "column", gap: "24px", position: "relative", zIndex: 2 }}>
-                        {/* Linha 1: Back Office */}
-                        <div style={{ display: "flex", alignItems: "center", minHeight: "44px" }}>
-                          <div
-                            style={{
-                              width: "160px",
-                              flexShrink: 0,
-                              fontSize: "17px",
-                              fontWeight: 700,
-                              color: "#0f172a",
-                              cursor: "pointer",
-                            }}
-                            onClick={() => {
-                              const bo = contratos.find((c) =>
-                                (c.numeroContrato.valor || c.projeto.valor || "").toLowerCase().includes("back office")
-                              );
-                              if (bo) setContratoSelecionado(bo);
-                            }}
-                          >
-                            Back Office
-                          </div>
-                          <div style={{ flex: 1, position: "relative", height: "40px" }}>
-                            {/* Barra Back Office: início 02/01/2025 (~0.1%) até 01/01/2027 (50%), cor Ocre #c58a27 */}
+                      {/* Track das Barras e Linhas */}
+                      <div style={{ flex: 1, position: "relative", display: "flex", flexDirection: "column", gap: "24px" }}>
+                        {/* 4 Linhas Verticais Pontilhadas nos Centros dos Anos */}
+                        <div
+                          style={{
+                            position: "absolute",
+                            top: 0,
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            display: "grid",
+                            gridTemplateColumns: "repeat(4, 1fr)",
+                            pointerEvents: "none",
+                            zIndex: 1,
+                          }}
+                        >
+                          {[0, 1, 2, 3].map((idx) => (
                             <div
-                              onClick={() => {
-                                const bo = contratos.find((c) =>
-                                  (c.numeroContrato.valor || c.projeto.valor || "").toLowerCase().includes("back office")
-                                );
-                                if (bo) setContratoSelecionado(bo);
-                              }}
+                              key={idx}
                               style={{
-                                position: "absolute",
-                                left: "0.2%",
-                                width: "49.8%",
-                                height: "38px",
-                                backgroundColor: "#c58a27",
-                                borderRadius: "8px",
                                 display: "flex",
-                                alignItems: "center",
                                 justifyContent: "center",
-                                color: "#ffffff",
-                                fontWeight: 700,
-                                fontSize: "14px",
-                                boxShadow: "0 1px 3px rgba(197,138,39,0.3)",
-                                cursor: "pointer",
-                                transition: "transform 0.15s ease",
+                                height: "100%",
                               }}
-                              title="Back Office — Ana Cecília | Vigência: 02/01/2025 a 01/01/2027 | R$ 330.867,84"
                             >
-                              R$ 330,9 mil
+                              <div
+                                style={{
+                                  width: "1px",
+                                  height: "100%",
+                                  borderLeft: "2px dotted #cbd5e1",
+                                }}
+                              />
                             </div>
-                          </div>
+                          ))}
                         </div>
 
-                        {/* Linha 2: Treinamento */}
-                        <div style={{ display: "flex", alignItems: "center", minHeight: "44px" }}>
-                          <div
-                            style={{
-                              width: "160px",
-                              flexShrink: 0,
-                              fontSize: "17px",
-                              fontWeight: 700,
-                              color: "#0f172a",
-                              cursor: "pointer",
-                            }}
-                            onClick={() => {
-                              const tr = contratos.find((c) =>
-                                (c.numeroContrato.valor || c.projeto.valor || "").toLowerCase().includes("treinamento")
-                              );
-                              if (tr) setContratoSelecionado(tr);
-                            }}
-                          >
-                            Treinamento
-                          </div>
-                          <div style={{ flex: 1, position: "relative", height: "40px" }}>
-                            {/* Barra Treinamento: início 28/02/2025 (~4%) até 27/02/2027 (~54%), cor Teal #218579 */}
-                            <div
-                              onClick={() => {
-                                const tr = contratos.find((c) =>
-                                  (c.numeroContrato.valor || c.projeto.valor || "").toLowerCase().includes("treinamento")
-                                );
-                                if (tr) setContratoSelecionado(tr);
-                              }}
-                              style={{
-                                position: "absolute",
-                                left: "4.0%",
-                                width: "50.0%",
-                                height: "38px",
-                                backgroundColor: "#218579",
-                                borderRadius: "8px",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                color: "#ffffff",
-                                fontWeight: 700,
-                                fontSize: "14px",
-                                boxShadow: "0 1px 3px rgba(33,133,121,0.3)",
-                                cursor: "pointer",
-                                transition: "transform 0.15s ease",
-                              }}
-                              title="Treinamento e Consultoria | Vigência: 28/02/2025 a 27/02/2027 | R$ 721.200,00"
-                            >
-                              R$ 721,2 mil
-                            </div>
-                          </div>
-                        </div>
+                        {/* Linha Vertical Laranja Tracejada: Hoje (10/11/2026) */}
+                        {/* Em escala de 4 anos (2025 a 2028 = 1461 dias):
+                            10/11/2026 corresponde a 679 dias = 46.47% (~46.5%).
+                            Back Office termina em 01/01/2027 (50%), Treinamento em 27/02/2027 (54%),
+                            logo a linha laranja PASSA POR DENTRO DE AMBOS! */}
+                        <div
+                          style={{
+                            position: "absolute",
+                            top: "-8px",
+                            bottom: 0,
+                            left: "46.5%",
+                            width: "0px",
+                            borderLeft: "2.5px dashed #ea580c",
+                            zIndex: 4,
+                            pointerEvents: "none",
+                          }}
+                        />
 
-                        {/* Linha 3: POE */}
-                        <div style={{ display: "flex", alignItems: "center", minHeight: "44px" }}>
-                          <div
-                            style={{
-                              width: "160px",
-                              flexShrink: 0,
-                              fontSize: "17px",
-                              fontWeight: 700,
-                              color: "#0f172a",
-                              cursor: "pointer",
-                            }}
-                            onClick={() => {
-                              const poe = contratos.find((c) =>
-                                (c.numeroContrato.valor || c.projeto.valor || "").toLowerCase().includes("poe")
-                              );
-                              if (poe) setContratoSelecionado(poe);
-                            }}
-                          >
-                            POE
-                          </div>
-                          <div style={{ flex: 1, position: "relative", height: "40px" }}>
-                            {/* Barra POE: início 14/04/2026 (~32%) até 13/04/2028 (~82%), cor Azul Real #4f72b7 */}
-                            <div
-                              onClick={() => {
-                                const poe = contratos.find((c) =>
-                                  (c.numeroContrato.valor || c.projeto.valor || "").toLowerCase().includes("poe")
-                                );
-                                if (poe) setContratoSelecionado(poe);
-                              }}
-                              style={{
-                                position: "absolute",
-                                left: "32.0%",
-                                width: "50.0%",
-                                height: "38px",
-                                backgroundColor: "#4f72b7",
-                                borderRadius: "8px",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                color: "#ffffff",
-                                fontWeight: 700,
-                                fontSize: "14px",
-                                boxShadow: "0 1px 3px rgba(79,114,183,0.3)",
-                                cursor: "pointer",
-                                transition: "transform 0.15s ease",
-                              }}
-                              title="Consultoria Pós-Vendas POE | Vigência: 14/04/2026 a 13/04/2028 | R$ 974.064,00"
-                            >
-                              R$ 974,1 mil
+                        {/* Barras de cada contrato */}
+                        {contratosTimeline.map((c, index) => {
+                          const { leftPct, widthPct } = calcularPosicaoBarra(c);
+                          const cor = obterCorContrato(c, index);
+                          const valorResumido = formatarValorResumido(Number(c.valorGlobal?.valor));
+
+                          return (
+                            <div key={c.id} style={{ height: "40px", position: "relative", zIndex: 2 }}>
+                              <div
+                                onClick={() => setContratoSelecionado(c)}
+                                style={{
+                                  position: "absolute",
+                                  left: `${leftPct}%`,
+                                  width: `${widthPct}%`,
+                                  height: "38px",
+                                  backgroundColor: cor,
+                                  borderRadius: "8px",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  color: "#ffffff",
+                                  fontWeight: 700,
+                                  fontSize: "14px",
+                                  boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
+                                  cursor: "pointer",
+                                  transition: "transform 0.15s ease",
+                                }}
+                                title={`${c.numeroContrato?.valor || c.projeto?.valor} | Vigência: ${formatarDataBR(c.dataInicio.valor)} a ${formatarDataBR(c.dataEncerramentoOficial || c.dataEncerramento.valor)} | ${brl(Number(c.valorGlobal.valor))}`}
+                              >
+                                {valorResumido}
+                              </div>
                             </div>
-                          </div>
-                        </div>
+                          );
+                        })}
                       </div>
                     </div>
 
@@ -2628,6 +2555,31 @@ export default function GestaoContratosPage() {
                     </div>
 
                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <button
+                        type="button"
+                        onClick={() => abrirModalEdicao(contratoSelecionado)}
+                        style={{
+                          padding: "8px 14px",
+                          borderRadius: "8px",
+                          border: "1px solid #bfdbfe",
+                          backgroundColor: "#eff6ff",
+                          color: "#1d4ed8",
+                          cursor: "pointer",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "5px",
+                          fontSize: "12px",
+                          fontWeight: 700,
+                          transition: "all 0.15s ease",
+                        }}
+                        title="Editar dados e vigência do contrato"
+                      >
+                        <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
+                          edit
+                        </span>
+                        <span>Editar</span>
+                      </button>
+
                       <button
                         type="button"
                         onClick={() => {
@@ -2980,6 +2932,241 @@ export default function GestaoContratosPage() {
               </div>
             </div>
           )}
+
+          {/* Modal de Edição Completa do Contrato */}
+          {modalEdicaoAberto && contratoEditando && (
+            <div
+              style={{
+                position: "fixed",
+                inset: 0,
+                backgroundColor: "rgba(15, 23, 42, 0.65)",
+                backdropFilter: "blur(4px)",
+                zIndex: 10000,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "20px",
+              }}
+              onClick={() => setModalEdicaoAberto(false)}
+            >
+              <div
+                style={{
+                  backgroundColor: "#ffffff",
+                  borderRadius: "16px",
+                  padding: "28px",
+                  width: "100%",
+                  maxWidth: "680px",
+                  maxHeight: "90vh",
+                  overflowY: "auto",
+                  boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.2)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "18px",
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid #e2e8f0", paddingBottom: "12px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span className="material-symbols-outlined" style={{ color: "#0284c7", fontSize: "24px" }}>
+                      edit_document
+                    </span>
+                    <h3 style={{ fontSize: "18px", fontWeight: 800, color: "#0f172a", margin: 0 }}>
+                      Editar Contrato • {contratoEditando.codigo}
+                    </h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setModalEdicaoAberto(false)}
+                    style={{ background: "none", border: "none", cursor: "pointer", color: "#64748b" }}
+                  >
+                    <span className="material-symbols-outlined">close</span>
+                  </button>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+                  <div>
+                    <label style={{ fontSize: "12px", fontWeight: 700, color: "#334155" }}>Número do Contrato:</label>
+                    <input
+                      type="text"
+                      value={String(contratoEditando.numeroContrato?.valor || "")}
+                      onChange={(e) =>
+                        setContratoEditando({
+                          ...contratoEditando,
+                          numeroContrato: { ...contratoEditando.numeroContrato, valor: e.target.value },
+                        })
+                      }
+                      style={inputStyle}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: "12px", fontWeight: 700, color: "#334155" }}>Cliente / Contratante:</label>
+                    <input
+                      type="text"
+                      value={String(contratoEditando.cliente?.valor || "")}
+                      onChange={(e) =>
+                        setContratoEditando({
+                          ...contratoEditando,
+                          cliente: { ...contratoEditando.cliente, valor: e.target.value },
+                        })
+                      }
+                      style={inputStyle}
+                    />
+                  </div>
+
+                  <div style={{ gridColumn: "span 2" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 700, color: "#334155" }}>Nome do Projeto:</label>
+                    <input
+                      type="text"
+                      value={String(contratoEditando.projeto?.valor || "")}
+                      onChange={(e) =>
+                        setContratoEditando({
+                          ...contratoEditando,
+                          projeto: { ...contratoEditando.projeto, valor: e.target.value },
+                        })
+                      }
+                      style={inputStyle}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: "12px", fontWeight: 700, color: "#334155" }}>Valor Global (R$):</label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={editValorGlobalStr}
+                      onChange={(e) => setEditValorGlobalStr(e.target.value)}
+                      onBlur={() => {
+                        const num = parseMoedaBR(editValorGlobalStr);
+                        setEditValorGlobalStr(formatarMoedaBR(num));
+                      }}
+                      style={inputStyle}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: "12px", fontWeight: 700, color: "#334155" }}>Remuneração Mensal Fixa (R$):</label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="0,00"
+                      value={editValorMensalStr}
+                      onChange={(e) => setEditValorMensalStr(e.target.value)}
+                      onBlur={() => {
+                        if (editValorMensalStr.trim() !== "") {
+                          const num = parseMoedaBR(editValorMensalStr);
+                          setEditValorMensalStr(formatarMoedaBR(num));
+                        }
+                      }}
+                      style={inputStyle}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: "12px", fontWeight: 700, color: "#334155" }}>Data de Início:</label>
+                    <input
+                      type="date"
+                      value={String(contratoEditando.dataInicio?.valor || "")}
+                      onChange={(e) =>
+                        setContratoEditando({
+                          ...contratoEditando,
+                          dataInicio: { ...contratoEditando.dataInicio, valor: e.target.value },
+                        })
+                      }
+                      style={inputStyle}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: "12px", fontWeight: 700, color: "#334155" }}>Data de Encerramento (Oficial):</label>
+                    <input
+                      type="date"
+                      value={String(contratoEditando.dataEncerramentoOficial || contratoEditando.dataEncerramento?.valor || "")}
+                      onChange={(e) =>
+                        setContratoEditando({
+                          ...contratoEditando,
+                          dataEncerramentoOficial: e.target.value,
+                          dataEncerramento: { ...contratoEditando.dataEncerramento, valor: e.target.value },
+                        })
+                      }
+                      style={inputStyle}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: "12px", fontWeight: 700, color: "#334155" }}>Modalidade de Cobrança:</label>
+                    <ModernDropdown
+                      value={contratoEditando.modalidadeCobranca?.valor || "MENSAL_FIXO"}
+                      onChange={(val) =>
+                        setContratoEditando({
+                          ...contratoEditando,
+                          modalidadeCobranca: {
+                            ...contratoEditando.modalidadeCobranca,
+                            valor: String(val) as ModalidadeCobranca,
+                          },
+                        })
+                      }
+                      options={[
+                        { value: "MENSAL_FIXO", label: "Mensalidade Fixa Garantida" },
+                        { value: "DEMANDA_SERVICOS", label: "Serviços por Demanda" },
+                      ]}
+                      icon="receipt_long"
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: "12px", fontWeight: 700, color: "#334155" }}>Responsável Interno:</label>
+                    <input
+                      type="text"
+                      value={String(contratoEditando.responsavelInterno?.valor || "")}
+                      onChange={(e) =>
+                        setContratoEditando({
+                          ...contratoEditando,
+                          responsavelInterno: { ...contratoEditando.responsavelInterno, valor: e.target.value },
+                        })
+                      }
+                      style={inputStyle}
+                    />
+                  </div>
+
+                  <div style={{ gridColumn: "span 2" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 700, color: "#334155" }}>Objeto do Contrato:</label>
+                    <textarea
+                      rows={3}
+                      value={String(contratoEditando.objeto?.valor || "")}
+                      onChange={(e) =>
+                        setContratoEditando({
+                          ...contratoEditando,
+                          objeto: { ...contratoEditando.objeto, valor: e.target.value },
+                        })
+                      }
+                      style={{ ...inputStyle, resize: "none" }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "12px", borderTop: "1px solid #e2e8f0", paddingTop: "14px" }}>
+                  <button
+                    type="button"
+                    onClick={() => setModalEdicaoAberto(false)}
+                    style={{ padding: "9px 16px", borderRadius: "8px", border: "1px solid #cbd5e1", backgroundColor: "#ffffff", fontWeight: 600, cursor: "pointer" }}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSalvarEdicao}
+                    style={{ padding: "9px 20px", borderRadius: "8px", backgroundColor: "#0f2a4a", color: "#ffffff", fontWeight: 700, border: "none", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "6px" }}
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
+                      save
+                    </span>
+                    <span>Salvar Alterações</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </main>
       </div>
     </div>
@@ -3068,4 +3255,49 @@ const inputStyle: React.CSSProperties = {
   boxSizing: "border-box",
   backgroundColor: "#ffffff",
 };
+
+function obterNomeCurto(c: ContratoCompleto): string {
+  const str = `${c.numeroContrato?.valor || ""} ${c.projeto?.valor || ""} ${c.codigo || ""} ${c.arquivoPdfNome || ""}`.toLowerCase();
+  if (str.includes("back office") || str.includes("ana cec") || str.includes("backoffice")) {
+    return "Back Office";
+  }
+  if (str.includes("treinamento")) {
+    return "Treinamento";
+  }
+  if (str.includes("poe") || str.includes("pós-vendas")) {
+    return "POE";
+  }
+  return c.numeroContrato?.valor || c.projeto?.valor || "Contrato";
+}
+
+function obterCorContrato(c: ContratoCompleto, index: number): string {
+  const nome = obterNomeCurto(c);
+  if (nome === "Back Office") return "#c58a27";
+  if (nome === "Treinamento") return "#218579";
+  if (nome === "POE") return "#4f72b7";
+  const cores = ["#c58a27", "#218579", "#4f72b7", "#8b5cf6", "#0284c7"];
+  return cores[index % cores.length];
+}
+
+function calcularPosicaoBarra(c: ContratoCompleto) {
+  const t2025 = new Date("2025-01-01T00:00:00").getTime();
+  const t2029 = new Date("2029-01-01T00:00:00").getTime();
+  const total = t2029 - t2025;
+
+  let dtIni = new Date(c.dataInicio.valor).getTime();
+  let dtFim = new Date(c.dataEncerramentoOficial || c.dataEncerramento.valor).getTime();
+
+  if (isNaN(dtIni) || dtIni < t2025) {
+    dtIni = t2025;
+  }
+  if (isNaN(dtFim)) {
+    dtFim = t2025 + 2 * 365 * 24 * 60 * 60 * 1000;
+  }
+
+  const leftPct = Math.max(0, Math.min(95, ((dtIni - t2025) / total) * 100));
+  const rightPct = Math.max(leftPct + 6, Math.min(100, ((dtFim - t2025) / total) * 100));
+  const widthPct = rightPct - leftPct;
+
+  return { leftPct, widthPct };
+}
 
