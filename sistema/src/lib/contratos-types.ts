@@ -173,6 +173,9 @@ export interface ContratoCompleto {
   inconsistencias: InconsistenciaContratual[];
   aditivos: AditivoContratual[];
   alertas: AlertaContratual[];
+  possivelDuplicidade?: boolean;
+  contratoDuplicadoRef?: string;
+  motivoDuplicidade?: string;
   arquivoPdfNome?: string;
   arquivoPdfUrl?: string;
   arquivoPdfTamanhoBytes?: number;

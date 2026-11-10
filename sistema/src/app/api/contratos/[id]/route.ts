@@ -123,7 +123,8 @@ export async function DELETE(
       );
     }
 
-    salvarContratos(filtrados);
+    const processados = processarSituacaoEAlertas(filtrados);
+    salvarContratos(processados);
 
     return NextResponse.json({
       sucesso: true,

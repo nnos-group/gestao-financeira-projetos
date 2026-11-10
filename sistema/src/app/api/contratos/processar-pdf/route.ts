@@ -25,6 +25,8 @@ export async function POST(req: NextRequest) {
       const arrayBuffer = await file.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
 
+      const pdfBase64 = buffer.toString("base64");
+
       // Tenta extrair texto com pdf-parse se disponível, caso contrário decodifica buffer
       try {
         const pdfModule: any = await import("pdf-parse");
@@ -35,30 +37,26 @@ export async function POST(req: NextRequest) {
         console.warn("Aviso ao extrair texto com pdf-parse, utilizando decodificador direto:", parseErr);
         textoCompleto = buffer.toString("utf-8").replace(/[^\x20-\x7E\xA0-\xFF\n\r]/g, " ");
       }
+
+      const contratoExtraido = await extrairDadosContratoPorIA({
+        textoCompleto,
+        nomeArquivo,
+        tamanhoBytes,
+        pdfBase64,
+      });
+
+      return NextResponse.json({
+        sucesso: true,
+        contrato: contratoExtraido,
+        inconsistencias: contratoExtraido.inconsistencias,
+        textoResumo: textoCompleto.slice(0, 500),
+      });
     } else {
-      const body = await req.json();
-      textoCompleto = body.texto || "";
-      nomeArquivo = body.nomeArquivo || nomeArquivo;
-      tamanhoBytes = body.tamanhoBytes || textoCompleto.length;
+      return NextResponse.json(
+        { sucesso: false, erro: "Formato inválido. Envie via multipart/form-data." },
+        { status: 400 }
+      );
     }
-
-    if (!textoCompleto || textoCompleto.trim().length < 10) {
-      // Cria texto de exemplo baseado no nome do arquivo se for um scan simples sem OCR
-      textoCompleto = `CONTRATO DE PRESTAÇÃO DE SERVIÇOS PROFISSIONAIS\nDocumento: ${nomeArquivo}\nPartes: NNÓS Consultoria e Treinamento Ltda e Cliente Contratante.\nVigência: 24 meses.\nValor Global: R$ 500.000,00.`;
-    }
-
-    const contratoExtraido = await extrairDadosContratoPorIA({
-      textoCompleto,
-      nomeArquivo,
-      tamanhoBytes,
-    });
-
-    return NextResponse.json({
-      sucesso: true,
-      contrato: contratoExtraido,
-      inconsistencias: contratoExtraido.inconsistencias,
-      textoResumo: textoCompleto.slice(0, 500),
-    });
   } catch (error: any) {
     return NextResponse.json(
       { sucesso: false, erro: error.message },

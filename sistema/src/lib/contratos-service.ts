@@ -5,7 +5,7 @@ import {
   SituacaoContratual,
   SeveridadeAlerta,
 } from "./contratos-types";
-import { formatarDataHoraBR } from "./date-utils";
+import { formatarDataBR, formatarDataHoraBR } from "./date-utils";
 
 const DATA_FILE = path.join(process.cwd(), "src/lib/contratos-base.json");
 
@@ -604,13 +604,63 @@ export function salvarContratos(lista: ContratoCompleto[]): void {
 }
 
 /**
+ * Identifica e sinaliza possível duplicidade de contratos cadastrados para o mesmo cliente
+ * com vigência coincidente ou mesmo projeto/objeto.
+ */
+export function identificarDuplicidades(contratos: ContratoCompleto[]): ContratoCompleto[] {
+  return contratos.map((c, i) => {
+    const cli = String(c.cliente?.valor || "").trim().toLowerCase();
+    const ini = String(c.dataInicio?.valor || "");
+    const proj = String(c.projeto?.valor || "").trim().toLowerCase();
+    const num = String(c.numeroContrato?.valor || "").trim().toLowerCase();
+
+    const outro = contratos.find((o, j) => {
+      if (i === j) return false;
+      const oCli = String(o.cliente?.valor || "").trim().toLowerCase();
+      if (!cli || !oCli || cli !== oCli) return false;
+
+      const oIni = String(o.dataInicio?.valor || "");
+      const oProj = String(o.projeto?.valor || "").trim().toLowerCase();
+      const oNum = String(o.numeroContrato?.valor || "").trim().toLowerCase();
+
+      // Mesma data de início
+      const mesmaDataInicio = ini && oIni && ini === oIni;
+      // Número idêntico ou muito similar
+      const mesmoNumero = num && oNum && (num === oNum || num.includes(oNum) || oNum.includes(num));
+      // Projeto com palavras-chave coincidentes
+      const palavrasC = proj.split(/\s+/).filter((w) => w.length > 4);
+      const coincideProjeto = palavrasC.some((w) => oProj.includes(w));
+
+      return mesmaDataInicio || mesmoNumero || (coincideProjeto && mesmaDataInicio);
+    });
+
+    if (outro) {
+      return {
+        ...c,
+        possivelDuplicidade: true,
+        contratoDuplicadoRef: String(outro.numeroContrato?.valor || outro.codigo),
+        motivoDuplicidade: `Identificado contrato similar (${outro.numeroContrato?.valor || outro.codigo}) para o mesmo cliente com vigência a partir de ${formatarDataBR(ini)}.`,
+      };
+    }
+
+    return {
+      ...c,
+      possivelDuplicidade: false,
+      contratoDuplicadoRef: undefined,
+      motivoDuplicidade: undefined,
+    };
+  });
+}
+
+/**
  * Processa dinamicamente a situação e os alertas de cada contrato com base na data de encerramento
  * e na regra obrigatória dos 90, 60, 30, 15 e 0 dias.
  */
 export function processarSituacaoEAlertas(contratos: ContratoCompleto[]): ContratoCompleto[] {
+  const contratosComDuplicidade = identificarDuplicidades(contratos);
   const hoje = obterHojeBrasil();
 
-  return contratos.map((c) => {
+  return contratosComDuplicidade.map((c) => {
     const dataFimStr = c.dataEncerramentoOficial || String(c.dataEncerramento.valor || "");
     if (!dataFimStr) return c;
 

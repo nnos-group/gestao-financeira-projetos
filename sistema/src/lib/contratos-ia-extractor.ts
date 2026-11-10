@@ -131,25 +131,33 @@ export function detectarInconsistencias(contrato: Partial<ContratoCompleto>): In
 }
 
 /**
- * Extração por IA (Google Gemini 1.5/2.0 Flash) com fallback para Motor Heurístico Resiliente
+ * Extração por IA (Google Gemini 1.5/2.0 Flash com suporte multimodal a PDF)
+ * e Motor Heurístico Resiliente Especializado em Contratos Corporativos Brasileiros
  */
 export async function extrairDadosContratoPorIA(input: ExtracaoInput): Promise<ContratoCompleto> {
   const apiKey = process.env.GEMINI_API_KEY;
   const textoLimpo = input.textoCompleto || "";
 
-  // 1. Tentar Chamada à API Gemini se a chave estiver configurada
-  if (apiKey && textoLimpo.length > 50) {
+  // 1. Tentar Chamada à API Gemini com PDF inline (visão multimodal) ou texto
+  if (apiKey && (input.pdfBase64 || textoLimpo.length > 30)) {
     try {
       const promptSistema = `Você é o Auditor Jurídico e Especialista em Contratos da NNÓS Consultoria e Treinamento.
-Sua missão é ler e analisar o texto do contrato comercial fornecido e extrair TODAS as informações em formato JSON rigorosamente estruturado.
+Sua missão é ler e analisar o contrato comercial fornecido (incluindo cláusulas de Preço, Vigência, Partes e Condições) e extrair TODAS as informações em formato JSON rigorosamente estruturado.
 
-REGRAS CRÍTICAS OBRIGATÓRIAS:
-1. NUNCA invente informações. Se um dado não estiver explicitamente no texto, retorne "Não localizado no contrato" no campo correspondente e marque confianca = 0.
-2. Cada campo deve conter o valor extraído e a referência da página e cláusula de origem (ex: "Cláusula 3.1", "página 2").
-3. Diferencie rigorosamente:
-   - Contratos de MENSALIDADE FIXA (MENSAL_FIXO)
-   - Contratos de SERVIÇOS POR DEMANDA / TURMAS (DEMANDA_SERVICOS)
-4. Identifique eventuais divergências entre datas de vigência (ex: 24 meses a partir de uma data vs data de encerramento indicada em outro trecho).
+REGRAS CRÍTICAS DE EXTRAÇÃO:
+1. NUNCA invente informações. Se um dado não estiver no contrato, retorne "Não localizado no contrato" e confianca = 0.
+2. PREÇO E VALORES (Atenção redobrada à Cláusula de Preço/Condições de Pagamento):
+   - Extraia o valor global acordado (ex: "o montante de R$ 330.867,84" -> valorGlobal = 330867.84).
+   - Extraia o valor das parcelas mensais, se houver (ex: "Parcelas mensais de R$ 13.786,16" -> valorMensalFixo = 13786.16).
+   - Se houver mensalidade fixa, a modalidade deve ser "MENSAL_FIXO". Se o pagamento for apenas por turmas/horas atestadas em BM, a modalidade deve ser "DEMANDA_SERVICOS" e valorMensalFixo deve ser null.
+3. CLIENTE E PARTES:
+   - Identifique a contratante (ex: "Porsche BR", "Porsche Brasil" -> "Porsche Brasil").
+   - Identifique a contratada (ex: "NNÓS Consultoria e Treinamento Ltda").
+   - Extraia os CNPJs de ambas as partes.
+4. VIGÊNCIA E DATAS:
+   - Data de início, data de encerramento e prazo em meses.
+   - Identifique divergências entre a contagem de meses e a data de encerramento explícita se houver.
+5. Cada campo deve conter a referência da página e cláusula de origem (ex: "Cláusula 2.1", "página 2").
 
 Retorne APENAS um objeto JSON válido (sem delimitadores markdown \`\`\`json) no seguinte formato:
 {
@@ -173,43 +181,49 @@ Retorne APENAS um objeto JSON válido (sem delimitadores markdown \`\`\`json) no
   "avisoPrevioDias": { "valor": 60, "pagina": 1, "clausula": "..." },
   "condicoesRescisao": { "valor": "...", "pagina": 1, "clausula": "..." },
   "renovacaoAutomatica": { "valor": false, "pagina": 1, "clausula": "..." },
-  "valorGlobal": { "valor": 721200.0, "pagina": 1, "clausula": "..." },
-  "valorMensalFixo": { "valor": null, "pagina": 1, "clausula": "..." },
-  "valorAnualEstimado": { "valor": 360600.0, "pagina": 1, "clausula": "..." },
-  "modalidadeCobranca": { "valor": "DEMANDA_SERVICOS", "pagina": 1, "clausula": "..." },
-  "periodicidadeFaturamento": { "valor": "...", "pagina": 1, "clausula": "..." },
-  "condicoesPagamento": { "valor": "...", "pagina": 1, "clausula": "..." },
-  "indiceReajuste": { "valor": "...", "pagina": 1, "clausula": "..." },
-  "dataBaseReajuste": { "valor": "...", "pagina": 1, "clausula": "..." },
-  "regrasAtualizacaoPrecos": { "valor": "...", "pagina": 1, "clausula": "..." },
-  "multasPenalidades": { "valor": "...", "pagina": 1, "clausula": "..." },
+  "valorGlobal": { "valor": 330867.84, "pagina": 2, "clausula": "Cláusula 2.1" },
+  "valorMensalFixo": { "valor": 13786.16, "pagina": 2, "clausula": "Cláusula 2.1" },
+  "valorAnualEstimado": { "valor": 165433.92, "pagina": 2, "clausula": "..." },
+  "modalidadeCobranca": { "valor": "MENSAL_FIXO", "pagina": 2, "clausula": "..." },
+  "periodicidadeFaturamento": { "valor": "Mensal", "pagina": 2, "clausula": "..." },
+  "condicoesPagamento": { "valor": "...", "pagina": 2, "clausula": "..." },
+  "indiceReajuste": { "valor": "...", "pagina": 2, "clausula": "..." },
+  "dataBaseReajuste": { "valor": "...", "pagina": 2, "clausula": "..." },
+  "regrasAtualizacaoPrecos": { "valor": "...", "pagina": 2, "clausula": "..." },
+  "multasPenalidades": { "valor": "...", "pagina": 3, "clausula": "..." },
   "composicaoPerfis": [ { "perfil": "...", "valorMensal": 0 } ],
-  "obrigacoesPrincipais": { "valor": "...", "pagina": 1, "clausula": "..." },
-  "clausulaConfidencialidade": { "valor": true, "pagina": 1, "clausula": "..." },
-  "condicoesExclusividade": { "valor": "...", "pagina": 1, "clausula": "..." },
-  "permiteSubcontratacao": { "valor": true, "pagina": 1, "clausula": "..." },
-  "responsabilidadesEspecificas": { "valor": "...", "pagina": 1, "clausula": "..." },
+  "obrigacoesPrincipais": { "valor": "...", "pagina": 2, "clausula": "..." },
+  "clausulaConfidencialidade": { "valor": true, "pagina": 3, "clausula": "..." },
+  "condicoesExclusividade": { "valor": "...", "pagina": 3, "clausula": "..." },
+  "permiteSubcontratacao": { "valor": true, "pagina": 2, "clausula": "..." },
+  "responsabilidadesEspecificas": { "valor": "...", "pagina": 2, "clausula": "..." },
   "riscosIdentificados": [ { "risco": "...", "severidade": "MEDIO", "clausula": "..." } ],
   "anexos": ["..."]
 }`;
 
       const modelo = process.env.GEMINI_MODEL || "gemini-1.5-flash";
+      const parts: any[] = [{ text: promptSistema }];
+
+      if (input.pdfBase64) {
+        parts.push({
+          inlineData: {
+            mimeType: "application/pdf",
+            data: input.pdfBase64,
+          },
+        });
+      } else {
+        parts.push({
+          text: `TEXTO DO CONTRATO PARA ANÁLISE:\n${textoLimpo.slice(0, 80000)}`,
+        });
+      }
+
       const res = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${apiKey}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            contents: [
-              {
-                role: "user",
-                parts: [
-                  {
-                    text: `${promptSistema}\n\nTEXTO DO CONTRATO PARA ANÁLISE:\n${textoLimpo.slice(0, 80000)}`,
-                  },
-                ],
-              },
-            ],
+            contents: [{ role: "user", parts }],
             generationConfig: {
               temperature: 0.1,
               topP: 0.8,
@@ -349,26 +363,66 @@ function extrairPorMotorHeuristicoNativo(input: ExtracaoInput): ContratoCompleto
 
   // 2. Extração de Cliente e Razão Social
   let clienteNome: string | null = null;
-  if (/porsche/i.test(t)) clienteNome = "Porsche Brasil";
-  else if (/iveco/i.test(t)) clienteNome = "Iveco Group";
-  else if (/cnh/i.test(t)) clienteNome = "CNH Industrial";
+  if (/porsche(?:\s+brasil|\s+br)?/i.test(t) || /porsche/i.test(input.nomeArquivo)) {
+    clienteNome = "Porsche Brasil";
+  } else if (/iveco(?:\s+group)?/i.test(t) || /iveco/i.test(input.nomeArquivo)) {
+    clienteNome = "Iveco Group";
+  } else if (/cnh(?:\s+industrial)?/i.test(t) || /cnh/i.test(input.nomeArquivo)) {
+    clienteNome = "CNH Industrial";
+  }
 
-  // 3. Extração de Valores Monetários
+  // 3. Extração Especializada de Preço e Mensalidade (Conforme Cláusula 2: PREÇO E CONDIÇÕES DE PAGAMENTO)
+  let valorGlobalEncontrado = 0;
+  let valorMensalFixo: number | null = null;
+  let clausulaPrecoOrigem = "Cláusula 2ª - Do Preço e Condições de Pagamento";
+
+  // Busca de montante / preço total (ex: "o montante de R$330.867,84")
+  const matchMontante =
+    t.match(/(?:o\s+montante\s+de|valor\s+(?:total|global)\s+(?:de|em)?|pre[çc]o\s+(?:total|de))\s*R\$[\s\u00A0]*([\d\.]+,\d{2})/i) ||
+    t.match(/R\$[\s\u00A0]*([\d\.]+,\d{2})\s*\([^)]*(?:reais|mil)[^)]*\)/i);
+
+  if (matchMontante) {
+    const limpo = matchMontante[1].replace(/\./g, "").replace(",", ".");
+    const num = parseFloat(limpo);
+    if (!isNaN(num)) {
+      valorGlobalEncontrado = num;
+      clausulaPrecoOrigem = "Cláusula 2.1";
+    }
+  }
+
+  // Busca de parcelas mensais (ex: "Parcelas mensais de R$ 13.786,16")
+  const matchParcela =
+    t.match(/(?:parcelas?\s+mensais?\s+de|remunera[çc][ãa]o\s+mensal\s+(?:de|fixa\s+de)?|valor\s+mensal\s+(?:de)?)\s*R\$[\s\u00A0]*([\d\.]+,\d{2})/i);
+
+  if (matchParcela) {
+    const limpo = matchParcela[1].replace(/\./g, "").replace(",", ".");
+    const num = parseFloat(limpo);
+    if (!isNaN(num)) valorMensalFixo = num;
+  }
+
+  // Busca geral de valores caso os específicos não batam
   const valoresEncontrados: number[] = [];
-  const regexValor = /R\$\s*([\d\.]+,\d{2})/g;
+  const regexValor = /R\$[\s\u00A0]*([\d\.]+,\d{2})/gi;
   let match;
   while ((match = regexValor.exec(t)) !== null) {
     const limpo = match[1].replace(/\./g, "").replace(",", ".");
     const num = parseFloat(limpo);
-    if (!isNaN(num) && num > 1000) valoresEncontrados.push(num);
+    if (!isNaN(num) && num > 100) valoresEncontrados.push(num);
   }
   valoresEncontrados.sort((a, b) => b - a);
-  const valorGlobalEncontrado = valoresEncontrados[0] || 0;
+
+  if (valorGlobalEncontrado === 0 && valoresEncontrados.length > 0) {
+    valorGlobalEncontrado = valoresEncontrados[0];
+  }
+  if (valorMensalFixo === null && valoresEncontrados.length > 1) {
+    valorMensalFixo = valoresEncontrados[1];
+  }
 
   // 4. Modalidade de Cobrança e Mensalidade Fixa
-  const ehMensalFixo = /mensalidade fixa|valor mensal fixo|remunera[çc][ãa]o mensal fixa/i.test(t);
+  const ehMensalFixo =
+    valorMensalFixo !== null ||
+    /parcelas?\s+mensais?|mensalidade fixa|remunera[çc][ãa]o mensal/i.test(t);
   const modalidade: ModalidadeCobranca = ehMensalFixo ? "MENSAL_FIXO" : "DEMANDA_SERVICOS";
-  const valorMensalFixo = ehMensalFixo && valoresEncontrados.length > 1 ? valoresEncontrados[1] : null;
 
   // 5. Prazo em meses
   const matchPrazo = t.match(/(\d{1,2})\s*\((?:extenso|[a-z]+)\)?\s*meses/i) || t.match(/prazo de (\d{1,2})\s*meses/i);

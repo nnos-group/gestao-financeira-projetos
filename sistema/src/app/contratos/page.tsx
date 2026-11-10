@@ -21,6 +21,17 @@ const brl = (val: number | null | undefined) =>
     ? val.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
     : "R$ 0,00";
 
+const formatarValorResumido = (val: number | null | undefined) => {
+  if (!val || val === 0) return "R$ 0,00";
+  if (val >= 1_000_000) {
+    return `R$ ${(val / 1_000_000).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} mi`;
+  }
+  if (val >= 1_000) {
+    return `R$ ${(val / 1_000).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} mil`;
+  }
+  return brl(val);
+};
+
 export default function GestaoContratosPage() {
   const [abaAtiva, setAbaAtiva] = useState<AbaNavegacao>("DASHBOARD");
   const [contratos, setContratos] = useState<ContratoCompleto[]>([]);
@@ -320,6 +331,32 @@ export default function GestaoContratosPage() {
     }
   };
 
+  // Excluir Contrato
+  const handleExcluirContrato = async (id: string, numeroOuCodigo?: string) => {
+    const identificador = numeroOuCodigo || "este contrato";
+    if (!window.confirm(`Tem certeza que deseja excluir o contrato "${identificador}"? Esta ação removerá o instrumento da base de dados.`)) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/contratos/${encodeURIComponent(id)}`, {
+        method: "DELETE",
+      });
+      const json = await res.json();
+      if (json.sucesso) {
+        mostrarToast("🗑️ Contrato excluído com sucesso.");
+        if (contratoSelecionado?.id === id || contratoSelecionado?.codigo === id) {
+          setContratoSelecionado(null);
+        }
+        await carregarDados();
+      } else {
+        mostrarToast("Erro ao excluir contrato: " + (json.erro || "Falha na exclusão."));
+      }
+    } catch (e: any) {
+      mostrarToast("Erro na requisição de exclusão: " + e.message);
+    }
+  };
+
   return (
     <div className="layout-container">
       {/* Toast Notificação */}
@@ -487,41 +524,7 @@ export default function GestaoContratosPage() {
             }}
           >
             <div>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <span
-                  style={{
-                    backgroundColor: "#e0f2fe",
-                    color: "#0369a1",
-                    fontSize: "11px",
-                    fontWeight: 800,
-                    padding: "3px 8px",
-                    borderRadius: "6px",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.04em",
-                  }}
-                >
-                  Ciclo de Vida Contratual &amp; IA
-                </span>
-                <span
-                  style={{
-                    backgroundColor: "#ecfdf5",
-                    color: "#047857",
-                    fontSize: "11px",
-                    fontWeight: 700,
-                    padding: "3px 8px",
-                    borderRadius: "6px",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "4px",
-                  }}
-                >
-                  <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>
-                    smart_toy
-                  </span>
-                  Extrator Gemini Integrado
-                </span>
-              </div>
-              <h1 style={{ fontSize: "22px", fontWeight: 800, color: "#0f172a", marginTop: "6px", margin: 0 }}>
+              <h1 style={{ fontSize: "22px", fontWeight: 800, color: "#0f172a", margin: 0 }}>
                 Gestão de Contratos Comerciais
               </h1>
               <p style={{ fontSize: "13px", color: "#64748b", marginTop: "4px", margin: 0 }}>
@@ -985,22 +988,62 @@ export default function GestaoContratosPage() {
                         const percentual = metricas.valorGlobal > 0 ? (somaGlobal / metricas.valorGlobal) * 100 : 0;
 
                         return (
-                          <div key={cli.value}>
-                            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12.5px", marginBottom: "4px" }}>
-                              <span style={{ fontWeight: 700, color: "#0f172a" }}>{cli.label}</span>
-                              <span style={{ color: "#64748b" }}>
-                                {brl(somaGlobal)} ({percentual.toFixed(1)}%)
-                              </span>
+                          <div key={cli.value} style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                            <div>
+                              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12.5px", marginBottom: "4px" }}>
+                                <span style={{ fontWeight: 700, color: "#0f172a" }}>{cli.label}</span>
+                                <span style={{ color: "#64748b" }}>
+                                  {brl(somaGlobal)} ({percentual.toFixed(1)}%)
+                                </span>
+                              </div>
+                              <div style={{ width: "100%", height: "8px", backgroundColor: "#f1f5f9", borderRadius: "999px", overflow: "hidden" }}>
+                                <div
+                                  style={{
+                                    width: `${percentual}%`,
+                                    height: "100%",
+                                    backgroundColor: "#0284c7",
+                                    borderRadius: "999px",
+                                  }}
+                                />
+                              </div>
                             </div>
-                            <div style={{ width: "100%", height: "8px", backgroundColor: "#f1f5f9", borderRadius: "999px", overflow: "hidden" }}>
-                              <div
-                                style={{
-                                  width: `${percentual}%`,
-                                  height: "100%",
-                                  backgroundColor: "#0284c7",
-                                  borderRadius: "999px",
-                                }}
-                              />
+
+                            {/* Sub-lista com contratos individuais do cliente */}
+                            <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginTop: "4px" }}>
+                              {contratosCli.map((ct) => (
+                                <div
+                                  key={ct.id}
+                                  onClick={() => {
+                                    setContratoSelecionado(ct);
+                                    setAbaFicha("RESUMO");
+                                  }}
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "space-between",
+                                    padding: "8px 12px",
+                                    backgroundColor: "#f8fafc",
+                                    borderRadius: "8px",
+                                    border: "1px solid #e2e8f0",
+                                    fontSize: "12px",
+                                    cursor: "pointer",
+                                    transition: "background-color 0.15s ease",
+                                  }}
+                                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f1f5f9")}
+                                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#f8fafc")}
+                                >
+                                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                    <span style={{ fontWeight: 700, color: "#0f2a4a" }}>
+                                      {ct.numeroContrato.valor || ct.codigo}
+                                    </span>
+                                    <span style={{ color: "#64748b" }}>•</span>
+                                    <span style={{ color: "#475569" }}>{ct.projeto.valor}</span>
+                                  </div>
+                                  <div style={{ fontWeight: 700, color: "#0f172a" }}>
+                                    {brl(Number(ct.valorGlobal.valor))}
+                                  </div>
+                                </div>
+                              ))}
                             </div>
                           </div>
                         );
@@ -1126,6 +1169,30 @@ export default function GestaoContratosPage() {
                                     {c.numeroContrato.valor}
                                   </span>
                                   <span style={{ fontSize: "11px", color: "#64748b" }}>{c.codigo}</span>
+                                  {c.possivelDuplicidade && (
+                                    <span
+                                      style={{
+                                        display: "inline-flex",
+                                        alignItems: "center",
+                                        gap: "4px",
+                                        marginTop: "4px",
+                                        color: "#9a3412",
+                                        backgroundColor: "#ffedd5",
+                                        border: "1px solid #fed7aa",
+                                        fontSize: "10px",
+                                        fontWeight: 700,
+                                        padding: "2px 6px",
+                                        borderRadius: "4px",
+                                        width: "fit-content",
+                                      }}
+                                      title={c.motivoDuplicidade || "Possível duplicidade identificada pela IA com outro contrato da carteira."}
+                                    >
+                                      <span className="material-symbols-outlined" style={{ fontSize: "12px", color: "#ea580c" }}>
+                                        content_copy
+                                      </span>
+                                      Possível Duplicidade
+                                    </span>
+                                  )}
                                   {temDivergencia && (
                                     <span
                                       style={{
@@ -1269,6 +1336,31 @@ export default function GestaoContratosPage() {
                                       visibility
                                     </span>
                                     <span>Ver Ficha</span>
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => handleExcluirContrato(c.id, c.numeroContrato.valor || c.codigo)}
+                                    style={{
+                                      padding: "6px 10px",
+                                      borderRadius: "8px",
+                                      backgroundColor: "#fff1f2",
+                                      color: "#e11d48",
+                                      fontSize: "12px",
+                                      fontWeight: 700,
+                                      border: "1px solid #fecdd3",
+                                      cursor: "pointer",
+                                      display: "inline-flex",
+                                      alignItems: "center",
+                                      gap: "4px",
+                                      transition: "all 0.15s ease",
+                                    }}
+                                    title="Excluir contrato permanentemente"
+                                  >
+                                    <span className="material-symbols-outlined" style={{ fontSize: "15px" }}>
+                                      delete
+                                    </span>
+                                    <span>Excluir</span>
                                   </button>
                                 </div>
                               </td>
@@ -1459,6 +1551,36 @@ export default function GestaoContratosPage() {
                       <span>Aprovar e Integrar ao Dashboard</span>
                     </button>
                   </div>
+
+                  {/* Destaque de Possível Duplicidade */}
+                  {contratoEmRevisao.possivelDuplicidade && (
+                    <div
+                      style={{
+                        backgroundColor: "#fff7ed",
+                        borderRadius: "12px",
+                        border: "1px solid #fed7aa",
+                        padding: "16px",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          color: "#c2410c",
+                          fontWeight: 800,
+                          fontSize: "14px",
+                        }}
+                      >
+                        <span className="material-symbols-outlined">content_copy</span>
+                        <span>ALERTA DE POSSÍVEL DUPLICIDADE DE CONTRATO</span>
+                      </div>
+                      <div style={{ marginTop: "6px", fontSize: "12.5px", color: "#9a3412" }}>
+                        {contratoEmRevisao.motivoDuplicidade ||
+                          "Identificado contrato já cadastrado na carteira com cliente e vigência coincidentes. Verifique se este documento não se trata de uma duplicata antes de aprovar."}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Destaque de Inconsistência se Houver */}
                   {(contratoEmRevisao.inconsistencias || []).length > 0 && (
@@ -1696,143 +1818,337 @@ export default function GestaoContratosPage() {
           )}
 
           {/* =================================================================== */}
-          {/* ABA 4: LINHA DO TEMPO (GANTT INTERATIVO)                            */}
+          {/* ABA 4: LINHA DO TEMPO (GANTT INTERATIVO - MODELO OFICIAL)           */}
           {/* =================================================================== */}
           {abaAtiva === "TIMELINE" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <h2 style={{ fontSize: "18px", fontWeight: 800, color: "#0f172a", margin: 0 }}>
+                  2. Linha do tempo de vigência
+                </h2>
+              </div>
+
               <section
                 style={{
                   backgroundColor: "var(--surface-container-lowest, #ffffff)",
-                  borderRadius: "16px",
+                  borderRadius: "20px",
                   border: "1px solid var(--border, #e2e8f0)",
-                  padding: "20px",
+                  padding: "24px 28px",
                   boxShadow: "0 1px 3px rgba(0,0,0,0.03)",
+                  position: "relative",
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
-                  <div>
-                    <h3 style={{ fontSize: "16px", fontWeight: 800, color: "#0f172a", margin: 0 }}>
-                      Linha do Tempo dos Contratos (Gantt Interativo)
-                    </h3>
-                    <span style={{ fontSize: "12px", color: "#64748b" }}>
-                      Visualização cronológica das vigências contratuais, aditivos e marcos temporais.
-                    </span>
+                {/* Header row: Title and current month badge */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "28px" }}>
+                  <span style={{ fontSize: "14px", fontWeight: 700, color: "#0f172a" }}>
+                    Evolução dos contratos — 2025 a 2028
+                  </span>
+                  <span
+                    style={{
+                      fontSize: "11px",
+                      fontWeight: 700,
+                      color: "#475569",
+                      backgroundColor: "#f1f5f9",
+                      padding: "3px 10px",
+                      borderRadius: "6px",
+                      border: "1px solid #e2e8f0",
+                    }}
+                  >
+                    Nov/2026
+                  </span>
+                </div>
+
+                {/* Timeline Gantt Grid */}
+                <div style={{ position: "relative", width: "100%", paddingBottom: "24px" }}>
+                  {/* Years Header Row */}
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      marginBottom: "16px",
+                    }}
+                  >
+                    {/* Left label empty spacer */}
+                    <div style={{ width: "200px", flexShrink: 0 }} />
+
+                    {/* Years Columns */}
+                    <div
+                      style={{
+                        flex: 1,
+                        display: "grid",
+                        gridTemplateColumns: "repeat(4, 1fr)",
+                        textAlign: "center",
+                      }}
+                    >
+                      {["2025", "2026", "2027", "2028"].map((ano) => (
+                        <div
+                          key={ano}
+                          style={{
+                            fontSize: "20px",
+                            fontWeight: 700,
+                            color: "#334155",
+                            letterSpacing: "-0.02em",
+                          }}
+                        >
+                          {ano}
+                        </div>
+                      ))}
+                    </div>
                   </div>
 
-                  {/* Legenda de Cores */}
-                  <div style={{ display: "flex", alignItems: "center", gap: "12px", fontSize: "11px", fontWeight: 700 }}>
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", color: "#2563eb" }}>
-                      <span style={{ width: "10px", height: "10px", borderRadius: "3px", backgroundColor: "#3b82f6" }} />
-                      Vigente
-                    </span>
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", color: "#d97706" }}>
-                      <span style={{ width: "10px", height: "10px", borderRadius: "3px", backgroundColor: "#f59e0b" }} />
-                      Vencimento Próximo
-                    </span>
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", color: "#dc2626" }}>
-                      <span style={{ width: "10px", height: "10px", borderRadius: "3px", backgroundColor: "#ef4444" }} />
-                      Vencido
-                    </span>
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", color: "#059669" }}>
-                      <span style={{ width: "10px", height: "10px", borderRadius: "3px", backgroundColor: "#10b981" }} />
-                      Renovado
-                    </span>
+                  {/* Chart Body with Background Vertical Dashed Lines */}
+                  <div style={{ position: "relative" }}>
+                    {/* Vertical grid lines (4 lines, aligned with each year) */}
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: 0,
+                        bottom: 0,
+                        left: "200px",
+                        right: 0,
+                        display: "grid",
+                        gridTemplateColumns: "repeat(4, 1fr)",
+                        pointerEvents: "none",
+                        zIndex: 1,
+                      }}
+                    >
+                      {[0, 1, 2, 3].map((idx) => (
+                        <div
+                          key={idx}
+                          style={{
+                            display: "flex",
+                            justifyContent: "center",
+                            height: "100%",
+                          }}
+                        >
+                          <div
+                            style={{
+                              width: "1px",
+                              height: "100%",
+                              borderLeft: "2px dashed #e2e8f0",
+                            }}
+                          />
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Vertical Line for HOJE (Data Atual) */}
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: "-8px",
+                        bottom: "-24px",
+                        left: "calc(200px + 47.5%)",
+                        width: "0px",
+                        borderLeft: "2.5px dashed #d97706",
+                        zIndex: 4,
+                        pointerEvents: "none",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "flex-end",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: "12px",
+                          height: "12px",
+                          borderRadius: "50%",
+                          backgroundColor: "#d97706",
+                          border: "2px solid #ffffff",
+                          boxShadow: "0 0 0 1px #d97706",
+                          marginBottom: "4px",
+                        }}
+                      />
+                      <div
+                        style={{
+                          fontSize: "13px",
+                          fontWeight: 700,
+                          color: "#0f172a",
+                          whiteSpace: "nowrap",
+                          transform: "translateY(100%)",
+                        }}
+                      >
+                        Hoje: 06/11/26
+                      </div>
+                    </div>
+
+                    {/* Contract Rows */}
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "24px",
+                        position: "relative",
+                        zIndex: 2,
+                      }}
+                    >
+                      {contratos.map((c, index) => {
+                        const projLower = (c.projeto.valor || "").toLowerCase();
+                        const objLower = (c.objeto.valor || "").toLowerCase();
+                        const codLower = (c.codigo || "").toLowerCase();
+
+                        const isTreinamento =
+                          projLower.includes("treinamento") ||
+                          objLower.includes("treinamento") ||
+                          codLower.includes("treinamento");
+
+                        const isPoe =
+                          projLower.includes("poe") ||
+                          objLower.includes("poe") ||
+                          codLower.includes("poe");
+
+                        const nomeCurto = isTreinamento
+                          ? "Treinamento"
+                          : isPoe
+                          ? "POE"
+                          : c.projeto.valor || `Contrato ${index + 1}`;
+
+                        const corPill = isTreinamento
+                          ? "#1b7b75"
+                          : isPoe
+                          ? "#4e70ba"
+                          : index % 2 === 0
+                          ? "#0284c7"
+                          : "#059669";
+
+                        // Scale calculation: 2025-01-01 to 2028-12-31 (4 years)
+                        const dtInicio = new Date(c.dataInicio.valor);
+                        const dtFim = new Date(c.dataEncerramentoOficial || c.dataEncerramento.valor);
+
+                        const t2025 = new Date("2025-01-01T00:00:00").getTime();
+                        const t2029 = new Date("2029-01-01T00:00:00").getTime();
+                        const totalTempo = t2029 - t2025;
+
+                        let leftPct = 10;
+                        let widthPct = 48;
+
+                        if (!isNaN(dtInicio.getTime()) && !isNaN(dtFim.getTime())) {
+                          const startDiff = dtInicio.getTime() - t2025;
+                          const spanDiff = dtFim.getTime() - dtInicio.getTime();
+                          leftPct = Math.max(0, Math.min(90, (startDiff / totalTempo) * 100));
+                          widthPct = Math.max(10, Math.min(100 - leftPct, (spanDiff / totalTempo) * 100));
+                        } else {
+                          if (isTreinamento) {
+                            leftPct = 8;
+                            widthPct = 50;
+                          } else {
+                            leftPct = 32;
+                            widthPct = 50;
+                          }
+                        }
+
+                        return (
+                          <div
+                            key={c.id}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              minHeight: "56px",
+                            }}
+                          >
+                            {/* Left label: Big Title + Resumed Amount */}
+                            <div
+                              style={{
+                                width: "200px",
+                                flexShrink: 0,
+                                display: "flex",
+                                flexDirection: "column",
+                                cursor: "pointer",
+                              }}
+                              onClick={() => {
+                                setContratoSelecionado(c);
+                                setAbaFicha("RESUMO");
+                              }}
+                            >
+                              <span
+                                style={{
+                                  fontSize: "18px",
+                                  fontWeight: 800,
+                                  color: "#0f172a",
+                                  letterSpacing: "-0.01em",
+                                }}
+                              >
+                                {nomeCurto}
+                              </span>
+                              <span style={{ fontSize: "14px", color: "#64748b", fontWeight: 500, marginTop: "2px" }}>
+                                {formatarValorResumido(Number(c.valorGlobal.valor))}
+                              </span>
+                            </div>
+
+                            {/* Right track with floating pill */}
+                            <div style={{ flex: 1, position: "relative", height: "46px" }}>
+                              <div
+                                onClick={() => {
+                                  setContratoSelecionado(c);
+                                  setAbaFicha("RESUMO");
+                                }}
+                                style={{
+                                  position: "absolute",
+                                  left: `${leftPct}%`,
+                                  width: `${widthPct}%`,
+                                  height: "100%",
+                                  backgroundColor: corPill,
+                                  borderRadius: "14px",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  color: "#ffffff",
+                                  fontSize: "15px",
+                                  fontWeight: 700,
+                                  cursor: "pointer",
+                                  boxShadow: "0 2px 6px rgba(0,0,0,0.12)",
+                                  transition: "transform 0.15s ease, filter 0.15s ease",
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.transform = "scaleY(1.04)";
+                                  e.currentTarget.style.filter = "brightness(1.05)";
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.transform = "scaleY(1)";
+                                  e.currentTarget.style.filter = "none";
+                                }}
+                                title={`${c.cliente.valor} • ${c.projeto.valor} (${c.prazoMeses.valor} meses: ${formatarPeriodoBR(c.dataInicio.valor, c.dataEncerramentoOficial || c.dataEncerramento.valor)})`}
+                              >
+                                <span>{c.prazoMeses.valor || "24"} meses</span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
 
-                {/* Grade Cronológica Gantt */}
-                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                  {contratos.map((c) => {
-                    const corBarra =
-                      c.situacao === "VIGENTE"
-                        ? "#3b82f6"
-                        : c.situacao === "VENCIMENTO_PROXIMO"
-                        ? "#f59e0b"
-                        : c.situacao === "VENCIDO"
-                        ? "#ef4444"
-                        : c.situacao === "RENOVADO"
-                        ? "#10b981"
-                        : "#94a3b8";
+                {/* Bottom Legend and Subtext */}
+                <div
+                  style={{
+                    marginTop: "40px",
+                    paddingTop: "16px",
+                    borderTop: "1px solid #f1f5f9",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "8px",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: "18px", fontSize: "12px", fontWeight: 600, color: "#334155" }}>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                      <span style={{ width: "10px", height: "10px", borderRadius: "50%", backgroundColor: "#1b7b75" }} />
+                      Treinamento
+                    </span>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                      <span style={{ width: "10px", height: "10px", borderRadius: "50%", backgroundColor: "#4e70ba" }} />
+                      Pós-Vendas POE
+                    </span>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                      <span style={{ width: "10px", height: "10px", borderRadius: "50%", backgroundColor: "#d97706" }} />
+                      Data atual
+                    </span>
+                  </div>
 
-                    return (
-                      <div
-                        key={c.id}
-                        onClick={() => {
-                          setContratoSelecionado(c);
-                          setAbaFicha("RESUMO");
-                        }}
-                        style={{
-                          backgroundColor: "#f8fafc",
-                          borderRadius: "12px",
-                          border: "1px solid #e2e8f0",
-                          padding: "16px",
-                          cursor: "pointer",
-                          transition: "all 0.15s ease",
-                        }}
-                        onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#94a3b8")}
-                        onMouseLeave={(e) => (e.currentTarget.style.borderColor = "#e2e8f0")}
-                      >
-                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
-                          <div>
-                            <span style={{ fontWeight: 800, color: "#0f172a", fontSize: "13.5px" }}>
-                              {c.cliente.valor} • {c.projeto.valor}
-                            </span>
-                            <span style={{ fontSize: "11px", color: "#64748b", marginLeft: "8px" }}>
-                              ({c.numeroContrato.valor})
-                            </span>
-                          </div>
-                          <div style={{ fontSize: "12px", fontWeight: 700, color: "#0f172a" }}>
-                            {brl(Number(c.valorGlobal.valor))}
-                          </div>
-                        </div>
-
-                        {/* Barra Gantt */}
-                        <div style={{ position: "relative", width: "100%", height: "24px", backgroundColor: "#e2e8f0", borderRadius: "8px", overflow: "hidden" }}>
-                          <div
-                            style={{
-                              width: "100%",
-                              height: "100%",
-                              backgroundColor: corBarra,
-                              borderRadius: "8px",
-                              display: "flex",
-                              alignItems: "center",
-                              padding: "0 12px",
-                              color: "#ffffff",
-                              fontSize: "11px",
-                              fontWeight: 700,
-                              justifyContent: "space-between",
-                            }}
-                          >
-                            <span>Início: {formatarDataBR(c.dataInicio.valor)}</span>
-                            <span>{c.prazoMeses.valor} meses</span>
-                            <span>Fim: {formatarDataBR(c.dataEncerramentoOficial || c.dataEncerramento.valor)}</span>
-                          </div>
-                        </div>
-
-                        {/* Aditivos Vinculados na Timeline */}
-                        {(c.aditivos || []).length > 0 && (
-                          <div style={{ marginTop: "8px", display: "flex", gap: "8px" }}>
-                            {c.aditivos.map((adt) => (
-                              <span
-                                key={adt.id}
-                                style={{
-                                  backgroundColor: "#ecfdf5",
-                                  color: "#047857",
-                                  fontSize: "10px",
-                                  fontWeight: 700,
-                                  padding: "2px 8px",
-                                  borderRadius: "6px",
-                                  border: "1px solid #a7f3d0",
-                                }}
-                              >
-                                📌 Termo Aditivo nº {adt.numeroAditivo}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                  <p style={{ fontSize: "11.5px", color: "#64748b", margin: 0 }}>
+                    Escala temporal aproximada. As barras representam a vigência prevista dos instrumentos, e não o faturamento realizado.
+                  </p>
                 </div>
               </section>
             </div>
@@ -2133,19 +2449,50 @@ export default function GestaoContratosPage() {
                       </span>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => setContratoSelecionado(null)}
-                      style={{
-                        padding: "8px",
-                        borderRadius: "8px",
-                        border: "1px solid #cbd5e1",
-                        backgroundColor: "#ffffff",
-                        cursor: "pointer",
-                      }}
-                    >
-                      <span className="material-symbols-outlined">close</span>
-                    </button>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleExcluirContrato(
+                            contratoSelecionado.id,
+                            contratoSelecionado.numeroContrato.valor || contratoSelecionado.codigo
+                          );
+                        }}
+                        style={{
+                          padding: "8px 12px",
+                          borderRadius: "8px",
+                          border: "1px solid #fecdd3",
+                          backgroundColor: "#fff1f2",
+                          color: "#e11d48",
+                          cursor: "pointer",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "4px",
+                          fontSize: "12px",
+                          fontWeight: 700,
+                        }}
+                        title="Excluir contrato permanentemente"
+                      >
+                        <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
+                          delete
+                        </span>
+                        <span>Excluir</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setContratoSelecionado(null)}
+                        style={{
+                          padding: "8px",
+                          borderRadius: "8px",
+                          border: "1px solid #cbd5e1",
+                          backgroundColor: "#ffffff",
+                          cursor: "pointer",
+                        }}
+                      >
+                        <span className="material-symbols-outlined">close</span>
+                      </button>
+                    </div>
                   </div>
 
                   {/* Indicadores do Topo */}
