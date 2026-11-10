@@ -1065,8 +1065,8 @@ NNÓS Consultoria e Treinamento`;
 
                       {/* Ações */}
                       <td style={{ padding: "14px 20px", textAlign: "right" }}>
-                        <div style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
-                          {/* Botão Disparar -> Abre Modal Oficial */}
+                        <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", justifyContent: "flex-end" }}>
+                          {/* Botão Ver E-mail -> Azul #0284c7 com ícone mail */}
                           <button
                             type="button"
                             onClick={() => {
@@ -1077,7 +1077,33 @@ NNÓS Consultoria e Treinamento`;
                               display: "inline-flex",
                               alignItems: "center",
                               gap: "5px",
-                              padding: "6px 14px",
+                              padding: "6px 12px",
+                              borderRadius: "8px",
+                              backgroundColor: "#0284c7",
+                              color: "#ffffff",
+                              fontSize: "12px",
+                              fontWeight: 700,
+                              border: "none",
+                              cursor: "pointer",
+                              boxShadow: "0 1px 3px rgba(2, 132, 199, 0.25)",
+                              transition: "all 0.15s ease",
+                              whiteSpace: "nowrap",
+                            }}
+                            title="Visualizar o e-mail oficial formatado deste usuário"
+                          >
+                            <span className="material-symbols-outlined" style={{ fontSize: "15px" }}>mail</span>
+                            <span>Ver E-mail</span>
+                          </button>
+
+                          {/* Botão Disparar -> Navy #0f2a4a com ícone send */}
+                          <button
+                            type="button"
+                            onClick={() => handleRegistrarDisparo(u)}
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "5px",
+                              padding: "6px 12px",
                               borderRadius: "8px",
                               backgroundColor: "#0f2a4a",
                               color: "#ffffff",
@@ -1085,9 +1111,11 @@ NNÓS Consultoria e Treinamento`;
                               fontWeight: 700,
                               border: "none",
                               cursor: "pointer",
-                              boxShadow: "0 1px 3px rgba(15,42,74,0.2)",
+                              boxShadow: "0 1px 3px rgba(15, 42, 74, 0.15)",
+                              transition: "all 0.15s ease",
+                              whiteSpace: "nowrap",
                             }}
-                            title="Visualizar e enviar convite oficial"
+                            title="Registrar envio do convite no log de homologação"
                           >
                             <span className="material-symbols-outlined" style={{ fontSize: "15px" }}>send</span>
                             <span>Disparar</span>
@@ -1100,19 +1128,26 @@ NNÓS Consultoria e Treinamento`;
                             style={{
                               padding: "6px",
                               borderRadius: "8px",
-                              backgroundColor: "transparent",
+                              backgroundColor: "#f8fafc",
                               color: "#64748b",
-                              border: "none",
+                              border: "1px solid #e2e8f0",
                               cursor: "pointer",
-                              display: "flex",
+                              display: "inline-flex",
                               alignItems: "center",
                               justifyContent: "center",
+                              transition: "all 0.15s ease",
                             }}
                             title="Copiar Link Oficial de Acesso"
-                            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f1f5f9")}
-                            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = "#e2e8f0";
+                              e.currentTarget.style.color = "#0f172a";
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = "#f8fafc";
+                              e.currentTarget.style.color = "#64748b";
+                            }}
                           >
-                            <span className="material-symbols-outlined" style={{ fontSize: "17px" }}>content_copy</span>
+                            <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>content_copy</span>
                           </button>
 
                           {/* Alternar Status Rápido */}
@@ -1132,19 +1167,26 @@ NNÓS Consultoria e Treinamento`;
                             style={{
                               padding: "6px",
                               borderRadius: "8px",
-                              backgroundColor: "transparent",
+                              backgroundColor: "#f8fafc",
                               color: "#64748b",
-                              border: "none",
+                              border: "1px solid #e2e8f0",
                               cursor: "pointer",
-                              display: "flex",
+                              display: "inline-flex",
                               alignItems: "center",
                               justifyContent: "center",
+                              transition: "all 0.15s ease",
                             }}
                             title="Alternar Status de Homologação"
-                            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f1f5f9")}
-                            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = "#e2e8f0";
+                              e.currentTarget.style.color = "#0f172a";
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = "#f8fafc";
+                              e.currentTarget.style.color = "#64748b";
+                            }}
                           >
-                            <span className="material-symbols-outlined" style={{ fontSize: "17px" }}>sync</span>
+                            <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>sync</span>
                           </button>
                         </div>
                       </td>

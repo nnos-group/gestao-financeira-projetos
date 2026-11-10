@@ -572,18 +572,28 @@ export default function AdminPage() {
           {/* Barra de Abas do Painel de Administrador */}
           <div
             style={{
-              backgroundColor: "var(--surface-container-lowest)",
-              border: "1px solid var(--border)",
-              borderRadius: "14px",
-              padding: "12px 16px",
+              backgroundColor: "var(--surface-container-lowest, #ffffff)",
+              border: "1px solid var(--border, #e2e8f0)",
+              borderRadius: "16px",
+              padding: "8px 12px",
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
               flexWrap: "wrap",
               gap: "12px",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.03)",
             }}
           >
-            <div style={{ display: "inline-flex", gap: "6px", backgroundColor: "var(--surface-container-low)", padding: "4px", borderRadius: "10px" }}>
+            <nav
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                overflowX: "auto",
+                maxWidth: "100%",
+              }}
+              aria-label="Abas de Governança"
+            >
               <button
                 type="button"
                 onClick={() => setAbaAtiva("CONFIGURAR_PERFIL")}
@@ -592,17 +602,21 @@ export default function AdminPage() {
                   alignItems: "center",
                   gap: "6px",
                   padding: "8px 14px",
-                  borderRadius: "8px",
+                  borderRadius: "10px",
                   border: "none",
                   cursor: "pointer",
-                  fontSize: "12.5px",
-                  fontWeight: 700,
-                  backgroundColor: abaAtiva === "CONFIGURAR_PERFIL" ? "var(--primary)" : "transparent",
-                  color: abaAtiva === "CONFIGURAR_PERFIL" ? "#ffffff" : "var(--on-surface-variant)",
+                  fontSize: "12px",
+                  fontWeight: abaAtiva === "CONFIGURAR_PERFIL" ? 700 : 600,
+                  backgroundColor: abaAtiva === "CONFIGURAR_PERFIL" ? "#0f2a4a" : "transparent",
+                  color: abaAtiva === "CONFIGURAR_PERFIL" ? "#ffffff" : "#475569",
+                  boxShadow: abaAtiva === "CONFIGURAR_PERFIL" ? "0 1px 3px rgba(15,42,74,0.2)" : "none",
+                  whiteSpace: "nowrap",
+                  transition: "all 0.15s ease",
                 }}
               >
-                <span className="material-symbols-outlined" style={{ fontSize: "17px" }}>tune</span>
-                <span>1. Módulos &amp; Regras do Perfil ({perfilAtual?.sigla})</span>
+                <span className="material-symbols-outlined" style={{ fontSize: "16px", color: abaAtiva === "CONFIGURAR_PERFIL" ? "#93c5fd" : "#94a3b8" }}>tune</span>
+                <span>1. Módulos &amp; Regras</span>
+                <span style={{ fontSize: "10px", fontWeight: 700, color: abaAtiva === "CONFIGURAR_PERFIL" ? "#93c5fd" : "#94a3b8", textTransform: "uppercase" }}>({perfilAtual?.sigla})</span>
               </button>
 
               <button
@@ -613,17 +627,20 @@ export default function AdminPage() {
                   alignItems: "center",
                   gap: "6px",
                   padding: "8px 14px",
-                  borderRadius: "8px",
+                  borderRadius: "10px",
                   border: "none",
                   cursor: "pointer",
-                  fontSize: "12.5px",
-                  fontWeight: 700,
-                  backgroundColor: abaAtiva === "MATRIZ_GERAL" ? "var(--primary)" : "transparent",
-                  color: abaAtiva === "MATRIZ_GERAL" ? "#ffffff" : "var(--on-surface-variant)",
+                  fontSize: "12px",
+                  fontWeight: abaAtiva === "MATRIZ_GERAL" ? 700 : 600,
+                  backgroundColor: abaAtiva === "MATRIZ_GERAL" ? "#0f2a4a" : "transparent",
+                  color: abaAtiva === "MATRIZ_GERAL" ? "#ffffff" : "#475569",
+                  boxShadow: abaAtiva === "MATRIZ_GERAL" ? "0 1px 3px rgba(15,42,74,0.2)" : "none",
+                  whiteSpace: "nowrap",
+                  transition: "all 0.15s ease",
                 }}
               >
-                <span className="material-symbols-outlined" style={{ fontSize: "17px" }}>grid_view</span>
-                <span>2. Matriz Comparativa (Todos os Perfis)</span>
+                <span className="material-symbols-outlined" style={{ fontSize: "16px", color: abaAtiva === "MATRIZ_GERAL" ? "#93c5fd" : "#94a3b8" }}>grid_view</span>
+                <span>2. Matriz Comparativa Geral</span>
               </button>
 
               <button
@@ -634,17 +651,33 @@ export default function AdminPage() {
                   alignItems: "center",
                   gap: "6px",
                   padding: "8px 14px",
-                  borderRadius: "8px",
+                  borderRadius: "10px",
                   border: "none",
                   cursor: "pointer",
-                  fontSize: "12.5px",
-                  fontWeight: 700,
-                  backgroundColor: abaAtiva === "USUARIOS" ? "var(--primary)" : "transparent",
-                  color: abaAtiva === "USUARIOS" ? "#ffffff" : "var(--on-surface-variant)",
+                  fontSize: "12px",
+                  fontWeight: abaAtiva === "USUARIOS" ? 700 : 600,
+                  backgroundColor: abaAtiva === "USUARIOS" ? "#0f2a4a" : "transparent",
+                  color: abaAtiva === "USUARIOS" ? "#ffffff" : "#475569",
+                  boxShadow: abaAtiva === "USUARIOS" ? "0 1px 3px rgba(15,42,74,0.2)" : "none",
+                  whiteSpace: "nowrap",
+                  transition: "all 0.15s ease",
                 }}
               >
-                <span className="material-symbols-outlined" style={{ fontSize: "17px" }}>manage_accounts</span>
-                <span>3. Usuários Vinculados ({(perfilAtual?.usuariosVinculados || []).length})</span>
+                <span className="material-symbols-outlined" style={{ fontSize: "16px", color: abaAtiva === "USUARIOS" ? "#93c5fd" : "#94a3b8" }}>manage_accounts</span>
+                <span>3. Usuários Vinculados</span>
+                <span
+                  style={{
+                    fontSize: "10px",
+                    fontWeight: 700,
+                    padding: "1px 6px",
+                    borderRadius: "999px",
+                    backgroundColor: abaAtiva === "USUARIOS" ? "#1e3a5f" : "#f1f5f9",
+                    color: abaAtiva === "USUARIOS" ? "#ffffff" : "#475569",
+                    border: abaAtiva === "USUARIOS" ? "1px solid #334155" : "1px solid #e2e8f0",
+                  }}
+                >
+                  {(perfilAtual?.usuariosVinculados || []).length}
+                </span>
               </button>
 
               <button
@@ -655,17 +688,20 @@ export default function AdminPage() {
                   alignItems: "center",
                   gap: "6px",
                   padding: "8px 14px",
-                  borderRadius: "8px",
+                  borderRadius: "10px",
                   border: "none",
                   cursor: "pointer",
-                  fontSize: "12.5px",
-                  fontWeight: 700,
-                  backgroundColor: abaAtiva === "GESTAO_USUARIOS" ? "var(--primary)" : "transparent",
-                  color: abaAtiva === "GESTAO_USUARIOS" ? "#ffffff" : "var(--on-surface-variant)",
+                  fontSize: "12px",
+                  fontWeight: abaAtiva === "GESTAO_USUARIOS" ? 700 : 600,
+                  backgroundColor: abaAtiva === "GESTAO_USUARIOS" ? "#0f2a4a" : "transparent",
+                  color: abaAtiva === "GESTAO_USUARIOS" ? "#ffffff" : "#475569",
+                  boxShadow: abaAtiva === "GESTAO_USUARIOS" ? "0 1px 3px rgba(15,42,74,0.2)" : "none",
+                  whiteSpace: "nowrap",
+                  transition: "all 0.15s ease",
                 }}
               >
-                <span className="material-symbols-outlined" style={{ fontSize: "17px" }}>passkey</span>
-                <span>4. Gestão de Usuários &amp; Senhas (MFA)</span>
+                <span className="material-symbols-outlined" style={{ fontSize: "16px", color: abaAtiva === "GESTAO_USUARIOS" ? "#93c5fd" : "#94a3b8" }}>passkey</span>
+                <span>4. Gestão de Senhas (MFA)</span>
               </button>
 
               <button
@@ -676,16 +712,19 @@ export default function AdminPage() {
                   alignItems: "center",
                   gap: "6px",
                   padding: "8px 14px",
-                  borderRadius: "8px",
+                  borderRadius: "10px",
                   border: "none",
                   cursor: "pointer",
-                  fontSize: "12.5px",
-                  fontWeight: 700,
-                  backgroundColor: abaAtiva === "LOGS_ACESSO" ? "var(--primary)" : "transparent",
-                  color: abaAtiva === "LOGS_ACESSO" ? "#ffffff" : "var(--on-surface-variant)",
+                  fontSize: "12px",
+                  fontWeight: abaAtiva === "LOGS_ACESSO" ? 700 : 600,
+                  backgroundColor: abaAtiva === "LOGS_ACESSO" ? "#0f2a4a" : "transparent",
+                  color: abaAtiva === "LOGS_ACESSO" ? "#ffffff" : "#475569",
+                  boxShadow: abaAtiva === "LOGS_ACESSO" ? "0 1px 3px rgba(15,42,74,0.2)" : "none",
+                  whiteSpace: "nowrap",
+                  transition: "all 0.15s ease",
                 }}
               >
-                <span className="material-symbols-outlined" style={{ fontSize: "17px" }}>policy</span>
+                <span className="material-symbols-outlined" style={{ fontSize: "16px", color: abaAtiva === "LOGS_ACESSO" ? "#93c5fd" : "#94a3b8" }}>policy</span>
                 <span>5. Monitoramento de Log de Acesso</span>
               </button>
 
@@ -696,49 +735,38 @@ export default function AdminPage() {
                   display: "inline-flex",
                   alignItems: "center",
                   gap: "7px",
-                  padding: "8px 14px",
-                  borderRadius: "8px",
+                  padding: "8px 16px",
+                  borderRadius: "10px",
                   border: "none",
                   cursor: "pointer",
-                  fontSize: "12.5px",
-                  fontWeight: 700,
-                  backgroundColor: abaAtiva === "HOMOLOGACAO" ? "var(--primary)" : "transparent",
-                  color: abaAtiva === "HOMOLOGACAO" ? "#ffffff" : "var(--on-surface-variant)",
+                  fontSize: "12px",
+                  fontWeight: abaAtiva === "HOMOLOGACAO" ? 700 : 600,
+                  backgroundColor: abaAtiva === "HOMOLOGACAO" ? "#0f2a4a" : "transparent",
+                  color: abaAtiva === "HOMOLOGACAO" ? "#ffffff" : "#475569",
+                  boxShadow: abaAtiva === "HOMOLOGACAO" ? "0 1px 3px rgba(15,42,74,0.2)" : "none",
+                  whiteSpace: "nowrap",
+                  transition: "all 0.15s ease",
                 }}
               >
-                <span className="material-symbols-outlined" style={{ fontSize: "17px", color: abaAtiva === "HOMOLOGACAO" ? "#93c5fd" : undefined }}>
+                <span className="material-symbols-outlined" style={{ fontSize: "16px", color: abaAtiva === "HOMOLOGACAO" ? "#93c5fd" : "#94a3b8" }}>
                   forward_to_inbox
                 </span>
                 <span>6. Homologação &amp; Convites</span>
-                <span style={{ position: "relative", display: "inline-flex", width: "8px", height: "8px" }}>
-                  <span
-                    style={{
-                      position: "absolute",
-                      width: "100%",
-                      height: "100%",
-                      borderRadius: "50%",
-                      backgroundColor: "#34d399",
-                      opacity: 0.75,
-                      animation: "ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite",
-                    }}
-                  />
-                  <span
-                    style={{
-                      position: "relative",
-                      display: "inline-flex",
-                      width: "8px",
-                      height: "8px",
-                      borderRadius: "50%",
-                      backgroundColor: "#10b981",
-                    }}
-                  />
-                </span>
               </button>
-            </div>
+            </nav>
 
             {perfilAtual && (
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
-                <span style={{ fontSize: "11.5px", fontWeight: 700, color: "var(--on-surface-variant)" }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  flexWrap: "wrap",
+                  borderLeft: "1px solid #e2e8f0",
+                  paddingLeft: "12px",
+                }}
+              >
+                <span style={{ fontSize: "11.5px", fontWeight: 700, color: "#64748b" }}>
                   Tela Inicial Padrão:
                 </span>
                 <ModernDropdown
@@ -746,7 +774,7 @@ export default function AdminPage() {
                   onChange={(val) => handleAlterarRotaPadrao(perfilAtual.id, String(val))}
                   options={opcoesRotasPadrao}
                   icon="home"
-                  minWidth={260}
+                  minWidth={250}
                   searchable={false}
                 />
 
@@ -764,17 +792,19 @@ export default function AdminPage() {
                     alignItems: "center",
                     gap: "6px",
                     padding: "7px 14px",
-                    borderRadius: "8px",
-                    border: "1px solid var(--primary)",
-                    backgroundColor: "var(--primary)",
+                    borderRadius: "10px",
+                    border: "none",
+                    backgroundColor: "#0f2a4a",
                     color: "#ffffff",
                     fontSize: "12px",
                     fontWeight: 700,
                     cursor: "pointer",
+                    boxShadow: "0 1px 3px rgba(15,42,74,0.15)",
+                    transition: "all 0.15s ease",
                   }}
                 >
-                  <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
-                    science
+                  <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "#93c5fd" }}>
+                    visibility
                   </span>
                   <span>Simular Visão ({perfilAtual.sigla})</span>
                 </button>
