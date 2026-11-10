@@ -210,21 +210,23 @@ export default function GestaoContratosPage() {
     }
   };
 
-  // Carregar Exemplo Real (Porsche Contrato A ou B)
-  const handleCarregarExemplo = (tipo: "A" | "B") => {
-    const exA = contratos.find((c) => c.codigo.includes("TREINAMENTO"));
-    const exB = contratos.find((c) => c.codigo.includes("POE"));
+  // Cálculo dinâmico da data atual para o gráfico Gantt e indicadores
+  const hojeData = useMemo(() => {
+    const d = new Date();
+    const dia = String(d.getDate()).padStart(2, "0");
+    const mes = String(d.getMonth() + 1).padStart(2, "0");
+    const ano2d = String(d.getFullYear()).slice(-2);
+    const texto = `Hoje: ${dia}/${mes}/${ano2d}`;
 
-    if (tipo === "A" && exA) {
-      setContratoEmRevisao({ ...exA, id: `CTR-UPLOAD-${Date.now()}` });
-      mostrarToast("Exemplo Contrato A (Porsche Treinamento & Consultoria) carregado para validação!");
-    } else if (tipo === "B" && exB) {
-      setContratoEmRevisao({ ...exB, id: `CTR-UPLOAD-${Date.now()}` });
-      mostrarToast("Exemplo Contrato B (Porsche Consultoria Pós-Vendas POE) carregado para validação!");
-    } else {
-      mostrarToast("Exemplo já integrado à base de dados.");
-    }
-  };
+    const mesesExt = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+    const badge = `${mesesExt[d.getMonth()]}/${d.getFullYear()}`;
+
+    const t2025 = new Date("2025-01-01T00:00:00").getTime();
+    const t2029 = new Date("2029-01-01T00:00:00").getTime();
+    const pct = Math.max(0, Math.min(100, ((d.getTime() - t2025) / (t2029 - t2025)) * 100));
+
+    return { texto, badge, pct };
+  }, []);
 
   // Salvar / Aprovar Contrato em Revisão
   const handleAprovarContratoRevisao = async () => {
@@ -535,7 +537,14 @@ export default function GestaoContratosPage() {
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
               <button
                 type="button"
-                onClick={() => setAbaAtiva("UPLOAD")}
+                onClick={() => {
+                  setContratoEmRevisao(null);
+                  setAbaAtiva("UPLOAD");
+                  if (fileInputRef.current) {
+                    fileInputRef.current.value = "";
+                    fileInputRef.current.click();
+                  }
+                }}
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
@@ -1445,65 +1454,6 @@ export default function GestaoContratosPage() {
                 )}
               </div>
 
-              {/* Botões de Acesso Rápido a Exemplos de Teste (Porsche A e B) */}
-              <div
-                style={{
-                  backgroundColor: "#f8fafc",
-                  borderRadius: "14px",
-                  border: "1px solid #e2e8f0",
-                  padding: "16px 20px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  flexWrap: "wrap",
-                  gap: "12px",
-                }}
-              >
-                <div>
-                  <span style={{ fontSize: "12px", fontWeight: 700, color: "#0f172a", display: "block" }}>
-                    🧪 Cenários Oficiais de Teste (Porsche Brasil):
-                  </span>
-                  <span style={{ fontSize: "11.5px", color: "#64748b" }}>
-                    Valide a extração, o reconhecimento de inconsistência de datas e as diferentes modalidades financeiras.
-                  </span>
-                </div>
-
-                <div style={{ display: "flex", gap: "10px" }}>
-                  <button
-                    type="button"
-                    onClick={() => handleCarregarExemplo("A")}
-                    style={{
-                      padding: "8px 14px",
-                      borderRadius: "8px",
-                      backgroundColor: "#ffffff",
-                      border: "1px solid #cbd5e1",
-                      color: "#0f172a",
-                      fontSize: "12px",
-                      fontWeight: 700,
-                      cursor: "pointer",
-                    }}
-                  >
-                    Carregar Contrato A (Treinamento - Demanda)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleCarregarExemplo("B")}
-                    style={{
-                      padding: "8px 14px",
-                      borderRadius: "8px",
-                      backgroundColor: "#ffffff",
-                      border: "1px solid #cbd5e1",
-                      color: "#0f172a",
-                      fontSize: "12px",
-                      fontWeight: 700,
-                      cursor: "pointer",
-                    }}
-                  >
-                    Carregar Contrato B (Pós-Vendas POE - Fixo)
-                  </button>
-                </div>
-              </div>
-
               {/* Formulário Estruturado de Conferência e Aprovação Humana */}
               {contratoEmRevisao && (
                 <section
@@ -1517,7 +1467,7 @@ export default function GestaoContratosPage() {
                     gap: "20px",
                   }}
                 >
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
                     <div>
                       <h3 style={{ fontSize: "18px", fontWeight: 800, color: "#0f172a", margin: 0 }}>
                         Conferência dos Dados Extraídos pela IA
@@ -1527,29 +1477,58 @@ export default function GestaoContratosPage() {
                       </span>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={handleAprovarContratoRevisao}
-                      style={{
-                        padding: "10px 20px",
-                        borderRadius: "10px",
-                        backgroundColor: "#059669",
-                        color: "#ffffff",
-                        fontSize: "13px",
-                        fontWeight: 700,
-                        border: "none",
-                        cursor: "pointer",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "6px",
-                        boxShadow: "0 2px 4px rgba(5,150,105,0.2)",
-                      }}
-                    >
-                      <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
-                        check_circle
-                      </span>
-                      <span>Aprovar e Integrar ao Dashboard</span>
-                    </button>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setContratoEmRevisao(null);
+                          if (fileInputRef.current) fileInputRef.current.value = "";
+                        }}
+                        style={{
+                          padding: "10px 16px",
+                          borderRadius: "10px",
+                          backgroundColor: "#f1f5f9",
+                          color: "#475569",
+                          fontSize: "12.5px",
+                          fontWeight: 700,
+                          border: "1px solid #cbd5e1",
+                          cursor: "pointer",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "6px",
+                          transition: "all 0.15s ease",
+                        }}
+                      >
+                        <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
+                          close
+                        </span>
+                        <span>Descartar e Enviar Outro PDF</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleAprovarContratoRevisao}
+                        style={{
+                          padding: "10px 20px",
+                          borderRadius: "10px",
+                          backgroundColor: "#059669",
+                          color: "#ffffff",
+                          fontSize: "13px",
+                          fontWeight: 700,
+                          border: "none",
+                          cursor: "pointer",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "6px",
+                          boxShadow: "0 2px 4px rgba(5,150,105,0.2)",
+                        }}
+                      >
+                        <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
+                          check_circle
+                        </span>
+                        <span>Aprovar e Integrar ao Dashboard</span>
+                      </button>
+                    </div>
                   </div>
 
                   {/* Destaque de Possível Duplicidade */}
@@ -1854,7 +1833,7 @@ export default function GestaoContratosPage() {
                       border: "1px solid #e2e8f0",
                     }}
                   >
-                    Nov/2026
+                    {hojeData.badge}
                   </span>
                 </div>
 
@@ -1932,13 +1911,13 @@ export default function GestaoContratosPage() {
                       ))}
                     </div>
 
-                    {/* Vertical Line for HOJE (Data Atual) */}
+                    {/* Vertical Line for HOJE (Data Atual Dinâmica) */}
                     <div
                       style={{
                         position: "absolute",
                         top: "-8px",
                         bottom: "-24px",
-                        left: "calc(200px + 47.5%)",
+                        left: `calc(200px + ${hojeData.pct.toFixed(2)}%)`,
                         width: "0px",
                         borderLeft: "2.5px dashed #d97706",
                         zIndex: 4,
@@ -1969,7 +1948,7 @@ export default function GestaoContratosPage() {
                           transform: "translateY(100%)",
                         }}
                       >
-                        Hoje: 06/11/26
+                        {hojeData.texto}
                       </div>
                     </div>
 

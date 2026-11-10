@@ -21,21 +21,29 @@ function normalizarPerfisSeparados(lista: any[]): { perfis: any[]; migrado: bool
     }
 
     if (p.id === "AGENCIA") {
-      const usuariosAtualizados = (p.usuariosVinculados || []).map((u: any) => {
-        if (
-          u.email === "viagens@nnos.com.br" ||
+      const temFatima = (p.usuariosVinculados || []).some(
+        (u: any) => u.email?.toLowerCase() === "fcconsultoriadeviagens@gmail.com"
+      );
+      const temAntigo = (p.usuariosVinculados || []).some(
+        (u: any) =>
+          u.email?.toLowerCase() === "viagens@nnos.com.br" ||
           (u.nome && u.nome.toUpperCase().includes("CENTRAL DE VIAGENS"))
-        ) {
-          migrado = true;
-          return {
-            nome: "Agência de Viagens FÁTIMA",
-            email: "fcconsultoriadeviagens@gmail.com",
-            cargo: "Operador de Cotações & Emissão",
-          };
-        }
-        return u;
-      });
-      return { ...p, usuariosVinculados: usuariosAtualizados };
+      );
+
+      if (!temFatima || temAntigo || (p.usuariosVinculados || []).length === 0) {
+        migrado = true;
+        return {
+          ...p,
+          usuariosVinculados: [
+            {
+              nome: "Agência de Viagens FÁTIMA",
+              email: "fcconsultoriadeviagens@gmail.com",
+              cargo: "Operador de Cotações & Emissão",
+            },
+          ],
+        };
+      }
+      return p;
     }
 
     return p;
