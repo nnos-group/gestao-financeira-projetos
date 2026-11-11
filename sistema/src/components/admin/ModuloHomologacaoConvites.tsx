@@ -182,13 +182,15 @@ export default function ModuloHomologacaoConvites({ perfis, onToast }: Props) {
       const data = await res.json();
       if (data.sucesso && (data.modo === "smtp" || data.modo === "resend")) {
         onToast(`✉️ E-mail oficial entregue com sucesso para ${user.email}!`);
+      } else if (data.sucesso === false) {
+        onToast(`⚠️ Falha no envio para ${user.email}: ${data.mensagem || data.erro || "Verifique o provedor de e-mail"}`);
       } else if (data.modo === "simulado") {
         onToast(`Convite registrado para ${user.nome}! (Modo Simulado: SMTP pendente de configuração)`);
       } else {
         onToast(`Convite de homologação registrado para ${user.nome}!`);
       }
-    } catch {
-      onToast(`Convite de homologação registrado para ${user.nome}!`);
+    } catch (e: any) {
+      onToast(`Erro ao disparar e-mail: ${e.message}`);
     }
   };
 
