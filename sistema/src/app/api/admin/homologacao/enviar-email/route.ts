@@ -13,7 +13,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const urlLogin = "https://gestao-financeira-projetos.vercel.app/login";
+    const urlLogin = process.env.NEXT_PUBLIC_APP_URL
+      ? `${process.env.NEXT_PUBLIC_APP_URL}/login`
+      : "https://gestao.nnos.com.br/login";
     const canalTeams = "Microsoft Teams da Equipe de Gestão NNÓS";
 
     const html = `
