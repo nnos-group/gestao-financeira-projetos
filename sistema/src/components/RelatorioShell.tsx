@@ -9,6 +9,7 @@ const MENU = [
   { href: "/projetos", icon: "assignment", label: "Projetos & Atividades" },
   { href: "/medicao", icon: "receipt_long", label: "BM - Boletim de Medição" },
   { href: "/viagens", icon: "flight", label: "Viagens & Logística" },
+  { href: "/contratos", icon: "history_edu", label: "Gestão de Contratos" },
   { href: "/centro-de-custo", icon: "account_tree", label: "Centro de Custo" },
   { href: "/tabela-precos", icon: "request_quote", label: "Tabela de Preços" },
   { href: "/pessoas", icon: "group", label: "Pessoas" },

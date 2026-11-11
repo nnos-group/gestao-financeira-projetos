@@ -3,7 +3,6 @@ import { Plus_Jakarta_Sans, Inter } from "next/font/google";
 import "./globals.css";
 import { SecurityGuard } from "@/components/SecurityGuard";
 import { PerfilAcessoProvider } from "@/contexts/PerfilAcessoContext";
-import BotaoAjudaCentral from "@/components/BotaoAjudaCentral";
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -83,7 +82,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <SecurityGuard />
         <PerfilAcessoProvider>
           {children}
-          <BotaoAjudaCentral variante="flutuante" />
         </PerfilAcessoProvider>
       </body>
     </html>

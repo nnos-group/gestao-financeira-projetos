@@ -1,5 +1,292 @@
 [
   {
+    "id": "CTR-2026-NRYY0",
+    "codigo": "CTR-2026-NRYY0",
+    "numeroContrato": {
+      "valor": "Contrato CNH Treinamentos - 00673/22",
+      "paginaOrigem": 1,
+      "clausulaOrigem": "Identificação Contratual",
+      "confianca": 0.9,
+      "naoLocalizado": false
+    },
+    "cliente": {
+      "valor": "CNH Industrial",
+      "paginaOrigem": 1,
+      "clausulaOrigem": "Qualificação das Partes",
+      "confianca": 0.9,
+      "naoLocalizado": false
+    },
+    "razaoSocialContratada": {
+      "valor": "NNÓS Consultoria e Treinamento Ltda",
+      "paginaOrigem": 1,
+      "clausulaOrigem": "Qualificação das Partes",
+      "confianca": 0.9,
+      "naoLocalizado": false
+    },
+    "cnpjCliente": {
+      "valor": "",
+      "paginaOrigem": 1,
+      "clausulaOrigem": "Qualificação das Partes",
+      "confianca": 0,
+      "naoLocalizado": true
+    },
+    "cnpjContratada": {
+      "valor": "34.892.115/0001-44",
+      "paginaOrigem": 1,
+      "clausulaOrigem": "Qualificação das Partes",
+      "confianca": 0.9,
+      "naoLocalizado": false
+    },
+    "projeto": {
+      "valor": "Back Office + serviços de treinamento",
+      "paginaOrigem": 1,
+      "clausulaOrigem": "Cláusula 1ª",
+      "confianca": 0.9,
+      "naoLocalizado": false
+    },
+    "objeto": {
+      "valor": "2. Receita variável sem garantia mínima\n\nO contrato não assegura uma quantidade mínima de treinamentos. Para projeções financeiras, o Back Office deve ficar separado das receitas provenientes de demandas efetivas.\n\n\n\n3. Cancelamentos de atividades\n\nA cláusula 3.1(a) prevê cobrança equivalente a 50% da tarifa horária previamente contratada para atividades canceladas com menos de 15 dias de antecedência. Recomendo validar a base de cálculo operacional, especialmente em atividades vendidas por diária.\n\n\n\n4. Penalidades e responsabilidade\n\nA cláusula 10.1 prevê multa diária de 1% sobre o valor das três últimas faturas, limitada a 30% dessa base, em determinadas hipóteses de inadimplemento. Há ainda obrigações trabalhistas, documentais e de ressarcimento relevantes.\n\n\n\n5. Restrições à subcontratação\n\nA cláusula 15.1 exige aprovação prévia e expressa da CNH e estabelece restrições específicas à subcontratação de pessoas físicas, cooperativas e pessoas jurídicas individuais. É importante verificar a aderência da operação.\n\n\n\n6. Parecer financeiro e contratual\nA estrutura comercial apresenta uma vantagem: combina receita mensal fixa com oportunidades de faturamento variável, permitindo crescimento conforme a demanda de treinamentos.\n\nEntretanto, para uma gestão financeira confiável, recomendo tratar separadamente as três dimensões:\n- Receita recorrente: valor de Back Office, ajustado conforme os reajustes efetivamente formalizados.\n- Receita variável: treinamentos medidos e aprovados.\n- Receita extraordinária: cancelamentos, deslocamentos e serviços extras, conforme as regras aplicáveis.",
+      "paginaOrigem": 1,
+      "clausulaOrigem": "Cláusula 1ª",
+      "confianca": 0,
+      "naoLocalizado": true
+    },
+    "responsavelInterno": {
+      "valor": "Leonardo Campos",
+      "paginaOrigem": 1,
+      "clausulaOrigem": "Gestão do Contrato",
+      "confianca": 0.9,
+      "naoLocalizado": false
+    },
+    "responsavelCliente": {
+      "valor": "",
+      "paginaOrigem": 1,
+      "clausulaOrigem": "Gestão do Contrato",
+      "confianca": 0,
+      "naoLocalizado": true
+    },
+    "tipoContrato": {
+      "valor": "Contrato de Prestação de Serviços por Demanda",
+      "paginaOrigem": 1,
+      "clausulaOrigem": "Epígrafe",
+      "confianca": 0.9,
+      "naoLocalizado": false
+    },
+    "situacaoAssinatura": {
+      "valor": "ASSINADO",
+      "paginaOrigem": 1,
+      "clausulaOrigem": "Assinaturas",
+      "confianca": 0.9,
+      "naoLocalizado": false
+    },
+    "dataAssinatura": {
+      "valor": "",
+      "paginaOrigem": 1,
+      "clausulaOrigem": "Datação",
+      "confianca": 0,
+      "naoLocalizado": true
+    },
+    "dataInicio": {
+      "valor": "2022-12-01",
+      "paginaOrigem": 2,
+      "clausulaOrigem": "Cláusula de Vigência",
+      "confianca": 0,
+      "naoLocalizado": true
+    },
+    "dataEncerramento": {
+      "valor": "2025-12-31",
+      "paginaOrigem": 2,
+      "clausulaOrigem": "Cláusula de Encerramento",
+      "confianca": 0,
+      "naoLocalizado": true
+    },
+    "dataEncerramentoOficial": "",
+    "prazoMeses": {
+      "valor": 0,
+      "paginaOrigem": 2,
+      "clausulaOrigem": "Cláusula de Vigência",
+      "confianca": 0.9,
+      "naoLocalizado": false
+    },
+    "possibilidadeRenovacao": {
+      "valor": true,
+      "paginaOrigem": 3,
+      "clausulaOrigem": "Cláusula de Prorrogação",
+      "confianca": 0.9,
+      "naoLocalizado": false
+    },
+    "condicoesProrrogacao": {
+      "valor": "",
+      "paginaOrigem": 3,
+      "clausulaOrigem": "Cláusula de Prorrogação",
+      "confianca": 0,
+      "naoLocalizado": true
+    },
+    "avisoPrevioDias": {
+      "valor": 60,
+      "paginaOrigem": 4,
+      "clausulaOrigem": "Cláusula de Rescisão",
+      "confianca": 0.9,
+      "naoLocalizado": false
+    },
+    "condicoesRescisao": {
+      "valor": "",
+      "paginaOrigem": 4,
+      "clausulaOrigem": "Cláusula de Rescisão",
+      "confianca": 0,
+      "naoLocalizado": true
+    },
+    "renovacaoAutomatica": {
+      "valor": false,
+      "paginaOrigem": 3,
+      "clausulaOrigem": "Cláusula de Vigência",
+      "confianca": 0.9,
+      "naoLocalizado": false
+    },
+    "valorGlobal": {
+      "valor": 323750,
+      "paginaOrigem": 3,
+      "clausulaOrigem": "Cláusula do Preço",
+      "confianca": 0.9,
+      "naoLocalizado": false
+    },
+    "valorMensalFixo": {
+      "valor": 0,
+      "paginaOrigem": 3,
+      "clausulaOrigem": "Cláusula de Remuneração",
+      "confianca": 0,
+      "naoLocalizado": true
+    },
+    "valorAnualEstimado": {
+      "valor": 0,
+      "paginaOrigem": 3,
+      "clausulaOrigem": "Preço Anual",
+      "confianca": 0.9,
+      "naoLocalizado": false
+    },
+    "modalidadeCobranca": {
+      "valor": "DEMANDA_SERVICOS",
+      "paginaOrigem": 3,
+      "clausulaOrigem": "Cláusula do Faturamento",
+      "confianca": 0.9,
+      "naoLocalizado": false
+    },
+    "periodicidadeFaturamento": {
+      "valor": "Mensal",
+      "paginaOrigem": 4,
+      "clausulaOrigem": "Cláusula de Faturamento",
+      "confianca": 0.9,
+      "naoLocalizado": false
+    },
+    "condicoesPagamento": {
+      "valor": "",
+      "paginaOrigem": 4,
+      "clausulaOrigem": "Condições de Pagamento",
+      "confianca": 0,
+      "naoLocalizado": true
+    },
+    "indiceReajuste": {
+      "valor": "IGP-M após os primeiros 12 meses",
+      "paginaOrigem": 4,
+      "clausulaOrigem": "Cláusula de Reajuste",
+      "confianca": 0,
+      "naoLocalizado": true
+    },
+    "dataBaseReajuste": {
+      "valor": "",
+      "paginaOrigem": 4,
+      "clausulaOrigem": "Cláusula de Reajuste",
+      "confianca": 0,
+      "naoLocalizado": true
+    },
+    "regrasAtualizacaoPrecos": {
+      "valor": "",
+      "paginaOrigem": 4,
+      "clausulaOrigem": "Cláusula de Reajuste",
+      "confianca": 0,
+      "naoLocalizado": true
+    },
+    "multasPenalidades": {
+      "valor": "",
+      "paginaOrigem": 5,
+      "clausulaOrigem": "Penalidades",
+      "confianca": 0,
+      "naoLocalizado": true
+    },
+    "composicaoPerfis": [],
+    "obrigacoesPrincipais": {
+      "valor": "",
+      "paginaOrigem": 2,
+      "clausulaOrigem": "Obrigações da Contratada",
+      "confianca": 0,
+      "naoLocalizado": true
+    },
+    "clausulaConfidencialidade": {
+      "valor": true,
+      "paginaOrigem": 5,
+      "clausulaOrigem": "Sigilo e Confidencialidade",
+      "confianca": 0.9,
+      "naoLocalizado": false
+    },
+    "condicoesExclusividade": {
+      "valor": "",
+      "paginaOrigem": 5,
+      "clausulaOrigem": "Disposições Gerais",
+      "confianca": 0,
+      "naoLocalizado": true
+    },
+    "permiteSubcontratacao": {
+      "valor": true,
+      "paginaOrigem": 2,
+      "clausulaOrigem": "Obrigações",
+      "confianca": 0.9,
+      "naoLocalizado": false
+    },
+    "responsabilidadesEspecificas": {
+      "valor": "",
+      "paginaOrigem": 2,
+      "clausulaOrigem": "Escopo",
+      "confianca": 0,
+      "naoLocalizado": true
+    },
+    "riscosIdentificados": [],
+    "anexos": [],
+    "situacao": "VENCIDO",
+    "statusRenovacao": "NAO_INICIADA",
+    "inconsistencias": [],
+    "aditivos": [],
+    "alertas": [
+      {
+        "id": "ALT-CTR-2026-NRYY0-VENCIMENTO",
+        "contratoId": "CTR-2026-NRYY0",
+        "contratoNumero": "Contrato CNH Treinamentos - 00673/22",
+        "cliente": "CNH Industrial",
+        "projeto": "Back Office + serviços de treinamento",
+        "diasRestantes": -315,
+        "dataAlerta": "2026-11-11",
+        "classificacao": "VENCIMENTO",
+        "acaoRecomendada": "Informar encerramento da vigência",
+        "status": "PENDENTE",
+        "destinatario": "Leonardo Campos",
+        "responsavel": "Leonardo Campos",
+        "historicoAcoes": [
+          {
+            "data": "11/11/2026 às 10:37",
+            "usuario": "Sistema Automático NNÓS",
+            "acao": "Alerta de VENCIMENTO disparado (-315 dias restantes)."
+          }
+        ]
+      }
+    ],
+    "arquivoPdfNome": "Contrato CNH Treinamentos- Assinado[1].pdf",
+    "arquivoPdfTamanhoBytes": 9701070,
+    "origemExtracao": "OCR_LOCAL",
+    "criadoEm": "2026-11-11T13:05:41.201Z",
+    "atualizadoEm": "2026-11-11T13:40:12.633Z",
+    "criadoPor": "Auditor IA NNÓS",
+    "possivelDuplicidade": false
+  },
+  {
     "id": "CTR-2026-C1HHK",
     "codigo": "CTR-2026-C1HHK",
     "numeroContrato": {
@@ -87,20 +374,20 @@
       "naoLocalizado": false
     },
     "dataInicio": {
-      "valor": "2025-01-02",
+      "valor": "2024-11-12",
       "paginaOrigem": 1,
       "clausulaOrigem": "Vigência Contratual",
       "confianca": 0.9,
       "naoLocalizado": false
     },
     "dataEncerramento": {
-      "valor": "2027-01-01",
+      "valor": "2026-11-12",
       "paginaOrigem": 1,
       "clausulaOrigem": "Vigência Contratual",
       "confianca": 0.9,
       "naoLocalizado": false
     },
-    "dataEncerramentoOficial": "2027-01-01",
+    "dataEncerramentoOficial": "2026-11-12",
     "prazoMeses": {
       "valor": 24,
       "paginaOrigem": 1,
@@ -264,7 +551,7 @@
     "anexos": [
       "Anexo I - Escopo Técnico"
     ],
-    "situacao": "VIGENTE",
+    "situacao": "VENCIMENTO_PROXIMO",
     "statusRenovacao": "PROPOSTA_ENVIADA",
     "inconsistencias": [
       {
@@ -278,12 +565,55 @@
       }
     ],
     "aditivos": [],
-    "alertas": [],
+    "alertas": [
+      {
+        "id": "ALT-CTR-2026-C1HHK-PRIORIDADE",
+        "contratoId": "CTR-2026-C1HHK",
+        "contratoNumero": "Back Office — Ana Cecília",
+        "cliente": "Porsche Brasil",
+        "projeto": "Back Office — Ana Cecília",
+        "diasRestantes": 51,
+        "dataAlerta": "2026-11-11",
+        "classificacao": "PRIORIDADE",
+        "acaoRecomendada": "Acompanhar negociação com cliente",
+        "status": "PENDENTE",
+        "destinatario": "Leonardo Campos",
+        "responsavel": "Leonardo Campos",
+        "historicoAcoes": [
+          {
+            "data": "11/11/2026 às 09:59",
+            "usuario": "Sistema Automático NNÓS",
+            "acao": "Alerta de PRIORIDADE disparado (51 dias restantes)."
+          }
+        ]
+      },
+      {
+        "id": "ALT-CTR-2026-C1HHK-URGENTE",
+        "contratoId": "CTR-2026-C1HHK",
+        "contratoNumero": "Back Office — Ana Cecília",
+        "cliente": "Porsche Brasil",
+        "projeto": "Back Office — Ana Cecília",
+        "diasRestantes": 1,
+        "dataAlerta": "2026-11-11",
+        "classificacao": "URGENTE",
+        "acaoRecomendada": "Escalonar para responsável",
+        "status": "PENDENTE",
+        "destinatario": "Leonardo Campos",
+        "responsavel": "Leonardo Campos",
+        "historicoAcoes": [
+          {
+            "data": "11/11/2026 às 10:04",
+            "usuario": "Sistema Automático NNÓS",
+            "acao": "Alerta de URGENTE disparado (1 dias restantes)."
+          }
+        ]
+      }
+    ],
     "arquivoPdfNome": "BackOffice - Ana Cecília.pdf",
     "arquivoPdfTamanhoBytes": 3407499,
     "origemExtracao": "OCR_LOCAL",
     "criadoEm": "2026-11-10T21:21:30.109Z",
-    "atualizadoEm": "2026-11-10T21:37:19.644Z",
+    "atualizadoEm": "2026-11-11T13:04:24.709Z",
     "criadoPor": "Auditor IA NNÓS",
     "possivelDuplicidade": false
   },

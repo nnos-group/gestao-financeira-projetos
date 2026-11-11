@@ -162,10 +162,34 @@ export default function ModuloHomologacaoConvites({ perfis, onToast }: Props) {
     onToast(`Status de ${user.nome} atualizado para ${novoStatus}!`);
   };
 
-  // Registrar Envio de E-mail Individual
+  // Registrar e Disparar Envio de E-mail Individual
   const handleRegistrarDisparo = async (user: any) => {
     await handleAtualizarStatus(user, "CONVITE_ENVIADO");
-    onToast(`Convite de homologação registrado para ${user.nome}!`);
+
+    try {
+      const res = await fetch("/api/admin/homologacao/enviar-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          usuarioNome: user.nome,
+          usuarioEmail: user.email,
+          usuarioLogin: user.login,
+          perfilId: user.perfilId,
+          perfilNome: perfis.find((p) => p.id === user.perfilId)?.nome || user.perfilId,
+        }),
+      });
+
+      const data = await res.json();
+      if (data.sucesso && (data.modo === "smtp" || data.modo === "resend")) {
+        onToast(`✉️ E-mail oficial entregue com sucesso para ${user.email}!`);
+      } else if (data.modo === "simulado") {
+        onToast(`Convite registrado para ${user.nome}! (Modo Simulado: SMTP pendente de configuração)`);
+      } else {
+        onToast(`Convite de homologação registrado para ${user.nome}!`);
+      }
+    } catch {
+      onToast(`Convite de homologação registrado para ${user.nome}!`);
+    }
   };
 
   // Disparo em Massa dos Selecionados
@@ -189,6 +213,18 @@ export default function ModuloHomologacaoConvites({ perfis, onToast }: Props) {
       };
 
       try {
+        await fetch("/api/admin/homologacao/enviar-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            usuarioNome: user.nome,
+            usuarioEmail: user.email,
+            usuarioLogin: user.login,
+            perfilId: user.perfilId,
+            perfilNome: perfis.find((p) => p.id === user.perfilId)?.nome || user.perfilId,
+          }),
+        });
+
         await fetch("/api/admin/logs-acesso", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
