@@ -58,14 +58,16 @@ export async function dispararEmail(options: EnviarEmailOptions): Promise<Enviar
         };
       });
 
-      const res = await fetch("https://api.resend.com/emails", {
+      let remetenteResend = process.env.RESEND_FROM || de;
+
+      let res = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${resendApiKey}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          from: de,
+          from: remetenteResend,
           to: [options.para],
           cc: options.cc,
           subject: options.assunto,
@@ -75,7 +77,32 @@ export async function dispararEmail(options: EnviarEmailOptions): Promise<Enviar
         }),
       });
 
-      const json = await res.json();
+      let json = await res.json();
+
+      // Se falhar porque o domínio personalizado nnos.com.br ainda não foi validado no painel do Resend,
+      // faz fallback automático para o remetente nativo de onboarding do Resend
+      if (!res.ok && (json.message?.toLowerCase().includes("verify") || json.message?.toLowerCase().includes("domain") || json.name === "validation_error")) {
+        console.warn("⚠️ Domínio customizado ainda não verificado no Resend. Utilizando onboarding@resend.dev...");
+        remetenteResend = "Gestão Financeira NNÓS <onboarding@resend.dev>";
+        res = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${resendApiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            from: remetenteResend,
+            to: [options.para],
+            cc: options.cc,
+            subject: options.assunto,
+            html: options.html,
+            text: options.texto,
+            attachments: attachmentsPayload.length > 0 ? attachmentsPayload : undefined,
+          }),
+        });
+        json = await res.json();
+      }
+
       if (!res.ok) {
         throw new Error(json.message || "Erro retornado pela API do Resend");
       }
@@ -88,8 +115,16 @@ export async function dispararEmail(options: EnviarEmailOptions): Promise<Enviar
         destinatario: options.para,
       };
     } catch (err: any) {
-      console.error("Falha ao enviar via Resend:", err);
-      // Cai para próxima tentativa (SMTP)
+      console.error("Falha ao enviar via Resend:", err.message);
+      // Se o usuário configurou especificamente a chave do Resend e falhou, reporta o erro diretamente
+      if (!process.env.SMTP_HOST) {
+        return {
+          sucesso: false,
+          modo: "resend",
+          mensagem: `Erro na API Resend: ${err.message}`,
+          destinatario: options.para,
+        };
+      }
     }
   }
 
