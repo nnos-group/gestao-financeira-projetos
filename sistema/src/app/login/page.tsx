@@ -11,8 +11,8 @@ export default function LoginPage() {
   const { ativarPerfil, setLiderSimulado } = usePerfilAcesso();
 
   const [modo, setModo] = useState<ModoTelaLogin>("PADRAO");
-  const [usuario, setUsuario] = useState("nnos");
-  const [senha, setSenha] = useState("nnos2026");
+  const [usuario, setUsuario] = useState("");
+  const [senha, setSenha] = useState("");
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const [codigoMfa, setCodigoMfa] = useState("");
   const [exibirCampoMfaNoPadrao, setExibirCampoMfaNoPadrao] = useState(true);
