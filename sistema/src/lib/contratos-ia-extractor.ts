@@ -188,7 +188,7 @@ Retorne APENAS um objeto JSON no seguinte formato:
   "cliente": { "valor": "", "pagina": 1, "clausula": "" },
   "razaoSocialContratada": { "valor": "NNÓS Consultoria e Treinamento Ltda", "pagina": 1, "clausula": "" },
   "cnpjCliente": { "valor": "", "pagina": 1, "clausula": "" },
-  "cnpjContratada": { "valor": "34.892.115/0001-44", "pagina": 1, "clausula": "" },
+  "cnpjContratada": { "valor": "36.443.716/0001-00", "pagina": 1, "clausula": "" },
   "projeto": { "valor": "", "pagina": 1, "clausula": "" },
   "objeto": { "valor": "", "pagina": 1, "clausula": "" },
   "responsavelInterno": { "valor": "Leonardo Campos", "pagina": 1, "clausula": "" },
@@ -303,7 +303,7 @@ function montarContratoEstruturado(
     ),
     cnpjCliente: campo(dados.cnpjCliente?.valor, dados.cnpjCliente?.pagina, dados.cnpjCliente?.clausula),
     cnpjContratada: campo(
-      dados.cnpjContratada?.valor || "34.892.115/0001-44",
+      dados.cnpjContratada?.valor || "36.443.716/0001-00",
       dados.cnpjContratada?.pagina,
       dados.cnpjContratada?.clausula
     ),
@@ -477,7 +477,7 @@ function extrairPorMotorHeuristicoNativo(input: ExtracaoInput): ContratoCompleto
 
   // 1. Extração de CNPJs
   const cnpjs = t.match(/\b\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}\b/g) || [];
-  const cnpjContratada = cnpjs.find((c) => c.includes("34.892.115")) || cnpjs[0] || "";
+  const cnpjContratada = cnpjs.find((c) => c.includes("36.443.716") || c.includes("34.892.115")) || cnpjs[0] || "36.443.716/0001-00";
   const cnpjCliente = cnpjs.find((c) => c !== cnpjContratada) || "";
 
   // 2. Extração de Cliente: Prioridade máxima para nome do arquivo e entidades qualificadas

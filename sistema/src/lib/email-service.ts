@@ -32,7 +32,7 @@ export interface EnviarEmailResultado {
  * 3. Se nenhum provedor estiver preenchido, opera em modo Simulado com logs informativos
  */
 export async function dispararEmail(options: EnviarEmailOptions): Promise<EnviarEmailResultado> {
-  const dePadrao = process.env.EMAIL_FROM || process.env.SMTP_FROM || "logistica@nnos.com.br";
+  const dePadrao = process.env.EMAIL_FROM || process.env.SMTP_FROM || "financeiro@nnos.com.br";
   const de = options.de || dePadrao;
 
   // 1. Tentar via Resend API

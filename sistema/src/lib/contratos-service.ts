@@ -66,7 +66,7 @@ export function gerarContratosIniciais(): ContratoCompleto[] {
         confianca: 0.95,
       },
       cnpjContratada: {
-        valor: "34.892.115/0001-44",
+        valor: "36.443.716/0001-00",
         paginaOrigem: 1,
         clausulaOrigem: "Qualificação das Partes",
         confianca: 1.0,
@@ -330,7 +330,7 @@ export function gerarContratosIniciais(): ContratoCompleto[] {
         confianca: 0.95,
       },
       cnpjContratada: {
-        valor: "34.892.115/0001-44",
+        valor: "36.443.716/0001-00",
         paginaOrigem: 1,
         clausulaOrigem: "Qualificação das Partes",
         confianca: 1.0,

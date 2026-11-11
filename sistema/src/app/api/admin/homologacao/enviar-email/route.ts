@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
 
         <!-- Rodapé -->
         <div style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 14px; text-align: center; font-size: 11px; color: #94a3b8;">
-          NNÓS Consultoria e Treinamento Ltda · CNPJ 34.892.115/0001-44
+          NNÓS Consultoria e Treinamento Ltda · CNPJ 36.443.716/0001-00
         </div>
       </div>
     `;
@@ -97,3 +97,4 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+

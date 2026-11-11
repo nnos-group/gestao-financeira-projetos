@@ -98,7 +98,14 @@ export default function GestaoContratosPage() {
   const [editValorMensalStr, setEditValorMensalStr] = useState("");
 
   const abrirModalEdicao = (c: ContratoCompleto) => {
-    setContratoEditando(JSON.parse(JSON.stringify(c)));
+    const cCopy = JSON.parse(JSON.stringify(c));
+    if (!cCopy.razaoSocialContratada) cCopy.razaoSocialContratada = { valor: "NNÓS Consultoria e Treinamento Ltda" };
+    if (!cCopy.cnpjContratada) cCopy.cnpjContratada = { valor: "36.443.716/0001-00" };
+    if (!cCopy.cnpjCliente) cCopy.cnpjCliente = { valor: "" };
+    if (!cCopy.responsavelCliente) cCopy.responsavelCliente = { valor: "" };
+    if (!cCopy.tipoContrato) cCopy.tipoContrato = { valor: "" };
+    if (!cCopy.indiceReajuste) cCopy.indiceReajuste = { valor: "" };
+    setContratoEditando(cCopy);
     setEditValorGlobalStr(formatarMoedaBR(c.valorGlobal?.valor));
     setEditValorMensalStr(c.valorMensalFixo?.valor != null ? formatarMoedaBR(c.valorMensalFixo.valor) : "");
     setModalEdicaoAberto(true);
@@ -2697,24 +2704,157 @@ export default function GestaoContratosPage() {
                 {/* Conteúdo da Aba da Ficha */}
                 <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "16px" }}>
                   {abaFicha === "RESUMO" && (
-                    <div style={{ display: "flex", flexDirection: "column", gap: "12px", fontSize: "13px" }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "14px", fontSize: "13px" }}>
                       <div>
                         <strong style={{ color: "#0f172a" }}>Objeto Contratual:</strong>
-                        <p style={{ color: "#475569", marginTop: "4px" }}>{contratoSelecionado.objeto.valor}</p>
+                        <p style={{ color: "#475569", marginTop: "4px", lineHeight: 1.5 }}>{contratoSelecionado.objeto.valor}</p>
                       </div>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-                        <div>
-                          <strong>Contratada:</strong>
-                          <p style={{ color: "#475569", margin: "2px 0 0 0" }}>
-                            {contratoSelecionado.razaoSocialContratada.valor} (CNPJ: {contratoSelecionado.cnpjContratada.valor})
-                          </p>
+
+                      {/* Partes Contratantes Organizadas: Nome em cima e CNPJ na linha de baixo */}
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+                        <div style={{ padding: "14px", backgroundColor: "#f8fafc", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+                          <div style={{ fontSize: "11px", fontWeight: 700, color: "#0284c7", textTransform: "uppercase", letterSpacing: "0.03em" }}>
+                            Contratada
+                          </div>
+                          <div style={{ fontSize: "13.5px", fontWeight: 700, color: "#0f172a", marginTop: "4px" }}>
+                            {contratoSelecionado.razaoSocialContratada?.valor || "NNÓS Consultoria e Treinamento Ltda"}
+                          </div>
+                          <div style={{ fontSize: "12px", color: "#64748b", marginTop: "3px" }}>
+                            CNPJ: <strong>{contratoSelecionado.cnpjContratada?.valor || "36.443.716/0001-00"}</strong>
+                          </div>
                         </div>
-                        <div>
-                          <strong>Contratante:</strong>
-                          <p style={{ color: "#475569", margin: "2px 0 0 0" }}>
-                            {contratoSelecionado.cliente.valor} (CNPJ: {contratoSelecionado.cnpjCliente.valor})
-                          </p>
+
+                        <div style={{ padding: "14px", backgroundColor: "#f8fafc", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+                          <div style={{ fontSize: "11px", fontWeight: 700, color: "#0284c7", textTransform: "uppercase", letterSpacing: "0.03em" }}>
+                            Contratante
+                          </div>
+                          <div style={{ fontSize: "13.5px", fontWeight: 700, color: "#0f172a", marginTop: "4px" }}>
+                            {contratoSelecionado.cliente?.valor || "Não identificado"}
+                          </div>
+                          <div style={{ fontSize: "12px", color: "#64748b", marginTop: "3px" }}>
+                            CNPJ: <strong>{contratoSelecionado.cnpjCliente?.valor || "Não localizado no contrato"}</strong>
+                          </div>
                         </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Aba Informações Contratuais Detalhadas */}
+                  {abaFicha === "DADOS" && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                      {/* 1. Identificação do Instrumento */}
+                      <div style={{ padding: "16px", backgroundColor: "#f8fafc", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+                        <h4 style={{ margin: "0 0 12px 0", fontSize: "13.5px", fontWeight: 800, color: "#0f172a", display: "flex", alignItems: "center", gap: "6px" }}>
+                          <span className="material-symbols-outlined" style={{ fontSize: "18px", color: "#0284c7" }}>badge</span>
+                          Identificação do Instrumento Contratual
+                        </h4>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", fontSize: "12.5px" }}>
+                          <div>
+                            <span style={{ color: "#64748b", display: "block", fontSize: "11px" }}>Número / Código do Contrato:</span>
+                            <strong style={{ color: "#0f172a" }}>{contratoSelecionado.numeroContrato?.valor || contratoSelecionado.codigo}</strong>
+                          </div>
+                          <div>
+                            <span style={{ color: "#64748b", display: "block", fontSize: "11px" }}>Tipo de Contrato:</span>
+                            <strong style={{ color: "#0f172a" }}>{contratoSelecionado.tipoContrato?.valor || "Prestação de Serviços"}</strong>
+                          </div>
+                          <div>
+                            <span style={{ color: "#64748b", display: "block", fontSize: "11px" }}>Situação da Assinatura:</span>
+                            <span style={{ display: "inline-block", padding: "2px 8px", borderRadius: "6px", backgroundColor: "#ecfdf5", color: "#047857", fontWeight: 700, fontSize: "11px" }}>
+                              {contratoSelecionado.situacaoAssinatura?.valor || "ASSINADO"}
+                            </span>
+                          </div>
+                          <div>
+                            <span style={{ color: "#64748b", display: "block", fontSize: "11px" }}>Data de Assinatura:</span>
+                            <strong style={{ color: "#0f172a" }}>{formatarDataBR(contratoSelecionado.dataAssinatura?.valor)}</strong>
+                          </div>
+                          <div style={{ gridColumn: "span 2" }}>
+                            <span style={{ color: "#64748b", display: "block", fontSize: "11px" }}>Projeto Vinculado:</span>
+                            <strong style={{ color: "#0f172a" }}>{contratoSelecionado.projeto?.valor || "-"}</strong>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 2. Qualificação das Partes & CNPJ */}
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+                        <div style={{ padding: "14px", backgroundColor: "#f8fafc", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+                          <div style={{ fontSize: "11px", fontWeight: 800, color: "#0284c7", textTransform: "uppercase", letterSpacing: "0.03em", marginBottom: "6px" }}>
+                            Contratada (Prestadora)
+                          </div>
+                          <div style={{ fontSize: "13.5px", fontWeight: 700, color: "#0f172a" }}>
+                            {contratoSelecionado.razaoSocialContratada?.valor || "NNÓS Consultoria e Treinamento Ltda"}
+                          </div>
+                          <div style={{ fontSize: "12px", color: "#475569", marginTop: "3px" }}>
+                            CNPJ: <strong>{contratoSelecionado.cnpjContratada?.valor || "36.443.716/0001-00"}</strong>
+                          </div>
+                          <div style={{ fontSize: "11.5px", color: "#64748b", marginTop: "6px" }}>
+                            Gestor Interno: <strong>{contratoSelecionado.responsavelInterno?.valor || "Leonardo Campos"}</strong>
+                          </div>
+                        </div>
+
+                        <div style={{ padding: "14px", backgroundColor: "#f8fafc", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+                          <div style={{ fontSize: "11px", fontWeight: 800, color: "#0284c7", textTransform: "uppercase", letterSpacing: "0.03em", marginBottom: "6px" }}>
+                            Contratante (Cliente)
+                          </div>
+                          <div style={{ fontSize: "13.5px", fontWeight: 700, color: "#0f172a" }}>
+                            {contratoSelecionado.cliente?.valor || "Não identificado"}
+                          </div>
+                          <div style={{ fontSize: "12px", color: "#475569", marginTop: "3px" }}>
+                            CNPJ: <strong>{contratoSelecionado.cnpjCliente?.valor || "Não localizado no contrato"}</strong>
+                          </div>
+                          <div style={{ fontSize: "11.5px", color: "#64748b", marginTop: "6px" }}>
+                            Gestor Cliente: <strong>{contratoSelecionado.responsavelCliente?.valor || "Não informado"}</strong>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 3. Vigência e Condições de Prorrogação */}
+                      <div style={{ padding: "16px", backgroundColor: "#f8fafc", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+                        <h4 style={{ margin: "0 0 12px 0", fontSize: "13.5px", fontWeight: 800, color: "#0f172a", display: "flex", alignItems: "center", gap: "6px" }}>
+                          <span className="material-symbols-outlined" style={{ fontSize: "18px", color: "#0284c7" }}>calendar_month</span>
+                          Vigência, Prazos &amp; Prorrogação
+                        </h4>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "12px", fontSize: "12.5px" }}>
+                          <div>
+                            <span style={{ color: "#64748b", display: "block", fontSize: "11px" }}>Início da Vigência:</span>
+                            <strong style={{ color: "#0f172a" }}>{formatarDataBR(contratoSelecionado.dataInicio?.valor)}</strong>
+                          </div>
+                          <div>
+                            <span style={{ color: "#64748b", display: "block", fontSize: "11px" }}>Término Previsto:</span>
+                            <strong style={{ color: "#0f172a" }}>{formatarDataBR(contratoSelecionado.dataEncerramento?.valor)}</strong>
+                          </div>
+                          <div>
+                            <span style={{ color: "#64748b", display: "block", fontSize: "11px" }}>Data Oficial de Vencimento:</span>
+                            <strong style={{ color: "#0284c7" }}>
+                              {formatarDataBR(contratoSelecionado.dataEncerramentoOficial || contratoSelecionado.dataEncerramento?.valor)}
+                            </strong>
+                          </div>
+                          <div>
+                            <span style={{ color: "#64748b", display: "block", fontSize: "11px" }}>Prazo Contratual:</span>
+                            <strong style={{ color: "#0f172a" }}>{contratoSelecionado.prazoMeses?.valor ? `${contratoSelecionado.prazoMeses.valor} meses` : "Indeterminado / Por Demanda"}</strong>
+                          </div>
+                          <div>
+                            <span style={{ color: "#64748b", display: "block", fontSize: "11px" }}>Possibilidade de Prorrogação:</span>
+                            <strong style={{ color: contratoSelecionado.possibilidadeRenovacao?.valor ? "#047857" : "#64748b" }}>
+                              {contratoSelecionado.possibilidadeRenovacao?.valor ? "Sim, mediante aditivo" : "Não estipulado"}
+                            </strong>
+                          </div>
+                          <div>
+                            <span style={{ color: "#64748b", display: "block", fontSize: "11px" }}>Aviso Prévio para Rescisão:</span>
+                            <strong style={{ color: "#0f172a" }}>
+                              {contratoSelecionado.avisoPrevioDias?.valor ? `${contratoSelecionado.avisoPrevioDias.valor} dias` : "Não estipulado"}
+                            </strong>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 4. Objeto Detalhado */}
+                      <div style={{ padding: "16px", backgroundColor: "#f8fafc", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+                        <h4 style={{ margin: "0 0 8px 0", fontSize: "13.5px", fontWeight: 800, color: "#0f172a" }}>
+                          Objeto dos Serviços
+                        </h4>
+                        <p style={{ margin: 0, fontSize: "13px", color: "#334155", lineHeight: 1.6 }}>
+                          {contratoSelecionado.objeto?.valor || "Prestação de serviços corporativos conforme escopo e termos contratuais."}
+                        </p>
                       </div>
                     </div>
                   )}
@@ -3006,6 +3146,22 @@ export default function GestaoContratosPage() {
                   </div>
 
                   <div>
+                    <label style={{ fontSize: "12px", fontWeight: 700, color: "#334155" }}>Tipo do Contrato:</label>
+                    <input
+                      type="text"
+                      placeholder="Ex: Prestação de Serviços, Consultoria..."
+                      value={String(contratoEditando.tipoContrato?.valor || "")}
+                      onChange={(e) =>
+                        setContratoEditando({
+                          ...contratoEditando,
+                          tipoContrato: { ...contratoEditando.tipoContrato, valor: e.target.value },
+                        })
+                      }
+                      style={inputStyle}
+                    />
+                  </div>
+
+                  <div>
                     <label style={{ fontSize: "12px", fontWeight: 700, color: "#334155" }}>Cliente / Contratante:</label>
                     <input
                       type="text"
@@ -3014,6 +3170,53 @@ export default function GestaoContratosPage() {
                         setContratoEditando({
                           ...contratoEditando,
                           cliente: { ...contratoEditando.cliente, valor: e.target.value },
+                        })
+                      }
+                      style={inputStyle}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: "12px", fontWeight: 700, color: "#334155" }}>CNPJ do Contratante:</label>
+                    <input
+                      type="text"
+                      placeholder="00.000.000/0000-00"
+                      value={String(contratoEditando.cnpjCliente?.valor || "")}
+                      onChange={(e) =>
+                        setContratoEditando({
+                          ...contratoEditando,
+                          cnpjCliente: { ...contratoEditando.cnpjCliente, valor: e.target.value },
+                        })
+                      }
+                      style={inputStyle}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: "12px", fontWeight: 700, color: "#334155" }}>Razão Social da Contratada:</label>
+                    <input
+                      type="text"
+                      value={String(contratoEditando.razaoSocialContratada?.valor || "")}
+                      onChange={(e) =>
+                        setContratoEditando({
+                          ...contratoEditando,
+                          razaoSocialContratada: { ...contratoEditando.razaoSocialContratada, valor: e.target.value },
+                        })
+                      }
+                      style={inputStyle}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: "12px", fontWeight: 700, color: "#334155" }}>CNPJ da Contratada (NNÓS):</label>
+                    <input
+                      type="text"
+                      placeholder="00.000.000/0000-00"
+                      value={String(contratoEditando.cnpjContratada?.valor || "")}
+                      onChange={(e) =>
+                        setContratoEditando({
+                          ...contratoEditando,
+                          cnpjContratada: { ...contratoEditando.cnpjContratada, valor: e.target.value },
                         })
                       }
                       style={inputStyle}
@@ -3029,6 +3232,37 @@ export default function GestaoContratosPage() {
                         setContratoEditando({
                           ...contratoEditando,
                           projeto: { ...contratoEditando.projeto, valor: e.target.value },
+                        })
+                      }
+                      style={inputStyle}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: "12px", fontWeight: 700, color: "#334155" }}>Responsável no Cliente:</label>
+                    <input
+                      type="text"
+                      placeholder="Nome do gestor / contato no cliente"
+                      value={String(contratoEditando.responsavelCliente?.valor || "")}
+                      onChange={(e) =>
+                        setContratoEditando({
+                          ...contratoEditando,
+                          responsavelCliente: { ...contratoEditando.responsavelCliente, valor: e.target.value },
+                        })
+                      }
+                      style={inputStyle}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: "12px", fontWeight: 700, color: "#334155" }}>Responsável Interno:</label>
+                    <input
+                      type="text"
+                      value={String(contratoEditando.responsavelInterno?.valor || "")}
+                      onChange={(e) =>
+                        setContratoEditando({
+                          ...contratoEditando,
+                          responsavelInterno: { ...contratoEditando.responsavelInterno, valor: e.target.value },
                         })
                       }
                       style={inputStyle}
@@ -3069,6 +3303,43 @@ export default function GestaoContratosPage() {
                   </div>
 
                   <div>
+                    <label style={{ fontSize: "12px", fontWeight: 700, color: "#334155" }}>Modalidade de Cobrança:</label>
+                    <ModernDropdown
+                      value={contratoEditando.modalidadeCobranca?.valor || "MENSAL_FIXO"}
+                      onChange={(val) =>
+                        setContratoEditando({
+                          ...contratoEditando,
+                          modalidadeCobranca: {
+                            ...contratoEditando.modalidadeCobranca,
+                            valor: String(val) as ModalidadeCobranca,
+                          },
+                        })
+                      }
+                      options={[
+                        { value: "MENSAL_FIXO", label: "Mensalidade Fixa Garantida" },
+                        { value: "DEMANDA_SERVICOS", label: "Serviços por Demanda" },
+                      ]}
+                      icon="receipt_long"
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: "12px", fontWeight: 700, color: "#334155" }}>Índice de Reajuste:</label>
+                    <input
+                      type="text"
+                      placeholder="Ex: IPCA, IGP-M, INPC..."
+                      value={String(contratoEditando.indiceReajuste?.valor || "")}
+                      onChange={(e) =>
+                        setContratoEditando({
+                          ...contratoEditando,
+                          indiceReajuste: { ...contratoEditando.indiceReajuste, valor: e.target.value },
+                        })
+                      }
+                      style={inputStyle}
+                    />
+                  </div>
+
+                  <div>
                     <label style={{ fontSize: "12px", fontWeight: 700, color: "#334155" }}>Data de Início:</label>
                     <input
                       type="date"
@@ -3093,42 +3364,6 @@ export default function GestaoContratosPage() {
                           ...contratoEditando,
                           dataEncerramentoOficial: e.target.value,
                           dataEncerramento: { ...contratoEditando.dataEncerramento, valor: e.target.value },
-                        })
-                      }
-                      style={inputStyle}
-                    />
-                  </div>
-
-                  <div>
-                    <label style={{ fontSize: "12px", fontWeight: 700, color: "#334155" }}>Modalidade de Cobrança:</label>
-                    <ModernDropdown
-                      value={contratoEditando.modalidadeCobranca?.valor || "MENSAL_FIXO"}
-                      onChange={(val) =>
-                        setContratoEditando({
-                          ...contratoEditando,
-                          modalidadeCobranca: {
-                            ...contratoEditando.modalidadeCobranca,
-                            valor: String(val) as ModalidadeCobranca,
-                          },
-                        })
-                      }
-                      options={[
-                        { value: "MENSAL_FIXO", label: "Mensalidade Fixa Garantida" },
-                        { value: "DEMANDA_SERVICOS", label: "Serviços por Demanda" },
-                      ]}
-                      icon="receipt_long"
-                    />
-                  </div>
-
-                  <div>
-                    <label style={{ fontSize: "12px", fontWeight: 700, color: "#334155" }}>Responsável Interno:</label>
-                    <input
-                      type="text"
-                      value={String(contratoEditando.responsavelInterno?.valor || "")}
-                      onChange={(e) =>
-                        setContratoEditando({
-                          ...contratoEditando,
-                          responsavelInterno: { ...contratoEditando.responsavelInterno, valor: e.target.value },
                         })
                       }
                       style={inputStyle}
