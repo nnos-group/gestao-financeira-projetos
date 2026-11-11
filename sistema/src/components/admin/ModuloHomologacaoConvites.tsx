@@ -23,7 +23,7 @@ export interface RegistroHomologacao {
   apontamentos: string;
 }
 
-const URL_OFICIAL_LOGIN = "https://gestao-financeira-projetos.vercel.app/login";
+const URL_OFICIAL_LOGIN = "https://gestao.nnos.com.br/login";
 
 const OPCOES_FILTRO_STATUS = [
   { value: "TODOS", label: "Status: Todos os Status" },
