@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import ConsultorHeader from "@/components/ConsultorHeader";
 import { useConsultor } from "@/contexts/ConsultorContext";
 import ModernDropdown from "@/components/ModernDropdown";
@@ -21,6 +21,26 @@ export default function ConsultorBmsPage() {
   };
 
   const bmsOriginais = dadosConsultor?.bms || [];
+
+  // Auto-abrir BM específico quando informado via query param (?bm=0926)
+  useEffect(() => {
+    if (typeof window === "undefined" || !bmsOriginais || bmsOriginais.length === 0) return;
+    const params = new URLSearchParams(window.location.search);
+    const bmParam = (params.get("bm") || "").trim().toLowerCase();
+    if (!bmParam) return;
+
+    const encontrado = bmsOriginais.find((b: any) => {
+      const cod = String(b.codigo || "").toLowerCase();
+      const id = String(b.id || "").toLowerCase();
+      const numCod = cod.replace(/\D/g, "");
+      const numParam = bmParam.replace(/\D/g, "");
+      return cod === bmParam || id === bmParam || (numParam && numCod === numParam);
+    });
+
+    if (encontrado) {
+      setBmVisualizando(encontrado);
+    }
+  }, [bmsOriginais]);
 
   const bmsFiltrados = useMemo(() => {
     return bmsOriginais.filter((bm: any) => {
@@ -167,7 +187,12 @@ export default function ConsultorBmsPage() {
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
                   <button
                     type="button"
-                    onClick={() => setBmVisualizando(null)}
+                    onClick={() => {
+                      setBmVisualizando(null);
+                      if (typeof window !== "undefined" && window.location.search.includes("bm=")) {
+                        window.history.replaceState({}, "", "/consultor/bms");
+                      }
+                    }}
                     style={{
                       background: "none",
                       border: "none",

@@ -52,6 +52,58 @@ const ESTILOS_CATEGORIA_DOC: Record<
     badgeText: "#92400e",
     badgeBorder: "#fde68a",
   },
+  "NNÓS MONEY": {
+    bg: "#d1fae5",
+    text: "#065f46",
+    border: "#a7f3d0",
+    chipActiveBg: "#059669",
+    chipActiveText: "#ffffff",
+    chipInactiveBg: "#ecfdf5",
+    chipInactiveText: "#065f46",
+    chipInactiveBorder: "#a7f3d0",
+    badgeBg: "#d1fae5",
+    badgeText: "#065f46",
+    badgeBorder: "#a7f3d0",
+  },
+  "PRÓ-LABORE": {
+    bg: "#ede9fe",
+    text: "#5b21b6",
+    border: "#ddd6fe",
+    chipActiveBg: "#7c3aed",
+    chipActiveText: "#ffffff",
+    chipInactiveBg: "#f5f3ff",
+    chipInactiveText: "#5b21b6",
+    chipInactiveBorder: "#ddd6fe",
+    badgeBg: "#ede9fe",
+    badgeText: "#5b21b6",
+    badgeBorder: "#ddd6fe",
+  },
+  "AJUDA DE CUSTO": {
+    bg: "#cffafe",
+    text: "#155e75",
+    border: "#a5f3fc",
+    chipActiveBg: "#0891b2",
+    chipActiveText: "#ffffff",
+    chipInactiveBg: "#ecfeff",
+    chipInactiveText: "#155e75",
+    chipInactiveBorder: "#a5f3fc",
+    badgeBg: "#cffafe",
+    badgeText: "#155e75",
+    badgeBorder: "#a5f3fc",
+  },
+  "APORTE": {
+    bg: "#ffe4e6",
+    text: "#9f1239",
+    border: "#fecdd3",
+    chipActiveBg: "#e11d48",
+    chipActiveText: "#ffffff",
+    chipInactiveBg: "#fff1f2",
+    chipInactiveText: "#9f1239",
+    chipInactiveBorder: "#fecdd3",
+    badgeBg: "#ffe4e6",
+    badgeText: "#9f1239",
+    badgeBorder: "#fecdd3",
+  },
   "BM": {
     bg: "#ecfdf5",
     text: "#047857",
@@ -66,16 +118,16 @@ const ESTILOS_CATEGORIA_DOC: Record<
     badgeBorder: "#a7f3d0",
   },
   "SÓCIO": {
-    bg: "#f3e8ff",
-    text: "#6d28d9",
+    bg: "#ede9fe",
+    text: "#5b21b6",
     border: "#ddd6fe",
     chipActiveBg: "#7c3aed",
     chipActiveText: "#ffffff",
-    chipInactiveBg: "#faf5ff",
-    chipInactiveText: "#6d28d9",
+    chipInactiveBg: "#f5f3ff",
+    chipInactiveText: "#5b21b6",
     chipInactiveBorder: "#ddd6fe",
-    badgeBg: "#f3e8ff",
-    badgeText: "#6d28d9",
+    badgeBg: "#ede9fe",
+    badgeText: "#5b21b6",
     badgeBorder: "#ddd6fe",
   },
 };
@@ -108,11 +160,50 @@ function classificarCategoriaDocumento(p: {
   const nota = String(p.numeroNota || "").trim().toUpperCase();
   const despesa = String(p.tipoDespesa || "").trim().toUpperCase();
   const tipo = String(p.tipo || "").trim().toUpperCase();
-  const bm = String(p.bm || "").trim();
 
-  // 1. Relatório de Viagem / Despesas reembolsáveis
+  // 1. NNÓS MONEY
+  if (
+    nota.includes("NNÓS MONEY") ||
+    nota.includes("NNOS MONEY") ||
+    despesa.includes("NNÓS MONEY") ||
+    despesa.includes("NNOS MONEY")
+  ) {
+    return "NNÓS MONEY";
+  }
+
+  // 2. PRÓ-LABORE
+  if (
+    nota.includes("PRÓ-LABORE") ||
+    nota.includes("PRO-LABORE") ||
+    nota.includes("PRÓ LABORE") ||
+    nota.includes("PRO LABORE") ||
+    despesa.includes("PRÓ-LABORE") ||
+    despesa.includes("PRO-LABORE") ||
+    despesa.includes("PRÓ LABORE") ||
+    despesa.includes("PRO LABORE")
+  ) {
+    return "PRÓ-LABORE";
+  }
+
+  // 3. AJUDA DE CUSTO
+  if (
+    nota.includes("AJUDA DE CUSTO") ||
+    nota.includes("AJUDA") ||
+    despesa.includes("AJUDA DE CUSTO")
+  ) {
+    return "AJUDA DE CUSTO";
+  }
+
+  // 4. APORTE
+  if (nota.includes("APORTE") || despesa.includes("APORTE")) {
+    return "APORTE";
+  }
+
+  // 5. Relatório de Viagem / Despesas reembolsáveis
   if (
     nota.includes("RDV") ||
+    nota.includes("RVD") ||
+    nota.includes("VIAGEM") ||
     despesa.includes("RDV") ||
     despesa.includes("RELATÓRIO DE VIAGEM") ||
     despesa.includes("REEMBOLSO") ||
@@ -121,28 +212,9 @@ function classificarCategoriaDocumento(p: {
     return "RDV";
   }
 
-  // 2. Pró-labore / Retiradas de Sócios / Acordos Societários
+  // 6. Boletim de Medição (BM informado ou referenciado)
   if (
-    tipo === "SÓCIO" ||
-    tipo === "SOCIO" ||
-    despesa.includes("PRÓ-LABORE") ||
-    despesa.includes("PRO-LABORE") ||
-    despesa.includes("SOCIETÁR") ||
-    despesa.includes("NNÓS MONEY") ||
-    despesa.includes("RECIBO") ||
-    despesa.includes("DISTRIBUIÇÃO") ||
-    despesa.includes("AJUDA DE CUSTO") ||
-    nota.includes("RECIBO") ||
-    nota.includes("PRÓ-LABORE") ||
-    nota.includes("PRO-LABORE") ||
-    nota.includes("AJUDA DE CUSTO")
-  ) {
-    return "SÓCIO";
-  }
-
-  // 3. Boletim de Medição (BM informado ou referenciado)
-  if (
-    bm ||
+    p.bm ||
     nota.startsWith("BM") ||
     nota.includes("BOLETIM") ||
     despesa.includes("BOLETIM DE MEDIÇÃO") ||
@@ -151,7 +223,18 @@ function classificarCategoriaDocumento(p: {
     return "BM";
   }
 
-  // 4. Nota Fiscal (padrão numérico ou com prefixo NF)
+  // 7. Retiradas societárias / Sócios genéricas
+  if (
+    despesa.includes("SOCIETÁR") ||
+    despesa.includes("DISTRIBUIÇÃO") ||
+    nota.includes("RECIBO") ||
+    tipo === "SÓCIO" ||
+    tipo === "SOCIO"
+  ) {
+    return "PRÓ-LABORE";
+  }
+
+  // 8. Nota Fiscal (padrão numérico ou com prefixo NF)
   if (
     nota.match(/^\d+$/) ||
     nota.startsWith("NF") ||
@@ -176,7 +259,10 @@ export default function ConsultorPagamentosPage() {
   const [filtroTipo, setFiltroTipo] = useState("TODOS");
   const [filtroCategoria, setFiltroCategoria] = useState<string>("TODAS");
   const [anoSelecionado, setAnoSelecionado] = useState("2026");
-  const [mesSelecionado, setMesSelecionado] = useState<string | null>(null);
+  const [mesSelecionado, setMesSelecionado] = useState<string | null>(() => {
+    const m = new Date().getMonth() + 1;
+    return String(m).padStart(2, "0");
+  });
 
   // Carregar estritamente os dados do consultor selecionado via backend seguro
   useEffect(() => {
@@ -297,7 +383,7 @@ export default function ConsultorPagamentosPage() {
 
   // 3. Categorias disponíveis adequadas ao usuário e ao período (só exibe quem tem docs > 0)
   const categoriasDisponiveis = useMemo(() => {
-    const ordemPreferencial = ["NF", "RDV", "BM", "SÓCIO"];
+    const ordemPreferencial = ["NF", "RDV", "NNÓS MONEY", "PRÓ-LABORE", "AJUDA DE CUSTO", "APORTE", "BM", "SÓCIO"];
     const existentes = Object.keys(contagemCategorias).filter(
       (c) => c !== "TODAS" && (contagemCategorias[c] || 0) > 0
     );
@@ -566,7 +652,7 @@ export default function ConsultorPagamentosPage() {
             boxShadow: "0 1px 3px rgba(0,0,0,0.02)",
           }}
         >
-          {/* Linha 1: Input de Busca + Dropdowns */}
+          {/* Linha 1: Input de Busca + Dropdowns (Conforme Modelo Print 4) */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px", flex: 1, minWidth: "260px", backgroundColor: "var(--surface)", border: "1px solid var(--border)", borderRadius: "8px", padding: "6px 12px" }}>
               <span className="material-symbols-outlined" style={{ color: "var(--on-surface-variant)", fontSize: "18px" }}>
@@ -574,7 +660,7 @@ export default function ConsultorPagamentosPage() {
               </span>
               <input
                 type="text"
-                placeholder="Buscar por projeto, nota/recibo, despesa ou BM..."
+                placeholder="Buscar por consultor, número da nota/RDV, projeto ou BM..."
                 value={busca}
                 onChange={(e) => setBusca(e.target.value)}
                 style={{
@@ -599,6 +685,19 @@ export default function ConsultorPagamentosPage() {
 
             <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
               <ModernDropdown
+                value={filtroTipo}
+                onChange={(val) => setFiltroTipo(String(val))}
+                options={[
+                  { value: "TODOS", label: "Todos os Tipos" },
+                  { value: "SÓCIO", label: "Sócio" },
+                  { value: "FUNCIONÁRIO", label: "Funcionário" },
+                  { value: "PARCEIRO", label: "Parceiro" },
+                ]}
+                icon="badge"
+                searchable={false}
+                minWidth={170}
+              />
+              <ModernDropdown
                 value={filtroStatus}
                 onChange={(val) => setFiltroStatus(String(val))}
                 options={[
@@ -606,14 +705,14 @@ export default function ConsultorPagamentosPage() {
                   { value: "Pago", label: "Pago" },
                   { value: "A Pagar", label: "A Pagar" },
                 ]}
-                icon="filter_list"
+                icon="verified"
                 searchable={false}
                 minWidth={170}
               />
             </div>
           </div>
 
-          {/* Linha 2: Chips de Documentos Dinâmicos e Adequados ao Usuário e Período */}
+          {/* Linha 2: Chips de Documentos Dinâmicos e Adequados ao Usuário e Período (Modelo Print 4) */}
           <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
             <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--on-surface-variant)", letterSpacing: "0.04em" }}>
               DOCUMENTO:
@@ -624,10 +723,10 @@ export default function ConsultorPagamentosPage() {
               style={{
                 padding: "4px 12px",
                 borderRadius: "20px",
-                fontSize: "11px",
+                fontSize: "11.5px",
                 fontWeight: 700,
                 cursor: "pointer",
-                border: "1px solid var(--border)",
+                border: filtroCategoria === "TODAS" ? "1px solid #002b49" : "1px solid var(--border)",
                 backgroundColor: filtroCategoria === "TODAS" ? "#002b49" : "var(--surface-container-low, #f8fafc)",
                 color: filtroCategoria === "TODAS" ? "#ffffff" : "var(--on-surface)",
                 display: "inline-flex",
@@ -636,17 +735,7 @@ export default function ConsultorPagamentosPage() {
                 transition: "all 0.15s ease",
               }}
             >
-              <span>TODOS</span>
-              <span
-                style={{
-                  fontSize: "10px",
-                  padding: "1px 6px",
-                  borderRadius: "10px",
-                  backgroundColor: filtroCategoria === "TODAS" ? "rgba(255,255,255,0.25)" : "var(--surface-container)",
-                }}
-              >
-                {contagemCategorias["TODAS"] || 0}
-              </span>
+              <span>TODOS ({contagemCategorias["TODAS"] || 0})</span>
             </button>
 
             {categoriasDisponiveis.map((cat) => {
@@ -658,11 +747,11 @@ export default function ConsultorPagamentosPage() {
                 <button
                   key={cat}
                   type="button"
-                  onClick={() => setFiltroCategoria(cat)}
+                  onClick={() => setFiltroCategoria(isAtiva ? "TODAS" : cat)}
                   style={{
                     padding: "4px 12px",
                     borderRadius: "20px",
-                    fontSize: "11px",
+                    fontSize: "11.5px",
                     fontWeight: 700,
                     cursor: "pointer",
                     border: isAtiva ? `1px solid ${estilo.chipActiveBg}` : `1px solid ${estilo.chipInactiveBorder}`,
@@ -677,11 +766,11 @@ export default function ConsultorPagamentosPage() {
                   <span>{cat}</span>
                   <span
                     style={{
-                      fontSize: "10px",
+                      fontSize: "10.5px",
                       padding: "1px 6px",
                       borderRadius: "10px",
-                      backgroundColor: isAtiva ? "rgba(255,255,255,0.25)" : estilo.bg,
-                      color: isAtiva ? "#ffffff" : estilo.text,
+                      backgroundColor: isAtiva ? "rgba(255,255,255,0.25)" : estilo.badgeBg,
+                      color: isAtiva ? "#ffffff" : estilo.badgeText,
                       fontWeight: 800,
                     }}
                   >

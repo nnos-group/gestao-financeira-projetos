@@ -313,7 +313,7 @@ export default function ConsultorPage() {
                           {brl(bm.valorTotal ?? bm.valorLiquidoTotal)}
                         </div>
                         <a
-                          href={`/consultor/bms`}
+                          href={`/consultor/bms?bm=${encodeURIComponent(bm.codigo || bm.id || "")}`}
                           style={{
                             fontSize: "11px",
                             color: "var(--primary)",

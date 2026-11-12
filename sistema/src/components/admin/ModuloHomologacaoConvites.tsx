@@ -334,6 +334,7 @@ export default function ModuloHomologacaoConvites({ perfis, onToast }: Props) {
   // Gerador de Texto Completo do E-mail
   const gerarTextoEmailPuro = (user: any) => {
     const ehAgencia = user.perfilId === "AGENCIA" || user.email.includes("fcconsultoriadeviagens") || user.login.includes("agencia");
+    const ehConsultor = user.perfilId === "CONSULTOR" || (user.cargo || "").toLowerCase().includes("consultor") || (user.cargo || "").toLowerCase().includes("instrutor");
     const linkAcesso = URL_OFICIAL_LOGIN;
 
     if (ehAgencia) {
@@ -377,6 +378,54 @@ Pedimos que qualquer processo divergente, sugestão ou ajuste seja enviado pelo 
 Muito obrigado pela parceria contínua!
 
 Atenciosamente,
+Leonardo Campos & Equipe de Gestão NNÓS
+NNÓS Consultoria e Treinamento`;
+    }
+
+    if (ehConsultor) {
+      return `Assunto: 🎓 Boas-vindas ao Portal do Consultor NNÓS | Acesso para Homologação e Validação Operacional
+
+Olá, ${user.nome}, tudo bem?
+
+É com grande entusiasmo que convidamos você para fazer parte do primeiro grupo de validação do novo Portal do Consultor no sistema NNÓS Gestão Financeira & Projetos!
+
+Desenvolvemos esta área exclusiva para você acompanhar e gerenciar de forma transparente toda a sua dinâmica operacional e financeira: sua agenda de treinamentos, orientações e vouchers de viagens, conferência e assinatura digital de Boletins de Medição (BMs) via Zoho Sign e a consulta detalhada de pagamentos e reembolsos.
+
+Estamos na reta final para a liberação em produção e a sua validação prática é fundamental para garantirmos que a experiência do consultor seja simples, ágil e precisa no seu dia a dia.
+
+--------------------------------------------------
+🎯 O QUE PRECISAMOS QUE VOCÊ TESTE E VALIDE:
+--------------------------------------------------
+1. Minha Agenda (/consultor/agenda): Consulte seus treinamentos e turmas programadas, conferindo datas, horários, concessionárias, cidades e detalhamentos da atividade.
+2. Minhas Viagens & Logística (/consultor/viagens): Acompanhe o status dos seus deslocamentos, passagens aéreas emitidas, hospedagens, translados e vouchers disponibilizados pela Agência Fátima.
+3. Meus Boletins de Medição (/consultor/bms): Valide a conferência das horas apuradas dos seus treinamentos, valores a receber e a facilidade do fluxo de assinatura digital com validade jurídica (Zoho Sign).
+4. Meus Pagamentos & Repasses (/consultor/pagamentos): Acompanhe as previsões financeiras, extrato de liquidações, notas fiscais, RDVs (relatórios de viagem/reembolsos de despesas) e o histórico de pagamentos efetuados.
+
+--------------------------------------------------
+🔑 SEUS DADOS DE ACESSO:
+--------------------------------------------------
+- Link Oficial de Acesso (Tela de Login): ${linkAcesso}
+- Seu Usuário / Login: ${user.login}
+- E-mail Cadastrado: ${user.email}
+- Senha Inicial: ${user.senha || "nnos2026"}
+* Nota: Ao efetuar o login com suas credenciais, seu acesso abrirá diretamente no seu Portal do Consultor (/consultor).
+
+--------------------------------------------------
+🦉 DÚVIDAS? UTILIZE O GUIA E O AGENTE DE IA:
+--------------------------------------------------
+No topo direito (ou no botão flutuante com o ícone da coruja), clique em "Ajuda & IA" para consultar o passo a passo ou tirar dúvidas diretamente com o Guia Virtual NNÓS.
+
+--------------------------------------------------
+📝 COMO ENVIAR SEUS APONTAMENTOS DE MELHORIA:
+--------------------------------------------------
+Pedimos que envie seus feedbacks, processos divergentes ou sugestões diretamente pelo canal de Microsoft Teams da Equipe de Gestão NNÓS ou respondendo a este e-mail indicando:
+1. Em qual tela você estava navegando;
+2. O que ocorreu de diferente do seu processo real;
+3. Sugestão de melhoria ou print da tela.
+
+Contamos muito com sua colaboração para colocarmos no ar o melhor sistema de gestão que a NNÓS já teve!
+
+Um abraço,
 Leonardo Campos & Equipe de Gestão NNÓS
 NNÓS Consultoria e Treinamento`;
     }
@@ -1506,6 +1555,18 @@ NNÓS Consultoria e Treinamento`;
                         Como parceiros estratégicos da nossa operação logística, convidamos vocês para testar a ferramenta com as demandas reais e nos apontar quaisquer ajustes necessários antes da entrada em produção.
                       </p>
                     </>
+                  ) : (usuarioSelecionado.perfilId === "CONSULTOR" || (usuarioSelecionado.cargo || "").toLowerCase().includes("consultor") || (usuarioSelecionado.cargo || "").toLowerCase().includes("instrutor")) ? (
+                    <>
+                      <p style={{ margin: 0 }}>
+                        É com grande entusiasmo que convidamos você para fazer parte do primeiro grupo de validação do novo <strong style={{ color: "#0f172a" }}>Portal do Consultor</strong> no sistema NNÓS Gestão Financeira &amp; Projetos!
+                      </p>
+                      <p style={{ margin: 0 }}>
+                        Desenvolvemos esta área exclusiva para você acompanhar e gerenciar de forma transparente toda a sua dinâmica operacional e financeira: sua agenda de treinamentos, orientações e vouchers de viagens, conferência e assinatura digital de Boletins de Medição (BMs) via Zoho Sign e a consulta detalhada de pagamentos e reembolsos.
+                      </p>
+                      <p style={{ margin: 0 }}>
+                        Estamos na reta final para a liberação em produção e a sua validação prática é fundamental para garantirmos que a experiência do consultor seja simples, ágil e precisa no seu dia a dia.
+                      </p>
+                    </>
                   ) : (
                     <>
                       <p style={{ margin: 0 }}>
@@ -1550,6 +1611,8 @@ NNÓS Consultoria e Treinamento`;
                     <span>
                       {usuarioSelecionado.perfilId === "AGENCIA"
                         ? "FOCO PRINCIPAL DA VALIDAÇÃO PELA AGÊNCIA FÁTIMA:"
+                        : (usuarioSelecionado.perfilId === "CONSULTOR" || (usuarioSelecionado.cargo || "").toLowerCase().includes("consultor") || (usuarioSelecionado.cargo || "").toLowerCase().includes("instrutor"))
+                        ? "O QUE PRECISAMOS QUE VOCÊ TESTE E VALIDE (PORTAL DO CONSULTOR):"
                         : "O QUE PRECISAMOS QUE VOCÊ TESTE E VALIDE:"}
                     </span>
                   </h2>
@@ -1584,6 +1647,41 @@ NNÓS Consultoria e Treinamento`;
                         <div>
                           <strong style={{ color: "#0f172a" }}>Upload de Vouchers</strong>:
                           {" "}Teste o envio de vouchers em PDF para conferência do viajante.
+                        </div>
+                      </li>
+                    </ol>
+                  ) : (usuarioSelecionado.perfilId === "CONSULTOR" || (usuarioSelecionado.cargo || "").toLowerCase().includes("consultor") || (usuarioSelecionado.cargo || "").toLowerCase().includes("instrutor")) ? (
+                    <ol style={{ margin: 0, paddingLeft: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "10px" }}>
+                      <li style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                        <span style={{ fontWeight: 800, color: "#0284c7", minWidth: "18px" }}>1.</span>
+                        <div>
+                          <strong style={{ color: "#0f172a" }}>Minha Agenda</strong>{" "}
+                          <code style={{ fontSize: "11px", fontFamily: "monospace", backgroundColor: "#ffffff", padding: "2px 6px", borderRadius: "4px", border: "1px solid #e2e8f0", color: "#0369a1" }}>/consultor/agenda</code>:
+                          {" "}Consulte seus treinamentos e turmas programadas, conferindo datas, horários, concessionárias, cidades e detalhamentos da atividade.
+                        </div>
+                      </li>
+                      <li style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                        <span style={{ fontWeight: 800, color: "#0284c7", minWidth: "18px" }}>2.</span>
+                        <div>
+                          <strong style={{ color: "#0f172a" }}>Minhas Viagens &amp; Logística</strong>{" "}
+                          <code style={{ fontSize: "11px", fontFamily: "monospace", backgroundColor: "#ffffff", padding: "2px 6px", borderRadius: "4px", border: "1px solid #e2e8f0", color: "#0369a1" }}>/consultor/viagens</code>:
+                          {" "}Acompanhe o status dos seus deslocamentos, passagens aéreas emitidas, hospedagens, translados e vouchers disponibilizados pela Agência Fátima.
+                        </div>
+                      </li>
+                      <li style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                        <span style={{ fontWeight: 800, color: "#0284c7", minWidth: "18px" }}>3.</span>
+                        <div>
+                          <strong style={{ color: "#0f172a" }}>Meus Boletins de Medição (BMs)</strong>{" "}
+                          <code style={{ fontSize: "11px", fontFamily: "monospace", backgroundColor: "#ffffff", padding: "2px 6px", borderRadius: "4px", border: "1px solid #e2e8f0", color: "#0369a1" }}>/consultor/bms</code>:
+                          {" "}Valide a conferência das horas apuradas dos seus treinamentos, valores a receber e a facilidade do fluxo de assinatura digital com validade jurídica (Zoho Sign).
+                        </div>
+                      </li>
+                      <li style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                        <span style={{ fontWeight: 800, color: "#0284c7", minWidth: "18px" }}>4.</span>
+                        <div>
+                          <strong style={{ color: "#0f172a" }}>Meus Pagamentos &amp; Repasses</strong>{" "}
+                          <code style={{ fontSize: "11px", fontFamily: "monospace", backgroundColor: "#ffffff", padding: "2px 6px", borderRadius: "4px", border: "1px solid #e2e8f0", color: "#0369a1" }}>/consultor/pagamentos</code>:
+                          {" "}Acompanhe as previsões financeiras, extrato de liquidações, notas fiscais, RDVs (relatórios de viagem/reembolsos de despesas) e o histórico de pagamentos efetuados.
                         </div>
                       </li>
                     </ol>
