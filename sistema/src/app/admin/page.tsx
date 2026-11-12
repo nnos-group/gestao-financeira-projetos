@@ -573,228 +573,477 @@ export default function AdminPage() {
             })}
           </section>
 
-          {/* Barra de Abas do Painel de Administrador */}
-          <div
+          {/* ================================================================= */}
+          {/* ARQUITETURA DE NAVEGAÇÃO & ACESSO (CONFORME DESIGN.md E code.html) */}
+          {/* ================================================================= */}
+          <section
             style={{
               backgroundColor: "var(--surface-container-lowest, #ffffff)",
-              border: "1px solid var(--border, #e2e8f0)",
               borderRadius: "16px",
-              padding: "8px 12px",
+              border: "1px solid var(--border, #e2e8f0)",
+              padding: "20px 24px",
+              boxShadow: "0 1px 3px rgba(15, 42, 74, 0.04), 0 1px 2px rgba(15, 42, 74, 0.03)",
               display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              flexWrap: "wrap",
-              gap: "12px",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.03)",
+              flexDirection: "column",
+              gap: "16px",
             }}
           >
-            <nav
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                overflowX: "auto",
-                maxWidth: "100%",
-                padding: "2px 0",
-              }}
-              aria-label="Abas de Governança"
-            >
-              {[
-                {
-                  id: "CONFIGURAR_PERFIL",
-                  numero: "1",
-                  label: "Módulos & Regras",
-                  icone: "tune",
-                  cor: "#0284c7",
-                  badge: perfilAtual?.sigla ? `(${perfilAtual.sigla})` : null,
-                },
-                {
-                  id: "MATRIZ_GERAL",
-                  numero: "2",
-                  label: "Matriz Comparativa Geral",
-                  icone: "grid_view",
-                  cor: "#1d4ed8",
-                  badge: null,
-                },
-                {
-                  id: "USUARIOS",
-                  numero: "3",
-                  label: "Usuários Vinculados",
-                  icone: "manage_accounts",
-                  cor: "#d97706",
-                  badge: String((perfilAtual?.usuariosVinculados || []).length),
-                },
-                {
-                  id: "GESTAO_USUARIOS",
-                  numero: "4",
-                  label: "Gestão de Senhas (MFA)",
-                  icone: "passkey",
-                  cor: "#059669",
-                  badge: null,
-                },
-                {
-                  id: "LOGS_ACESSO",
-                  numero: "5",
-                  label: "Monitoramento de Log de Acesso",
-                  icone: "policy",
-                  cor: "#7c3aed",
-                  badge: null,
-                },
-                {
-                  id: "HOMOLOGACAO",
-                  numero: "6",
-                  label: "Homologação & Convites",
-                  icone: "forward_to_inbox",
-                  cor: "#0f2a4a",
-                  badge: null,
-                },
-              ].map((aba) => {
-                const isAtiva = abaAtiva === aba.id;
-                return (
+            {/* Header descritivo do grid */}
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <span
+                  style={{
+                    width: "8px",
+                    height: "8px",
+                    borderRadius: "50%",
+                    backgroundColor: "#007A99",
+                    display: "inline-block",
+                  }}
+                />
+                <span
+                  style={{
+                    fontSize: "11px",
+                    fontWeight: 800,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                    color: "#007A99",
+                  }}
+                >
+                  Arquitetura de Navegação &amp; Acesso
+                </span>
+              </div>
+              <h2
+                style={{
+                  fontSize: "18px",
+                  fontWeight: 700,
+                  color: "#00152f",
+                  margin: "4px 0 0",
+                  fontFamily: "Plus Jakarta Sans, sans-serif",
+                }}
+              >
+                Módulos &amp; Configurações de Acesso
+              </h2>
+            </div>
+
+            {/* Container em 2 Linhas Estritas de 3 Colunas Cada (Zero Scroll Horizontal) */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              {/* LINHA 1 (Módulos 1, 2 e 3) */}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+                  gap: "12px",
+                }}
+              >
+                {[
+                  {
+                    id: "CONFIGURAR_PERFIL",
+                    numero: "1",
+                    titulo: "1. Módulos & Regras",
+                    icone: "tune",
+                    iconBg: "#87ddff",
+                    iconColor: "#00627b",
+                    badge: perfilAtual?.sigla || "LÍDER",
+                    badgeBg: "#87ddff",
+                    badgeColor: "#00627b",
+                    subtitulo: `${Object.keys(perfilAtual?.modulos || {}).length || 8} Telas & Políticas ativas`,
+                  },
+                  {
+                    id: "MATRIZ_GERAL",
+                    numero: "2",
+                    titulo: "2. Matriz Comparativa",
+                    icone: "grid_view",
+                    iconBg: "#dee9ff",
+                    iconColor: "#00152f",
+                    badge: null,
+                    subtitulo: `Visão consolidada de ${perfis.length || 6} perfis`,
+                  },
+                  {
+                    id: "USUARIOS",
+                    numero: "3",
+                    titulo: "3. Usuários Vinculados",
+                    icone: "group",
+                    iconBg: "#ffdbcb",
+                    iconColor: "#341100",
+                    badge: String((perfilAtual?.usuariosVinculados || []).length),
+                    badgeBg: "#dd7436",
+                    badgeColor: "#ffffff",
+                    isCounterBadge: true,
+                    subtitulo: `${perfilAtual?.nome || "Líderes de Operação"} alocados`,
+                  },
+                ].map((aba) => {
+                  const isAtiva = abaAtiva === aba.id;
+                  return (
+                    <button
+                      key={aba.id}
+                      type="button"
+                      onClick={() => setAbaAtiva(aba.id as any)}
+                      style={{
+                        position: "relative",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        padding: "14px 16px",
+                        borderRadius: "14px",
+                        border: isAtiva ? "1.5px solid #00152f" : "1px solid #d8e3f9",
+                        backgroundColor: isAtiva ? "#00152f" : "#f0f3ff",
+                        color: isAtiva ? "#ffffff" : "#00152f",
+                        boxShadow: isAtiva
+                          ? "0 4px 14px rgba(0, 21, 47, 0.25), 0 1px 3px rgba(0,0,0,0.1)"
+                          : "0 1px 2px rgba(15, 42, 74, 0.03)",
+                        cursor: "pointer",
+                        textAlign: "left",
+                        transition: "all 0.18s cubic-bezier(0.4, 0, 0.2, 1)",
+                        transform: isAtiva ? "translateY(-1px)" : "none",
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isAtiva) {
+                          e.currentTarget.style.backgroundColor = "#e7eeff";
+                          e.currentTarget.style.borderColor = "#7bd2f4";
+                          e.currentTarget.style.transform = "translateY(-2px)";
+                          e.currentTarget.style.boxShadow = "0 4px 12px rgba(15, 42, 74, 0.08)";
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isAtiva) {
+                          e.currentTarget.style.backgroundColor = "#f0f3ff";
+                          e.currentTarget.style.borderColor = "#d8e3f9";
+                          e.currentTarget.style.transform = "none";
+                          e.currentTarget.style.boxShadow = "0 1px 2px rgba(15, 42, 74, 0.03)";
+                        }
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: "12px", minWidth: 0 }}>
+                        <div
+                          style={{
+                            width: "40px",
+                            height: "40px",
+                            borderRadius: "10px",
+                            backgroundColor: isAtiva ? "#87ddff" : aba.iconBg,
+                            color: isAtiva ? "#00627b" : aba.iconColor,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            flexShrink: 0,
+                            boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+                          }}
+                        >
+                          <span
+                            className="material-symbols-outlined"
+                            style={{ fontSize: "20px", fontVariationSettings: "'FILL' 1" }}
+                          >
+                            {aba.icone}
+                          </span>
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                            <span
+                              style={{
+                                fontSize: "14px",
+                                fontWeight: 700,
+                                color: isAtiva ? "#ffffff" : "#00152f",
+                                fontFamily: "Plus Jakarta Sans, sans-serif",
+                              }}
+                            >
+                              {aba.titulo}
+                            </span>
+                            {aba.badge && (
+                              <span
+                                style={{
+                                  fontSize: "11px",
+                                  fontWeight: 800,
+                                  padding: aba.isCounterBadge ? "0 6px" : "1px 7px",
+                                  borderRadius: "999px",
+                                  minWidth: aba.isCounterBadge ? "20px" : "auto",
+                                  height: aba.isCounterBadge ? "20px" : "auto",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  backgroundColor: aba.badgeBg,
+                                  color: aba.badgeColor,
+                                }}
+                              >
+                                {aba.badge}
+                              </span>
+                            )}
+                          </div>
+                          <span
+                            style={{
+                              fontSize: "11.5px",
+                              color: isAtiva ? "#7a92b7" : "#43474e",
+                              marginTop: "2px",
+                              whiteSpace: "nowrap",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                            }}
+                          >
+                            {aba.subtitulo}
+                          </span>
+                        </div>
+                      </div>
+                      <span
+                        className="material-symbols-outlined"
+                        style={{
+                          fontSize: "20px",
+                          color: isAtiva ? "#87ddff" : "#5A6578",
+                          flexShrink: 0,
+                          marginLeft: "8px",
+                          transition: "transform 0.15s ease",
+                        }}
+                      >
+                        arrow_forward
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* LINHA 2 (Módulos 4, 5 e 6) */}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+                  gap: "12px",
+                }}
+              >
+                {[
+                  {
+                    id: "GESTAO_USUARIOS",
+                    numero: "4",
+                    titulo: "4. Gestão de Senhas (MFA)",
+                    icone: "password",
+                    iconBg: "#baeaff",
+                    iconColor: "#004d62",
+                    badge: null,
+                    subtitulo: "Política Ativa • 2FA Obrigatório",
+                    subtituloDestaque: true,
+                  },
+                  {
+                    id: "LOGS_ACESSO",
+                    numero: "5",
+                    titulo: "5. Monitoramento de Logs",
+                    icone: "security_update_good",
+                    iconBg: "#d4e3ff",
+                    iconColor: "#00152f",
+                    badge: null,
+                    subtitulo: "Auditoria de Acesso & Segurança (SP-BR)",
+                  },
+                  {
+                    id: "HOMOLOGACAO",
+                    numero: "6",
+                    titulo: "6. Homologação",
+                    icone: "mark_email_read",
+                    iconBg: "#87ddff",
+                    iconColor: "#00627b",
+                    badge: "PRIORITÁRIO",
+                    badgeBg: "#006781",
+                    badgeColor: "#ffffff",
+                    subtitulo: "Convites & Assinatura Digital",
+                  },
+                ].map((aba) => {
+                  const isAtiva = abaAtiva === aba.id;
+                  return (
+                    <button
+                      key={aba.id}
+                      type="button"
+                      onClick={() => setAbaAtiva(aba.id as any)}
+                      style={{
+                        position: "relative",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        padding: "14px 16px",
+                        borderRadius: "14px",
+                        border: isAtiva ? "1.5px solid #00152f" : "1px solid #d8e3f9",
+                        backgroundColor: isAtiva ? "#00152f" : "#f0f3ff",
+                        color: isAtiva ? "#ffffff" : "#00152f",
+                        boxShadow: isAtiva
+                          ? "0 4px 14px rgba(0, 21, 47, 0.25), 0 1px 3px rgba(0,0,0,0.1)"
+                          : "0 1px 2px rgba(15, 42, 74, 0.03)",
+                        cursor: "pointer",
+                        textAlign: "left",
+                        transition: "all 0.18s cubic-bezier(0.4, 0, 0.2, 1)",
+                        transform: isAtiva ? "translateY(-1px)" : "none",
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isAtiva) {
+                          e.currentTarget.style.backgroundColor = "#e7eeff";
+                          e.currentTarget.style.borderColor = "#7bd2f4";
+                          e.currentTarget.style.transform = "translateY(-2px)";
+                          e.currentTarget.style.boxShadow = "0 4px 12px rgba(15, 42, 74, 0.08)";
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isAtiva) {
+                          e.currentTarget.style.backgroundColor = "#f0f3ff";
+                          e.currentTarget.style.borderColor = "#d8e3f9";
+                          e.currentTarget.style.transform = "none";
+                          e.currentTarget.style.boxShadow = "0 1px 2px rgba(15, 42, 74, 0.03)";
+                        }
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: "12px", minWidth: 0 }}>
+                        <div
+                          style={{
+                            width: "40px",
+                            height: "40px",
+                            borderRadius: "10px",
+                            backgroundColor: isAtiva ? "#87ddff" : aba.iconBg,
+                            color: isAtiva ? "#00627b" : aba.iconColor,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            flexShrink: 0,
+                            boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+                          }}
+                        >
+                          <span
+                            className="material-symbols-outlined"
+                            style={{ fontSize: "20px", fontVariationSettings: "'FILL' 1" }}
+                          >
+                            {aba.icone}
+                          </span>
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                            <span
+                              style={{
+                                fontSize: "14px",
+                                fontWeight: 700,
+                                color: isAtiva ? "#ffffff" : "#00152f",
+                                fontFamily: "Plus Jakarta Sans, sans-serif",
+                              }}
+                            >
+                              {aba.titulo}
+                            </span>
+                            {aba.badge && (
+                              <span
+                                style={{
+                                  fontSize: "10.5px",
+                                  fontWeight: 800,
+                                  padding: "1px 7px",
+                                  borderRadius: "999px",
+                                  backgroundColor: aba.badgeBg,
+                                  color: aba.badgeColor,
+                                }}
+                              >
+                                {aba.badge}
+                              </span>
+                            )}
+                          </div>
+                          <span
+                            style={{
+                              fontSize: "11.5px",
+                              color: isAtiva
+                                ? "#7a92b7"
+                                : aba.subtituloDestaque
+                                ? "#006781"
+                                : "#43474e",
+                              fontWeight: aba.subtituloDestaque && !isAtiva ? 600 : 400,
+                              marginTop: "2px",
+                              whiteSpace: "nowrap",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                            }}
+                          >
+                            {aba.subtitulo}
+                          </span>
+                        </div>
+                      </div>
+                      <span
+                        className="material-symbols-outlined"
+                        style={{
+                          fontSize: "20px",
+                          color: isAtiva ? "#87ddff" : "#5A6578",
+                          flexShrink: 0,
+                          marginLeft: "8px",
+                          transition: "transform 0.15s ease",
+                        }}
+                      >
+                        arrow_forward
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Barra Integrada de Ação e Contexto Operacional */}
+            {perfilAtual && (
+              <div
+                style={{
+                  marginTop: "6px",
+                  padding: "12px 16px",
+                  backgroundColor: "var(--surface-container-low, #f0f3ff)",
+                  borderRadius: "12px",
+                  border: "1px solid var(--border, #d8e3f9)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  flexWrap: "wrap",
+                  gap: "12px",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ fontSize: "12px", fontWeight: 600, color: "#43474e" }}>
+                      Tela Inicial Padrão:
+                    </span>
+                    <ModernDropdown
+                      value={perfilAtual.rotaPadrao || "/projetos"}
+                      onChange={(val) => handleAlterarRotaPadrao(perfilAtual.id, String(val))}
+                      options={opcoesRotasPadrao}
+                      icon="home"
+                      minWidth={260}
+                      searchable={false}
+                    />
+                  </div>
+
                   <button
-                    key={aba.id}
                     type="button"
-                    onClick={() => setAbaAtiva(aba.id as any)}
+                    onClick={() => {
+                      if (perfilAtual.id === "CONSULTOR") {
+                        router.push("/consultor");
+                      } else {
+                        ativarPerfil(perfilAtual.id, true);
+                      }
+                    }}
                     style={{
                       display: "inline-flex",
                       alignItems: "center",
-                      gap: "8px",
-                      padding: "10px 18px",
-                      borderRadius: "12px",
-                      border: isAtiva ? `1.5px solid ${aba.cor}` : `1.5px solid ${aba.cor}35`,
-                      cursor: "pointer",
-                      fontSize: "12.5px",
+                      gap: "7px",
+                      padding: "8px 16px",
+                      borderRadius: "8px",
+                      border: "none",
+                      backgroundColor: "#00152f",
+                      color: "#ffffff",
+                      fontSize: "13px",
                       fontWeight: 700,
-                      letterSpacing: "0.01em",
-                      backgroundColor: isAtiva ? aba.cor : `${aba.cor}0c`,
-                      color: isAtiva ? "#ffffff" : "#1e293b",
-                      boxShadow: isAtiva
-                        ? `0 4px 16px ${aba.cor}45, 0 2px 4px rgba(0,0,0,0.08)`
-                        : "0 1px 3px rgba(0,0,0,0.03)",
-                      whiteSpace: "nowrap",
-                      transform: isAtiva ? "translateY(-1px)" : "none",
-                      transition: "all 0.18s cubic-bezier(0.4, 0, 0.2, 1)",
+                      cursor: "pointer",
+                      boxShadow: "0 2px 4px rgba(0, 21, 47, 0.2)",
+                      transition: "all 0.15s ease",
                     }}
                     onMouseEnter={(e) => {
-                      if (!isAtiva) {
-                        e.currentTarget.style.borderColor = aba.cor;
-                        e.currentTarget.style.backgroundColor = `${aba.cor}18`;
-                        e.currentTarget.style.transform = "translateY(-2px)";
-                        e.currentTarget.style.boxShadow = `0 4px 12px ${aba.cor}25`;
-                      }
+                      e.currentTarget.style.backgroundColor = "#0f2a4a";
+                      e.currentTarget.style.transform = "scale(1.02)";
                     }}
                     onMouseLeave={(e) => {
-                      if (!isAtiva) {
-                        e.currentTarget.style.borderColor = `${aba.cor}35`;
-                        e.currentTarget.style.backgroundColor = `${aba.cor}0c`;
-                        e.currentTarget.style.transform = "none";
-                        e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.03)";
-                      }
+                      e.currentTarget.style.backgroundColor = "#00152f";
+                      e.currentTarget.style.transform = "none";
                     }}
                   >
                     <span
                       className="material-symbols-outlined"
-                      style={{
-                        fontSize: "18px",
-                        color: isAtiva ? "#ffffff" : aba.cor,
-                        transition: "color 0.15s ease",
-                      }}
+                      style={{ fontSize: "18px", color: "#87ddff", fontVariationSettings: "'FILL' 1" }}
                     >
-                      {aba.icone}
+                      visibility
                     </span>
-                    <span>
-                      {aba.numero}. {aba.label}
-                    </span>
-                    {aba.badge && (
-                      <span
-                        style={{
-                          fontSize: "10.5px",
-                          fontWeight: 800,
-                          padding: "2px 8px",
-                          borderRadius: "999px",
-                          backgroundColor: isAtiva ? "rgba(255, 255, 255, 0.25)" : `${aba.cor}20`,
-                          color: isAtiva ? "#ffffff" : aba.cor,
-                          border: isAtiva ? "1px solid rgba(255, 255, 255, 0.4)" : `1px solid ${aba.cor}40`,
-                          textTransform: "uppercase",
-                        }}
-                      >
-                        {aba.badge}
-                      </span>
-                    )}
-                    <span
-                      style={{
-                        fontSize: "14px",
-                        fontWeight: 900,
-                        marginLeft: "2px",
-                        lineHeight: 1,
-                        color: isAtiva ? "#ffffff" : aba.cor,
-                        opacity: isAtiva ? 1 : 0.6,
-                        transition: "all 0.15s ease",
-                      }}
-                    >
-                      →
-                    </span>
+                    <span>Simular Visão ({perfilAtual.sigla})</span>
                   </button>
-                );
-              })}
-            </nav>
-
-            {perfilAtual && (
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "10px",
-                  flexWrap: "wrap",
-                  borderLeft: "1px solid #e2e8f0",
-                  paddingLeft: "12px",
-                }}
-              >
-                <span style={{ fontSize: "11.5px", fontWeight: 700, color: "#64748b" }}>
-                  Tela Inicial Padrão:
-                </span>
-                <ModernDropdown
-                  value={perfilAtual.rotaPadrao || "/projetos"}
-                  onChange={(val) => handleAlterarRotaPadrao(perfilAtual.id, String(val))}
-                  options={opcoesRotasPadrao}
-                  icon="home"
-                  minWidth={250}
-                  searchable={false}
-                />
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (perfilAtual.id === "CONSULTOR") {
-                      router.push("/consultor");
-                    } else {
-                      ativarPerfil(perfilAtual.id, true);
-                    }
-                  }}
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    padding: "7px 14px",
-                    borderRadius: "10px",
-                    border: "none",
-                    backgroundColor: "#0f2a4a",
-                    color: "#ffffff",
-                    fontSize: "12px",
-                    fontWeight: 700,
-                    cursor: "pointer",
-                    boxShadow: "0 1px 3px rgba(15,42,74,0.15)",
-                    transition: "all 0.15s ease",
-                  }}
-                >
-                  <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "#93c5fd" }}>
-                    visibility
-                  </span>
-                  <span>Simular Visão ({perfilAtual.sigla})</span>
-                </button>
+                </div>
               </div>
             )}
-          </div>
+          </section>
 
           {/* ================================================================= */}
           {/* ABA 1: CONFIGURAÇÃO DETALHADA DO PERFIL SELECIONADO               */}
