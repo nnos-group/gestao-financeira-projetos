@@ -590,34 +590,12 @@ export default function AdminPage() {
           >
             {/* Header descritivo do grid */}
             <div>
-              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                <span
-                  style={{
-                    width: "8px",
-                    height: "8px",
-                    borderRadius: "50%",
-                    backgroundColor: "#007A99",
-                    display: "inline-block",
-                  }}
-                />
-                <span
-                  style={{
-                    fontSize: "11px",
-                    fontWeight: 800,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.08em",
-                    color: "#007A99",
-                  }}
-                >
-                  Arquitetura de Navegação &amp; Acesso
-                </span>
-              </div>
               <h2
                 style={{
                   fontSize: "18px",
                   fontWeight: 700,
                   color: "#00152f",
-                  margin: "4px 0 0",
+                  margin: 0,
                   fontFamily: "Plus Jakarta Sans, sans-serif",
                 }}
               >
