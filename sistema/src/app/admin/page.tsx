@@ -592,171 +592,149 @@ export default function AdminPage() {
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: "6px",
+                gap: "8px",
                 overflowX: "auto",
                 maxWidth: "100%",
+                padding: "2px 0",
               }}
               aria-label="Abas de Governança"
             >
-              <button
-                type="button"
-                onClick={() => setAbaAtiva("CONFIGURAR_PERFIL")}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  padding: "8px 14px",
-                  borderRadius: "10px",
-                  border: "none",
-                  cursor: "pointer",
-                  fontSize: "12px",
-                  fontWeight: abaAtiva === "CONFIGURAR_PERFIL" ? 700 : 600,
-                  backgroundColor: abaAtiva === "CONFIGURAR_PERFIL" ? "#0f2a4a" : "transparent",
-                  color: abaAtiva === "CONFIGURAR_PERFIL" ? "#ffffff" : "#475569",
-                  boxShadow: abaAtiva === "CONFIGURAR_PERFIL" ? "0 1px 3px rgba(15,42,74,0.2)" : "none",
-                  whiteSpace: "nowrap",
-                  transition: "all 0.15s ease",
-                }}
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: "16px", color: abaAtiva === "CONFIGURAR_PERFIL" ? "#93c5fd" : "#94a3b8" }}>tune</span>
-                <span>1. Módulos &amp; Regras</span>
-                <span style={{ fontSize: "10px", fontWeight: 700, color: abaAtiva === "CONFIGURAR_PERFIL" ? "#93c5fd" : "#94a3b8", textTransform: "uppercase" }}>({perfilAtual?.sigla})</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setAbaAtiva("MATRIZ_GERAL")}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  padding: "8px 14px",
-                  borderRadius: "10px",
-                  border: "none",
-                  cursor: "pointer",
-                  fontSize: "12px",
-                  fontWeight: abaAtiva === "MATRIZ_GERAL" ? 700 : 600,
-                  backgroundColor: abaAtiva === "MATRIZ_GERAL" ? "#0f2a4a" : "transparent",
-                  color: abaAtiva === "MATRIZ_GERAL" ? "#ffffff" : "#475569",
-                  boxShadow: abaAtiva === "MATRIZ_GERAL" ? "0 1px 3px rgba(15,42,74,0.2)" : "none",
-                  whiteSpace: "nowrap",
-                  transition: "all 0.15s ease",
-                }}
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: "16px", color: abaAtiva === "MATRIZ_GERAL" ? "#93c5fd" : "#94a3b8" }}>grid_view</span>
-                <span>2. Matriz Comparativa Geral</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setAbaAtiva("USUARIOS")}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  padding: "8px 14px",
-                  borderRadius: "10px",
-                  border: "none",
-                  cursor: "pointer",
-                  fontSize: "12px",
-                  fontWeight: abaAtiva === "USUARIOS" ? 700 : 600,
-                  backgroundColor: abaAtiva === "USUARIOS" ? "#0f2a4a" : "transparent",
-                  color: abaAtiva === "USUARIOS" ? "#ffffff" : "#475569",
-                  boxShadow: abaAtiva === "USUARIOS" ? "0 1px 3px rgba(15,42,74,0.2)" : "none",
-                  whiteSpace: "nowrap",
-                  transition: "all 0.15s ease",
-                }}
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: "16px", color: abaAtiva === "USUARIOS" ? "#93c5fd" : "#94a3b8" }}>manage_accounts</span>
-                <span>3. Usuários Vinculados</span>
-                <span
-                  style={{
-                    fontSize: "10px",
-                    fontWeight: 700,
-                    padding: "1px 6px",
-                    borderRadius: "999px",
-                    backgroundColor: abaAtiva === "USUARIOS" ? "#1e3a5f" : "#f1f5f9",
-                    color: abaAtiva === "USUARIOS" ? "#ffffff" : "#475569",
-                    border: abaAtiva === "USUARIOS" ? "1px solid #334155" : "1px solid #e2e8f0",
-                  }}
-                >
-                  {(perfilAtual?.usuariosVinculados || []).length}
-                </span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setAbaAtiva("GESTAO_USUARIOS")}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  padding: "8px 14px",
-                  borderRadius: "10px",
-                  border: "none",
-                  cursor: "pointer",
-                  fontSize: "12px",
-                  fontWeight: abaAtiva === "GESTAO_USUARIOS" ? 700 : 600,
-                  backgroundColor: abaAtiva === "GESTAO_USUARIOS" ? "#0f2a4a" : "transparent",
-                  color: abaAtiva === "GESTAO_USUARIOS" ? "#ffffff" : "#475569",
-                  boxShadow: abaAtiva === "GESTAO_USUARIOS" ? "0 1px 3px rgba(15,42,74,0.2)" : "none",
-                  whiteSpace: "nowrap",
-                  transition: "all 0.15s ease",
-                }}
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: "16px", color: abaAtiva === "GESTAO_USUARIOS" ? "#93c5fd" : "#94a3b8" }}>passkey</span>
-                <span>4. Gestão de Senhas (MFA)</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setAbaAtiva("LOGS_ACESSO")}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  padding: "8px 14px",
-                  borderRadius: "10px",
-                  border: "none",
-                  cursor: "pointer",
-                  fontSize: "12px",
-                  fontWeight: abaAtiva === "LOGS_ACESSO" ? 700 : 600,
-                  backgroundColor: abaAtiva === "LOGS_ACESSO" ? "#0f2a4a" : "transparent",
-                  color: abaAtiva === "LOGS_ACESSO" ? "#ffffff" : "#475569",
-                  boxShadow: abaAtiva === "LOGS_ACESSO" ? "0 1px 3px rgba(15,42,74,0.2)" : "none",
-                  whiteSpace: "nowrap",
-                  transition: "all 0.15s ease",
-                }}
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: "16px", color: abaAtiva === "LOGS_ACESSO" ? "#93c5fd" : "#94a3b8" }}>policy</span>
-                <span>5. Monitoramento de Log de Acesso</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setAbaAtiva("HOMOLOGACAO")}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "7px",
-                  padding: "8px 16px",
-                  borderRadius: "10px",
-                  border: "none",
-                  cursor: "pointer",
-                  fontSize: "12px",
-                  fontWeight: abaAtiva === "HOMOLOGACAO" ? 700 : 600,
-                  backgroundColor: abaAtiva === "HOMOLOGACAO" ? "#0f2a4a" : "transparent",
-                  color: abaAtiva === "HOMOLOGACAO" ? "#ffffff" : "#475569",
-                  boxShadow: abaAtiva === "HOMOLOGACAO" ? "0 1px 3px rgba(15,42,74,0.2)" : "none",
-                  whiteSpace: "nowrap",
-                  transition: "all 0.15s ease",
-                }}
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: "16px", color: abaAtiva === "HOMOLOGACAO" ? "#93c5fd" : "#94a3b8" }}>
-                  forward_to_inbox
-                </span>
-                <span>6. Homologação &amp; Convites</span>
-              </button>
+              {[
+                {
+                  id: "CONFIGURAR_PERFIL",
+                  numero: "1",
+                  label: "Módulos & Regras",
+                  icone: "tune",
+                  cor: "#0284c7",
+                  badge: perfilAtual?.sigla ? `(${perfilAtual.sigla})` : null,
+                },
+                {
+                  id: "MATRIZ_GERAL",
+                  numero: "2",
+                  label: "Matriz Comparativa Geral",
+                  icone: "grid_view",
+                  cor: "#1d4ed8",
+                  badge: null,
+                },
+                {
+                  id: "USUARIOS",
+                  numero: "3",
+                  label: "Usuários Vinculados",
+                  icone: "manage_accounts",
+                  cor: "#d97706",
+                  badge: String((perfilAtual?.usuariosVinculados || []).length),
+                },
+                {
+                  id: "GESTAO_USUARIOS",
+                  numero: "4",
+                  label: "Gestão de Senhas (MFA)",
+                  icone: "passkey",
+                  cor: "#059669",
+                  badge: null,
+                },
+                {
+                  id: "LOGS_ACESSO",
+                  numero: "5",
+                  label: "Monitoramento de Log de Acesso",
+                  icone: "policy",
+                  cor: "#7c3aed",
+                  badge: null,
+                },
+                {
+                  id: "HOMOLOGACAO",
+                  numero: "6",
+                  label: "Homologação & Convites",
+                  icone: "forward_to_inbox",
+                  cor: "#0f2a4a",
+                  badge: null,
+                },
+              ].map((aba) => {
+                const isAtiva = abaAtiva === aba.id;
+                return (
+                  <button
+                    key={aba.id}
+                    type="button"
+                    onClick={() => setAbaAtiva(aba.id as any)}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "7px",
+                      padding: "8px 14px",
+                      borderRadius: "10px",
+                      border: isAtiva ? `1.5px solid ${aba.cor}` : "1.5px solid #e2e8f0",
+                      cursor: "pointer",
+                      fontSize: "12px",
+                      fontWeight: 700,
+                      backgroundColor: isAtiva ? aba.cor : "#ffffff",
+                      color: isAtiva ? "#ffffff" : "#334155",
+                      boxShadow: isAtiva
+                        ? `0 4px 14px ${aba.cor}40, 0 1px 3px rgba(0,0,0,0.08)`
+                        : "0 1px 2px rgba(0,0,0,0.03)",
+                      whiteSpace: "nowrap",
+                      transition: "all 0.18s cubic-bezier(0.4, 0, 0.2, 1)",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isAtiva) {
+                        e.currentTarget.style.borderColor = aba.cor;
+                        e.currentTarget.style.backgroundColor = "#f8fafc";
+                        e.currentTarget.style.transform = "translateY(-1px)";
+                        e.currentTarget.style.boxShadow = "0 3px 8px rgba(0,0,0,0.06)";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isAtiva) {
+                        e.currentTarget.style.borderColor = "#e2e8f0";
+                        e.currentTarget.style.backgroundColor = "#ffffff";
+                        e.currentTarget.style.transform = "none";
+                        e.currentTarget.style.boxShadow = "0 1px 2px rgba(0,0,0,0.03)";
+                      }
+                    }}
+                  >
+                    <span
+                      className="material-symbols-outlined"
+                      style={{
+                        fontSize: "16px",
+                        color: isAtiva ? "#ffffff" : aba.cor,
+                        transition: "color 0.15s ease",
+                      }}
+                    >
+                      {aba.icone}
+                    </span>
+                    <span>
+                      {aba.numero}. {aba.label}
+                    </span>
+                    {aba.badge && (
+                      <span
+                        style={{
+                          fontSize: "10px",
+                          fontWeight: 800,
+                          padding: "1px 7px",
+                          borderRadius: "999px",
+                          backgroundColor: isAtiva ? "rgba(255, 255, 255, 0.25)" : "#f1f5f9",
+                          color: isAtiva ? "#ffffff" : aba.cor,
+                          border: isAtiva ? "1px solid rgba(255, 255, 255, 0.35)" : "1px solid #e2e8f0",
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        {aba.badge}
+                      </span>
+                    )}
+                    {isAtiva && (
+                      <span
+                        style={{
+                          fontSize: "13px",
+                          fontWeight: 900,
+                          marginLeft: "2px",
+                          lineHeight: 1,
+                          color: "#ffffff",
+                        }}
+                      >
+                        →
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </nav>
 
             {perfilAtual && (

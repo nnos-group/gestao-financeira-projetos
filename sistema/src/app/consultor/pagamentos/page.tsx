@@ -22,11 +22,6 @@ export interface PagamentoItem {
   categoriaDoc?: string;
 }
 
-const CATEGORIAS_DOCUMENTO = [
-  "NF",
-  "RDV",
-] as const;
-
 const ESTILOS_CATEGORIA_DOC: Record<
   string,
   { bg: string; text: string; border: string; chipActiveBg: string; chipActiveText: string; chipInactiveBg: string; chipInactiveText: string; chipInactiveBorder: string; badgeBg: string; badgeText: string; badgeBorder: string; }
@@ -57,13 +52,85 @@ const ESTILOS_CATEGORIA_DOC: Record<
     badgeText: "#92400e",
     badgeBorder: "#fde68a",
   },
+  "BM": {
+    bg: "#ecfdf5",
+    text: "#047857",
+    border: "#a7f3d0",
+    chipActiveBg: "#059669",
+    chipActiveText: "#ffffff",
+    chipInactiveBg: "#f0fdf4",
+    chipInactiveText: "#047857",
+    chipInactiveBorder: "#a7f3d0",
+    badgeBg: "#ecfdf5",
+    badgeText: "#047857",
+    badgeBorder: "#a7f3d0",
+  },
+  "SÓCIO": {
+    bg: "#f3e8ff",
+    text: "#6d28d9",
+    border: "#ddd6fe",
+    chipActiveBg: "#7c3aed",
+    chipActiveText: "#ffffff",
+    chipInactiveBg: "#faf5ff",
+    chipInactiveText: "#6d28d9",
+    chipInactiveBorder: "#ddd6fe",
+    badgeBg: "#f3e8ff",
+    badgeText: "#6d28d9",
+    badgeBorder: "#ddd6fe",
+  },
 };
 
-function classificarCategoriaDocumento(p: { numeroNota?: string; tipoDespesa?: string; categoriaDoc?: string }): "NF" | "RDV" {
-  if (p.categoriaDoc === "RDV") return "RDV";
+const ESTILO_PADRAO_DOC = {
+  bg: "#f1f5f9",
+  text: "#334155",
+  border: "#cbd5e1",
+  chipActiveBg: "#0f2a4a",
+  chipActiveText: "#ffffff",
+  chipInactiveBg: "#f8fafc",
+  chipInactiveText: "#334155",
+  chipInactiveBorder: "#cbd5e1",
+  badgeBg: "#f1f5f9",
+  badgeText: "#334155",
+  badgeBorder: "#cbd5e1",
+};
+
+function classificarCategoriaDocumento(p: { numeroNota?: string; tipoDespesa?: string; categoriaDoc?: string }): string {
+  if (p.categoriaDoc) {
+    const cd = p.categoriaDoc.trim().toUpperCase();
+    if (cd) return cd;
+  }
   const nota = String(p.numeroNota || "").trim().toUpperCase();
   const despesa = String(p.tipoDespesa || "").trim().toUpperCase();
-  if (nota.includes("RDV") || despesa.includes("RDV") || despesa.includes("RELATÓRIO DE VIAGEM")) return "RDV";
+
+  // Relatório de Viagem / Despesas reembolsáveis
+  if (nota.includes("RDV") || despesa.includes("RDV") || despesa.includes("RELATÓRIO DE VIAGEM") || despesa.includes("REEMBOLSO") || despesa.includes("VIAGEM")) {
+    return "RDV";
+  }
+
+  // Boletim de Medição
+  if (nota.startsWith("BM") || nota.includes("BOLETIM") || despesa.includes("BOLETIM DE MEDIÇÃO") || despesa.includes("BM")) {
+    return "BM";
+  }
+
+  // Pró-labore / Recibos / Sócios
+  if (
+    despesa.includes("PRÓ-LABORE") ||
+    despesa.includes("PRO-LABORE") ||
+    despesa.includes("SOCIETÁR") ||
+    despesa.includes("NNÓS MONEY") ||
+    despesa.includes("RECIBO") ||
+    despesa.includes("DISTRIBUIÇÃO") ||
+    despesa.includes("AJUDA DE CUSTO") ||
+    nota.includes("RECIBO")
+  ) {
+    return "SÓCIO";
+  }
+
+  // Nota Fiscal (padrão numérico ou com prefixo NF)
+  if (nota.match(/^\d+$/) || nota.startsWith("NF") || nota.includes("NOTA FISCAL") || despesa.includes("HONORÁRIOS") || despesa.includes("PRESTAÇÃO DE SERVIÇOS")) {
+    return "NF";
+  }
+
   return "NF";
 }
 
@@ -146,20 +213,6 @@ export default function ConsultorPagamentosPage() {
     });
   }, [todosPagamentos, consultorAtivo]);
 
-  // Contagem dinâmica por categoria para os chips (Apenas NF e RDV)
-  const contagemCategorias = useMemo(() => {
-    const counts: Record<string, number> = {
-      "TODAS": pagamentosDoConsultor.length,
-      "NF": 0,
-      "RDV": 0,
-    };
-    pagamentosDoConsultor.forEach((p) => {
-      const cat = classificarCategoriaDocumento(p);
-      if (counts[cat] !== undefined) counts[cat]++;
-    });
-    return counts;
-  }, [pagamentosDoConsultor]);
-
   // Anos disponíveis dinamicamente baseados nos documentos/pagamentos do consultor
   const anosDisponiveis = useMemo(() => {
     const anosSet = new Set<string>();
@@ -176,8 +229,8 @@ export default function ConsultorPagamentosPage() {
     return lista.length > 0 ? lista : ["2026"];
   }, [pagamentosDoConsultor]);
 
-  // Filtragem completa com competência, categoria, status e busca
-  const pagamentosFiltrados = useMemo(() => {
+  // 1. Pagamentos do consultor filtrados pelo período (Ano e Mês selecionados)
+  const pagamentosDoPeriodo = useMemo(() => {
     return pagamentosDoConsultor.filter((p) => {
       // Filtro de ano
       if (anoSelecionado && anoSelecionado !== "TODOS") {
@@ -195,6 +248,48 @@ export default function ConsultorPagamentosPage() {
         if (!matchNum && !matchNome) return false;
       }
 
+      return true;
+    });
+  }, [pagamentosDoConsultor, anoSelecionado, mesSelecionado]);
+
+  // 2. Contagem dinâmica por categoria NO PERÍODO SELECIONADO (Total e por tipo real)
+  const contagemCategorias = useMemo(() => {
+    const counts: Record<string, number> = {
+      "TODAS": pagamentosDoPeriodo.length,
+    };
+    pagamentosDoPeriodo.forEach((p) => {
+      const cat = classificarCategoriaDocumento(p);
+      counts[cat] = (counts[cat] || 0) + 1;
+    });
+    return counts;
+  }, [pagamentosDoPeriodo]);
+
+  // 3. Categorias disponíveis adequadas ao usuário e ao período (só exibe quem tem docs > 0)
+  const categoriasDisponiveis = useMemo(() => {
+    const ordemPreferencial = ["NF", "RDV", "BM", "SÓCIO"];
+    const existentes = Object.keys(contagemCategorias).filter(
+      (c) => c !== "TODAS" && (contagemCategorias[c] || 0) > 0
+    );
+    return existentes.sort((a, b) => {
+      const idxA = ordemPreferencial.indexOf(a);
+      const idxB = ordemPreferencial.indexOf(b);
+      if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+      if (idxA !== -1) return -1;
+      if (idxB !== -1) return 1;
+      return a.localeCompare(b);
+    });
+  }, [contagemCategorias]);
+
+  // 4. Auto-reset de segurança: se a categoria atual não tiver itens no período, volta para TODAS
+  useEffect(() => {
+    if (filtroCategoria !== "TODAS" && (!contagemCategorias[filtroCategoria] || contagemCategorias[filtroCategoria] === 0)) {
+      setFiltroCategoria("TODAS");
+    }
+  }, [filtroCategoria, contagemCategorias]);
+
+  // 5. Filtragem completa final (aplica Categoria, Status, Tipo e Busca sobre o período)
+  const pagamentosFiltrados = useMemo(() => {
+    return pagamentosDoPeriodo.filter((p) => {
       // Filtro de Categoria
       if (filtroCategoria !== "TODAS") {
         const cat = classificarCategoriaDocumento(p);
@@ -220,7 +315,7 @@ export default function ConsultorPagamentosPage() {
 
       return true;
     });
-  }, [pagamentosDoConsultor, anoSelecionado, mesSelecionado, filtroCategoria, filtroStatus, filtroTipo, busca]);
+  }, [pagamentosDoPeriodo, filtroCategoria, filtroStatus, filtroTipo, busca]);
 
   // Indicadores KPIs oficiais
   const kpis = useMemo(() => {
@@ -487,7 +582,7 @@ export default function ConsultorPagamentosPage() {
             </div>
           </div>
 
-          {/* Linha 2: Chips de Documentos (Apenas NF e RDV conforme solicitado) */}
+          {/* Linha 2: Chips de Documentos Dinâmicos e Adequados ao Usuário e Período */}
           <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
             <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--on-surface-variant)", letterSpacing: "0.04em" }}>
               DOCUMENTO:
@@ -507,16 +602,24 @@ export default function ConsultorPagamentosPage() {
                 display: "inline-flex",
                 alignItems: "center",
                 gap: "6px",
+                transition: "all 0.15s ease",
               }}
             >
               <span>TODOS</span>
-              <span style={{ fontSize: "10px", padding: "1px 6px", borderRadius: "10px", backgroundColor: filtroCategoria === "TODAS" ? "rgba(255,255,255,0.25)" : "var(--surface-container)" }}>
-                {contagemCategorias["TODAS"]}
+              <span
+                style={{
+                  fontSize: "10px",
+                  padding: "1px 6px",
+                  borderRadius: "10px",
+                  backgroundColor: filtroCategoria === "TODAS" ? "rgba(255,255,255,0.25)" : "var(--surface-container)",
+                }}
+              >
+                {contagemCategorias["TODAS"] || 0}
               </span>
             </button>
 
-            {CATEGORIAS_DOCUMENTO.map((cat) => {
-              const estilo = ESTILOS_CATEGORIA_DOC[cat];
+            {categoriasDisponiveis.map((cat) => {
+              const estilo = ESTILOS_CATEGORIA_DOC[cat] || ESTILO_PADRAO_DOC;
               const isAtiva = filtroCategoria === cat;
               const count = contagemCategorias[cat] || 0;
 
@@ -633,7 +736,7 @@ export default function ConsultorPagamentosPage() {
                     const notaLimpa = (!rawNota || isNFBM || rawNota === "—") ? "—" : rawNota;
                     const isVazio = notaLimpa === "—";
                     const catDoc = classificarCategoriaDocumento(item);
-                    const estilo = ESTILOS_CATEGORIA_DOC[catDoc] || ESTILOS_CATEGORIA_DOC["NF"];
+                    const estilo = ESTILOS_CATEGORIA_DOC[catDoc] || ESTILO_PADRAO_DOC;
                     const isPago = item.status === "Pago";
 
                     return (

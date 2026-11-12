@@ -16843,5 +16843,20 @@
     "bm": "910",
     "centroCusto": "01.06.005.031",
     "observacoes": ""
+  },
+  {
+    "id": "pgto-26-916",
+    "realizado": "OUTUBRO",
+    "dataPagto": "10/11/2026",
+    "consultor": "CLEIVSON VIEIRA",
+    "tipo": "SÓCIO",
+    "projeto": "PARTS ACADEMY",
+    "numeroNota": "BM 0916",
+    "tipoDespesa": "Acordo Societário / Pró-Labore",
+    "valor": 1468.09,
+    "status": "Pago",
+    "bm": "916",
+    "centroCusto": "01.06.003.012",
+    "observacoes": "BM 0916 - GESTÃO ESTRATÉGICA DE COMPRAS (19/10 a 21/10/2026 - 12h)"
   }
 ]

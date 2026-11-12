@@ -290,7 +290,7 @@
     "id": "CTR-2026-C1HHK",
     "codigo": "CTR-2026-C1HHK",
     "numeroContrato": {
-      "valor": "Back Office — Ana Cecília",
+      "valor": "Back Office - Ana Cecília",
       "paginaOrigem": 1,
       "clausulaOrigem": "Pedido de Compras",
       "confianca": 0.9,
@@ -311,7 +311,7 @@
       "naoLocalizado": false
     },
     "cnpjCliente": {
-      "valor": "Não localizado no contrato",
+      "valor": "01.306.024/0001-36",
       "paginaOrigem": 1,
       "clausulaOrigem": "Qualificação das Partes",
       "confianca": 0,
@@ -325,7 +325,7 @@
       "naoLocalizado": false
     },
     "projeto": {
-      "valor": "Back Office — Ana Cecília",
+      "valor": "Back Office - Ana Cecília",
       "paginaOrigem": 1,
       "clausulaOrigem": "Cláusula 1ª",
       "confianca": 0.9,
@@ -552,7 +552,7 @@
       "Anexo I - Escopo Técnico"
     ],
     "situacao": "VENCIMENTO_PROXIMO",
-    "statusRenovacao": "PROPOSTA_ENVIADA",
+    "statusRenovacao": "NAO_INICIADA",
     "inconsistencias": [
       {
         "id": "INC-REAJUSTE-1794345690138",
@@ -613,7 +613,7 @@
     "arquivoPdfTamanhoBytes": 3407499,
     "origemExtracao": "OCR_LOCAL",
     "criadoEm": "2026-11-10T21:21:30.109Z",
-    "atualizadoEm": "2026-11-11T13:04:24.709Z",
+    "atualizadoEm": "2026-11-11T19:36:34.319Z",
     "criadoPor": "Auditor IA NNÓS",
     "possivelDuplicidade": false
   },

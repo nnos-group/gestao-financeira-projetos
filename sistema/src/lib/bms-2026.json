@@ -20617,5 +20617,71 @@
       }
     ],
     "atividades": []
+  },
+  {
+    "id": "bm-0916",
+    "codigo": "0916",
+    "consultorNome": "CLEIVSON VIEIRA",
+    "consultorRazaoSocial": "SÓCIO",
+    "consultorCnpj": "21.374.592/0001-81",
+    "consultorEmail": "cmv_cmv@hotmail.com",
+    "consultorEndereco": "EMAIL:",
+    "contrato": "SÓCIO",
+    "mesReferencia": "Outubro / 2026",
+    "periodoTipo": "Integral",
+    "dataCorte": "30/10/2026",
+    "totalHoras": 12,
+    "valorTotal": 1468.09,
+    "mediaHora": 122.34,
+    "status": "Aprovado & Pronto p/ Faturamento",
+    "statusAssinatura": "ASSINADO",
+    "dataEnvio": "30/10/2026 11:03:35",
+    "liderProjetoNome": "BEATRIZ PICORELLI",
+    "liderProjetoEmail": "beatriz.picorelli@nnos.com.br",
+    "responsavelNnosNome": "Marcelo Lara da Silva",
+    "responsavelNnosEmail": "marcelo.lara@nnos.com.br",
+    "copiaEmails": "leonardo.campos@nnos.com.br",
+    "logs": [
+      {
+        "signatario": "CLEIVSON MOURA VIEIRA",
+        "papel": "Prestador de Serviços",
+        "email": "cmv_cmv@hotmail.com",
+        "status": "Assinado",
+        "dataHora": "30/10/2026 11:03:35 (Assinado)",
+        "detalhe": "Zoho Sign ID: 2EEBEA08-EOTGSSCTVID1UMLEFFBY16QED2ITPP4NMNJBZIB0DNY"
+      },
+      {
+        "signatario": "BEATRIZ PICORELLI",
+        "papel": "Líder de Projeto / Aprovador Técnico",
+        "email": "beatriz.picorelli@nnos.com.br",
+        "status": "Assinado",
+        "dataHora": "30/10/2026 11:03:35 (Aprovado)",
+        "detalhe": "Validação de horas e escopo de entrega técnica aprovada"
+      },
+      {
+        "signatario": "MARCELO LARA DA SILVA",
+        "papel": "Responsável NNÓS (Coordenação Geral)",
+        "email": "marcelo.lara@nnos.com.br",
+        "status": "Assinado",
+        "dataHora": "30/10/2026 11:03:35 (Homologado)",
+        "detalhe": "Homologação financeira para faturamento e pagamento"
+      }
+    ],
+    "atividades": [
+      {
+        "centroCusto": "01.06.003.012",
+        "projeto": "PARTS ACADEMY",
+        "atividade": "GESTÃO ESTRATÉGICA DE COMPRAS",
+        "periodo": "19/10/2026 a 21/10/2026",
+        "dataInicial": "19/10/2026",
+        "dataFinal": "21/10/2026",
+        "horas": 12,
+        "valorHora": 122.34,
+        "valorTotal": 1468.09,
+        "rateioInterno": "53,51%",
+        "liderProjeto": "BEATRIZ PICORELLI",
+        "liderEmail": "beatriz.picorelli@nnos.com.br"
+      }
+    ]
   }
 ]
