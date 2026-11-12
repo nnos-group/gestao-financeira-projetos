@@ -658,42 +658,44 @@ export default function AdminPage() {
                     style={{
                       display: "inline-flex",
                       alignItems: "center",
-                      gap: "7px",
-                      padding: "8px 14px",
-                      borderRadius: "10px",
-                      border: isAtiva ? `1.5px solid ${aba.cor}` : "1.5px solid #e2e8f0",
+                      gap: "8px",
+                      padding: "10px 18px",
+                      borderRadius: "12px",
+                      border: isAtiva ? `1.5px solid ${aba.cor}` : `1.5px solid ${aba.cor}35`,
                       cursor: "pointer",
-                      fontSize: "12px",
+                      fontSize: "12.5px",
                       fontWeight: 700,
-                      backgroundColor: isAtiva ? aba.cor : "#ffffff",
-                      color: isAtiva ? "#ffffff" : "#334155",
+                      letterSpacing: "0.01em",
+                      backgroundColor: isAtiva ? aba.cor : `${aba.cor}0c`,
+                      color: isAtiva ? "#ffffff" : "#1e293b",
                       boxShadow: isAtiva
-                        ? `0 4px 14px ${aba.cor}40, 0 1px 3px rgba(0,0,0,0.08)`
-                        : "0 1px 2px rgba(0,0,0,0.03)",
+                        ? `0 4px 16px ${aba.cor}45, 0 2px 4px rgba(0,0,0,0.08)`
+                        : "0 1px 3px rgba(0,0,0,0.03)",
                       whiteSpace: "nowrap",
+                      transform: isAtiva ? "translateY(-1px)" : "none",
                       transition: "all 0.18s cubic-bezier(0.4, 0, 0.2, 1)",
                     }}
                     onMouseEnter={(e) => {
                       if (!isAtiva) {
                         e.currentTarget.style.borderColor = aba.cor;
-                        e.currentTarget.style.backgroundColor = "#f8fafc";
-                        e.currentTarget.style.transform = "translateY(-1px)";
-                        e.currentTarget.style.boxShadow = "0 3px 8px rgba(0,0,0,0.06)";
+                        e.currentTarget.style.backgroundColor = `${aba.cor}18`;
+                        e.currentTarget.style.transform = "translateY(-2px)";
+                        e.currentTarget.style.boxShadow = `0 4px 12px ${aba.cor}25`;
                       }
                     }}
                     onMouseLeave={(e) => {
                       if (!isAtiva) {
-                        e.currentTarget.style.borderColor = "#e2e8f0";
-                        e.currentTarget.style.backgroundColor = "#ffffff";
+                        e.currentTarget.style.borderColor = `${aba.cor}35`;
+                        e.currentTarget.style.backgroundColor = `${aba.cor}0c`;
                         e.currentTarget.style.transform = "none";
-                        e.currentTarget.style.boxShadow = "0 1px 2px rgba(0,0,0,0.03)";
+                        e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.03)";
                       }
                     }}
                   >
                     <span
                       className="material-symbols-outlined"
                       style={{
-                        fontSize: "16px",
+                        fontSize: "18px",
                         color: isAtiva ? "#ffffff" : aba.cor,
                         transition: "color 0.15s ease",
                       }}
@@ -706,32 +708,32 @@ export default function AdminPage() {
                     {aba.badge && (
                       <span
                         style={{
-                          fontSize: "10px",
+                          fontSize: "10.5px",
                           fontWeight: 800,
-                          padding: "1px 7px",
+                          padding: "2px 8px",
                           borderRadius: "999px",
-                          backgroundColor: isAtiva ? "rgba(255, 255, 255, 0.25)" : "#f1f5f9",
+                          backgroundColor: isAtiva ? "rgba(255, 255, 255, 0.25)" : `${aba.cor}20`,
                           color: isAtiva ? "#ffffff" : aba.cor,
-                          border: isAtiva ? "1px solid rgba(255, 255, 255, 0.35)" : "1px solid #e2e8f0",
+                          border: isAtiva ? "1px solid rgba(255, 255, 255, 0.4)" : `1px solid ${aba.cor}40`,
                           textTransform: "uppercase",
                         }}
                       >
                         {aba.badge}
                       </span>
                     )}
-                    {isAtiva && (
-                      <span
-                        style={{
-                          fontSize: "13px",
-                          fontWeight: 900,
-                          marginLeft: "2px",
-                          lineHeight: 1,
-                          color: "#ffffff",
-                        }}
-                      >
-                        →
-                      </span>
-                    )}
+                    <span
+                      style={{
+                        fontSize: "14px",
+                        fontWeight: 900,
+                        marginLeft: "2px",
+                        lineHeight: 1,
+                        color: isAtiva ? "#ffffff" : aba.cor,
+                        opacity: isAtiva ? 1 : 0.6,
+                        transition: "all 0.15s ease",
+                      }}
+                    >
+                      →
+                    </span>
                   </button>
                 );
               })}

@@ -94,26 +94,37 @@ const ESTILO_PADRAO_DOC = {
   badgeBorder: "#cbd5e1",
 };
 
-function classificarCategoriaDocumento(p: { numeroNota?: string; tipoDespesa?: string; categoriaDoc?: string }): string {
+function classificarCategoriaDocumento(p: {
+  numeroNota?: string;
+  tipoDespesa?: string;
+  categoriaDoc?: string;
+  bm?: string;
+  tipo?: string;
+}): string {
   if (p.categoriaDoc) {
     const cd = p.categoriaDoc.trim().toUpperCase();
     if (cd) return cd;
   }
   const nota = String(p.numeroNota || "").trim().toUpperCase();
   const despesa = String(p.tipoDespesa || "").trim().toUpperCase();
+  const tipo = String(p.tipo || "").trim().toUpperCase();
+  const bm = String(p.bm || "").trim();
 
-  // Relatório de Viagem / Despesas reembolsáveis
-  if (nota.includes("RDV") || despesa.includes("RDV") || despesa.includes("RELATÓRIO DE VIAGEM") || despesa.includes("REEMBOLSO") || despesa.includes("VIAGEM")) {
+  // 1. Relatório de Viagem / Despesas reembolsáveis
+  if (
+    nota.includes("RDV") ||
+    despesa.includes("RDV") ||
+    despesa.includes("RELATÓRIO DE VIAGEM") ||
+    despesa.includes("REEMBOLSO") ||
+    despesa.includes("VIAGEM")
+  ) {
     return "RDV";
   }
 
-  // Boletim de Medição
-  if (nota.startsWith("BM") || nota.includes("BOLETIM") || despesa.includes("BOLETIM DE MEDIÇÃO") || despesa.includes("BM")) {
-    return "BM";
-  }
-
-  // Pró-labore / Recibos / Sócios
+  // 2. Pró-labore / Retiradas de Sócios / Acordos Societários
   if (
+    tipo === "SÓCIO" ||
+    tipo === "SOCIO" ||
     despesa.includes("PRÓ-LABORE") ||
     despesa.includes("PRO-LABORE") ||
     despesa.includes("SOCIETÁR") ||
@@ -121,13 +132,33 @@ function classificarCategoriaDocumento(p: { numeroNota?: string; tipoDespesa?: s
     despesa.includes("RECIBO") ||
     despesa.includes("DISTRIBUIÇÃO") ||
     despesa.includes("AJUDA DE CUSTO") ||
-    nota.includes("RECIBO")
+    nota.includes("RECIBO") ||
+    nota.includes("PRÓ-LABORE") ||
+    nota.includes("PRO-LABORE") ||
+    nota.includes("AJUDA DE CUSTO")
   ) {
     return "SÓCIO";
   }
 
-  // Nota Fiscal (padrão numérico ou com prefixo NF)
-  if (nota.match(/^\d+$/) || nota.startsWith("NF") || nota.includes("NOTA FISCAL") || despesa.includes("HONORÁRIOS") || despesa.includes("PRESTAÇÃO DE SERVIÇOS")) {
+  // 3. Boletim de Medição (BM informado ou referenciado)
+  if (
+    bm ||
+    nota.startsWith("BM") ||
+    nota.includes("BOLETIM") ||
+    despesa.includes("BOLETIM DE MEDIÇÃO") ||
+    despesa.includes("BM")
+  ) {
+    return "BM";
+  }
+
+  // 4. Nota Fiscal (padrão numérico ou com prefixo NF)
+  if (
+    nota.match(/^\d+$/) ||
+    nota.startsWith("NF") ||
+    nota.includes("NOTA FISCAL") ||
+    despesa.includes("HONORÁRIOS") ||
+    despesa.includes("PRESTAÇÃO DE SERVIÇOS")
+  ) {
     return "NF";
   }
 
