@@ -190,5 +190,33 @@
     "fotoUrl": "",
     "ultimoAcesso": "2026-11-06T09:00:00-03:00",
     "criadoEm": "2026-02-01T08:00:00-03:00"
+  },
+  {
+    "id": "usr-tiago-angelo",
+    "login": "tiago.angelo",
+    "nome": "Tiago Angelo",
+    "email": "tiago.angelo@nnos.com.br",
+    "cargo": "Consultor Especialista & Instrutor",
+    "perfilId": "CONSULTOR",
+    "liderVinculado": "TIAGO ANGELO",
+    "senha": "nnos2026",
+    "mfaAtivo": true,
+    "mfaSecret": "JBSWY3DPEHPK3PXP",
+    "status": "ATIVO",
+    "criadoEm": "2026-11-12T13:55:00-03:00"
+  },
+  {
+    "id": "usr-alejandro-lapuente",
+    "login": "alejandro.lapuente",
+    "nome": "Alejandro Lapuente",
+    "email": "alejandrolapuente@hotmail.com",
+    "cargo": "Consultor Especialista & Instrutor",
+    "perfilId": "CONSULTOR",
+    "liderVinculado": "ALEJANDRO LAPUENTE",
+    "senha": "nnos2026",
+    "mfaAtivo": true,
+    "mfaSecret": "JBSWY3DPEHPK3PXP",
+    "status": "ATIVO",
+    "criadoEm": "2026-11-12T13:55:00-03:00"
   }
 ]

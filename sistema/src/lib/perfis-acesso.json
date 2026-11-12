@@ -1026,6 +1026,11 @@
     "descricao": "Acesso estrito ao Portal do Consultor (/consultor): visualização exclusiva da própria agenda, vouchers de viagem, políticas de reembolso, BMs para emissão de NF e histórico de pagamentos.",
     "usuariosVinculados": [
       {
+        "nome": "TIAGO ANGELO",
+        "email": "tiago.angelo@nnos.com.br",
+        "cargo": "Consultor Especialista & Instrutor"
+      },
+      {
         "nome": "ALEJANDRO LAPUENTE",
         "email": "alejandrolapuente@hotmail.com",
         "cargo": "Consultor Parceiro Sênior"

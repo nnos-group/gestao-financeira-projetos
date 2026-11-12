@@ -5,6 +5,7 @@ import {
   registrarLogSeguranca,
   gerarCodigoTotp,
 } from "@/lib/usuarios-service";
+import { dispararEmail } from "@/lib/email-service";
 
 export async function POST(req: NextRequest) {
   try {
@@ -65,7 +66,79 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      const codigoRecuperacao = gerarCodigoTotp(user.mfaSecret || "JBSWY3DPEHPK3PXP");
+      // Gera código de 6 dígitos único e temporário (válido por 15 minutos)
+      const codigoRecuperacao = Math.floor(100000 + Math.random() * 900000).toString();
+      const expiraEm = Date.now() + 15 * 60 * 1000;
+
+      const userIdx = usuarios.findIndex((u: any) => u.id === user.id);
+      if (userIdx >= 0) {
+        usuarios[userIdx] = {
+          ...user,
+          codigoRecuperacao,
+          codigoRecuperacaoExpira: expiraEm,
+        };
+        salvarUsuarios(usuarios);
+      }
+
+      // Disparar e-mail real com o código de recuperação
+      try {
+        const urlLogin = process.env.NEXT_PUBLIC_APP_URL
+          ? `${process.env.NEXT_PUBLIC_APP_URL}/login`
+          : "https://gestao.nnos.com.br/login";
+
+        const htmlEmail = `
+          <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; color: #1e293b;">
+            <div style="background-color: #0f2a4a; padding: 24px; text-align: center; color: #ffffff;">
+              <h2 style="margin: 0; font-size: 20px; font-weight: 700; letter-spacing: 0.5px;">NNÓS CONSULTORIA E TREINAMENTO</h2>
+              <p style="margin: 6px 0 0; font-size: 13px; color: #94a3b8;">Sistema de Gestão Financeira &amp; Projetos · Exercício 2026</p>
+            </div>
+            <div style="padding: 28px 24px;">
+              <h3 style="color: #0f2a4a; font-size: 18px; margin-top: 0;">Olá, ${user.nome}!</h3>
+              <p style="font-size: 14px; line-height: 1.6; color: #334155;">
+                Recebemos uma solicitação de <strong>redefinição de senha</strong> para o seu acesso ao Sistema de Gestão Financeira NNÓS.
+              </p>
+
+              <div style="background-color: #f0fdf4; border: 1.5px solid #86efac; border-radius: 10px; padding: 20px; margin: 24px 0; text-align: center;">
+                <span style="font-size: 11.5px; font-weight: 700; color: #166534; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">
+                  Seu Código de Confirmação (Válido por 15 minutos)
+                </span>
+                <span style="font-family: monospace; font-size: 34px; font-weight: 800; letter-spacing: 6px; color: #0f2a4a; background-color: #ffffff; padding: 8px 24px; border-radius: 8px; border: 1px solid #cbd5e1; display: inline-block;">
+                  ${codigoRecuperacao}
+                </span>
+              </div>
+
+              <p style="font-size: 13.5px; line-height: 1.6; color: #475569;">
+                Para concluir a alteração:
+                <br/>1. Retorne à tela de recuperação no sistema.
+                <br/>2. Digite o código de 6 dígitos acima (ou utilize seu código do Google Authenticator).
+                <br/>3. Defina e confirme a sua nova senha pessoal.
+              </p>
+
+              <div style="text-align: center; margin: 28px 0;">
+                <a href="${urlLogin}" target="_blank" style="display: inline-block; background-color: #0284c7; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-size: 14px; font-weight: 700; box-shadow: 0 2px 4px rgba(2, 132, 199, 0.3);">
+                  Acessar Tela de Login
+                </a>
+              </div>
+
+              <div style="border-top: 1px solid #f1f5f9; padding-top: 16px; font-size: 12px; color: #64748b; line-height: 1.5;">
+                <p style="margin: 0;">Se você não solicitou este código, por favor ignore este e-mail com segurança.</p>
+              </div>
+            </div>
+            <div style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 12px; text-align: center; font-size: 11px; color: #94a3b8;">
+              NNÓS Consultoria e Treinamento Ltda · CNPJ 36.443.716/0001-00
+            </div>
+          </div>
+        `;
+
+        await dispararEmail({
+          para: user.email,
+          assunto: `Código de Recuperação de Senha: ${codigoRecuperacao} · Sistema NNÓS`,
+          html: htmlEmail,
+          texto: `Olá ${user.nome}, seu código para redefinir a senha no Sistema NNÓS é: ${codigoRecuperacao}. Válido por 15 minutos.`,
+        });
+      } catch (errEmail) {
+        console.error("Erro ao disparar e-mail de recuperação:", errEmail);
+      }
 
       registrarLogSeguranca({
         usuarioLogin: user.login,
@@ -73,10 +146,10 @@ export async function POST(req: NextRequest) {
         usuarioEmail: user.email,
         perfilId: user.perfilId,
         evento: "RECUPERACAO_SENHA",
-        metodo: "Token / Google Authenticator",
+        metodo: "E-mail com Código de 6 Dígitos",
         status: "ALERTA",
         dispositivo: dispositivoResumo,
-        detalhes: `Solicitação de redefinição de senha iniciada para ${user.email}.`,
+        detalhes: `Código de recuperação enviado para ${user.email}.`,
       });
 
       return NextResponse.json({
@@ -88,7 +161,7 @@ export async function POST(req: NextRequest) {
           email: user.email,
         },
         codigoDemo: codigoRecuperacao,
-        mensagem: `Enviamos as instruções de recuperação para ${user.email}. Você também pode validar com seu código do Google Authenticator.`,
+        mensagem: `Enviamos as instruções e o código de recuperação para ${user.email}.`,
       });
     }
 
@@ -121,7 +194,10 @@ export async function POST(req: NextRequest) {
       const totpAnt = gerarCodigoTotp(secret, -1);
       const totpProx = gerarCodigoTotp(secret, 1);
 
+      // Código é válido se bater com o código enviado por e-mail (dentro dos 15 min),
+      // com o TOTP do Google Authenticator, ou com as chaves mestras de homologação
       const codigoValido =
+        (user.codigoRecuperacao && codigo === String(user.codigoRecuperacao).trim() && Date.now() <= (user.codigoRecuperacaoExpira || 0)) ||
         codigo === totp0 ||
         codigo === totpAnt ||
         codigo === totpProx ||
@@ -141,7 +217,7 @@ export async function POST(req: NextRequest) {
           detalhes: `Código inválido informado ao tentar redefinir a senha de ${user.nome}.`,
         });
         return NextResponse.json(
-          { error: "Código de verificação inválido ou expirado." },
+          { error: "Código de verificação inválido ou expirado. Solicite um novo código." },
           { status: 401 }
         );
       }
@@ -150,6 +226,8 @@ export async function POST(req: NextRequest) {
         ...user,
         senha: novaSenha,
         status: "ATIVO",
+        codigoRecuperacao: null,
+        codigoRecuperacaoExpira: null,
       };
       salvarUsuarios(usuarios);
 
