@@ -415,6 +415,7 @@ export default async function ProjetosPage({
             const solicitacoesViagem = carregarSolicitacoesArquivo();
             return (
               <FloatingCardsList
+                key={`projetos-${anoSelecionado}-${isTodosMeses ? "todos" : mes}`}
                 itens={itens}
                 competencia={competencia}
                 todosProjetos={todosProjetos}

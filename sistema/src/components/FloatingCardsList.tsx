@@ -356,6 +356,11 @@ export default function FloatingCardsList({
   const router = useRouter();
   const { perfilAtivoId, liderSimulado, pertenceAoLiderAtivo, regraAtiva, nivelModulo } = usePerfilAcesso();
   const [lista, setLista] = useState<LancamentoItem[]>(itens);
+
+  // Sincronizar estado local sempre que os itens mudarem (ao navegar entre meses ou anos)
+  useEffect(() => {
+    setLista(itens);
+  }, [itens]);
   const [previewVoucherDoc, setPreviewVoucherDoc] = useState<AnexoDocumento | null>(null);
   const [confirmandoExclusaoId, setConfirmandoExclusaoId] = useState<string | null>(null);
   const [modalNovoAberto, setModalNovoAberto] = useState(false);
