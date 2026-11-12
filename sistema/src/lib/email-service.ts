@@ -58,7 +58,7 @@ export async function dispararEmail(options: EnviarEmailOptions): Promise<Enviar
         };
       });
 
-      let remetenteResend = process.env.RESEND_FROM || de;
+      let remetenteResend = process.env.RESEND_FROM || "Gestão Financeira NNÓS <financeiro@mail.nnos.com.br>";
 
       let res = await fetch("https://api.resend.com/emails", {
         method: "POST",
@@ -68,6 +68,7 @@ export async function dispararEmail(options: EnviarEmailOptions): Promise<Enviar
         },
         body: JSON.stringify({
           from: remetenteResend,
+          reply_to: "financeiro@nnos.com.br",
           to: [options.para],
           cc: options.cc,
           subject: options.assunto,
