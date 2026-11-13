@@ -12,6 +12,7 @@ import {
 import { dispararEmail } from "./email-service";
 import { formatarDataBR, formatarPeriodoBR } from "./date-utils";
 import { POLITICAS_VIAGEM } from "./politicas-viagem";
+import { obterDadosLiderViagem } from "./lider-utils";
 
 const DATA_FILE = path.join(process.cwd(), "src/lib/viagens-solicitacoes-base.json");
 
@@ -245,6 +246,10 @@ export async function sincronizarSolicitacoesIniciais(competencia?: string): Pro
         },
       ];
 
+      const dadosLider = obterDadosLiderViagem({
+        projeto: l.projetos?.nome || "PROJETO NNÓS",
+      });
+
       const novaSolicitacao: ViagemSolicitacao = {
         id: `sol-${l.id}`,
         lancamentoId: l.id,
@@ -253,6 +258,8 @@ export async function sincronizarSolicitacoesIniciais(competencia?: string): Pro
         atividade: l.atividade || "Atividade Operacional",
         consultor: l.consultores?.nome || "Consultor a definir",
         perfilConsultor: l.perfil || "SÊNIOR",
+        liderNome: dadosLider.nome,
+        liderEmail: dadosLider.email,
         origem: "Belo Horizonte - MG",
         destino: l.local || "Destino a definir",
         dataInicial: l.data_inicial || "",
@@ -832,11 +839,14 @@ export async function enviarVouchersViajante(
 
   const agora = new Date().toISOString();
   const destEmail = emailDestinatario || sol.consultorEmail || "leonardo.campos@nnos.com.br";
-  const destinatarios = [destEmail, "agencia.fatima@nnos.com.br", "gestao.projetos@nnos.com.br"];
+  const lider = obterDadosLiderViagem(sol);
+  const destinatarios = [destEmail, "agencia.fatima@nnos.com.br", lider.email];
 
   sol.status = "VOUCHERS_ENVIADOS";
   sol.vouchersEnviadosEm = agora;
   sol.destinatariosEnvio = destinatarios;
+  sol.liderNome = lider.nome;
+  sol.liderEmail = lider.email;
   // Reinicia confirmação do consultor para que ele aprove o recebimento dos novos vouchers
   sol.vouchersRecebidosAprovadosEm = undefined;
   sol.vouchersRecebidosAprovadosPor = undefined;
@@ -884,7 +894,7 @@ export async function enviarVouchersViajante(
   const emailPreview = {
     de: `${sol.agenciaNome || "Agência de Viagens"} <agencia.${(sol.agenciaNome || "fatima").toLowerCase()}@nnos.com.br>`,
     para: destEmail,
-    cc: ["agencia.fatima@nnos.com.br", "gestao.projetos@nnos.com.br"],
+    cc: ["agencia.fatima@nnos.com.br", lider.email],
     assunto: `[VOUCHER & RESERVAS] Viagem Confirmada • ${sol.projeto} - ${sol.atividade}`,
     dataEnvio: agora,
     passageiro: sol.consultor,
@@ -1123,7 +1133,7 @@ export async function enviarVouchersViajante(
     const resultadoEmail = await dispararEmail({
       para: destEmail,
       de: `Agência de Viagens <${sol.agenciaNome ? `agencia.${sol.agenciaNome.toLowerCase()}@nnos.com.br` : "logistica@nnos.com.br"}>`,
-      cc: ["fcconsultoriadeviagens@gmail.com", "gestao.projetos@nnos.com.br"],
+      cc: ["fcconsultoriadeviagens@gmail.com", lider.email],
       assunto: `[VOUCHER & RESERVAS] Viagem Confirmada • ${sol.projeto} - ${sol.atividade}`,
       html: htmlCorpo,
       anexos: anexosEnvio,
@@ -1325,7 +1335,6 @@ async function sincronizarViagemComSupabase(sol: ViagemSolicitacao): Promise<voi
 }
 
 const EMAIL_AGENCIA_OFICIAL = "fcconsultoriadeviagens@gmail.com";
-const EMAIL_GESTAO_PROJETOS = "gestao.projetos@nnos.com.br";
 const URL_SISTEMA_VIAGENS = "https://gestao.nnos.com.br/viagens";
 
 /**
@@ -1333,6 +1342,7 @@ const URL_SISTEMA_VIAGENS = "https://gestao.nnos.com.br/viagens";
  */
 export async function dispararNotificacaoNovaCotacaoAgencia(sol: ViagemSolicitacao) {
   try {
+    const lider = obterDadosLiderViagem(sol);
     const periodoFmt = formatarPeriodoBR(sol.dataInicial, sol.dataFinal);
     const assunto = `✈️ [NOVA COTAÇÃO] Solicitação de Viagem & Logística • ${sol.projeto} - ${sol.atividade}`;
 
@@ -1345,7 +1355,7 @@ export async function dispararNotificacaoNovaCotacaoAgencia(sol: ViagemSolicitac
         <div style="padding: 24px;">
           <h3 style="color: #0f2a4a; font-size: 16px; margin-top: 0; font-weight: 700;">Olá, Fátima e Equipe de Viagens!</h3>
           <p style="font-size: 13.5px; line-height: 1.6; color: #334155;">
-            Uma nova demanda de treinamento foi registrada no sistema com necessidade de deslocamento e logística. Favor elaborar as opções de cotação para aprovação do líder de projeto.
+            Uma nova demanda de treinamento foi registrada no sistema com necessidade de deslocamento e logística vinculada ao líder <strong>${lider.nome}</strong>. Favor elaborar as opções de cotação para aprovação.
           </p>
 
           <div style="background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px; padding: 18px; margin: 20px 0;">
@@ -1360,6 +1370,10 @@ export async function dispararNotificacaoNovaCotacaoAgencia(sol: ViagemSolicitac
               <tr>
                 <td style="color: #64748b; font-weight: 600;">Atividade:</td>
                 <td style="font-weight: 700; color: #0f172a;">${sol.atividade}</td>
+              </tr>
+              <tr>
+                <td style="color: #64748b; font-weight: 600;">Líder Responsável:</td>
+                <td style="font-weight: 700; color: #0f172a;">${lider.nome} (${lider.email})</td>
               </tr>
               <tr>
                 <td style="color: #64748b; font-weight: 600;">Viajante / Consultor:</td>
@@ -1404,10 +1418,10 @@ export async function dispararNotificacaoNovaCotacaoAgencia(sol: ViagemSolicitac
 
     await dispararEmail({
       para: EMAIL_AGENCIA_OFICIAL,
-      cc: [EMAIL_GESTAO_PROJETOS],
+      cc: [lider.email],
       assunto,
       html,
-      texto: `Nova cotação de viagem pendente para ${sol.consultor} no projeto ${sol.projeto} (${periodoFmt}). Destino: ${sol.destino}. Acesse: ${URL_SISTEMA_VIAGENS}`,
+      texto: `Nova cotação de viagem pendente para ${sol.consultor} no projeto ${sol.projeto} (${periodoFmt}). Destino: ${sol.destino}. Líder: ${lider.nome} (${lider.email}). Acesse: ${URL_SISTEMA_VIAGENS}`,
     });
   } catch (err) {
     console.warn("Aviso ao disparar e-mail de nova cotação para agência:", err);
@@ -1419,6 +1433,7 @@ export async function dispararNotificacaoNovaCotacaoAgencia(sol: ViagemSolicitac
  */
 export async function dispararNotificacaoCotacoesProntasLider(sol: ViagemSolicitacao, observacoesAgencia?: string) {
   try {
+    const lider = obterDadosLiderViagem(sol);
     const periodoFmt = formatarPeriodoBR(sol.dataInicial, sol.dataFinal);
     const valorCotadoFmt = (sol.totalCotado || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
     const assunto = `📋 [COTAÇÃO ENVIADA] Propostas de Viagem Prontas para Aprovação • ${sol.projeto} - ${sol.atividade}`;
@@ -1430,9 +1445,9 @@ export async function dispararNotificacaoCotacoesProntasLider(sol: ViagemSolicit
           <p style="margin: 4px 0 0; font-size: 13px; color: #94a3b8;">Propostas de Viagem Aguardando Aprovação do Líder</p>
         </div>
         <div style="padding: 24px;">
-          <h3 style="color: #0f2a4a; font-size: 16px; margin-top: 0; font-weight: 700;">Olá, Líder de Projeto / Gestor(a)!</h3>
+          <h3 style="color: #0f2a4a; font-size: 16px; margin-top: 0; font-weight: 700;">Olá, ${lider.nome}!</h3>
           <p style="font-size: 13.5px; line-height: 1.6; color: #334155;">
-            A <strong>Agência Fátima</strong> cadastrou as alternativas de voo, hospedagem e translado para a viagem abaixo. Favor avaliar e aprovar a opção mais conveniente.
+            A <strong>Agência Fátima</strong> cadastrou as alternativas de voo, hospedagem e translado para a viagem abaixo vinculada ao seu projeto. Favor avaliar e aprovar a opção mais conveniente.
           </p>
 
           <div style="background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px; padding: 18px; margin: 20px 0;">
@@ -1482,7 +1497,7 @@ export async function dispararNotificacaoCotacoesProntasLider(sol: ViagemSolicit
     `;
 
     await dispararEmail({
-      para: EMAIL_GESTAO_PROJETOS,
+      para: lider.email,
       cc: [EMAIL_AGENCIA_OFICIAL],
       assunto,
       html,
@@ -1498,6 +1513,7 @@ export async function dispararNotificacaoCotacoesProntasLider(sol: ViagemSolicit
  */
 export async function dispararNotificacaoCotacaoAprovadaAgencia(sol: ViagemSolicitacao, aprovadorNome: string) {
   try {
+    const lider = obterDadosLiderViagem(sol);
     const periodoFmt = formatarPeriodoBR(sol.dataInicial, sol.dataFinal);
     const valorAprovadoFmt = (sol.totalAprovado || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
     const assunto = `✅ [COTAÇÃO APROVADA] Liberado para Compra e Emissão • ${sol.projeto} - ${sol.atividade}`;
@@ -1511,7 +1527,7 @@ export async function dispararNotificacaoCotacaoAprovadaAgencia(sol: ViagemSolic
         <div style="padding: 24px;">
           <h3 style="color: #0f2a4a; font-size: 16px; margin-top: 0; font-weight: 700;">Olá, Fátima e Equipe de Viagens!</h3>
           <p style="font-size: 13.5px; line-height: 1.6; color: #334155;">
-            A cotação de viagem foi <strong>aprovada</strong> por <strong>${aprovadorNome || "Líder de Projeto"}</strong>. A solicitação está liberada para efetivação das compras, preenchimento dos localizadores e upload dos vouchers em PDF.
+            A cotação de viagem foi <strong>aprovada</strong> por <strong>${aprovadorNome || lider.nome}</strong>. A solicitação está liberada para efetivação das compras, preenchimento dos localizadores e upload dos vouchers em PDF.
           </p>
 
           <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 18px; margin: 20px 0;">
@@ -1522,6 +1538,10 @@ export async function dispararNotificacaoCotacaoAprovadaAgencia(sol: ViagemSolic
               <tr>
                 <td style="color: #64748b; width: 140px; font-weight: 600;">Projeto / Atividade:</td>
                 <td style="font-weight: 700; color: #0f172a;">${sol.projeto} - ${sol.atividade}</td>
+              </tr>
+              <tr>
+                <td style="color: #64748b; font-weight: 600;">Líder de Projeto:</td>
+                <td style="font-weight: 700; color: #0f172a;">${lider.nome} (${lider.email})</td>
               </tr>
               <tr>
                 <td style="color: #64748b; font-weight: 600;">Viajante:</td>
@@ -1557,7 +1577,7 @@ export async function dispararNotificacaoCotacaoAprovadaAgencia(sol: ViagemSolic
 
     await dispararEmail({
       para: EMAIL_AGENCIA_OFICIAL,
-      cc: [EMAIL_GESTAO_PROJETOS],
+      cc: [lider.email],
       assunto,
       html,
       texto: `Cotação aprovada para ${sol.consultor} no valor de ${valorAprovadoFmt} (${sol.projeto}). Favor emitir as passagens/vouchers em: ${URL_SISTEMA_VIAGENS}`,

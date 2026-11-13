@@ -12,6 +12,7 @@ import { ViagensPerfil } from "./ViagensRoleSelector";
 import DocumentPreviewModal from "./DocumentPreviewModal";
 import { formatarDataBR, formatarPeriodoBR, formatarDataHoraBR } from "@/lib/date-utils";
 import { POLITICAS_VIAGEM } from "@/lib/politicas-viagem";
+import { obterDadosLiderViagem } from "@/lib/lider-utils";
 
 const formatarMoedaBRInput = (val: number | null | undefined): string => {
   if (val == null || isNaN(val) || val === 0) return "";
@@ -222,10 +223,13 @@ export default function CotacoesMatrixModal({
       });
     });
 
+    const lider = obterDadosLiderViagem(sol);
+    const destEmail = sol.consultorEmail || "leonardo.campos@nnos.com.br";
+
     setEmailPreviewData({
       de: `Agência de Viagens <agencia.${(sol.agenciaNome || "fatima").toLowerCase()}@nnos.com.br>`,
-      para: "leonardo.campos@nnos.com.br",
-      cc: ["agencia.fatima@nnos.com.br", "gestao.projetos@nnos.com.br"],
+      para: destEmail,
+      cc: ["agencia.fatima@nnos.com.br", lider.email],
       assunto: `[VOUCHER & RESERVAS] Viagem Confirmada • ${sol.projeto} - ${sol.atividade}`,
       passageiro: sol.consultor,
       perfil: sol.perfilConsultor,

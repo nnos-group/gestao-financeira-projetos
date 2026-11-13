@@ -31,8 +31,9 @@ const OPCOES_TIPO_MEDICAO = [
 export default function PessoasPage() {
   const { perfilAtivoId, nivelModulo, regraAtiva } = usePerfilAcesso();
   const nivelPessoas = nivelModulo("pessoas");
-  const podeEditar = perfilAtivoId === "ADMIN" || nivelPessoas === "TOTAL" || nivelPessoas === "EDITAR_APROVAR";
-  const somenteLeitura = perfilAtivoId === "AGENCIA" || !podeEditar;
+  const isAgencia = perfilAtivoId === "AGENCIA" || String(perfilAtivoId || "").toUpperCase() === "AGENCIA";
+  const podeEditar = (perfilAtivoId === "ADMIN" || nivelPessoas === "TOTAL" || nivelPessoas === "EDITAR_APROVAR") && !isAgencia;
+  const somenteLeitura = isAgencia || !podeEditar;
 
   const [pessoas, setPessoas] = useState<PessoaItem[]>(PESSOAS_INICIAIS);
   const [busca, setBusca] = useState("");

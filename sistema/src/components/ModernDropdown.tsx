@@ -132,11 +132,18 @@ export default function ModernDropdown({
           gap: "8px",
           padding: "7px 12px",
           borderRadius: "10px",
-          border: open ? "1.5px solid var(--primary, #0284c7)" : "1px solid var(--border, #cbd5e1)",
-          background: "var(--surface-container-lowest, #ffffff)",
-          boxShadow: open ? "0 0 0 3px rgba(2, 132, 199, 0.15)" : "0 1px 3px rgba(0,0,0,0.04)",
+          border: disabled
+            ? "1px solid var(--border, #e2e8f0)"
+            : open
+            ? "1.5px solid var(--primary, #0284c7)"
+            : "1px solid var(--border, #cbd5e1)",
+          background: disabled
+            ? "var(--surface-container-low, #f8fafc)"
+            : "var(--surface-container-lowest, #ffffff)",
+          boxShadow: open && !disabled ? "0 0 0 3px rgba(2, 132, 199, 0.15)" : "0 1px 3px rgba(0,0,0,0.04)",
           cursor: disabled ? "not-allowed" : "pointer",
-          opacity: disabled ? 0.6 : 1,
+          opacity: disabled ? 0.75 : 1,
+          pointerEvents: disabled ? "none" : "auto",
           minWidth: minWidth || "auto",
           width: style?.width === "100%" ? "100%" : "auto",
           justifyContent: "space-between",
@@ -150,7 +157,7 @@ export default function ModernDropdown({
           {icon && (
             <span
               className="material-symbols-outlined"
-              style={{ fontSize: "16px", color: "var(--primary, #0284c7)", flexShrink: 0 }}
+              style={{ fontSize: "16px", color: disabled ? "var(--on-surface-variant, #94a3b8)" : "var(--primary, #0284c7)", flexShrink: 0 }}
             >
               {icon}
             </span>
@@ -159,7 +166,11 @@ export default function ModernDropdown({
             style={{
               fontSize: "13px",
               fontWeight: 700,
-              color: selected ? "var(--on-surface, #0f172a)" : "var(--on-surface-variant, #64748b)",
+              color: disabled
+                ? "var(--on-surface-variant, #64748b)"
+                : selected
+                ? "var(--on-surface, #0f172a)"
+                : "var(--on-surface-variant, #64748b)",
               whiteSpace: "nowrap",
               overflow: "hidden",
               textOverflow: "ellipsis",
@@ -172,18 +183,19 @@ export default function ModernDropdown({
           className="material-symbols-outlined"
           style={{
             fontSize: "18px",
-            color: "var(--on-surface-variant, #64748b)",
-            transform: open ? "rotate(180deg)" : "rotate(0deg)",
+            color: disabled ? "var(--border, #94a3b8)" : "var(--on-surface-variant, #64748b)",
+            transform: open && !disabled ? "rotate(180deg)" : "rotate(0deg)",
             transition: "transform 0.2s ease",
             flexShrink: 0,
             marginLeft: "4px",
+            opacity: disabled ? 0.5 : 1,
           }}
         >
           expand_more
         </span>
       </button>
 
-      {open && (
+      {open && !disabled && (
         <div
           style={{
             position: "absolute",

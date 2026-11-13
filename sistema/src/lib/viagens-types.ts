@@ -70,6 +70,8 @@ export interface ViagemSolicitacao {
   consultor: string;
   consultorEmail?: string;
   perfilConsultor?: string;
+  liderNome?: string;
+  liderEmail?: string;
   origem: string;
   destino: string;
   dataInicial: string;
