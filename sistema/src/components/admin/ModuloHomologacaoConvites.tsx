@@ -174,8 +174,10 @@ export default function ModuloHomologacaoConvites({ perfis, onToast }: Props) {
           usuarioNome: user.nome,
           usuarioEmail: user.email,
           usuarioLogin: user.login,
+          usuarioSenha: user.senha || (user.perfilId === "AGENCIA" ? "viagem2026" : "nnos2026"),
           perfilId: user.perfilId,
           perfilNome: perfis.find((p) => p.id === user.perfilId)?.nome || user.perfilId,
+          corpoTextoPersonalizado: gerarTextoEmailPuro(user),
         }),
       });
 
@@ -222,8 +224,10 @@ export default function ModuloHomologacaoConvites({ perfis, onToast }: Props) {
             usuarioNome: user.nome,
             usuarioEmail: user.email,
             usuarioLogin: user.login,
+            usuarioSenha: user.senha || (user.perfilId === "AGENCIA" ? "viagem2026" : "nnos2026"),
             perfilId: user.perfilId,
             perfilNome: perfis.find((p) => p.id === user.perfilId)?.nome || user.perfilId,
+            corpoTextoPersonalizado: gerarTextoEmailPuro(user),
           }),
         });
 

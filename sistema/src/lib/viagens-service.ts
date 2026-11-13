@@ -409,6 +409,7 @@ export async function sincronizarSolicitacoesIniciais(competencia?: string): Pro
 export async function garantirSolicitacaoAtividade(lancamentoId: string, dadosAtividade: any): Promise<ViagemSolicitacao> {
   const lista = carregarSolicitacoesArquivo();
   let sol = lista.find((s) => s.lancamentoId === lancamentoId);
+  const eraNova = !sol;
 
   const agora = new Date().toISOString();
 
@@ -483,6 +484,14 @@ export async function garantirSolicitacaoAtividade(lancamentoId: string, dadosAt
   }
 
   salvarSolicitacoesArquivo(lista);
+
+  // Dispara notificação por e-mail para a Agência quando uma nova atividade com logística é criada
+  if (eraNova && !isCancelado && dadosAtividade.precisaLogistica !== false) {
+    dispararNotificacaoNovaCotacaoAgencia(sol).catch((e) =>
+      console.warn("Aviso ao disparar e-mail de nova cotação:", e)
+    );
+  }
+
   return sol;
 }
 
@@ -586,6 +595,14 @@ export async function salvarCotacoesAgencia(
 
   sol.atualizadoEm = agora;
   salvarSolicitacoesArquivo(lista);
+
+  // Dispara notificação por e-mail para o Líder quando a Agência envia para aprovação
+  if (enviarParaAprovacao) {
+    dispararNotificacaoCotacoesProntasLider(sol, observacoesAgencia).catch((e) =>
+      console.warn("Aviso ao disparar e-mail de cotação pronta:", e)
+    );
+  }
+
   return sol;
 }
 
@@ -672,6 +689,13 @@ export async function aprovarLogisticaLider(
 
   // Sincroniza custos aprovados no Supabase
   await sincronizarViagemComSupabase(sol);
+
+  // Dispara notificação por e-mail para a Agência informando aprovação e liberando compras
+  if (sol.status === "APROVADO_AGUARDANDO_COMPRA") {
+    dispararNotificacaoCotacaoAprovadaAgencia(sol, aprovadorNome).catch((e) =>
+      console.warn("Aviso ao disparar e-mail de cotação aprovada para agência:", e)
+    );
+  }
 
   return sol;
 }
@@ -1099,7 +1123,7 @@ export async function enviarVouchersViajante(
     const resultadoEmail = await dispararEmail({
       para: destEmail,
       de: `Agência de Viagens <${sol.agenciaNome ? `agencia.${sol.agenciaNome.toLowerCase()}@nnos.com.br` : "logistica@nnos.com.br"}>`,
-      cc: ["agencia.fatima@nnos.com.br", "gestao.projetos@nnos.com.br"],
+      cc: ["fcconsultoriadeviagens@gmail.com", "gestao.projetos@nnos.com.br"],
       assunto: `[VOUCHER & RESERVAS] Viagem Confirmada • ${sol.projeto} - ${sol.atividade}`,
       html: htmlCorpo,
       anexos: anexosEnvio,
@@ -1297,5 +1321,248 @@ async function sincronizarViagemComSupabase(sol: ViagemSolicitacao): Promise<voi
     }
   } catch (err) {
     console.warn("Aviso ao sincronizar viagem com Supabase:", err);
+  }
+}
+
+const EMAIL_AGENCIA_OFICIAL = "fcconsultoriadeviagens@gmail.com";
+const EMAIL_GESTAO_PROJETOS = "gestao.projetos@nnos.com.br";
+const URL_SISTEMA_VIAGENS = "https://gestao.nnos.com.br/viagens";
+
+/**
+ * Notificação 1: Dispara e-mail para a Agência quando uma nova atividade com logística é registrada
+ */
+export async function dispararNotificacaoNovaCotacaoAgencia(sol: ViagemSolicitacao) {
+  try {
+    const periodoFmt = formatarPeriodoBR(sol.dataInicial, sol.dataFinal);
+    const assunto = `✈️ [NOVA COTAÇÃO] Solicitação de Viagem & Logística • ${sol.projeto} - ${sol.atividade}`;
+
+    const html = `
+      <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 650px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; overflow: hidden; color: #1e293b;">
+        <div style="background: linear-gradient(135deg, #00152f 0%, #0f2a4a 100%); padding: 22px 26px; color: #ffffff;">
+          <h2 style="margin: 0; font-size: 19px; font-weight: 800; letter-spacing: 0.5px;">NNÓS VIAGENS &amp; LOGÍSTICA</h2>
+          <p style="margin: 4px 0 0; font-size: 13px; color: #94a3b8;">Nova Ordem Logística para Elaboração de Cotação</p>
+        </div>
+        <div style="padding: 24px;">
+          <h3 style="color: #0f2a4a; font-size: 16px; margin-top: 0; font-weight: 700;">Olá, Fátima e Equipe de Viagens!</h3>
+          <p style="font-size: 13.5px; line-height: 1.6; color: #334155;">
+            Uma nova demanda de treinamento foi registrada no sistema com necessidade de deslocamento e logística. Favor elaborar as opções de cotação para aprovação do líder de projeto.
+          </p>
+
+          <div style="background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px; padding: 18px; margin: 20px 0;">
+            <h4 style="margin: 0 0 12px; font-size: 12px; text-transform: uppercase; color: #0369a1; letter-spacing: 0.5px; font-weight: 800;">
+              📋 DADOS DA VIAGEM:
+            </h4>
+            <table style="width: 100%; font-size: 13px; border-collapse: collapse; line-height: 1.7;">
+              <tr>
+                <td style="color: #64748b; width: 140px; font-weight: 600;">Projeto:</td>
+                <td style="font-weight: 700; color: #0f172a;">${sol.projeto}</td>
+              </tr>
+              <tr>
+                <td style="color: #64748b; font-weight: 600;">Atividade:</td>
+                <td style="font-weight: 700; color: #0f172a;">${sol.atividade}</td>
+              </tr>
+              <tr>
+                <td style="color: #64748b; font-weight: 600;">Viajante / Consultor:</td>
+                <td style="font-weight: 700; color: #0369a1;">${sol.consultor} (${sol.perfilConsultor || "SÊNIOR"})</td>
+              </tr>
+              <tr>
+                <td style="color: #64748b; font-weight: 600;">Origem &rarr; Destino:</td>
+                <td style="font-weight: 700; color: #0f172a;">${sol.origem || "Belo Horizonte - MG"} &rarr; ${sol.destino}</td>
+              </tr>
+              <tr>
+                <td style="color: #64748b; font-weight: 600;">Período:</td>
+                <td style="font-weight: 700; color: #0f172a;">${periodoFmt}</td>
+              </tr>
+              <tr>
+                <td style="color: #64748b; font-weight: 600;">Necessidades:</td>
+                <td style="color: #0f172a;">
+                  ${sol.necessidades?.aereo ? "✈️ Aéreo " : ""}
+                  ${sol.necessidades?.hotel ? "🏨 Hotel " : ""}
+                  ${sol.necessidades?.carro ? "🚗 Carro/Translado " : ""}
+                </td>
+              </tr>
+              ${sol.observacoesSolicitante ? `
+              <tr>
+                <td style="color: #64748b; font-weight: 600;">Observações:</td>
+                <td style="color: #334155; font-style: italic;">${sol.observacoesSolicitante}</td>
+              </tr>` : ""}
+            </table>
+          </div>
+
+          <div style="text-align: center; margin: 26px 0;">
+            <a href="${URL_SISTEMA_VIAGENS}" target="_blank" style="display: inline-block; background-color: #0284c7; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-size: 13.5px; font-weight: 700; box-shadow: 0 2px 6px rgba(2, 132, 199, 0.35);">
+              Acessar Painel da Agência &amp; Lançar Cotação
+            </a>
+          </div>
+
+          <p style="margin: 0; font-size: 12px; color: #94a3b8; border-top: 1px solid #f1f5f9; padding-top: 14px;">
+            Notificação automática disparada pelo Sistema NNÓS Gestão Financeira &amp; Projetos.
+          </p>
+        </div>
+      </div>
+    `;
+
+    await dispararEmail({
+      para: EMAIL_AGENCIA_OFICIAL,
+      cc: [EMAIL_GESTAO_PROJETOS],
+      assunto,
+      html,
+      texto: `Nova cotação de viagem pendente para ${sol.consultor} no projeto ${sol.projeto} (${periodoFmt}). Destino: ${sol.destino}. Acesse: ${URL_SISTEMA_VIAGENS}`,
+    });
+  } catch (err) {
+    console.warn("Aviso ao disparar e-mail de nova cotação para agência:", err);
+  }
+}
+
+/**
+ * Notificação 2: Dispara e-mail para o Líder de Projeto quando a Agência envia as cotações para aprovação
+ */
+export async function dispararNotificacaoCotacoesProntasLider(sol: ViagemSolicitacao, observacoesAgencia?: string) {
+  try {
+    const periodoFmt = formatarPeriodoBR(sol.dataInicial, sol.dataFinal);
+    const valorCotadoFmt = (sol.totalCotado || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    const assunto = `📋 [COTAÇÃO ENVIADA] Propostas de Viagem Prontas para Aprovação • ${sol.projeto} - ${sol.atividade}`;
+
+    const html = `
+      <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 650px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; overflow: hidden; color: #1e293b;">
+        <div style="background: linear-gradient(135deg, #00152f 0%, #0f2a4a 100%); padding: 22px 26px; color: #ffffff;">
+          <h2 style="margin: 0; font-size: 19px; font-weight: 800; letter-spacing: 0.5px;">NNÓS VIAGENS &amp; LOGÍSTICA</h2>
+          <p style="margin: 4px 0 0; font-size: 13px; color: #94a3b8;">Propostas de Viagem Aguardando Aprovação do Líder</p>
+        </div>
+        <div style="padding: 24px;">
+          <h3 style="color: #0f2a4a; font-size: 16px; margin-top: 0; font-weight: 700;">Olá, Líder de Projeto / Gestor(a)!</h3>
+          <p style="font-size: 13.5px; line-height: 1.6; color: #334155;">
+            A <strong>Agência Fátima</strong> cadastrou as alternativas de voo, hospedagem e translado para a viagem abaixo. Favor avaliar e aprovar a opção mais conveniente.
+          </p>
+
+          <div style="background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px; padding: 18px; margin: 20px 0;">
+            <h4 style="margin: 0 0 12px; font-size: 12px; text-transform: uppercase; color: #0369a1; letter-spacing: 0.5px; font-weight: 800;">
+              📋 RESUMO DAS COTAÇÕES:
+            </h4>
+            <table style="width: 100%; font-size: 13px; border-collapse: collapse; line-height: 1.7;">
+              <tr>
+                <td style="color: #64748b; width: 140px; font-weight: 600;">Projeto / Atividade:</td>
+                <td style="font-weight: 700; color: #0f172a;">${sol.projeto} - ${sol.atividade}</td>
+              </tr>
+              <tr>
+                <td style="color: #64748b; font-weight: 600;">Viajante:</td>
+                <td style="font-weight: 700; color: #0369a1;">${sol.consultor}</td>
+              </tr>
+              <tr>
+                <td style="color: #64748b; font-weight: 600;">Destino:</td>
+                <td style="font-weight: 700; color: #0f172a;">${sol.destino}</td>
+              </tr>
+              <tr>
+                <td style="color: #64748b; font-weight: 600;">Período:</td>
+                <td style="font-weight: 700; color: #0f172a;">${periodoFmt}</td>
+              </tr>
+              <tr>
+                <td style="color: #64748b; font-weight: 600;">Total Cotado:</td>
+                <td style="font-weight: 800; color: #166534; font-size: 14px;">${valorCotadoFmt}</td>
+              </tr>
+              ${observacoesAgencia ? `
+              <tr>
+                <td style="color: #64748b; font-weight: 600;">Obs. da Agência:</td>
+                <td style="color: #334155; font-style: italic;">${observacoesAgencia}</td>
+              </tr>` : ""}
+            </table>
+          </div>
+
+          <div style="text-align: center; margin: 26px 0;">
+            <a href="${URL_SISTEMA_VIAGENS}" target="_blank" style="display: inline-block; background-color: #059669; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-size: 13.5px; font-weight: 700; box-shadow: 0 2px 6px rgba(5, 150, 105, 0.35);">
+              Avaliar &amp; Aprovar Cotação
+            </a>
+          </div>
+
+          <p style="margin: 0; font-size: 12px; color: #94a3b8; border-top: 1px solid #f1f5f9; padding-top: 14px;">
+            Notificação automática disparada pelo Sistema NNÓS Gestão Financeira &amp; Projetos.
+          </p>
+        </div>
+      </div>
+    `;
+
+    await dispararEmail({
+      para: EMAIL_GESTAO_PROJETOS,
+      cc: [EMAIL_AGENCIA_OFICIAL],
+      assunto,
+      html,
+      texto: `Cotação de viagem cadastrada pela Agência Fátima para ${sol.consultor} no valor de ${valorCotadoFmt} (${sol.projeto}). Acesse para aprovar: ${URL_SISTEMA_VIAGENS}`,
+    });
+  } catch (err) {
+    console.warn("Aviso ao disparar e-mail de cotação pronta para o líder:", err);
+  }
+}
+
+/**
+ * Notificação 3: Dispara e-mail para a Agência quando o Líder aprova a cotação (liberando compra e emissão)
+ */
+export async function dispararNotificacaoCotacaoAprovadaAgencia(sol: ViagemSolicitacao, aprovadorNome: string) {
+  try {
+    const periodoFmt = formatarPeriodoBR(sol.dataInicial, sol.dataFinal);
+    const valorAprovadoFmt = (sol.totalAprovado || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    const assunto = `✅ [COTAÇÃO APROVADA] Liberado para Compra e Emissão • ${sol.projeto} - ${sol.atividade}`;
+
+    const html = `
+      <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 650px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; overflow: hidden; color: #1e293b;">
+        <div style="background: linear-gradient(135deg, #00152f 0%, #0f2a4a 100%); padding: 22px 26px; color: #ffffff;">
+          <h2 style="margin: 0; font-size: 19px; font-weight: 800; letter-spacing: 0.5px;">NNÓS VIAGENS &amp; LOGÍSTICA</h2>
+          <p style="margin: 4px 0 0; font-size: 13px; color: #94a3b8;">Cotação Aprovada · Autorização para Compra e Emissão</p>
+        </div>
+        <div style="padding: 24px;">
+          <h3 style="color: #0f2a4a; font-size: 16px; margin-top: 0; font-weight: 700;">Olá, Fátima e Equipe de Viagens!</h3>
+          <p style="font-size: 13.5px; line-height: 1.6; color: #334155;">
+            A cotação de viagem foi <strong>aprovada</strong> por <strong>${aprovadorNome || "Líder de Projeto"}</strong>. A solicitação está liberada para efetivação das compras, preenchimento dos localizadores e upload dos vouchers em PDF.
+          </p>
+
+          <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 18px; margin: 20px 0;">
+            <h4 style="margin: 0 0 12px; font-size: 12px; text-transform: uppercase; color: #166534; letter-spacing: 0.5px; font-weight: 800;">
+              ✅ ITENS APROVADOS:
+            </h4>
+            <table style="width: 100%; font-size: 13px; border-collapse: collapse; line-height: 1.7;">
+              <tr>
+                <td style="color: #64748b; width: 140px; font-weight: 600;">Projeto / Atividade:</td>
+                <td style="font-weight: 700; color: #0f172a;">${sol.projeto} - ${sol.atividade}</td>
+              </tr>
+              <tr>
+                <td style="color: #64748b; font-weight: 600;">Viajante:</td>
+                <td style="font-weight: 700; color: #0369a1;">${sol.consultor}</td>
+              </tr>
+              <tr>
+                <td style="color: #64748b; font-weight: 600;">Destino:</td>
+                <td style="font-weight: 700; color: #0f172a;">${sol.destino}</td>
+              </tr>
+              <tr>
+                <td style="color: #64748b; font-weight: 600;">Período:</td>
+                <td style="font-weight: 700; color: #0f172a;">${periodoFmt}</td>
+              </tr>
+              <tr>
+                <td style="color: #64748b; font-weight: 600;">Valor Aprovado:</td>
+                <td style="font-weight: 800; color: #166534; font-size: 14px;">${valorAprovadoFmt}</td>
+              </tr>
+            </table>
+          </div>
+
+          <div style="text-align: center; margin: 26px 0;">
+            <a href="${URL_SISTEMA_VIAGENS}" target="_blank" style="display: inline-block; background-color: #0284c7; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-size: 13.5px; font-weight: 700; box-shadow: 0 2px 6px rgba(2, 132, 199, 0.35);">
+              Emitir Passagens &amp; Anexar Vouchers
+            </a>
+          </div>
+
+          <p style="margin: 0; font-size: 12px; color: #94a3b8; border-top: 1px solid #f1f5f9; padding-top: 14px;">
+            Notificação automática disparada pelo Sistema NNÓS Gestão Financeira &amp; Projetos.
+          </p>
+        </div>
+      </div>
+    `;
+
+    await dispararEmail({
+      para: EMAIL_AGENCIA_OFICIAL,
+      cc: [EMAIL_GESTAO_PROJETOS],
+      assunto,
+      html,
+      texto: `Cotação aprovada para ${sol.consultor} no valor de ${valorAprovadoFmt} (${sol.projeto}). Favor emitir as passagens/vouchers em: ${URL_SISTEMA_VIAGENS}`,
+    });
+  } catch (err) {
+    console.warn("Aviso ao disparar e-mail de aprovação para agência:", err);
   }
 }
