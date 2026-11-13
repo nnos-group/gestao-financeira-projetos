@@ -31,8 +31,11 @@ export default function LoginPage() {
   const [sucesso, setSucesso] = useState<string | null>(null);
 
   const autenticarSessao = (userObj: any) => {
+    const perfilId = userObj.perfilId || "ADMIN";
+
     try {
       localStorage.setItem("nnos_usuario_logado_v1", JSON.stringify(userObj));
+      localStorage.setItem("nnos_perfil_ativo_id", perfilId);
       if (userObj.fotoUrl) {
         const fotosAtuais = JSON.parse(localStorage.getItem("nnos_fotos_usuarios_v1") || "{}");
         fotosAtuais[String(userObj.login || "").toLowerCase()] = userObj.fotoUrl;
@@ -41,8 +44,6 @@ export default function LoginPage() {
       }
       window.dispatchEvent(new CustomEvent("nnos-user-updated"));
     } catch {}
-
-    const perfilId = userObj.perfilId || "ADMIN";
 
     // Determina a rota autorizada de destino conforme o perfil oficial
     let rotaDestino = "/projetos";
@@ -65,8 +66,8 @@ export default function LoginPage() {
       setLiderSimulado(userObj.nome);
     }
 
-    ativarPerfil(perfilId, false);
-    router.push(rotaDestino);
+    ativarPerfil(perfilId, true);
+    window.location.href = rotaDestino;
   };
 
   const handleLogin = async (e: React.FormEvent) => {

@@ -1,23 +1,36 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import ThemeToggle from "@/components/ThemeToggle";
 import ModernDropdown from "@/components/ModernDropdown";
 import BotaoAjudaCentral from "@/components/BotaoAjudaCentral";
+import ModalPerfilUsuario, { IdentidadeUsuarioModal } from "@/components/ModalPerfilUsuario";
 import { useConsultor } from "@/contexts/ConsultorContext";
 
 interface ConsultorHeaderProps {
   tituloPagina?: string;
 }
 
+function obterIniciais(nome: string): string {
+  const partes = String(nome || "NN")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  if (partes.length === 0) return "NN";
+  if (partes.length === 1) return partes[0].slice(0, 2).toUpperCase();
+  return (partes[0][0] + partes[partes.length - 1][0]).toUpperCase();
+}
+
 export default function ConsultorHeader({ tituloPagina = "Visão Geral" }: ConsultorHeaderProps) {
   const router = useRouter();
   const { consultorAtivo, selecionarConsultorPorId, listaConsultores, carregando } = useConsultor();
   const [usuarioLogado, setUsuarioLogado] = useState<any | null>(null);
+  const [fotosPorChave, setFotosPorChave] = useState<Record<string, string>>({});
+  const [modalPerfilAberto, setModalPerfilAberto] = useState(false);
 
   useEffect(() => {
-    const carregarUsuario = () => {
+    const carregarUsuarioEFotos = () => {
       try {
         const saved = localStorage.getItem("nnos_usuario_logado_v1");
         if (saved) {
@@ -25,15 +38,49 @@ export default function ConsultorHeader({ tituloPagina = "Visão Geral" }: Consu
         } else {
           setUsuarioLogado(null);
         }
+        const savedFotos = localStorage.getItem("nnos_fotos_usuarios_v1");
+        if (savedFotos) {
+          setFotosPorChave(JSON.parse(savedFotos));
+        }
       } catch {}
     };
 
-    carregarUsuario();
-    window.addEventListener("nnos-user-updated", carregarUsuario);
-    return () => window.removeEventListener("nnos-user-updated", carregarUsuario);
+    carregarUsuarioEFotos();
+    window.addEventListener("nnos-user-updated", carregarUsuarioEFotos);
+    return () => window.removeEventListener("nnos-user-updated", carregarUsuarioEFotos);
   }, []);
 
   const isUsuarioAdmin = !usuarioLogado || usuarioLogado.perfilId === "ADMIN";
+
+  const consultorIdentidade: IdentidadeUsuarioModal = useMemo(() => {
+    const nome = consultorAtivo?.nome || usuarioLogado?.nome || "Consultor";
+    const login = (usuarioLogado?.login || consultorAtivo?.nome || "consultor")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/\s+/g, ".");
+    const email = consultorAtivo?.email || usuarioLogado?.email || `${login}@nnos.com.br`;
+    const cargo =
+      consultorAtivo?.tipo === "socio"
+        ? "Sócio / Parceiro • Consultor"
+        : `Consultor Especialista • ${consultorAtivo?.perfil || "Sênior"}`;
+    const foto =
+      fotosPorChave[login] ||
+      fotosPorChave[nome.toUpperCase()] ||
+      usuarioLogado?.fotoUrl ||
+      consultorAtivo?.fotoUrl ||
+      "";
+
+    return {
+      id: consultorAtivo?.id || usuarioLogado?.id,
+      login,
+      nome,
+      email,
+      cargo,
+      fotoUrl: foto,
+      mfaSecret: usuarioLogado?.mfaSecret || "NNOSMFA2026KEY",
+    };
+  }, [consultorAtivo, usuarioLogado, fotosPorChave]);
 
   const handleLogout = async () => {
     try {
@@ -42,20 +89,21 @@ export default function ConsultorHeader({ tituloPagina = "Visão Geral" }: Consu
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           acao: "LOGOUT",
-          login: usuarioLogado?.login || consultorAtivo?.nome || "consultor",
-          nome: consultorAtivo?.nome,
+          login: consultorIdentidade.login,
+          nome: consultorIdentidade.nome,
           perfilId: usuarioLogado?.perfilId || "CONSULTOR",
         }),
       });
     } catch {}
     try {
       localStorage.removeItem("nnos_usuario_logado_v1");
+      localStorage.removeItem("nnos_perfil_ativo_id");
       localStorage.removeItem("nnos_consultor_simulado_id");
       localStorage.removeItem("nnos_consultor_simulado_nome");
       localStorage.removeItem("nnos_consultor_simulado_obj");
       window.dispatchEvent(new CustomEvent("nnos-user-updated"));
     } catch {}
-    router.push("/login");
+    window.location.href = "/login";
   };
 
   const optionsConsultores = listaConsultores.map((c) => ({
@@ -183,36 +231,101 @@ export default function ConsultorHeader({ tituloPagina = "Visão Geral" }: Consu
           <span>Sair</span>
         </button>
 
-        {/* Perfil do Consultor */}
-        <div className="header-user" style={{ cursor: "default" }}>
+        {/* Perfil do Consultor - Clicável para Foto, Senha e Google MFA */}
+        <div
+          className="header-user"
+          onClick={() => setModalPerfilAberto(true)}
+          title="Clique para alterar sua foto de perfil, senha ou Google Authenticator"
+          style={{
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            padding: "4px 8px 4px 10px",
+            borderRadius: "12px",
+            transition: "background-color 0.15s ease",
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--surface-container)")}
+          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+        >
           <div className="user-details" style={{ textAlign: "right" }}>
-            <strong style={{ fontSize: "12px", color: "var(--primary)" }}>
-              {consultorAtivo?.nome || "Carregando..."}
+            <strong style={{ fontSize: "12.5px", color: "var(--primary)", display: "block", lineHeight: 1.2 }}>
+              {consultorIdentidade.nome}
             </strong>
-            <span style={{ fontSize: "10px", color: "var(--on-surface-variant)" }}>
-              {consultorAtivo?.tipo === "socio" ? "Sócio / Parceiro" : (consultorAtivo?.perfil || "Consultor")}
+            <span style={{ fontSize: "11px", color: "var(--on-surface-variant)", display: "block", lineHeight: 1.2 }}>
+              {consultorIdentidade.cargo}
             </span>
           </div>
+
           <div
             className="user-avatar"
             style={{
+              position: "relative",
               backgroundColor: "#e0f2fe",
               color: "#0369a1",
               fontWeight: 700,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              width: "36px",
-              height: "36px",
+              width: "38px",
+              height: "38px",
               borderRadius: "50%",
+              overflow: "visible",
             }}
           >
-            <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>
-              badge
+            {consultorIdentidade.fotoUrl ? (
+              <img
+                src={consultorIdentidade.fotoUrl}
+                alt={consultorIdentidade.nome}
+                style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }}
+              />
+            ) : (
+              <span style={{ fontSize: "13px", fontWeight: 800 }}>
+                {obterIniciais(consultorIdentidade.nome)}
+              </span>
+            )}
+
+            {/* Badge de Câmera */}
+            <span
+              style={{
+                position: "absolute",
+                bottom: "-2px",
+                right: "-2px",
+                width: "16px",
+                height: "16px",
+                borderRadius: "50%",
+                backgroundColor: "#0284c7",
+                color: "#ffffff",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                border: "1.5px solid #ffffff",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.25)",
+              }}
+              title="Alterar Foto de Perfil"
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: "10px" }}>
+                photo_camera
+              </span>
             </span>
           </div>
         </div>
       </div>
+
+      {/* Modal Oficial de Perfil do Usuário (Foto, Senha e Google MFA) */}
+      <ModalPerfilUsuario
+        aberto={modalPerfilAberto}
+        onFechar={() => setModalPerfilAberto(false)}
+        identidade={consultorIdentidade}
+        onFotoAtualizada={(novaFoto) => {
+          const login = consultorIdentidade.login;
+          setFotosPorChave((prev) => ({
+            ...prev,
+            [login]: novaFoto,
+            [consultorIdentidade.nome.toUpperCase()]: novaFoto,
+          }));
+        }}
+      />
     </header>
   );
 }

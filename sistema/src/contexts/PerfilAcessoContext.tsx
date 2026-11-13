@@ -677,7 +677,7 @@ export function PerfilAcessoProvider({ children }: { children: React.ReactNode }
               <div style={{ color: "var(--on-surface)" }}>
                 <ModernDropdown
                   value={perfilAtivoId}
-                  onChange={(val) => ativarPerfil(String(val), false)}
+                  onChange={(val) => ativarPerfil(String(val), true)}
                   options={opcoesPerfisDropdown}
                   icon="badge"
                   minWidth={220}

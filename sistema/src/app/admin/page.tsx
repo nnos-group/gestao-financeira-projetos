@@ -981,11 +981,7 @@ export default function AdminPage() {
                   <button
                     type="button"
                     onClick={() => {
-                      if (perfilAtual.id === "CONSULTOR") {
-                        router.push("/consultor");
-                      } else {
-                        ativarPerfil(perfilAtual.id, true);
-                      }
+                      ativarPerfil(perfilAtual.id, true);
                     }}
                     style={{
                       display: "inline-flex",

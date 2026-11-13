@@ -233,7 +233,7 @@
         "rota": "/contratos",
         "icone": "history_edu",
         "visivel": true,
-        "nivel": "TOTAL",
+        "nivel": "VISUALIZAR",
         "abaPadrao": "Dashboard de Contratos",
         "observacao": "Visibilidade executiva da carteira comercial, receitas recorrentes e vencimentos."
       },
@@ -302,8 +302,8 @@
         "nome": "Consultor",
         "rota": "/consultor",
         "icone": "support_agent",
-        "visivel": true,
-        "nivel": "TOTAL",
+        "visivel": false,
+        "nivel": "BLOQUEADO",
         "abaPadrao": "Meus BMs & Entregas",
         "observacao": "Acesso ao portal individual para conferência de suas próprias alocações."
       },
