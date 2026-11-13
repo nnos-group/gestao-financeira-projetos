@@ -268,6 +268,7 @@ export default function AdminPage() {
     { value: "/projetos", label: "Projetos & Atividades (/projetos)" },
     { value: "/medicao", label: "BM - Boletim de Medição (/medicao)" },
     { value: "/viagens", label: "Viagens & Logística (/viagens)" },
+    { value: "/contratos", label: "Gestão de Contratos (/contratos)" },
     { value: "/consultor", label: "Portal do Consultor (/consultor)" },
     { value: "/faturamento", label: "Faturamento (/faturamento)" },
     { value: "/pagamentos", label: "Pagamentos (/pagamentos)" },

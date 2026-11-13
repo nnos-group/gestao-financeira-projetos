@@ -723,6 +723,16 @@
         "observacao": "Pré-selecionado na aba Agência de Viagens: inserir cotações, anexar PDFs e enviar vouchers."
       },
       {
+        "id": "contratos",
+        "nome": "Gestão de Contratos",
+        "rota": "/contratos",
+        "icone": "history_edu",
+        "visivel": false,
+        "nivel": "BLOQUEADO",
+        "abaPadrao": "Dashboard de Contratos",
+        "observacao": "Centralização, inteligência artificial documental, linha do tempo Gantt e monitoramento de 90 dias."
+      },
+      {
         "id": "pessoas",
         "nome": "Pessoas",
         "rota": "/pessoas",
@@ -923,6 +933,16 @@
         "observacao": "Consulta de bilhetes, vouchers e políticas de prestação de contas (CNH/Iveco/NNÓS)."
       },
       {
+        "id": "contratos",
+        "nome": "Gestão de Contratos",
+        "rota": "/contratos",
+        "icone": "history_edu",
+        "visivel": false,
+        "nivel": "BLOQUEADO",
+        "abaPadrao": "Dashboard de Contratos",
+        "observacao": "Centralização, inteligência artificial documental, linha do tempo Gantt e monitoramento de 90 dias."
+      },
+      {
         "id": "relatorios",
         "nome": "Relatórios",
         "rota": "/relatorios",
@@ -1026,11 +1046,6 @@
     "descricao": "Acesso estrito ao Portal do Consultor (/consultor): visualização exclusiva da própria agenda, vouchers de viagem, políticas de reembolso, BMs para emissão de NF e histórico de pagamentos.",
     "usuariosVinculados": [
       {
-        "nome": "TIAGO ANGELO",
-        "email": "tiago.angelo@nnos.com.br",
-        "cargo": "Consultor Especialista & Instrutor"
-      },
-      {
         "nome": "ALEJANDRO LAPUENTE",
         "email": "alejandrolapuente@hotmail.com",
         "cargo": "Consultor Parceiro Sênior"
@@ -1116,6 +1131,16 @@
         "nivel": "BLOQUEADO",
         "abaPadrao": "Bloqueado (Usa /consultor/viagens)",
         "observacao": "Visualiza apenas seus próprios vouchers e políticas em /consultor/viagens."
+      },
+      {
+        "id": "contratos",
+        "nome": "Gestão de Contratos",
+        "rota": "/contratos",
+        "icone": "history_edu",
+        "visivel": false,
+        "nivel": "BLOQUEADO",
+        "abaPadrao": "Dashboard de Contratos",
+        "observacao": "Centralização, inteligência artificial documental, linha do tempo Gantt e monitoramento de 90 dias."
       },
       {
         "id": "centro-de-custo",

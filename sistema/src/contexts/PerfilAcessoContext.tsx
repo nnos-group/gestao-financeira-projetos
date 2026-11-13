@@ -109,6 +109,42 @@ function normalizarListaPerfis(lista: PerfilAcessoItem[]): PerfilAcessoItem[] {
     }
   }
 
+  // Garantir que todos os perfis possuam o módulo "contratos"
+  for (const p of resultado) {
+    if (!Array.isArray(p.modulos)) continue;
+    const temContratos = p.modulos.some((m: any) => m.id === "contratos");
+    if (!temContratos) {
+      const modPadrao = (perfisIniciais as unknown as PerfilAcessoItem[])
+        .find((pad) => pad.id === p.id)
+        ?.modulos?.find((m: any) => m.id === "contratos");
+
+      const novoModuloContratos = modPadrao
+        ? { ...modPadrao }
+        : {
+            id: "contratos",
+            nome: "Gestão de Contratos",
+            rota: "/contratos",
+            icone: "history_edu",
+            visivel: p.id === "ADMIN" || p.id === "DIRETORIA" || p.id === "LIDER" || p.id === "FINANCEIRO",
+            nivel:
+              p.id === "ADMIN" || p.id === "DIRETORIA" || p.id === "FINANCEIRO"
+                ? "TOTAL"
+                : p.id === "LIDER"
+                ? "OPERACIONAL"
+                : "BLOQUEADO",
+            abaPadrao: p.id === "LIDER" ? "Contratos Cadastrados" : "Dashboard de Contratos",
+            observacao: "Consulta a contratos de sua carteira, escopo técnico, perfis e vigência.",
+          };
+
+      const idxViagens = p.modulos.findIndex((m: any) => m.id === "viagens");
+      if (idxViagens >= 0) {
+        p.modulos.splice(idxViagens + 1, 0, novoModuloContratos);
+      } else {
+        p.modulos.splice(3, 0, novoModuloContratos);
+      }
+    }
+  }
+
   return resultado;
 }
 
@@ -435,30 +471,27 @@ export function PerfilAcessoProvider({ children }: { children: React.ReactNode }
 
   // CSS Dinâmico para ocultar do menu lateral (.sidebar-nav) os módulos não autorizados para o perfil ativo
   const cssRestricaoMenu = useMemo(() => {
-    if (!hidratado || perfilAtivoId === "ADMIN") return "";
+    if (!hidratado) return "";
 
     const regrasCss: string[] = [];
+
+    // O menu "Líder de Projeto" (/lider) e "Administrador" (/admin) são botões EXCLUSIVOS do Administrador
+    if (perfilAtivoId !== "ADMIN") {
+      regrasCss.push(`.sidebar-nav a.nav-item[href="/lider"] { display: none !important; }`);
+      regrasCss.push(`.sidebar-nav a.nav-item[href^="/lider/"] { display: none !important; }`);
+      regrasCss.push(`.sidebar-nav a.nav-item[href="/admin"] { display: none !important; }`);
+      regrasCss.push(`.sidebar-nav a.nav-item[href^="/admin/"] { display: none !important; }`);
+    }
+
+    if (perfilAtivoId === "ADMIN") return regrasCss.join("\n");
+
     const modulos = perfilAtivoObj?.modulos || [];
 
     for (const mod of modulos) {
       if (!mod.visivel || mod.nivel === "BLOQUEADO") {
-        // Não oculta o próprio botão "Líder de Projeto" quando estamos no perfil LIDER
-        if (perfilAtivoId === "LIDER" && mod.rota === "/lider") continue;
         regrasCss.push(`.sidebar-nav a.nav-item[href="${mod.rota}"] { display: none !important; }`);
         regrasCss.push(`.sidebar-nav a.nav-item[href^="${mod.rota}/"] { display: none !important; }`);
       }
-    }
-
-    // Destaca o item "Líder de Projeto" no menu lateral quando a visão de Líder está ativa
-    if (perfilAtivoId === "LIDER") {
-      regrasCss.push(`
-        .sidebar-nav a.nav-item[href="/lider"] {
-          background: rgba(3, 105, 161, 0.14) !important;
-          color: #38bdf8 !important;
-          border-left: 3px solid #38bdf8 !important;
-          font-weight: 700 !important;
-        }
-      `);
     }
 
     return regrasCss.join("\n");
@@ -470,6 +503,20 @@ export function PerfilAcessoProvider({ children }: { children: React.ReactNode }
     if (!pathname || pathname === "/" || pathname === "/lider" || pathname.startsWith("/login")) return false;
     return !temAcessoModulo(pathname);
   }, [hidratado, perfilAtivoId, pathname, temAcessoModulo]);
+
+  // Redirecionamento Automático Imediato: Se a rota acessada for restrita para o perfil ativo,
+  // vai direto para a tela autorizada do usuário, sem modal ou telas intermediárias de aviso.
+  useEffect(() => {
+    if (rotaAtualBloqueada) {
+      const rotaAlvo =
+        perfilAtivoObj?.rotaPadrao && perfilAtivoObj.rotaPadrao !== "/lider"
+          ? perfilAtivoObj.rotaPadrao
+          : perfilAtivoId === "CONSULTOR" || perfilAtivoId === "SOCIO"
+          ? "/consultor"
+          : "/projetos";
+      router.replace(rotaAlvo);
+    }
+  }, [rotaAtualBloqueada, perfilAtivoObj, perfilAtivoId, router]);
 
   const exibirBarraSimulacao =
     hidratado &&
@@ -696,116 +743,9 @@ export function PerfilAcessoProvider({ children }: { children: React.ReactNode }
         </div>
       )}
 
-      {/* Bloqueio de Rota Não Autorizada para o Perfil Ativo */}
+      {/* Bloqueio de Rota Não Autorizada para o Perfil Ativo - Redirecionamento Automático Imediato */}
       {rotaAtualBloqueada ? (
-        <div
-          style={{
-            marginLeft: "var(--sidebar-w, 232px)",
-            minHeight: "calc(100vh - 60px)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "32px",
-            backgroundColor: "var(--background)",
-          }}
-        >
-          <div
-            style={{
-              maxWidth: "520px",
-              width: "100%",
-              backgroundColor: "var(--surface-container-lowest)",
-              border: "1px solid var(--border)",
-              borderRadius: "16px",
-              padding: "32px",
-              textAlign: "center",
-              boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
-            }}
-          >
-            <div
-              style={{
-                width: "56px",
-                height: "56px",
-                borderRadius: "14px",
-                backgroundColor: "#fee2e2",
-                color: "#dc2626",
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                marginBottom: "16px",
-              }}
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: "30px" }}>
-                gpp_maybe
-              </span>
-            </div>
-            <h2 style={{ fontSize: "19px", fontWeight: 800, color: "var(--on-surface)", margin: "0 0 8px 0" }}>
-              Módulo Restrito para o Perfil {perfilAtivoObj?.nome}
-            </h2>
-            <p style={{ fontSize: "13.5px", color: "var(--on-surface-variant)", lineHeight: 1.6, margin: "0 0 22px 0" }}>
-              A tela <strong>{pathname}</strong> não está habilitada para o perfil{" "}
-              <strong>{perfilAtivoObj?.sigla}</strong> conforme configurado na matriz de segurança do Painel de
-              Administrador.
-            </p>
-            <div style={{ display: "flex", justifyContent: "center", gap: "10px", flexWrap: "wrap" }}>
-              <button
-                type="button"
-                onClick={() => {
-                  const rotaAlvo =
-                    perfilAtivoObj?.rotaPadrao && perfilAtivoObj.rotaPadrao !== "/lider"
-                      ? perfilAtivoObj.rotaPadrao
-                      : perfilAtivoId === "CONSULTOR" || perfilAtivoId === "SOCIO"
-                      ? "/consultor"
-                      : "/projetos";
-                  router.push(rotaAlvo);
-                }}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  padding: "9px 16px",
-                  borderRadius: "8px",
-                  border: "none",
-                  backgroundColor: "var(--primary)",
-                  color: "#ffffff",
-                  fontSize: "12.5px",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                }}
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: "17px" }}>
-                  arrow_back
-                </span>
-                <span>Ir para Tela Autorizada</span>
-              </button>
-
-              {isUsuarioAdminReal && (
-                <button
-                  type="button"
-                  onClick={voltarParaAdmin}
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    padding: "9px 16px",
-                    borderRadius: "8px",
-                    border: "1px solid var(--border)",
-                    backgroundColor: "var(--surface-container-low)",
-                    color: "var(--on-surface)",
-                    fontSize: "12.5px",
-                    fontWeight: 700,
-                    cursor: "pointer",
-                  }}
-                  title="Desativar modo simulação e restaurar visão de Administrador"
-                >
-                  <span className="material-symbols-outlined" style={{ fontSize: "17px" }}>
-                    admin_panel_settings
-                  </span>
-                  <span>Desativar Restrição (Acesso Total)</span>
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
+        <div style={{ minHeight: "100vh", backgroundColor: "var(--background)" }} />
       ) : !hidratado ? (
         <div style={{ minHeight: "100vh", backgroundColor: "var(--background)" }} />
       ) : (

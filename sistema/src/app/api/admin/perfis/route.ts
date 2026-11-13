@@ -62,6 +62,56 @@ function normalizarPerfisSeparados(lista: any[]): { perfis: any[]; migrado: bool
     }
   }
 
+  // Garantir que todos os perfis possuam o módulo "contratos" (Gestão de Contratos)
+  for (const p of copia) {
+    if (!Array.isArray(p.modulos)) continue;
+    const temContratos = p.modulos.some((m: any) => m.id === "contratos");
+    const modPadrao = (perfisPadrao as any[])
+      .find((pad) => pad.id === p.id)
+      ?.modulos?.find((m: any) => m.id === "contratos");
+
+    const visivelPadrao = p.id === "ADMIN" || p.id === "DIRETORIA" || p.id === "LIDER" || p.id === "FINANCEIRO";
+    const nivelPadrao =
+      p.id === "ADMIN" || p.id === "DIRETORIA" || p.id === "FINANCEIRO"
+        ? "TOTAL"
+        : p.id === "LIDER"
+        ? "OPERACIONAL"
+        : "BLOQUEADO";
+
+    if (!temContratos) {
+      migrado = true;
+      const novoModuloContratos = {
+        id: "contratos",
+        nome: "Gestão de Contratos",
+        rota: "/contratos",
+        icone: "history_edu",
+        visivel: modPadrao ? modPadrao.visivel : visivelPadrao,
+        nivel: modPadrao ? modPadrao.nivel : nivelPadrao,
+        abaPadrao: p.id === "LIDER" ? "Contratos Cadastrados" : "Dashboard de Contratos",
+        observacao:
+          p.id === "LIDER"
+            ? "Consulta a contratos de sua carteira, escopo técnico, perfis e vigência."
+            : "Centralização, inteligência artificial documental, linha do tempo Gantt e monitoramento de 90 dias.",
+      };
+
+      // Inserir logo após "viagens" ou no índice 3
+      const idxViagens = p.modulos.findIndex((m: any) => m.id === "viagens");
+      if (idxViagens >= 0) {
+        p.modulos.splice(idxViagens + 1, 0, novoModuloContratos);
+      } else {
+        p.modulos.splice(3, 0, novoModuloContratos);
+      }
+    } else if (p.id === "AGENCIA" || p.id === "SOCIO" || p.id === "CONSULTOR") {
+      // Corrige caso tenha herdado TOTAL temporariamente
+      const c = p.modulos.find((m: any) => m.id === "contratos");
+      if (c && c.nivel === "TOTAL") {
+        c.visivel = false;
+        c.nivel = "BLOQUEADO";
+        migrado = true;
+      }
+    }
+  }
+
   return { perfis: copia, migrado };
 }
 
