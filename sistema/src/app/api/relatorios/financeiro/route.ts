@@ -23,6 +23,46 @@ function lerParametros(): Record<string, ParametrosAno> {
   }
 }
 
+async function lerParametrosAsync(): Promise<Record<string, ParametrosAno>> {
+  try {
+    const db = supabaseAdmin();
+    const { data, error } = await db
+      .from("configuracoes")
+      .select("descricao")
+      .eq("chave", "dre_parametros")
+      .maybeSingle();
+    if (!error && data?.descricao) {
+      const parsed = JSON.parse(data.descricao);
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        return parsed as Record<string, ParametrosAno>;
+      }
+    }
+  } catch (e) {
+    console.warn("Aviso ao ler dre_parametros no Supabase:", e);
+  }
+  return lerParametros();
+}
+
+async function salvarParametrosAsync(todos: Record<string, ParametrosAno>): Promise<void> {
+  try {
+    fs.writeFileSync(ARQ, JSON.stringify(todos, null, 2), "utf8");
+  } catch {
+    // Em ambiente serverless (Vercel) o sistema de arquivos local é somente leitura
+  }
+  const db = supabaseAdmin();
+  const { error } = await db.from("configuracoes").upsert(
+    {
+      chave: "dre_parametros",
+      valor: Object.keys(todos).length,
+      descricao: JSON.stringify(todos),
+    },
+    { onConflict: "chave" }
+  );
+  if (error) {
+    throw new Error(`Erro ao salvar parâmetros no Supabase: ${error.message}`);
+  }
+}
+
 async function buscarLancamentos(ano: number): Promise<LancamentoDRE[]> {
   const db = supabaseAdmin();
   const todos: LancamentoDRE[] = [];
@@ -111,7 +151,8 @@ export async function GET(req: Request) {
     const mesFinal = Math.min(12, Math.max(mesInicial, Number(sp.get("mesFinal")) || 12));
     const tipoReceita = sp.get("tipoReceita") === "faturado" ? "faturado" : "previsto";
 
-    const params = lerParametros()[String(ano)] ?? parametrosPadrao();
+    const todosParams = await lerParametrosAsync();
+    const params = todosParams[String(ano)] ?? parametrosPadrao();
     const lancs = await buscarLancamentos(ano);
 
     const receitasFaturadas =
@@ -154,9 +195,9 @@ export async function PUT(req: Request) {
     if (!body?.ano || !body?.parametros?.meses) {
       return NextResponse.json({ ok: false, error: "Payload inválido" }, { status: 400 });
     }
-    const todos = lerParametros();
+    const todos = await lerParametrosAsync();
     todos[String(body.ano)] = body.parametros;
-    fs.writeFileSync(ARQ, JSON.stringify(todos, null, 2), "utf8");
+    await salvarParametrosAsync(todos);
     return NextResponse.json({ ok: true });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "Erro ao salvar parâmetros";
