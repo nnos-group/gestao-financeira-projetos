@@ -1314,6 +1314,41 @@ export default function GestaoUsuariosELogs({ modo, perfis, onToast }: Props) {
           </span>
           <span>{carregando ? "Atualizando..." : "Atualizar Log"}</span>
         </button>
+        <button
+          type="button"
+          onClick={async () => {
+            if (!window.confirm("Deseja limpar todos os registros do histórico de logs?")) return;
+            setCarregando(true);
+            try {
+              const res = await fetch("/api/admin/logs-acesso", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ acao: "LIMPAR_LOGS" }),
+              });
+              if (res.ok) setLogs([]);
+            } finally {
+              setCarregando(false);
+            }
+          }}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "6px",
+            padding: "8px 14px",
+            borderRadius: "9px",
+            border: "1px solid #fecaca",
+            backgroundColor: "#fef2f2",
+            color: "#dc2626",
+            fontSize: "12px",
+            fontWeight: 700,
+            cursor: "pointer",
+          }}
+        >
+          <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
+            delete_sweep
+          </span>
+          <span>Limpar Logs</span>
+        </button>
       </div>
 
       {/* Tabela de Monitoramento de Log de Acesso */}

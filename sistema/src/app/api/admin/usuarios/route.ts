@@ -1,15 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
-  lerUsuarios,
-  salvarUsuarios,
-  registrarLogSeguranca,
+  lerUsuariosAsync,
+  salvarUsuariosAsync,
+  registrarLogSegurancaAsync,
   gerarCodigoTotp,
   gerarNovoSegredoBase32,
 } from "@/lib/usuarios-service";
 
 export async function GET() {
   try {
-    const lista = lerUsuarios().map((u) => ({
+    const listaBase = await lerUsuariosAsync();
+    const lista = listaBase.map((u) => ({
       ...u,
       totpAtual: gerarCodigoTotp(u.mfaSecret || "JBSWY3DPEHPK3PXP"),
     }));
@@ -23,7 +24,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const acao = body.acao || "CRIAR_OU_EDITAR";
-    let usuarios = lerUsuarios();
+    let usuarios = await lerUsuariosAsync();
 
     if (acao === "ATUALIZAR_FOTO") {
       const { id, login, nome, fotoUrl } = body;
@@ -38,7 +39,7 @@ export async function POST(req: NextRequest) {
         }
         return u;
       });
-      salvarUsuarios(usuarios);
+      await salvarUsuariosAsync(usuarios);
       return NextResponse.json({ ok: true, usuario: atualizado, usuarios });
     }
 
@@ -55,9 +56,9 @@ export async function POST(req: NextRequest) {
         }
         return u;
       });
-      salvarUsuarios(usuarios);
+      await salvarUsuariosAsync(usuarios);
       if (alvo) {
-        registrarLogSeguranca({
+        await registrarLogSegurancaAsync({
           usuarioLogin: alvo.login,
           usuarioNome: alvo.nome,
           usuarioEmail: alvo.email,
@@ -82,9 +83,9 @@ export async function POST(req: NextRequest) {
         }
         return u;
       });
-      salvarUsuarios(usuarios);
+      await salvarUsuariosAsync(usuarios);
       if (alvo) {
-        registrarLogSeguranca({
+        await registrarLogSegurancaAsync({
           usuarioLogin: alvo.login,
           usuarioNome: alvo.nome,
           usuarioEmail: alvo.email,
@@ -102,9 +103,9 @@ export async function POST(req: NextRequest) {
       const { id } = body;
       const removido = usuarios.find((u) => u.id === id);
       usuarios = usuarios.filter((u) => u.id !== id);
-      salvarUsuarios(usuarios);
+      await salvarUsuariosAsync(usuarios);
       if (removido) {
-        registrarLogSeguranca({
+        await registrarLogSegurancaAsync({
           usuarioLogin: removido.login,
           usuarioNome: removido.nome,
           usuarioEmail: removido.email,
@@ -134,8 +135,8 @@ export async function POST(req: NextRequest) {
         mfaSecret: uData.mfaSecret || atual.mfaSecret || gerarNovoSegredoBase32(),
       };
       usuarios[existeIdx] = editado;
-      salvarUsuarios(usuarios);
-      registrarLogSeguranca({
+      await salvarUsuariosAsync(usuarios);
+      await registrarLogSegurancaAsync({
         usuarioLogin: editado.login,
         usuarioNome: editado.nome,
         usuarioEmail: editado.email,
@@ -163,8 +164,8 @@ export async function POST(req: NextRequest) {
         criadoEm: new Date().toISOString(),
       };
       usuarios.push(novo);
-      salvarUsuarios(usuarios);
-      registrarLogSeguranca({
+      await salvarUsuariosAsync(usuarios);
+      await registrarLogSegurancaAsync({
         usuarioLogin: novo.login,
         usuarioNome: novo.nome,
         usuarioEmail: novo.email,

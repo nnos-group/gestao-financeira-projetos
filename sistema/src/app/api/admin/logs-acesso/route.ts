@@ -1,27 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
-import logsPadrao from "@/lib/logs-acesso.json";
-import { registrarLogSeguranca } from "@/lib/usuarios-service";
+import {
+  lerLogsAsync,
+  salvarLogsAsync,
+  registrarLogSegurancaAsync,
+} from "@/lib/usuarios-service";
 
-const LOGS_PATH = path.join(process.cwd(), "src", "lib", "logs-acesso.json");
-
-function lerLogs(): any[] {
-  try {
-    if (fs.existsSync(LOGS_PATH)) {
-      const raw = fs.readFileSync(LOGS_PATH, "utf-8");
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) return parsed;
-    }
-  } catch (e) {
-    console.warn("Aviso ao ler logs-acesso.json:", e);
-  }
-  return logsPadrao as any[];
+function extrairIpCliente(req: NextRequest): string {
+  const forwarded = req.headers.get("x-forwarded-for");
+  if (forwarded) return forwarded.split(",")[0].trim();
+  const realIp = req.headers.get("x-real-ip");
+  if (realIp) return realIp.trim();
+  return "189.40.112.84";
 }
 
 export async function GET() {
   try {
-    const logs = lerLogs();
+    const logs = await lerLogsAsync();
     return NextResponse.json({ logs });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -31,12 +25,15 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    if (body.acao === "RESTAURAR_PADRAO") {
-      fs.writeFileSync(LOGS_PATH, JSON.stringify(logsPadrao, null, 2), "utf-8");
-      return NextResponse.json({ ok: true, logs: logsPadrao });
+
+    if (body.acao === "LIMPAR_LOGS" || body.acao === "RESTAURAR_PADRAO") {
+      await salvarLogsAsync([]);
+      return NextResponse.json({ ok: true, logs: [] });
     }
 
-    registrarLogSeguranca({
+    const ipCliente = body.ip || extrairIpCliente(req);
+
+    await registrarLogSegurancaAsync({
       usuarioLogin: body.usuarioLogin || "sistema",
       usuarioNome: body.usuarioNome || "Usuário do Sistema",
       usuarioEmail: body.usuarioEmail || "sistema@nnos.com.br",
@@ -44,15 +41,14 @@ export async function POST(req: NextRequest) {
       evento: body.evento || "ACESSO_SISTEMA",
       metodo: body.metodo || "Sessão Web",
       status: body.status || "SUCESSO",
-      ip: body.ip || "189.40.112.84",
+      ip: ipCliente,
       dispositivo: body.dispositivo || "Windows • Navegador Corporativo",
       detalhes: body.detalhes || "Evento registrado pelo monitoramento de segurança.",
     });
 
-    const logs = lerLogs();
+    const logs = await lerLogsAsync();
     return NextResponse.json({ ok: true, logs });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
-

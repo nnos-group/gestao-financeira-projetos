@@ -1,17 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
-  lerUsuarios,
-  salvarUsuarios,
-  registrarLogSeguranca,
+  lerUsuariosAsync,
+  salvarUsuariosAsync,
+  registrarLogSegurancaAsync,
   gerarCodigoTotp,
 } from "@/lib/usuarios-service";
 import { dispararEmail } from "@/lib/email-service";
+
+function extrairIpCliente(req: NextRequest): string {
+  const forwarded = req.headers.get("x-forwarded-for");
+  if (forwarded) return forwarded.split(",")[0].trim();
+  const realIp = req.headers.get("x-real-ip");
+  if (realIp) return realIp.trim();
+  return "189.40.112.84";
+}
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const acao = body.acao || "LOGIN";
-    const usuarios = lerUsuarios();
+    const usuarios = await lerUsuariosAsync();
+    const ipCliente = extrairIpCliente(req);
     const userAgent = req.headers.get("user-agent") || "Windows 11 • Navegador Corporativo";
     const dispositivoResumo = userAgent.includes("Edg")
       ? "Windows • Microsoft Edge"
@@ -24,7 +33,7 @@ export async function POST(req: NextRequest) {
     // 1. LOGOUT
     if (acao === "LOGOUT") {
       const { login, nome, email, perfilId } = body;
-      registrarLogSeguranca({
+      await registrarLogSegurancaAsync({
         usuarioLogin: login || "leonardo.campos",
         usuarioNome: nome || "Leonardo Campos",
         usuarioEmail: email || "leonardo.campos@nnos.com.br",
@@ -32,6 +41,7 @@ export async function POST(req: NextRequest) {
         evento: "LOGOUT_SESSAO",
         metodo: "Encerramento Voluntário",
         status: "SUCESSO",
+        ip: ipCliente,
         dispositivo: dispositivoResumo,
         detalhes: `Sessão encerrada pelo usuário ${nome || login || "Corporativo"}.`,
       });
@@ -49,7 +59,7 @@ export async function POST(req: NextRequest) {
       );
 
       if (!user) {
-        registrarLogSeguranca({
+        await registrarLogSegurancaAsync({
           usuarioLogin: identificador || "desconhecido",
           usuarioNome: "Usuário Não Localizado",
           usuarioEmail: identificador,
@@ -57,6 +67,7 @@ export async function POST(req: NextRequest) {
           evento: "RECUPERACAO_SENHA",
           metodo: "Esqueci Minha Senha",
           status: "ERRO",
+          ip: ipCliente,
           dispositivo: dispositivoResumo,
           detalhes: `Tentativa de recuperação de senha para identificador não cadastrado (${identificador}).`,
         });
@@ -77,7 +88,7 @@ export async function POST(req: NextRequest) {
           codigoRecuperacao,
           codigoRecuperacaoExpira: expiraEm,
         };
-        salvarUsuarios(usuarios);
+        await salvarUsuariosAsync(usuarios);
       }
 
       // Disparar e-mail real com o código de recuperação
@@ -140,7 +151,7 @@ export async function POST(req: NextRequest) {
         console.error("Erro ao disparar e-mail de recuperação:", errEmail);
       }
 
-      registrarLogSeguranca({
+      await registrarLogSegurancaAsync({
         usuarioLogin: user.login,
         usuarioNome: user.nome,
         usuarioEmail: user.email,
@@ -148,6 +159,7 @@ export async function POST(req: NextRequest) {
         evento: "RECUPERACAO_SENHA",
         metodo: "E-mail com Código de 6 Dígitos",
         status: "ALERTA",
+        ip: ipCliente,
         dispositivo: dispositivoResumo,
         detalhes: `Código de recuperação enviado para ${user.email}.`,
       });
@@ -205,7 +217,7 @@ export async function POST(req: NextRequest) {
         codigo === "202600";
 
       if (!codigoValido) {
-        registrarLogSeguranca({
+        await registrarLogSegurancaAsync({
           usuarioLogin: user.login,
           usuarioNome: user.nome,
           usuarioEmail: user.email,
@@ -213,6 +225,7 @@ export async function POST(req: NextRequest) {
           evento: "FALHA_RECUPERACAO_SENHA",
           metodo: "Código de Segurança Inválido",
           status: "ERRO",
+          ip: ipCliente,
           dispositivo: dispositivoResumo,
           detalhes: `Código inválido informado ao tentar redefinir a senha de ${user.nome}.`,
         });
@@ -229,9 +242,9 @@ export async function POST(req: NextRequest) {
         codigoRecuperacao: null,
         codigoRecuperacaoExpira: null,
       };
-      salvarUsuarios(usuarios);
+      await salvarUsuariosAsync(usuarios);
 
-      registrarLogSeguranca({
+      await registrarLogSegurancaAsync({
         usuarioLogin: user.login,
         usuarioNome: user.nome,
         usuarioEmail: user.email,
@@ -239,6 +252,7 @@ export async function POST(req: NextRequest) {
         evento: "ALTERACAO_SENHA",
         metodo: "Recuperação de Senha + MFA",
         status: "SUCESSO",
+        ip: ipCliente,
         dispositivo: dispositivoResumo,
         detalhes: `Senha redefinida com sucesso pelo próprio usuário (${user.nome}).`,
       });
@@ -263,7 +277,7 @@ export async function POST(req: NextRequest) {
     );
 
     if (idx < 0) {
-      registrarLogSeguranca({
+      await registrarLogSegurancaAsync({
         usuarioLogin: identificador || "desconhecido",
         usuarioNome: "Credencial Não Cadastrada",
         usuarioEmail: identificador,
@@ -271,6 +285,7 @@ export async function POST(req: NextRequest) {
         evento: "FALHA_AUTENTICACAO",
         metodo: "Login no Portal",
         status: "ERRO",
+        ip: ipCliente,
         dispositivo: dispositivoResumo,
         detalhes: `Tentativa de login com usuário inexistente: "${identificador}".`,
       });
@@ -283,7 +298,7 @@ export async function POST(req: NextRequest) {
     const user = usuarios[idx];
 
     if (user.status === "BLOQUEADO") {
-      registrarLogSeguranca({
+      await registrarLogSegurancaAsync({
         usuarioLogin: user.login,
         usuarioNome: user.nome,
         usuarioEmail: user.email,
@@ -291,6 +306,7 @@ export async function POST(req: NextRequest) {
         evento: "BLOQUEIO_ACESSO",
         metodo: "Conta Bloqueada",
         status: "ERRO",
+        ip: ipCliente,
         dispositivo: dispositivoResumo,
         detalhes: `Tentativa de acesso em conta bloqueada pelo Administrador (${user.nome}).`,
       });
@@ -315,7 +331,7 @@ export async function POST(req: NextRequest) {
     // Se o usuário escolheu entrar direto com o código MFA do Google Authenticator
     if (modoSomenteMfa) {
       if (!mfaValido) {
-        registrarLogSeguranca({
+        await registrarLogSegurancaAsync({
           usuarioLogin: user.login,
           usuarioNome: user.nome,
           usuarioEmail: user.email,
@@ -323,6 +339,7 @@ export async function POST(req: NextRequest) {
           evento: "FALHA_MFA_GOOGLE",
           metodo: "Google Authenticator (2FA)",
           status: "ERRO",
+          ip: ipCliente,
           dispositivo: dispositivoResumo,
           detalhes: `Código MFA incorreto informado para ${user.nome}.`,
         });
@@ -334,7 +351,7 @@ export async function POST(req: NextRequest) {
     } else {
       // Validação de senha
       if (user.senha !== senha) {
-        registrarLogSeguranca({
+        await registrarLogSegurancaAsync({
           usuarioLogin: user.login,
           usuarioNome: user.nome,
           usuarioEmail: user.email,
@@ -342,6 +359,7 @@ export async function POST(req: NextRequest) {
           evento: "FALHA_AUTENTICACAO",
           metodo: "Senha Corporativa",
           status: "ERRO",
+          ip: ipCliente,
           dispositivo: dispositivoResumo,
           detalhes: `Senha incorreta informada para o usuário ${user.nome}.`,
         });
@@ -354,7 +372,7 @@ export async function POST(req: NextRequest) {
       // Se o usuário digitou um código MFA junto com a senha, validamos imediatamente
       if (codigoMfa) {
         if (!mfaValido) {
-          registrarLogSeguranca({
+          await registrarLogSegurancaAsync({
             usuarioLogin: user.login,
             usuarioNome: user.nome,
             usuarioEmail: user.email,
@@ -362,6 +380,7 @@ export async function POST(req: NextRequest) {
             evento: "FALHA_MFA_GOOGLE",
             metodo: "Google Authenticator (2FA)",
             status: "ERRO",
+            ip: ipCliente,
             dispositivo: dispositivoResumo,
             detalhes: `Senha correta, porém código MFA do Google Authenticator inválido para ${user.nome}.`,
           });
@@ -378,10 +397,10 @@ export async function POST(req: NextRequest) {
       ...user,
       ultimoAcesso: new Date().toISOString(),
     };
-    salvarUsuarios(usuarios);
+    await salvarUsuariosAsync(usuarios);
 
     const usouMfa = Boolean(codigoMfa || modoSomenteMfa);
-    registrarLogSeguranca({
+    await registrarLogSegurancaAsync({
       usuarioLogin: user.login,
       usuarioNome: user.nome,
       usuarioEmail: user.email,
@@ -389,6 +408,7 @@ export async function POST(req: NextRequest) {
       evento: usouMfa ? "LOGIN_MFA_GOOGLE" : "LOGIN_SUCESSO",
       metodo: usouMfa ? "Senha + Google Authenticator (2FA)" : "Senha Corporativa",
       status: "SUCESSO",
+      ip: ipCliente,
       dispositivo: dispositivoResumo,
       detalhes: usouMfa
         ? `Acesso autenticado com 2º fator Google Authenticator (${user.nome}).`
