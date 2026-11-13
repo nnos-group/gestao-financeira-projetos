@@ -42,13 +42,31 @@ export default function LoginPage() {
       window.dispatchEvent(new CustomEvent("nnos-user-updated"));
     } catch {}
 
-    if (userObj.liderVinculado && userObj.liderVinculado !== "TODOS") {
-      setLiderSimulado(userObj.liderVinculado);
+    const perfilId = userObj.perfilId || "ADMIN";
+
+    // Determina a rota autorizada de destino conforme o perfil oficial
+    let rotaDestino = "/projetos";
+    if (perfilId === "CONSULTOR" || perfilId === "SOCIO") {
+      rotaDestino = "/consultor";
+      try {
+        localStorage.setItem("nnos_consultor_simulado_nome", userObj.nome);
+        localStorage.removeItem("nnos_consultor_simulado_id");
+        localStorage.removeItem("nnos_consultor_simulado_obj");
+      } catch {}
+    } else if (perfilId === "AGENCIA") {
+      rotaDestino = "/viagens";
+    } else if (perfilId === "FINANCEIRO") {
+      rotaDestino = "/medicao";
     }
 
-    const perfilId = userObj.perfilId || "ADMIN";
-    ativarPerfil(perfilId, true);
-    router.push("/projetos");
+    if (userObj.liderVinculado && userObj.liderVinculado !== "TODOS") {
+      setLiderSimulado(userObj.liderVinculado);
+    } else if (perfilId === "LIDER" && userObj.nome) {
+      setLiderSimulado(userObj.nome);
+    }
+
+    ativarPerfil(perfilId, false);
+    router.push(rotaDestino);
   };
 
   const handleLogin = async (e: React.FormEvent) => {

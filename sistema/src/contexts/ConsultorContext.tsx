@@ -34,21 +34,42 @@ export function ConsultorProvider({ children }: { children: React.ReactNode }) {
   const [dadosConsultor, setDadosConsultor] = useState<any>(null);
   const [carregando, setCarregando] = useState(true);
 
-  // Inicialização imediata do consultor ativo salvo no localStorage (elimina delay percebido)
+  // Inicialização imediata do consultor ativo salvo ou do usuário logado oficial
   useEffect(() => {
-    try {
-      const savedObjStr = localStorage.getItem("nnos_consultor_simulado_obj");
-      if (savedObjStr) {
-        const parsed = JSON.parse(savedObjStr);
-        if (parsed && parsed.nome) {
-          setConsultorAtivoState(parsed);
-        }
-      }
-    } catch {}
+    const sincronizarConsultor = () => {
+      let usuarioLogado: any = null;
+      try {
+        const uStr = localStorage.getItem("nnos_usuario_logado_v1");
+        if (uStr) usuarioLogado = JSON.parse(uStr);
+      } catch {}
 
-    const savedId = localStorage.getItem("nnos_consultor_simulado_id") || undefined;
-    const savedNome = localStorage.getItem("nnos_consultor_simulado_nome") || undefined;
-    carregarDados(savedId, savedNome);
+      const isConsultorReal =
+        usuarioLogado &&
+        (usuarioLogado.perfilId === "CONSULTOR" || usuarioLogado.perfilId === "SOCIO");
+
+      if (isConsultorReal && usuarioLogado.nome) {
+        // O usuário logado é um consultor oficial: forçar seu nome e dados
+        carregarDados(undefined, usuarioLogado.nome);
+      } else {
+        try {
+          const savedObjStr = localStorage.getItem("nnos_consultor_simulado_obj");
+          if (savedObjStr) {
+            const parsed = JSON.parse(savedObjStr);
+            if (parsed && parsed.nome) {
+              setConsultorAtivoState(parsed);
+            }
+          }
+        } catch {}
+
+        const savedId = localStorage.getItem("nnos_consultor_simulado_id") || undefined;
+        const savedNome = localStorage.getItem("nnos_consultor_simulado_nome") || undefined;
+        carregarDados(savedId, savedNome);
+      }
+    };
+
+    sincronizarConsultor();
+    window.addEventListener("nnos-user-updated", sincronizarConsultor);
+    return () => window.removeEventListener("nnos-user-updated", sincronizarConsultor);
   }, []);
 
   const carregarDados = async (consultorId?: string, consultorNome?: string) => {

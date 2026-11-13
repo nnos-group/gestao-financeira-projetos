@@ -71,6 +71,20 @@ export default function UserProfileHeader() {
 
   // Determina a identidade exibida no topo conforme o perfil/líder ativo ou usuário logado
   const identidadeAtiva: UsuarioAtivoInfo = React.useMemo(() => {
+    // 1. Se há um usuário real autenticado que não seja ADMIN, sua própria identidade é soberana
+    if (usuarioSessao && usuarioSessao.perfilId !== "ADMIN") {
+      const chave = (usuarioSessao.login || usuarioSessao.nome || "nnos").toLowerCase();
+      return {
+        ...usuarioSessao,
+        fotoUrl:
+          fotosPorChave[chave] ||
+          fotosPorChave[usuarioSessao.nome?.toUpperCase() || ""] ||
+          usuarioSessao.fotoUrl ||
+          "",
+      };
+    }
+
+    // 2. Administrador simulando perfil LIDER
     if (perfilAtivoId === "LIDER" && liderSimulado && liderSimulado !== "TODOS") {
       const infoLider = listaLideres.find(
         (l) => l.nome.toUpperCase() === liderSimulado.toUpperCase()

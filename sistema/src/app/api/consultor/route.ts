@@ -48,15 +48,33 @@ export async function GET(req: NextRequest) {
       console.warn("Aviso ao buscar consultores no banco:", e);
     }
 
-    // Se não passou nenhum consultor, seleciona o primeiro por padrão (ex: Marcelo Lara ou Leonardo Campos)
+    const normalizar = (s?: string | null) =>
+      String(s || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .toUpperCase();
+
+    const consultorNomeNorm = normalizar(consultorNome);
+
     let consultorAtivo = pessoas.find(
       (p) =>
         (consultorId && p.id === consultorId) ||
-        (consultorNome && p.nome.toUpperCase().trim() === consultorNome.toUpperCase().trim())
+        (consultorNomeNorm && normalizar(p.nome) === consultorNomeNorm) ||
+        (consultorNomeNorm && normalizar(p.nome_completo) === consultorNomeNorm)
     );
 
-    if (!consultorAtivo && pessoas.length > 0) {
-      // Priorizar MARCELO LARA DA SILVA ou LEONARDO CAMPOS para testes imediatos
+    if (!consultorAtivo && consultorNomeNorm) {
+      consultorAtivo = pessoas.find(
+        (p) =>
+          normalizar(p.nome).includes(consultorNomeNorm) ||
+          consultorNomeNorm.includes(normalizar(p.nome))
+      );
+    }
+
+    if (!consultorAtivo && !consultorId && !consultorNome && pessoas.length > 0) {
+      // Priorizar MARCELO LARA DA SILVA ou LEONARDO CAMPOS apenas se nada foi especificado
       consultorAtivo =
         pessoas.find((p) => p.nome.toUpperCase().includes("MARCELO LARA")) ||
         pessoas.find((p) => p.nome.toUpperCase().includes("LEONARDO CAMPOS")) ||

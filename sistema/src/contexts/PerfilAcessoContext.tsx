@@ -121,6 +121,7 @@ export function PerfilAcessoProvider({ children }: { children: React.ReactNode }
   const [perfis, setPerfis] = useState<PerfilAcessoItem[]>(perfisIniciais as unknown as PerfilAcessoItem[]);
   const [perfilAtivoId, setPerfilAtivoId] = useState<string>("ADMIN");
   const [liderSimulado, setLiderSimuladoState] = useState<string>("BEATRIZ PICORELLI");
+  const [usuarioLogado, setUsuarioLogado] = useState<any | null>(null);
   const [hidratado, setHidratado] = useState<boolean>(false);
 
   // Mapa rápido de Projeto / Centro de Custo -> Líder de Projeto
@@ -185,6 +186,32 @@ export function PerfilAcessoProvider({ children }: { children: React.ReactNode }
   }, []);
 
   useEffect(() => {
+    const carregarUsuarioLogado = () => {
+      try {
+        const savedUser = localStorage.getItem("nnos_usuario_logado_v1");
+        if (savedUser) {
+          const parsed = JSON.parse(savedUser);
+          setUsuarioLogado(parsed);
+          // Se o usuário logado for não-admin, seu perfil ativo é obrigatoriamente o seu perfil real
+          if (parsed.perfilId && parsed.perfilId !== "ADMIN") {
+            setPerfilAtivoId(parsed.perfilId);
+            try {
+              localStorage.setItem("nnos_perfil_ativo_id", parsed.perfilId);
+            } catch {}
+          }
+          if (parsed.perfilId === "LIDER" && (parsed.liderVinculado || parsed.nome)) {
+            const liderNome = parsed.liderVinculado || parsed.nome;
+            setLiderSimuladoState(liderNome);
+            try {
+              localStorage.setItem("nnos_lider_simulado_v1", liderNome);
+            } catch {}
+          }
+        } else {
+          setUsuarioLogado(null);
+        }
+      } catch {}
+    };
+
     try {
       const savedPerfis = localStorage.getItem("nnos_perfis_acesso_v1");
       if (savedPerfis) {
@@ -202,6 +229,8 @@ export function PerfilAcessoProvider({ children }: { children: React.ReactNode }
         setLiderSimuladoState(savedLider);
       }
     } catch {}
+
+    carregarUsuarioLogado();
     setHidratado(true);
     recarregarPerfis();
 
@@ -215,15 +244,34 @@ export function PerfilAcessoProvider({ children }: { children: React.ReactNode }
     };
 
     window.addEventListener("nnos-perfis-updated", handleCustomUpdate);
-    return () => window.removeEventListener("nnos-perfis-updated", handleCustomUpdate);
+    window.addEventListener("nnos-user-updated", carregarUsuarioLogado);
+    return () => {
+      window.removeEventListener("nnos-perfis-updated", handleCustomUpdate);
+      window.removeEventListener("nnos-user-updated", carregarUsuarioLogado);
+    };
   }, [recarregarPerfis]);
 
+  const isUsuarioAdminReal = useMemo(() => {
+    if (!usuarioLogado) return true;
+    return usuarioLogado.perfilId === "ADMIN";
+  }, [usuarioLogado]);
+
   const setLiderSimulado = useCallback((nome: string) => {
+    if (!isUsuarioAdminReal && usuarioLogado?.perfilId === "LIDER") {
+      const meuLider = usuarioLogado.liderVinculado || usuarioLogado.nome;
+      if (meuLider) {
+        setLiderSimuladoState(meuLider);
+        try {
+          localStorage.setItem("nnos_lider_simulado_v1", meuLider);
+        } catch {}
+        return;
+      }
+    }
     setLiderSimuladoState(nome);
     try {
       localStorage.setItem("nnos_lider_simulado_v1", nome);
     } catch {}
-  }, []);
+  }, [isUsuarioAdminReal, usuarioLogado]);
 
   const perfilAtivoObj = useMemo(() => {
     return perfis.find((p) => p.id === perfilAtivoId) || perfis[0];
@@ -270,6 +318,11 @@ export function PerfilAcessoProvider({ children }: { children: React.ReactNode }
 
   const ativarPerfil = useCallback(
     (novoId: string, redirecionar = false) => {
+      // Usuários que não são Administrador têm seu perfil travado no perfil oficial autenticado
+      if (!isUsuarioAdminReal && usuarioLogado?.perfilId) {
+        novoId = usuarioLogado.perfilId;
+      }
+
       setPerfilAtivoId(novoId);
       try {
         localStorage.setItem("nnos_perfil_ativo_id", novoId);
@@ -297,7 +350,7 @@ export function PerfilAcessoProvider({ children }: { children: React.ReactNode }
         }
       }
     },
-    [perfis, pathname, router]
+    [isUsuarioAdminReal, usuarioLogado, perfis, pathname, router]
   );
 
   const voltarParaAdmin = useCallback(() => {
@@ -420,6 +473,7 @@ export function PerfilAcessoProvider({ children }: { children: React.ReactNode }
 
   const exibirBarraSimulacao =
     hidratado &&
+    isUsuarioAdminReal &&
     perfilAtivoId !== "ADMIN" &&
     pathname !== "/lider" &&
     !pathname?.startsWith("/login") &&
@@ -695,13 +749,15 @@ export function PerfilAcessoProvider({ children }: { children: React.ReactNode }
             <div style={{ display: "flex", justifyContent: "center", gap: "10px", flexWrap: "wrap" }}>
               <button
                 type="button"
-                onClick={() =>
-                  router.push(
+                onClick={() => {
+                  const rotaAlvo =
                     perfilAtivoObj?.rotaPadrao && perfilAtivoObj.rotaPadrao !== "/lider"
                       ? perfilAtivoObj.rotaPadrao
-                      : "/projetos"
-                  )
-                }
+                      : perfilAtivoId === "CONSULTOR" || perfilAtivoId === "SOCIO"
+                      ? "/consultor"
+                      : "/projetos";
+                  router.push(rotaAlvo);
+                }}
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
@@ -722,28 +778,31 @@ export function PerfilAcessoProvider({ children }: { children: React.ReactNode }
                 <span>Ir para Tela Autorizada</span>
               </button>
 
-              <button
-                type="button"
-                onClick={voltarParaAdmin}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  padding: "9px 16px",
-                  borderRadius: "8px",
-                  border: "1px solid var(--border)",
-                  backgroundColor: "var(--surface-container-low)",
-                  color: "var(--on-surface)",
-                  fontSize: "12.5px",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                }}
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: "17px" }}>
-                  admin_panel_settings
-                </span>
-                <span>Desativar Restrição (Acesso Total)</span>
-              </button>
+              {isUsuarioAdminReal && (
+                <button
+                  type="button"
+                  onClick={voltarParaAdmin}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    padding: "9px 16px",
+                    borderRadius: "8px",
+                    border: "1px solid var(--border)",
+                    backgroundColor: "var(--surface-container-low)",
+                    color: "var(--on-surface)",
+                    fontSize: "12.5px",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                  }}
+                  title="Desativar modo simulação e restaurar visão de Administrador"
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: "17px" }}>
+                    admin_panel_settings
+                  </span>
+                  <span>Desativar Restrição (Acesso Total)</span>
+                </button>
+              )}
             </div>
           </div>
         </div>
