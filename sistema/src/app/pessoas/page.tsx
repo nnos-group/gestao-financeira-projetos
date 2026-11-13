@@ -5,8 +5,35 @@ import React, { useState, useMemo, useEffect } from "react";
 import ThemeToggle from "@/components/ThemeToggle";
 import { PESSOAS_INICIAIS, PessoaItem } from "@/lib/pessoas-data";
 import ModernDropdown from "@/components/ModernDropdown";
+import { usePerfilAcesso } from "@/contexts/PerfilAcessoContext";
+
+const OPCOES_TIPO_VINCULO = [
+  { value: "parceiro", label: "PARCEIRO (Prestador PJ)" },
+  { value: "funcionario", label: "FUNCIONÁRIO (CLT / Equipe Interna)" },
+  { value: "socio", label: "SÓCIO (Diretoria Executiva)" },
+];
+
+const OPCOES_PERFIL_SENIORIDADE = [
+  { value: "SÊNIOR", label: "SÊNIOR" },
+  { value: "PLENO", label: "PLENO" },
+  { value: "JÚNIOR", label: "JÚNIOR" },
+  { value: "LÍDER DE PROJETO", label: "LÍDER DE PROJETO" },
+  { value: "DIRETORIA", label: "DIRETORIA" },
+  { value: "COORDENADOR", label: "COORDENADOR" },
+  { value: "OPERACIONAL", label: "OPERACIONAL" },
+];
+
+const OPCOES_TIPO_MEDICAO = [
+  { value: "INTEGRAL", label: "Integral (Mês Cheio)" },
+  { value: "QUINZENAL", label: "Quinzenal" },
+];
 
 export default function PessoasPage() {
+  const { perfilAtivoId, nivelModulo, regraAtiva } = usePerfilAcesso();
+  const nivelPessoas = nivelModulo("pessoas");
+  const podeEditar = perfilAtivoId === "ADMIN" || nivelPessoas === "TOTAL" || nivelPessoas === "EDITAR_APROVAR";
+  const somenteLeitura = perfilAtivoId === "AGENCIA" || !podeEditar;
+
   const [pessoas, setPessoas] = useState<PessoaItem[]>(PESSOAS_INICIAIS);
   const [busca, setBusca] = useState("");
   const [filtroTipo, setFiltroTipo] = useState<"todos" | "parceiro" | "funcionario" | "socio">("todos");
@@ -120,6 +147,10 @@ export default function PessoasPage() {
 
   const handleSalvar = (e?: React.SyntheticEvent) => {
     if (e) e.preventDefault();
+    if (somenteLeitura) {
+      setToastMsg("Perfil com permissão exclusiva de consulta. Alterações não são permitidas.");
+      return;
+    }
     if (!formData.nome || !formData.nome.trim()) {
       alert("Por favor, preencha o Nome da pessoa.");
       return;
@@ -600,31 +631,33 @@ export default function PessoasPage() {
               </p>
             </div>
 
-            <button
-              onClick={abrirNovaPessoa}
-              style={{
-                backgroundColor: "var(--primary)",
-                color: "#ffffff",
-                padding: "10px 20px",
-                borderRadius: "8px",
-                border: "none",
-                fontWeight: 600,
-                fontSize: "14px",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "8px",
-                cursor: "pointer",
-                boxShadow: "0 2px 6px rgba(0, 21, 47, 0.15)",
-                transition: "all 0.2s ease",
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--primary-container)")}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "var(--primary)")}
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
-                person_add
-              </span>
-              Cadastrar Nova Pessoa
-            </button>
+            {!somenteLeitura && (
+              <button
+                onClick={abrirNovaPessoa}
+                style={{
+                  backgroundColor: "var(--primary)",
+                  color: "#ffffff",
+                  padding: "10px 20px",
+                  borderRadius: "8px",
+                  border: "none",
+                  fontWeight: 600,
+                  fontSize: "14px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  cursor: "pointer",
+                  boxShadow: "0 2px 6px rgba(0, 21, 47, 0.15)",
+                  transition: "all 0.2s ease",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--primary-container)")}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "var(--primary)")}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
+                  person_add
+                </span>
+                Cadastrar Nova Pessoa
+              </button>
+            )}
           </div>
 
           {/* KPI Cards Banner */}
@@ -1352,9 +1385,9 @@ export default function PessoasPage() {
                               }}
                             >
                               <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>
-                                edit
+                                {somenteLeitura ? "visibility" : "edit"}
                               </span>
-                              Ficha
+                              {somenteLeitura ? "Visualizar" : "Ficha"}
                             </button>
                           </td>
                         </tr>
@@ -1402,6 +1435,27 @@ export default function PessoasPage() {
                   {pessoaSelecionada ? "badge" : "add_circle"}
                 </span>
                 <span>{pessoaSelecionada ? `Ficha de ${pessoaSelecionada.nome}` : "Cadastrar Nova Pessoa"}</span>
+                {somenteLeitura && (
+                  <span
+                    style={{
+                      fontSize: "11px",
+                      fontWeight: 700,
+                      color: "#0369a1",
+                      backgroundColor: "#e0f2fe",
+                      padding: "3px 9px",
+                      borderRadius: "6px",
+                      marginLeft: "10px",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "4px",
+                    }}
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>
+                      visibility
+                    </span>
+                    Modo Consulta (Somente Leitura)
+                  </span>
+                )}
               </h3>
               <button
                 type="button"
@@ -1498,18 +1552,30 @@ export default function PessoasPage() {
                         <input
                           type="text"
                           required
+                          readOnly={somenteLeitura}
+                          disabled={somenteLeitura}
                           value={formData.nome || ""}
                           onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
                           placeholder="Ex: CARLOS SILVA"
+                          style={{
+                            backgroundColor: somenteLeitura ? "var(--surface-container-low)" : "#ffffff",
+                            cursor: somenteLeitura ? "default" : "text",
+                          }}
                         />
                       </div>
                       <div className="form-field">
                         <label>Nome Civil Completo (Para Passagens & Contratos)</label>
                         <input
                           type="text"
+                          readOnly={somenteLeitura}
+                          disabled={somenteLeitura}
                           value={formData.nome_completo || ""}
                           onChange={(e) => setFormData({ ...formData, nome_completo: e.target.value })}
                           placeholder="Ex: CARLOS ALBERTO SILVA SANTOS"
+                          style={{
+                            backgroundColor: somenteLeitura ? "var(--surface-container-low)" : "#ffffff",
+                            cursor: somenteLeitura ? "default" : "text",
+                          }}
                         />
                       </div>
                     </div>
@@ -1517,32 +1583,26 @@ export default function PessoasPage() {
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "14px", marginBottom: "14px" }}>
                       <div className="form-field">
                         <label>Tipo de Vínculo (Tag) *</label>
-                        <select
+                        <ModernDropdown
                           value={formData.tipo || "parceiro"}
-                          onChange={(e) => setFormData({ ...formData, tipo: e.target.value as any })}
-                          style={{ fontWeight: 600 }}
-                        >
-                          <option value="parceiro">PARCEIRO (Prestador PJ)</option>
-                          <option value="funcionario">FUNCIONÁRIO (CLT / Equipe Interna)</option>
-                          <option value="socio">SÓCIO (Diretoria Executiva)</option>
-                        </select>
+                          onChange={(val) => setFormData({ ...formData, tipo: String(val) as any })}
+                          options={OPCOES_TIPO_VINCULO}
+                          disabled={somenteLeitura}
+                          minWidth="100%"
+                          icon="badge"
+                        />
                       </div>
 
                       <div className="form-field">
                         <label>Perfil / Senioridade</label>
-                        <select
+                        <ModernDropdown
                           value={formData.perfil || "SÊNIOR"}
-                          onChange={(e) => setFormData({ ...formData, perfil: e.target.value })}
-                          style={{ fontWeight: 600 }}
-                        >
-                          <option value="SÊNIOR">SÊNIOR</option>
-                          <option value="PLENO">PLENO</option>
-                          <option value="JÚNIOR">JÚNIOR</option>
-                          <option value="LÍDER DE PROJETO">LÍDER DE PROJETO</option>
-                          <option value="DIRETORIA">DIRETORIA</option>
-                          <option value="COORDENADOR">COORDENADOR</option>
-                          <option value="OPERACIONAL">OPERACIONAL</option>
-                        </select>
+                          onChange={(val) => setFormData({ ...formData, perfil: String(val) })}
+                          options={OPCOES_PERFIL_SENIORIDADE}
+                          disabled={somenteLeitura}
+                          minWidth="100%"
+                          icon="psychology"
+                        />
                       </div>
 
                       <div className="form-field">
@@ -1564,19 +1624,14 @@ export default function PessoasPage() {
                             }}
                           />
                         ) : (
-                          <select
+                          <ModernDropdown
                             value={formData.tipo_medicao || "INTEGRAL"}
-                            onChange={(e) => setFormData({ ...formData, tipo_medicao: e.target.value as any })}
-                            style={{
-                              fontWeight: 700,
-                              color: formData.tipo_medicao === "QUINZENAL" ? "#0369a1" : "#7e22ce",
-                              backgroundColor: formData.tipo_medicao === "QUINZENAL" ? "#f0f9ff" : "#faf5ff",
-                              border: formData.tipo_medicao === "QUINZENAL" ? "1px solid #bae6fd" : "1px solid #d8b4fe",
-                            }}
-                          >
-                            <option value="INTEGRAL">Integral (Mês Cheio)</option>
-                            <option value="QUINZENAL">Quinzenal</option>
-                          </select>
+                            onChange={(val) => setFormData({ ...formData, tipo_medicao: String(val) as any })}
+                            options={OPCOES_TIPO_MEDICAO}
+                            disabled={somenteLeitura}
+                            minWidth="100%"
+                            icon="schedule"
+                          />
                         )}
                       </div>
                     </div>
@@ -1586,18 +1641,30 @@ export default function PessoasPage() {
                         <label>E-mail Operacional</label>
                         <input
                           type="email"
+                          readOnly={somenteLeitura}
+                          disabled={somenteLeitura}
                           value={formData.email || ""}
                           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                           placeholder="Ex: consultor.exemplo@nnos.com.br"
+                          style={{
+                            backgroundColor: somenteLeitura ? "var(--surface-container-low)" : "#ffffff",
+                            cursor: somenteLeitura ? "default" : "text",
+                          }}
                         />
                       </div>
                       <div className="form-field">
                         <label>Telefone / WhatsApp</label>
                         <input
                           type="text"
+                          readOnly={somenteLeitura}
+                          disabled={somenteLeitura}
                           value={formData.telefone || ""}
                           onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
                           placeholder="(11) 98765-4321"
+                          style={{
+                            backgroundColor: somenteLeitura ? "var(--surface-container-low)" : "#ffffff",
+                            cursor: somenteLeitura ? "default" : "text",
+                          }}
                         />
                       </div>
                     </div>
@@ -1606,9 +1673,15 @@ export default function PessoasPage() {
                       <label>Cargo / Função</label>
                       <input
                         type="text"
+                        readOnly={somenteLeitura}
+                        disabled={somenteLeitura}
                         value={formData.cargo || ""}
                         onChange={(e) => setFormData({ ...formData, cargo: e.target.value })}
                         placeholder="Ex: Consultor Especialista / Instrutor Líder"
+                        style={{
+                          backgroundColor: somenteLeitura ? "var(--surface-container-low)" : "#ffffff",
+                          cursor: somenteLeitura ? "default" : "text",
+                        }}
                       />
                     </div>
                   </>
@@ -1622,19 +1695,31 @@ export default function PessoasPage() {
                         <label>CPF do Viajante (Obrigatório para Passagens)</label>
                         <input
                           type="text"
+                          readOnly={somenteLeitura}
+                          disabled={somenteLeitura}
                           value={formData.cpf || ""}
                           onChange={(e) => setFormData({ ...formData, cpf: e.target.value })}
                           placeholder="000.000.000-00 (Ex: 123.456.789-00)"
-                          style={{ fontWeight: 600 }}
+                          style={{
+                            fontWeight: 600,
+                            backgroundColor: somenteLeitura ? "var(--surface-container-low)" : "#ffffff",
+                            cursor: somenteLeitura ? "default" : "text",
+                          }}
                         />
                       </div>
                       <div className="form-field">
                         <label>RG / Órgão Emissor</label>
                         <input
                           type="text"
+                          readOnly={somenteLeitura}
+                          disabled={somenteLeitura}
                           value={formData.rg || ""}
                           onChange={(e) => setFormData({ ...formData, rg: e.target.value })}
                           placeholder="Ex: SSP-12.345.678 / SP"
+                          style={{
+                            backgroundColor: somenteLeitura ? "var(--surface-container-low)" : "#ffffff",
+                            cursor: somenteLeitura ? "default" : "text",
+                          }}
                         />
                       </div>
                     </div>
@@ -1644,22 +1729,35 @@ export default function PessoasPage() {
                         <label>Data de Nascimento (Exigida por Cias Aéreas)</label>
                         <input
                           type="text"
+                          readOnly={somenteLeitura}
+                          disabled={somenteLeitura}
                           value={formData.data_nascimento || ""}
                           onChange={(e) => {
+                            if (somenteLeitura) return;
                             const formatado = formatarMascaraData(e.target.value);
                             setFormData({ ...formData, data_nascimento: formatado });
                           }}
                           maxLength={10}
                           placeholder="DD/MM/AAAA (Ex: 08/11/1963)"
+                          style={{
+                            backgroundColor: somenteLeitura ? "var(--surface-container-low)" : "#ffffff",
+                            cursor: somenteLeitura ? "default" : "text",
+                          }}
                         />
                       </div>
                       <div className="form-field">
                         <label>Cidade / UF de Residência</label>
                         <input
                           type="text"
+                          readOnly={somenteLeitura}
+                          disabled={somenteLeitura}
                           value={formData.cidade_base || ""}
                           onChange={(e) => setFormData({ ...formData, cidade_base: e.target.value })}
                           placeholder="Ex: São Paulo / SP"
+                          style={{
+                            backgroundColor: somenteLeitura ? "var(--surface-container-low)" : "#ffffff",
+                            cursor: somenteLeitura ? "default" : "text",
+                          }}
                         />
                       </div>
                     </div>
@@ -1668,9 +1766,15 @@ export default function PessoasPage() {
                       <label>Aeroporto Preferencial de Embarque</label>
                       <input
                         type="text"
+                        readOnly={somenteLeitura}
+                        disabled={somenteLeitura}
                         value={formData.aeroporto_preferencial || ""}
                         onChange={(e) => setFormData({ ...formData, aeroporto_preferencial: e.target.value })}
                         placeholder="Ex: GRU (Guarulhos / SP), CNF (Confins / BH), CWB (Curitiba)"
+                        style={{
+                          backgroundColor: somenteLeitura ? "var(--surface-container-low)" : "#ffffff",
+                          cursor: somenteLeitura ? "default" : "text",
+                        }}
                       />
                     </div>
                   </>
@@ -1684,19 +1788,31 @@ export default function PessoasPage() {
                         <label>Razão Social da Empresa PJ</label>
                         <input
                           type="text"
+                          readOnly={somenteLeitura}
+                          disabled={somenteLeitura}
                           value={formData.razao_social || ""}
                           onChange={(e) => setFormData({ ...formData, razao_social: e.target.value })}
                           placeholder="Ex: ALFA TREINAMENTOS E CONSULTORIA LTDA"
+                          style={{
+                            backgroundColor: somenteLeitura ? "var(--surface-container-low)" : "#ffffff",
+                            cursor: somenteLeitura ? "default" : "text",
+                          }}
                         />
                       </div>
                       <div className="form-field">
                         <label>CNPJ da Empresa</label>
                         <input
                           type="text"
+                          readOnly={somenteLeitura}
+                          disabled={somenteLeitura}
                           value={formData.cnpj || ""}
                           onChange={(e) => setFormData({ ...formData, cnpj: e.target.value })}
                           placeholder="00.000.000/0001-00 (Ex: 12.345.678/0001-90)"
-                          style={{ fontWeight: 600 }}
+                          style={{
+                            fontWeight: 600,
+                            backgroundColor: somenteLeitura ? "var(--surface-container-low)" : "#ffffff",
+                            cursor: somenteLeitura ? "default" : "text",
+                          }}
                         />
                       </div>
                     </div>
@@ -1706,18 +1822,30 @@ export default function PessoasPage() {
                         <label>Inscrição Municipal</label>
                         <input
                           type="text"
+                          readOnly={somenteLeitura}
+                          disabled={somenteLeitura}
                           value={formData.inscricao_municipal || ""}
                           onChange={(e) => setFormData({ ...formData, inscricao_municipal: e.target.value })}
                           placeholder="Ex: 1.208.841/002-5"
+                          style={{
+                            backgroundColor: somenteLeitura ? "var(--surface-container-low)" : "#ffffff",
+                            cursor: somenteLeitura ? "default" : "text",
+                          }}
                         />
                       </div>
                       <div className="form-field">
                         <label>Contrato Vinculado / Ativo</label>
                         <input
                           type="text"
+                          readOnly={somenteLeitura}
+                          disabled={somenteLeitura}
                           value={formData.contrato_ativo || ""}
                           onChange={(e) => setFormData({ ...formData, contrato_ativo: e.target.value })}
                           placeholder="Ex: #2026.0001 • NNÓS"
+                          style={{
+                            backgroundColor: somenteLeitura ? "var(--surface-container-low)" : "#ffffff",
+                            cursor: somenteLeitura ? "default" : "text",
+                          }}
                         />
                       </div>
                     </div>
@@ -1726,50 +1854,92 @@ export default function PessoasPage() {
                       <label>Endereço Comercial Cadastrado</label>
                       <input
                         type="text"
+                        readOnly={somenteLeitura}
+                        disabled={somenteLeitura}
                         value={formData.endereco_empresa || ""}
                         onChange={(e) => setFormData({ ...formData, endereco_empresa: e.target.value })}
                         placeholder="Ex: Av. Paulista, 1000 - Bela Vista, São Paulo - SP | CEP: 01310-100"
+                        style={{
+                          backgroundColor: somenteLeitura ? "var(--surface-container-low)" : "#ffffff",
+                          cursor: somenteLeitura ? "default" : "text",
+                        }}
                       />
                     </div>
 
-                    <div className="modal-grid-3">
-                      <div className="form-field">
-                        <label>Banco</label>
-                        <input
-                          type="text"
-                          value={formData.banco || ""}
-                          onChange={(e) => setFormData({ ...formData, banco: e.target.value })}
-                          placeholder="Ex: Banco do Brasil"
-                        />
+                    {!regraAtiva("verDadosBancarios") ? (
+                      <div
+                        style={{
+                          padding: "16px",
+                          borderRadius: "8px",
+                          backgroundColor: "var(--surface-container-low)",
+                          border: "1px dashed var(--border)",
+                          color: "var(--on-surface-variant)",
+                          fontSize: "12px",
+                          fontStyle: "italic",
+                          textAlign: "center",
+                          marginTop: "8px",
+                        }}
+                      >
+                        Dados bancários, agência, conta corrente e chave PIX são confidenciais e restritos à Controladoria e Financeiro.
                       </div>
-                      <div className="form-field">
-                        <label>Agência / Conta</label>
-                        <input
-                          type="text"
-                          value={formData.agencia ? `${formData.agencia} / ${formData.conta || ""}` : ""}
-                          onChange={(e) => {
-                            const parts = e.target.value.split("/");
-                            setFormData({ ...formData, agencia: parts[0]?.trim(), conta: parts[1]?.trim() });
-                          }}
-                          placeholder="Ex: 1234-5 / 98765-4"
-                        />
+                    ) : (
+                      <div className="modal-grid-3">
+                        <div className="form-field">
+                          <label>Banco</label>
+                          <input
+                            type="text"
+                            readOnly={somenteLeitura}
+                            disabled={somenteLeitura}
+                            value={formData.banco || ""}
+                            onChange={(e) => setFormData({ ...formData, banco: e.target.value })}
+                            placeholder="Ex: Banco do Brasil"
+                            style={{
+                              backgroundColor: somenteLeitura ? "var(--surface-container-low)" : "#ffffff",
+                              cursor: somenteLeitura ? "default" : "text",
+                            }}
+                          />
+                        </div>
+                        <div className="form-field">
+                          <label>Agência / Conta</label>
+                          <input
+                            type="text"
+                            readOnly={somenteLeitura}
+                            disabled={somenteLeitura}
+                            value={formData.agencia ? `${formData.agencia} / ${formData.conta || ""}` : ""}
+                            onChange={(e) => {
+                              const parts = e.target.value.split("/");
+                              setFormData({ ...formData, agencia: parts[0]?.trim(), conta: parts[1]?.trim() });
+                            }}
+                            placeholder="Ex: 1234-5 / 98765-4"
+                            style={{
+                              backgroundColor: somenteLeitura ? "var(--surface-container-low)" : "#ffffff",
+                              cursor: somenteLeitura ? "default" : "text",
+                            }}
+                          />
+                        </div>
+                        <div className="form-field">
+                          <label>Chave PIX</label>
+                          <input
+                            type="text"
+                            readOnly={somenteLeitura}
+                            disabled={somenteLeitura}
+                            value={formData.pix || ""}
+                            onChange={(e) => setFormData({ ...formData, pix: e.target.value })}
+                            placeholder="Ex: 12.345.678/0001-90"
+                            style={{
+                              backgroundColor: somenteLeitura ? "var(--surface-container-low)" : "#ffffff",
+                              cursor: somenteLeitura ? "default" : "text",
+                            }}
+                          />
+                        </div>
                       </div>
-                      <div className="form-field">
-                        <label>Chave PIX</label>
-                        <input
-                          type="text"
-                          value={formData.pix || ""}
-                          onChange={(e) => setFormData({ ...formData, pix: e.target.value })}
-                          placeholder="Ex: 12.345.678/0001-90"
-                        />
-                      </div>
-                    </div>
+                    )}
                   </>
                 )}
               </div>
 
               {/* Modal Footer Padrão Print 2 */}
-              <div className="modal-footer">
+              <div className="modal-footer" style={{ display: "flex", justifyContent: "flex-end", gap: "10px", padding: "16px 24px", borderTop: "1px solid var(--border)" }}>
                 <button
                   type="button"
                   onClick={() => setModalAberto(false)}
@@ -1785,32 +1955,34 @@ export default function PessoasPage() {
                     transition: "all 0.15s ease",
                   }}
                 >
-                  Cancelar
+                  {somenteLeitura ? "Fechar Ficha" : "Cancelar"}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => handleSalvar()}
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    padding: "10px 24px",
-                    borderRadius: "8px",
-                    backgroundColor: "var(--primary, #0284c7)",
-                    color: "#ffffff",
-                    fontSize: "13px",
-                    fontWeight: 700,
-                    cursor: "pointer",
-                    border: "none",
-                    boxShadow: "0 2px 6px rgba(2,132,199,0.25)",
-                    transition: "all 0.15s ease",
-                  }}
-                >
-                  <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
-                    check_circle
-                  </span>
-                  <span>{pessoaSelecionada ? "Salvar Ficha Cadastral" : "Cadastrar Pessoa"}</span>
-                </button>
+                {!somenteLeitura && (
+                  <button
+                    type="button"
+                    onClick={() => handleSalvar()}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      padding: "10px 24px",
+                      borderRadius: "8px",
+                      backgroundColor: "var(--primary, #0284c7)",
+                      color: "#ffffff",
+                      fontSize: "13px",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      border: "none",
+                      boxShadow: "0 2px 6px rgba(2,132,199,0.25)",
+                      transition: "all 0.15s ease",
+                    }}
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
+                      check_circle
+                    </span>
+                    <span>{pessoaSelecionada ? "Salvar Ficha Cadastral" : "Cadastrar Pessoa"}</span>
+                  </button>
+                )}
               </div>
             </form>
           </div>
