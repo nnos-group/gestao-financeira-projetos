@@ -68,7 +68,7 @@ export default function ConsultorHeader({ tituloPagina = "Visão Geral" }: Consu
       fotosPorChave[login] ||
       fotosPorChave[nome.toUpperCase()] ||
       usuarioLogado?.fotoUrl ||
-      consultorAtivo?.fotoUrl ||
+      (consultorAtivo as any)?.fotoUrl ||
       "";
 
     return {

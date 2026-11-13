@@ -118,7 +118,7 @@ function normalizarListaPerfis(lista: PerfilAcessoItem[]): PerfilAcessoItem[] {
         .find((pad) => pad.id === p.id)
         ?.modulos?.find((m: any) => m.id === "contratos");
 
-      const novoModuloContratos = modPadrao
+      const novoModuloContratos: ModuloPermissao = modPadrao
         ? { ...modPadrao }
         : {
             id: "contratos",
@@ -126,12 +126,13 @@ function normalizarListaPerfis(lista: PerfilAcessoItem[]): PerfilAcessoItem[] {
             rota: "/contratos",
             icone: "history_edu",
             visivel: p.id === "ADMIN" || p.id === "DIRETORIA" || p.id === "LIDER" || p.id === "FINANCEIRO",
-            nivel:
+            nivel: (
               p.id === "ADMIN" || p.id === "DIRETORIA" || p.id === "FINANCEIRO"
                 ? "TOTAL"
                 : p.id === "LIDER"
                 ? "OPERACIONAL"
-                : "BLOQUEADO",
+                : "BLOQUEADO"
+            ) as NivelAcessoModulo,
             abaPadrao: p.id === "LIDER" ? "Contratos Cadastrados" : "Dashboard de Contratos",
             observacao: "Consulta a contratos de sua carteira, escopo técnico, perfis e vigência.",
           };

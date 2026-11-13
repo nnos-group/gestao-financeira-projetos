@@ -41,13 +41,8 @@ export default function UserProfileHeader() {
   const { perfilAtivoId, perfilAtivoObj, liderSimulado, listaLideres } = usePerfilAcesso();
   const [mounted, setMounted] = useState(false);
   const [modalAberto, setModalAberto] = useState(false);
-  const [abaModal, setAbaModal] = useState<"FOTO" | "SENHA" | "MFA">("FOTO");
   const [fotosPorChave, setFotosPorChave] = useState<Record<string, string>>({});
   const [usuarioSessao, setUsuarioSessao] = useState<UsuarioAtivoInfo | null>(null);
-  const [novaSenha, setNovaSenha] = useState("");
-  const [confirmaSenha, setConfirmaSenha] = useState("");
-  const [feedbackMsg, setFeedbackMsg] = useState<{ tipo: "ok" | "erro"; texto: string } | null>(null);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -163,116 +158,6 @@ export default function UserProfileHeader() {
     };
   }, [perfilAtivoId, perfilAtivoObj, liderSimulado, listaLideres, usuarioSessao, fotosPorChave]);
 
-  const handleSelecionarArquivoFoto = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const img = new Image();
-      img.onload = async () => {
-        const canvas = document.createElement("canvas");
-        const maxDim = 220;
-        let w = img.width;
-        let h = img.height;
-        if (w > h) {
-          if (w > maxDim) {
-            h = Math.round((h * maxDim) / w);
-            w = maxDim;
-          }
-        } else {
-          if (h > maxDim) {
-            w = Math.round((w * maxDim) / h);
-            h = maxDim;
-          }
-        }
-        canvas.width = w;
-        canvas.height = h;
-        const ctx = canvas.getContext("2d");
-        if (ctx) {
-          ctx.drawImage(img, 0, 0, w, h);
-        }
-        const dataUrl = canvas.toDataURL("image/jpeg", 0.86);
-        await salvarFotoPerfil(dataUrl);
-      };
-      img.src = String(ev.target?.result || "");
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const salvarFotoPerfil = async (novaFotoUrl: string) => {
-    const chave = identidadeAtiva.login.toLowerCase();
-    const novasFotos = {
-      ...fotosPorChave,
-      [chave]: novaFotoUrl,
-      [identidadeAtiva.nome.toUpperCase()]: novaFotoUrl,
-    };
-    setFotosPorChave(novasFotos);
-
-    try {
-      localStorage.setItem("nnos_fotos_usuarios_v1", JSON.stringify(novasFotos));
-      if (usuarioSessao) {
-        const atualizado = { ...usuarioSessao, fotoUrl: novaFotoUrl };
-        setUsuarioSessao(atualizado);
-        localStorage.setItem("nnos_usuario_logado_v1", JSON.stringify(atualizado));
-      }
-      window.dispatchEvent(new CustomEvent("nnos-user-updated"));
-    } catch {}
-
-    try {
-      await fetch("/api/admin/usuarios", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          acao: "ATUALIZAR_FOTO",
-          login: identidadeAtiva.login,
-          nome: identidadeAtiva.nome,
-          fotoUrl: novaFotoUrl,
-        }),
-      });
-    } catch {}
-
-    setFeedbackMsg({
-      tipo: "ok",
-      texto: novaFotoUrl ? "Foto de perfil atualizada com sucesso!" : "Foto removida com sucesso.",
-    });
-    setTimeout(() => setFeedbackMsg(null), 3000);
-  };
-
-  const handleSalvarNovaSenha = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!novaSenha || novaSenha.trim().length < 4) {
-      setFeedbackMsg({ tipo: "erro", texto: "A nova senha deve ter no mínimo 4 caracteres." });
-      return;
-    }
-    if (novaSenha !== confirmaSenha) {
-      setFeedbackMsg({ tipo: "erro", texto: "A confirmação de senha não confere." });
-      return;
-    }
-
-    try {
-      const res = await fetch("/api/admin/usuarios", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          acao: "ALTERAR_SENHA",
-          login: identidadeAtiva.login,
-          novaSenha: novaSenha.trim(),
-        }),
-      });
-      if (res.ok) {
-        setNovaSenha("");
-        setConfirmaSenha("");
-        setFeedbackMsg({ tipo: "ok", texto: "Senha atualizada com sucesso!" });
-        setTimeout(() => setFeedbackMsg(null), 3000);
-      } else {
-        setFeedbackMsg({ tipo: "erro", texto: "Não foi possível alterar a senha." });
-      }
-    } catch {
-      setFeedbackMsg({ tipo: "erro", texto: "Erro de conexão ao salvar senha." });
-    }
-  };
-
   const handleLogout = async () => {
     try {
       await fetch("/api/auth/login", {
@@ -299,10 +184,6 @@ export default function UserProfileHeader() {
     window.location.href = "/login";
   };
 
-  const otpAuthUri = `otpauth://totp/NNOS:${encodeURIComponent(
-    identidadeAtiva.email
-  )}?secret=${identidadeAtiva.mfaSecret || "JBSWY3DPEHPK3PXP"}&issuer=NNOS%20Consultoria`;
-
   return (
     <>
       <div style={{ display: "inline-flex", alignItems: "center", gap: "10px" }}>
@@ -325,10 +206,7 @@ export default function UserProfileHeader() {
         {/* Identificação do Usuário Logado + Avatar com Upload de Foto */}
         <div
           className="header-user"
-          onClick={() => {
-            setFeedbackMsg(null);
-            setModalAberto(true);
-          }}
+          onClick={() => setModalAberto(true)}
           title="Clique para alterar sua foto de perfil, senha ou Google Authenticator"
           style={{
             cursor: "pointer",
@@ -411,7 +289,11 @@ export default function UserProfileHeader() {
         onFechar={() => setModalAberto(false)}
         identidade={identidadeAtiva}
         onFotoAtualizada={(novaFotoUrl) => {
-          salvarFotoPerfil(novaFotoUrl);
+          setFotosPorChave((prev) => ({
+            ...prev,
+            [identidadeAtiva.login.toLowerCase()]: novaFotoUrl,
+            [identidadeAtiva.nome.toUpperCase()]: novaFotoUrl,
+          }));
         }}
       />
     </>
