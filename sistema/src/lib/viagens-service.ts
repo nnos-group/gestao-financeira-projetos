@@ -1243,10 +1243,51 @@ export async function enviarVouchersViajante(
   // Disparar envio de e-mail com anexos reais
   let envioInfo = "Modo Simulação";
   try {
-    const anexosEnvio: { filename: string; content: string }[] = todosAnexos.filter((a) => a.url).map((a) => ({
-      filename: a.nome,
-      content: a.url!,
-    }));
+    const db = getSupabase();
+    const anexosEnvio: { filename: string; content: string }[] = [];
+
+    for (const a of todosAnexos) {
+      if (!a.url) continue;
+      if (a.url.startsWith("data:")) {
+        anexosEnvio.push({ filename: a.nome, content: a.url });
+      } else if (a.url.startsWith("http")) {
+        try {
+          const respArq = await fetch(a.url);
+          if (respArq.ok) {
+            const arrBuf = await respArq.arrayBuffer();
+            const mime = respArq.headers.get("content-type") || "application/pdf";
+            anexosEnvio.push({
+              filename: a.nome,
+              content: `data:${mime};base64,${Buffer.from(arrBuf).toString("base64")}`,
+            });
+          }
+        } catch (errFetch) {
+          console.warn("Aviso ao baixar anexo remoto para e-mail:", a.nome, errFetch);
+        }
+      } else if (a.url.startsWith("/api/viagens/anexo?id=")) {
+        try {
+          const docId = a.url.split("id=")[1]?.split("&")[0];
+          if (docId) {
+            const { data: docRow } = await db
+              .from("configuracoes")
+              .select("descricao")
+              .eq("chave", `viagem_doc_${docId}`)
+              .maybeSingle();
+            if (docRow?.descricao) {
+              const parsed = JSON.parse(docRow.descricao);
+              if (parsed?.base64) {
+                anexosEnvio.push({
+                  filename: a.nome,
+                  content: `data:${parsed.mimeType || "application/pdf"};base64,${parsed.base64}`,
+                });
+              }
+            }
+          }
+        } catch (errDoc) {
+          console.warn("Aviso ao carregar anexo do banco para e-mail:", a.nome, errDoc);
+        }
+      }
+    }
 
     // Inclui os PDFs oficiais das políticas de viagem como anexos reais no e-mail
     const politicasDir = path.join(process.cwd(), "public/politicas");

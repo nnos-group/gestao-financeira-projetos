@@ -333,6 +333,19 @@ export default function CotacoesMatrixModal({
     );
   };
 
+  const lerRespostaSegura = async (res: Response) => {
+    const text = await res.text();
+    try {
+      return JSON.parse(text);
+    } catch {
+      throw new Error(
+        res.status === 413
+          ? "Arquivo excedeu o limite permitido pelo servidor. Envie arquivos de até 4 MB por vez."
+          : text.slice(0, 140) || `Erro HTTP ${res.status}`
+      );
+    }
+  };
+
   const handleUploadAnexo = async (
     e: React.ChangeEvent<HTMLInputElement>,
     categoria: CategoriaLogistica,
@@ -343,26 +356,27 @@ export default function CotacoesMatrixModal({
     e.target.value = "";
     if (files.length === 0) return;
 
-    const lerComoDataUrl = (file: File): Promise<AnexoDocumento> =>
-      new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          resolve({
-            id: `doc-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-            nome: file.name,
-            tipo,
-            url: reader.result as string,
-            mimeType: file.type || "application/pdf",
-            tamanhoFormatado: `${Math.max(1, Math.round(file.size / 1024))} KB`,
-            criadoEm: new Date().toISOString(),
-          });
-        };
-        reader.onerror = () => reject(reader.error);
-        reader.readAsDataURL(file);
-      });
+    const enviarArquivoIndividual = async (file: File): Promise<AnexoDocumento> => {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("tipo", tipo);
+      formData.append("solicitacaoId", sol.id);
+      formData.append("categoria", categoria);
 
+      const res = await fetch("/api/viagens/anexo", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await lerRespostaSegura(res);
+      if (!res.ok || !data?.ok || !data?.anexo) {
+        throw new Error(data?.error || `Falha ao enviar arquivo ${file.name}`);
+      }
+      return data.anexo as AnexoDocumento;
+    };
+
+    setLoading(true);
     try {
-      const novosAnexos = await Promise.all(files.map(lerComoDataUrl));
+      const novosAnexos = await Promise.all(files.map(enviarArquivoIndividual));
 
       const novasCategorias = categoriasState.map((cat) => {
         if (cat.categoria !== categoria) return cat;
@@ -418,8 +432,8 @@ export default function CotacoesMatrixModal({
 
       showToast(
         novosAnexos.length === 1
-          ? `Documento "${novosAnexos[0].nome}" anexado com sucesso!`
-          : `${novosAnexos.length} documentos anexados com sucesso!`
+          ? `Documento "${novosAnexos[0].nome}" enviado com sucesso!`
+          : `${novosAnexos.length} documentos enviados com sucesso!`
       );
 
       if (tipo === "VOUCHER") {
@@ -435,8 +449,10 @@ export default function CotacoesMatrixModal({
           .then(() => onAtualizar())
           .catch(() => {});
       }
-    } catch {
-      showToast("Erro ao ler o(s) arquivo(s) selecionado(s).");
+    } catch (err: any) {
+      showToast(`Erro no upload: ${err?.message || "Falha ao enviar o(s) arquivo(s)."}`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -467,8 +483,8 @@ export default function CotacoesMatrixModal({
           usuarioNome: "Agência Fátima",
         }),
       });
-      const data = await res.json();
-      if (!data.ok) throw new Error(data.error);
+      const data = await lerRespostaSegura(res);
+      if (!res.ok || !data.ok) throw new Error(data.error || "Falha ao salvar cotações");
 
       setSol(data.solicitacao);
       showToast(
@@ -511,8 +527,8 @@ export default function CotacoesMatrixModal({
           aprovadorNome: obterDadosLiderViagem(sol).nome || "Líder de Projeto",
         }),
       });
-      const data = await res.json();
-      if (!data.ok) throw new Error(data.error);
+      const data = await lerRespostaSegura(res);
+      if (!res.ok || !data.ok) throw new Error(data.error || "Falha ao aprovar logística");
 
       setSol(data.solicitacao);
       showToast("Escolhas APROVADAS com sucesso! Agência notificada para compra e emissão.");
@@ -538,8 +554,8 @@ export default function CotacoesMatrixModal({
           usuarioNome: "Agência Fátima",
         }),
       });
-      const data = await res.json();
-      if (!data.ok) throw new Error(data.error);
+      const data = await lerRespostaSegura(res);
+      if (!res.ok || !data.ok) throw new Error(data.error || "Falha ao registrar compras");
 
       setSol(data.solicitacao);
       if (data.requerReaprovacao) {
@@ -568,8 +584,8 @@ export default function CotacoesMatrixModal({
           usuarioNome: "Agência Fátima",
         }),
       });
-      const dataComprar = await resComprar.json();
-      if (!dataComprar.ok) throw new Error(dataComprar.error);
+      const dataComprar = await lerRespostaSegura(resComprar);
+      if (!resComprar.ok || !dataComprar.ok) throw new Error(dataComprar.error || "Falha ao registrar valores finais");
 
       if (dataComprar.requerReaprovacao || dataComprar.solicitacao?.requerReaprovacao) {
         setSol(dataComprar.solicitacao);
@@ -588,8 +604,8 @@ export default function CotacoesMatrixModal({
           usuarioNome: "Agência Fátima",
         }),
       });
-      const data = await res.json();
-      if (!data.ok) throw new Error(data.error);
+      const data = await lerRespostaSegura(res);
+      if (!res.ok || !data.ok) throw new Error(data.error || "Falha ao enviar vouchers");
 
       setSol(data.solicitacao);
       setShowEmailPreviewModal(false);
