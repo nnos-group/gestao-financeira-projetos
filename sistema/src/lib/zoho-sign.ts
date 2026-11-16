@@ -77,10 +77,33 @@ export interface EnviarBmZohoParams {
   pdfBuffer?: Buffer | Uint8Array;
 }
 
+function extrairEmailsValidos(str?: string): string[] {
+  return String(str || "")
+    .split(/[;,]+/)
+    .map((e) => e.trim())
+    .filter((e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e));
+}
+
 /**
  * Cria a solicitação oficial de assinatura no Zoho Sign com os 3 signatários
  */
 export async function enviarBmParaZohoSign(params: EnviarBmZohoParams) {
+  const liderEmails = extrairEmailsValidos(params.liderEmail);
+  const consultorEmails = extrairEmailsValidos(params.consultorEmail);
+  const responsavelEmails = extrairEmailsValidos(params.responsavelEmail);
+
+  if (!liderEmails[0]) throw new Error(`E-mail do líder inválido: "${params.liderEmail}"`);
+  if (!consultorEmails[0]) throw new Error(`E-mail do consultor inválido: "${params.consultorEmail}"`);
+  if (!responsavelEmails[0]) throw new Error(`E-mail do responsável inválido: "${params.responsavelEmail}"`);
+
+  const copiaBase = extrairEmailsValidos(params.emailsCopia);
+  const todosSecundarios = [
+    ...liderEmails.slice(1),
+    ...consultorEmails.slice(1),
+    ...responsavelEmails.slice(1),
+    ...copiaBase,
+  ];
+
   // 1. Se houver Zoho Flow configurado (Zoho One), despacha diretamente via Webhook do Flow
   const flowUrl = process.env.ZOHO_FLOW_WEBHOOK_URL;
   if (flowUrl) {
@@ -92,12 +115,12 @@ export async function enviarBmParaZohoSign(params: EnviarBmZohoParams) {
         body: JSON.stringify({
           codigo_bm: params.codigoBm,
           consultor_nome: params.consultorNome,
-          consultor_email: params.consultorEmail,
+          consultor_email: consultorEmails[0],
           lider_nome: params.liderNome,
-          lider_email: params.liderEmail,
+          lider_email: liderEmails[0],
           responsavel_nome: params.responsavelNome,
-          responsavel_email: params.responsavelEmail,
-          emails_copia: params.emailsCopia || "leonardo.campos@nnos.com.br",
+          responsavel_email: responsavelEmails[0],
+          emails_copia: todosSecundarios.length > 0 ? todosSecundarios.join(";") : "leonardo.campos@nnos.com.br",
           periodo: params.periodoStr,
           valor_total: params.valorTotal,
           link_sistema: "https://gestao.nnos.com.br/medicao",
@@ -133,42 +156,39 @@ export async function enviarBmParaZohoSign(params: EnviarBmZohoParams) {
   const actions: any[] = [
     {
       recipient_name: params.liderNome,
-      recipient_email: params.liderEmail,
+      recipient_email: liderEmails[0],
       action_type: "SIGN",
       signing_order: 1,
       verify_recipient: false,
     },
     {
       recipient_name: params.consultorNome,
-      recipient_email: params.consultorEmail,
+      recipient_email: consultorEmails[0],
       action_type: "SIGN",
       signing_order: 2,
       verify_recipient: false,
     },
     {
       recipient_name: params.responsavelNome,
-      recipient_email: params.responsavelEmail,
+      recipient_email: responsavelEmails[0],
       action_type: "SIGN",
       signing_order: 3,
       verify_recipient: false,
     },
   ];
 
-  // Adicionar destinatários de cópia (visualizadores) apenas se não forem já signatários
-  if (params.emailsCopia) {
-    const copias = params.emailsCopia.split(";").map((e) => e.trim()).filter(Boolean);
-    copias.forEach((email) => {
-      const jaExiste = actions.some((a) => a.recipient_email.toLowerCase() === email.toLowerCase());
-      if (!jaExiste) {
-        actions.push({
-          recipient_name: "Cópia Financeiro",
-          recipient_email: email,
-          action_type: "VIEW",
-          signing_order: actions.length + 1,
-        });
-      }
-    });
-  }
+  // Adicionar destinatários de cópia e e-mails secundários como visualizadores (VIEW)
+  todosSecundarios.forEach((email) => {
+    const jaExiste = actions.some((a) => a.recipient_email.toLowerCase() === email.toLowerCase());
+    if (!jaExiste) {
+      actions.push({
+        recipient_name: "Cópia / Secundário",
+        recipient_email: email,
+        action_type: "VIEW",
+        signing_order: actions.length + 1,
+      });
+    }
+  });
 
   const periodoLimpo = (params.periodoStr || "")
     .replace(/\s*\(\s*/g, " - ")
