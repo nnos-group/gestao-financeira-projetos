@@ -655,71 +655,6 @@ export default function BoletimMedicaoPage() {
     }
   };
 
-  // Simular avanço de assinatura
-  const handleAvancarAssinatura = (bm: BoletimMedicaoItem) => {
-    const dataAgora = new Date();
-    const dataHoraStr = `${dataAgora.toLocaleDateString("pt-BR")} às ${dataAgora.toLocaleTimeString("pt-BR")}`;
-
-    const novosBms = bmsLista.map((item) => {
-      if (item.id !== bm.id) return item;
-
-      if (item.status === "Pendente de Assinatura") {
-        const novosLogs: LogSignatario[] = [
-          {
-            ...item.logs[0],
-            status: "Assinado",
-            dataHora: dataHoraStr,
-            detalhe: "IP: 189.44.112.5 • Assinado via NNÓS Sign",
-          },
-          item.logs[1] || { signatario: "LÍDER DE PROJETO", papel: "Aprovador", email: "projetos@nnos.com.br", status: "Pendente" },
-          item.logs[2] || { signatario: "MARCELO LARA", papel: "Coordenação", email: "marcelo.lara@nnos.com.br", status: "Pendente" },
-        ];
-        showToast("Assinatura do prestador (" + item.consultorNome + ") registrada!");
-        return {
-          ...item,
-          status: "Assinado pelo Prestador" as const,
-          logs: novosLogs,
-        };
-      } else if (item.status === "Assinado pelo Prestador") {
-        const novosLogs: LogSignatario[] = [
-          item.logs[0],
-          {
-            ...(item.logs[1] || { signatario: item.liderProjetoNome, papel: "Aprovador", email: item.liderProjetoEmail }),
-            status: "Assinado",
-            dataHora: dataHoraStr,
-            detalhe: "Aprovado pelo líder " + item.liderProjetoNome,
-          },
-          item.logs[2] || { signatario: "MARCELO LARA", papel: "Coordenação", email: "marcelo.lara@nnos.com.br", status: "Pendente" },
-        ];
-        showToast("Aprovação do Líder de Projeto (" + item.liderProjetoNome + ") concluída!");
-        return {
-          ...item,
-          status: "Aprovado pelo Líder" as const,
-          logs: novosLogs,
-        };
-      } else if (item.status === "Aprovado pelo Líder") {
-        const novosLogs: LogSignatario[] = [
-          item.logs[0],
-          item.logs[1],
-          {
-            ...(item.logs[2] || { signatario: item.responsavelNnosNome, papel: "Coordenação Geral", email: item.responsavelNnosEmail }),
-            status: "Assinado",
-            dataHora: dataHoraStr,
-            detalhe: "Homologado para faturamento financeiro",
-          },
-        ];
-        showToast("BM " + item.codigo + " Aprovado & Pronto para Faturamento!");
-        return {
-          ...item,
-          status: "Aprovado & Pronto p/ Faturamento" as const,
-          logs: novosLogs,
-        };
-      }
-      return item;
-    });
-    salvarBms(novosBms);
-  };
-
   // Copiar descrição da nota fiscal
   const handleCopyNfTexto = (bm: BoletimMedicaoItem) => {
     const linhasProjetos = Array.from(
@@ -2071,17 +2006,6 @@ ${linhasProjetos.join("\n")}`;
                                   <span>Visualizar</span>
                                 </button>
 
-                                {bm.status !== "Aprovado & Pronto p/ Faturamento" && (
-                                  <button
-                                    type="button"
-                                    onClick={() => handleAvancarAssinatura(bm)}
-                                    className="btn-secondary"
-                                    style={{ padding: "6px 8px", fontSize: "11px" }}
-                                    title="Avançar etapa de assinatura"
-                                  >
-                                    <span className="material-symbols-outlined" style={{ fontSize: "14px", color: "var(--secondary)" }}>draw</span>
-                                  </button>
-                                )}
                                 {regraAtiva("homologarBmFinanceiro") && (
                                 <button
                                   type="button"
