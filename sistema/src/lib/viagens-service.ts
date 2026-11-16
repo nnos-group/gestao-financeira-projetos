@@ -51,7 +51,68 @@ export function salvarSolicitacoesArquivo(lista: ViagemSolicitacao[]): void {
     invalidarCacheViagens();
     fs.writeFileSync(DATA_FILE, JSON.stringify(lista, null, 2), "utf8");
   } catch (err) {
-    console.error("Erro ao salvar viagens-solicitacoes-base.json:", err);
+    console.warn("Aviso ao salvar viagens-solicitacoes-base.json (FS somente leitura em serverless):", err);
+  }
+}
+
+const PREFIXO_WORKFLOW_CLOUD = "viagem_wf_";
+
+export async function carregarWorkflowCloud(): Promise<Map<string, ViagemSolicitacao>> {
+  const mapa = new Map<string, ViagemSolicitacao>();
+  try {
+    const db = getSupabase();
+    const { data, error } = await db
+      .from("configuracoes")
+      .select("chave, descricao")
+      .like("chave", `${PREFIXO_WORKFLOW_CLOUD}%`);
+    if (!error && Array.isArray(data)) {
+      for (const row of data) {
+        if (!row?.descricao) continue;
+        try {
+          const parsed = JSON.parse(row.descricao) as ViagemSolicitacao;
+          if (parsed?.id) mapa.set(parsed.id, parsed);
+          if (parsed?.lancamentoId) mapa.set(parsed.lancamentoId, parsed);
+        } catch {
+          // ignora linha malformada
+        }
+      }
+    }
+  } catch (err) {
+    console.warn("Aviso ao carregar workflow de viagens no Supabase:", err);
+  }
+  return mapa;
+}
+
+export async function carregarSolicitacaoUnicaCloud(idOuLancId: string): Promise<ViagemSolicitacao | null> {
+  try {
+    const db = getSupabase();
+    const idNorm = idOuLancId.startsWith("sol-") ? idOuLancId : `sol-${idOuLancId}`;
+    const { data, error } = await db
+      .from("configuracoes")
+      .select("descricao")
+      .eq("chave", `${PREFIXO_WORKFLOW_CLOUD}${idNorm}`)
+      .maybeSingle();
+    if (!error && data?.descricao) {
+      return JSON.parse(data.descricao) as ViagemSolicitacao;
+    }
+  } catch {}
+  return null;
+}
+
+export async function salvarSolicitacaoWorkflowCloud(sol: ViagemSolicitacao): Promise<void> {
+  try {
+    invalidarCacheViagens();
+    const db = getSupabase();
+    await db.from("configuracoes").upsert(
+      {
+        chave: `${PREFIXO_WORKFLOW_CLOUD}${sol.id}`,
+        valor: Number(sol.totalRealizado || sol.totalContratado || 0),
+        descricao: JSON.stringify(sol),
+      },
+      { onConflict: "chave" }
+    );
+  } catch (err) {
+    console.warn("Aviso ao persistir workflow de viagem no Supabase:", err);
   }
 }
 
@@ -113,7 +174,17 @@ export async function sincronizarSolicitacoesIniciais(competencia?: string): Pro
   }
 
   const existentes = carregarSolicitacoesArquivo();
-  const mapaExistentes = new Map(existentes.map((s) => [s.lancamentoId, s]));
+  const mapaCloud = await carregarWorkflowCloud();
+  const mapaExistentes = new Map<string, ViagemSolicitacao>();
+  existentes.forEach((s) => {
+    const cloudSol = mapaCloud.get(s.id) || mapaCloud.get(s.lancamentoId);
+    mapaExistentes.set(s.lancamentoId, cloudSol || s);
+  });
+  mapaCloud.forEach((cloudSol) => {
+    if (cloudSol?.lancamentoId && !mapaExistentes.has(cloudSol.lancamentoId)) {
+      mapaExistentes.set(cloudSol.lancamentoId, cloudSol);
+    }
+  });
 
   let houveMudanca = false;
 
@@ -523,7 +594,9 @@ export async function obterSolicitacaoGarantida(
   solicitacaoId: string
 ): Promise<{ sol: ViagemSolicitacao; lista: ViagemSolicitacao[] }> {
   let lista = carregarSolicitacoesArquivo();
-  let sol = lista.find(
+  const cloudSol = await carregarSolicitacaoUnicaCloud(solicitacaoId);
+
+  let solIdx = lista.findIndex(
     (s) =>
       s.id === solicitacaoId ||
       s.lancamentoId === solicitacaoId ||
@@ -532,10 +605,10 @@ export async function obterSolicitacaoGarantida(
       String(s.lancamentoId) === String(solicitacaoId)
   );
 
-  if (!sol) {
+  if (solIdx === -1) {
     // Sincroniza todas as solicitações a partir do banco de dados
     lista = await sincronizarSolicitacoesIniciais();
-    sol = lista.find(
+    solIdx = lista.findIndex(
       (s) =>
         s.id === solicitacaoId ||
         s.lancamentoId === solicitacaoId ||
@@ -543,6 +616,12 @@ export async function obterSolicitacaoGarantida(
         solicitacaoId.endsWith(s.id) ||
         String(s.lancamentoId) === String(solicitacaoId)
     );
+  }
+
+  let sol = solIdx >= 0 ? lista[solIdx] : cloudSol;
+  if (cloudSol && solIdx >= 0) {
+    lista[solIdx] = cloudSol;
+    sol = cloudSol;
   }
 
   if (!sol) {
@@ -566,11 +645,23 @@ export async function salvarCotacoesAgencia(
 
   const agora = new Date().toISOString();
 
-  sol.categorias = categoriasAtualizadas;
-  
-  // Recalcula total cotado com base nas menores cotações disponíveis de cada categoria necessária
+  // Garante que categorias com PDFs anexados fiquem ativas/necessárias
+  sol.categorias = categoriasAtualizadas.map((cat) => {
+    const temPdf = (cat.alternativas || []).some((a) => (a.anexos && a.anexos.length > 0));
+    return temPdf ? { ...cat, necessaria: true } : cat;
+  });
+
+  if (observacoesAgencia !== undefined) {
+    sol.observacoesSolicitante = observacoesAgencia;
+  }
+
+  // Recalcula total cotado caso haja valores numéricos informados (no novo fluxo por PDF pode ser 0)
   let totalCot = 0;
-  categoriasAtualizadas.forEach((cat) => {
+  let totalAnexosPdf = 0;
+  sol.categorias.forEach((cat) => {
+    cat.alternativas.forEach((a) => {
+      totalAnexosPdf += (a.anexos || []).length;
+    });
     if (cat.necessaria && cat.alternativas.length > 0) {
       const menor = Math.min(...cat.alternativas.map((a) => a.valor || 0));
       totalCot += menor;
@@ -586,7 +677,9 @@ export async function salvarCotacoesAgencia(
       perfilUsuario: "AGENCIA",
       usuarioNome,
       acao: "COTACOES_ENVIADAS_APROVACAO",
-      detalhes: `Cotações enviadas para aprovação do líder. Total estimado: R$ ${sol.totalCotado.toFixed(2)}. ${observacoesAgencia || ""}`,
+      detalhes: totalCot > 0
+        ? `Cotações enviadas para aprovação do líder (${totalAnexosPdf} PDF(s)). Total estimado: R$ ${sol.totalCotado.toFixed(2)}. ${observacoesAgencia || ""}`
+        : `Arquivos de cotação em PDF (${totalAnexosPdf} anexo(s)) enviados para escolha e aprovação do líder. ${observacoesAgencia || ""}`,
     });
   } else {
     sol.status = "EM_COTACAO";
@@ -596,16 +689,17 @@ export async function salvarCotacoesAgencia(
       perfilUsuario: "AGENCIA",
       usuarioNome,
       acao: "COTACOES_SALVAS_RASCUNHO",
-      detalhes: "Propostas e cotações atualizadas pela agência",
+      detalhes: "Propostas e arquivos de cotação atualizados pela agência",
     });
   }
 
   sol.atualizadoEm = agora;
   salvarSolicitacoesArquivo(lista);
+  await salvarSolicitacaoWorkflowCloud(sol);
 
   // Dispara notificação por e-mail para o Líder quando a Agência envia para aprovação
   if (enviarParaAprovacao) {
-    dispararNotificacaoCotacoesProntasLider(sol, observacoesAgencia).catch((e) =>
+    await dispararNotificacaoCotacoesProntasLider(sol, observacoesAgencia).catch((e) =>
       console.warn("Aviso ao disparar e-mail de cotação pronta:", e)
     );
   }
@@ -628,6 +722,34 @@ export async function aprovarLogisticaLider(
   let somaAprovada = 0;
 
   sol.categorias.forEach((cat) => {
+    const textoEscolha = justificativas?.[cat.categoria]?.trim();
+    if (textoEscolha) {
+      cat.necessaria = true;
+      if (!cat.alternativas || cat.alternativas.length === 0) {
+        const altPadrao: AlternativaCotacao = {
+          id: `alt-${cat.categoria.toLowerCase()}-${sol.id}-1`,
+          alternativaNumero: 1,
+          fornecedor: cat.nomeExibicao,
+          descricao: textoEscolha,
+          valor: 0,
+          dataCotacao: agora.split("T")[0],
+          selecionada: true,
+          anexos: [],
+        };
+        cat.alternativas = [altPadrao];
+        cat.alternativaAprovadaId = altPadrao.id;
+      } else {
+        const alvoId = escolhasPorCategoria[cat.categoria] || cat.alternativaAprovadaId || cat.alternativas[0].id;
+        cat.alternativaAprovadaId = alvoId;
+        cat.alternativas.forEach((alt) => {
+          alt.selecionada = alt.id === alvoId;
+          if (alt.selecionada) {
+            alt.descricao = textoEscolha;
+          }
+        });
+      }
+    }
+
     const altEscolhidaId = escolhasPorCategoria[cat.categoria] || cat.alternativaAprovadaId || cat.alternativas.find((a) => a.selecionada)?.id;
     if (altEscolhidaId) {
       cat.alternativaAprovadaId = altEscolhidaId;
@@ -679,7 +801,7 @@ export async function aprovarLogisticaLider(
   }
 
   const justTexto = justificativas && Object.keys(justificativas).length > 0
-    ? ` Justificativas: ${Object.entries(justificativas).map(([k, v]) => `[${k}: ${v}]`).join("; ")}`
+    ? ` Opções escolhidas: ${Object.entries(justificativas).map(([k, v]) => `[${k}: ${v}]`).join("; ")}`
     : "";
 
   sol.auditoria.push({
@@ -688,18 +810,21 @@ export async function aprovarLogisticaLider(
     perfilUsuario: "LIDER",
     usuarioNome: aprovadorNome,
     acao: "LOGISTICA_APROVADA",
-    detalhes: `Composição da viagem aprovada com total de R$ ${sol.totalAprovado.toFixed(2)}.${justTexto} Aguardando conferência e confirmação do consultor.`,
+    detalhes: sol.totalAprovado > 0
+      ? `Composição da viagem aprovada com total de R$ ${sol.totalAprovado.toFixed(2)}.${justTexto}`
+      : `Opções do PDF escolhidas e aprovadas pelo Líder.${justTexto} Agência liberada para compra e emissão.`,
   });
 
   sol.atualizadoEm = agora;
   salvarSolicitacoesArquivo(lista);
+  await salvarSolicitacaoWorkflowCloud(sol);
 
   // Sincroniza custos aprovados no Supabase
   await sincronizarViagemComSupabase(sol);
 
   // Dispara notificação por e-mail para a Agência informando aprovação e liberando compras
   if (sol.status === "APROVADO_AGUARDANDO_COMPRA") {
-    dispararNotificacaoCotacaoAprovadaAgencia(sol, aprovadorNome).catch((e) =>
+    await dispararNotificacaoCotacaoAprovadaAgencia(sol, aprovadorNome).catch((e) =>
       console.warn("Aviso ao disparar e-mail de cotação aprovada para agência:", e)
     );
   }
@@ -716,6 +841,7 @@ export async function registrarCompraAgencia(
     compras: {
       categoria: CategoriaLogistica;
       alternativaId: string;
+      fornecedor?: string;
       valorContratado: number;
       localizadorOuReserva?: string;
       observacoes?: string;
@@ -757,8 +883,8 @@ export async function registrarCompraAgencia(
       alt = {
         id: c.alternativaId || `alt-${c.categoria.toLowerCase()}-${sol.id}-${Date.now()}`,
         alternativaNumero: 1,
-        fornecedor: c.categoria === "CARRO" ? "Locadora de Veículos" : "Agência de Viagens",
-        descricao: `Reserva de ${cat.nomeExibicao}`,
+        fornecedor: c.fornecedor || (c.categoria === "CARRO" ? "Locadora de Veículos" : "Agência de Viagens"),
+        descricao: sol.justificativasLider?.[c.categoria] || `Reserva de ${cat.nomeExibicao}`,
         valor: Number(c.valorContratado) || 0,
         valorContratado: Number(c.valorContratado) || 0,
         dataCotacao: agora.split("T")[0],
@@ -771,6 +897,9 @@ export async function registrarCompraAgencia(
       cat.necessaria = true;
       cat.alternativaAprovadaId = alt.id;
     } else {
+      if (c.fornecedor !== undefined && c.fornecedor.trim() !== "") {
+        alt.fornecedor = c.fornecedor.trim();
+      }
       alt.valorContratado = Number(c.valorContratado) ?? alt.valor;
       alt.localizadorOuReserva = c.localizadorOuReserva ?? alt.localizadorOuReserva;
       alt.observacoesContratacao = c.observacoes || alt.observacoesContratacao;
@@ -784,11 +913,21 @@ export async function registrarCompraAgencia(
   });
 
   sol.totalContratado = Math.round(totalContratado * 100) / 100;
-  sol.diferencaValor = Math.round((sol.totalContratado - sol.totalAprovado) * 100) / 100;
+
+  // No fluxo por PDF, a cotação aprovada pelo Líder não tinha valores digitados (totalAprovado === 0).
+  // Ao informar o valor final na Etapa 3, ele se torna o valor aprovado de referência sem bloquear por divergência.
+  const veioDoFluxoPdfSemValorPrevio = (sol.totalAprovado || 0) === 0;
+  if (veioDoFluxoPdfSemValorPrevio) {
+    sol.totalAprovado = sol.totalContratado;
+    sol.diferencaValor = 0;
+  } else {
+    sol.diferencaValor = Math.round((sol.totalContratado - sol.totalAprovado) * 100) / 100;
+  }
+
   sol.totalRealizado = Math.round((sol.totalContratado + sol.custoAlimentacaoDiaria) * 100) / 100;
 
-  // MELHORIA 1: Reaprovação obrigatória se valor contratado > aprovado (tolerância zero)
-  if (sol.totalContratado > sol.totalAprovado + 0.05) {
+  // MELHORIA 1: Reaprovação obrigatória se valor contratado > aprovado prévio (exceto quando veio do fluxo PDF sem valor prévio)
+  if (!veioDoFluxoPdfSemValorPrevio && sol.totalContratado > sol.totalAprovado + 0.05) {
     sol.status = "AGUARDANDO_REAPROVACAO";
     sol.requerReaprovacao = true;
     sol.motivoReaprovacao = `Valor contratado (R$ ${sol.totalContratado.toFixed(2)}) excedeu o valor aprovado (R$ ${sol.totalAprovado.toFixed(2)}) em R$ ${sol.diferencaValor.toFixed(2)}.`;
@@ -820,6 +959,7 @@ export async function registrarCompraAgencia(
 
   sol.atualizadoEm = agora;
   salvarSolicitacoesArquivo(lista);
+  await salvarSolicitacaoWorkflowCloud(sol);
 
   // Sincroniza custos no Supabase
   await sincronizarViagemComSupabase(sol);
@@ -862,6 +1002,7 @@ export async function enviarVouchersViajante(
 
   sol.atualizadoEm = agora;
   salvarSolicitacoesArquivo(lista);
+  await salvarSolicitacaoWorkflowCloud(sol);
 
   // Sincroniza custos no Supabase imediatamente para refletir na tela de Projetos
   await sincronizarViagemComSupabase(sol);
@@ -1169,9 +1310,7 @@ export async function registrarAlimentacaoFinanceiro(
   concluirPrestacao: boolean,
   usuarioNome: string = "Financeiro NNÓS"
 ): Promise<ViagemSolicitacao> {
-  const lista = carregarSolicitacoesArquivo();
-  const sol = lista.find((s) => s.id === solicitacaoId);
-  if (!sol) throw new Error("Solicitação não encontrada");
+  const { sol, lista } = await obterSolicitacaoGarantida(solicitacaoId);
 
   const agora = new Date().toISOString();
   const valorAnterior = sol.custoAlimentacaoDiaria;
@@ -1200,6 +1339,7 @@ export async function registrarAlimentacaoFinanceiro(
 
   sol.atualizadoEm = agora;
   salvarSolicitacoesArquivo(lista);
+  await salvarSolicitacaoWorkflowCloud(sol);
 
   // Sincroniza custos no Supabase
   await sincronizarViagemComSupabase(sol);
@@ -1214,9 +1354,7 @@ export async function aprovarRecebimentoVouchersConsultor(
   solicitacaoId: string,
   usuarioNome: string = "Consultor"
 ): Promise<ViagemSolicitacao> {
-  const lista = carregarSolicitacoesArquivo();
-  const sol = lista.find((s) => s.id === solicitacaoId);
-  if (!sol) throw new Error("Solicitação não encontrada");
+  const { sol, lista } = await obterSolicitacaoGarantida(solicitacaoId);
 
   const agora = new Date().toISOString();
   sol.status = "AGUARDANDO_PRESTACAO_CONTAS";
@@ -1234,6 +1372,7 @@ export async function aprovarRecebimentoVouchersConsultor(
 
   sol.atualizadoEm = agora;
   salvarSolicitacoesArquivo(lista);
+  await salvarSolicitacaoWorkflowCloud(sol);
 
   await sincronizarViagemComSupabase(sol);
 
@@ -1435,19 +1574,25 @@ export async function dispararNotificacaoCotacoesProntasLider(sol: ViagemSolicit
   try {
     const lider = obterDadosLiderViagem(sol);
     const periodoFmt = formatarPeriodoBR(sol.dataInicial, sol.dataFinal);
-    const valorCotadoFmt = (sol.totalCotado || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-    const assunto = `📋 [COTAÇÃO ENVIADA] Propostas de Viagem Prontas para Aprovação • ${sol.projeto} - ${sol.atividade}`;
+    const temValorCotado = (sol.totalCotado || 0) > 0;
+    const valorCotadoFmt = temValorCotado
+      ? (sol.totalCotado || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
+      : "Opções enviadas em PDF para escolha";
+    const nomesArquivosPdf = (sol.categorias || [])
+      .flatMap((c) => (c.alternativas || []).flatMap((a) => (a.anexos || []).map((anx) => `${c.nomeExibicao}: ${anx.nome}`)))
+      .filter(Boolean);
+    const assunto = `📋 [COTAÇÃO ENVIADA] Propostas em PDF Prontas para Escolha • ${sol.projeto} - ${sol.atividade}`;
 
     const html = `
       <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 650px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; overflow: hidden; color: #1e293b;">
         <div style="background: linear-gradient(135deg, #00152f 0%, #0f2a4a 100%); padding: 22px 26px; color: #ffffff;">
           <h2 style="margin: 0; font-size: 19px; font-weight: 800; letter-spacing: 0.5px;">NNÓS VIAGENS &amp; LOGÍSTICA</h2>
-          <p style="margin: 4px 0 0; font-size: 13px; color: #94a3b8;">Propostas de Viagem Aguardando Aprovação do Líder</p>
+          <p style="margin: 4px 0 0; font-size: 13px; color: #94a3b8;">Arquivos de Cotação em PDF Aguardando Escolha do Líder</p>
         </div>
         <div style="padding: 24px;">
           <h3 style="color: #0f2a4a; font-size: 16px; margin-top: 0; font-weight: 700;">Olá, ${lider.nome}!</h3>
           <p style="font-size: 13.5px; line-height: 1.6; color: #334155;">
-            A <strong>Agência Fátima</strong> cadastrou as alternativas de voo, hospedagem e translado para a viagem abaixo vinculada ao seu projeto. Favor avaliar e aprovar a opção mais conveniente.
+            A <strong>Agência Fátima</strong> anexou os arquivos comparativos de voo, hospedagem e/ou locação para a viagem abaixo vinculada ao seu projeto. Acesse o sistema para visualizar os PDFs e informar qual opção deseja aprovar para compra.
           </p>
 
           <div style="background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px; padding: 18px; margin: 20px 0;">
@@ -1456,7 +1601,7 @@ export async function dispararNotificacaoCotacoesProntasLider(sol: ViagemSolicit
             </h4>
             <table style="width: 100%; font-size: 13px; border-collapse: collapse; line-height: 1.7;">
               <tr>
-                <td style="color: #64748b; width: 140px; font-weight: 600;">Projeto / Atividade:</td>
+                <td style="color: #64748b; width: 150px; font-weight: 600;">Projeto / Atividade:</td>
                 <td style="font-weight: 700; color: #0f172a;">${sol.projeto} - ${sol.atividade}</td>
               </tr>
               <tr>
@@ -1472,9 +1617,14 @@ export async function dispararNotificacaoCotacoesProntasLider(sol: ViagemSolicit
                 <td style="font-weight: 700; color: #0f172a;">${periodoFmt}</td>
               </tr>
               <tr>
-                <td style="color: #64748b; font-weight: 600;">Total Cotado:</td>
-                <td style="font-weight: 800; color: #166534; font-size: 14px;">${valorCotadoFmt}</td>
+                <td style="color: #64748b; font-weight: 600;">Propostas / Valores:</td>
+                <td style="font-weight: 800; color: #166534; font-size: 13.5px;">${valorCotadoFmt}</td>
               </tr>
+              ${nomesArquivosPdf.length > 0 ? `
+              <tr>
+                <td style="color: #64748b; font-weight: 600; vertical-align: top;">PDFs Anexados:</td>
+                <td style="color: #0f172a; font-weight: 600;">${nomesArquivosPdf.join("<br/>")}</td>
+              </tr>` : ""}
               ${observacoesAgencia ? `
               <tr>
                 <td style="color: #64748b; font-weight: 600;">Obs. da Agência:</td>
@@ -1485,7 +1635,7 @@ export async function dispararNotificacaoCotacoesProntasLider(sol: ViagemSolicit
 
           <div style="text-align: center; margin: 26px 0;">
             <a href="${URL_SISTEMA_VIAGENS}" target="_blank" style="display: inline-block; background-color: #059669; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-size: 13.5px; font-weight: 700; box-shadow: 0 2px 6px rgba(5, 150, 105, 0.35);">
-              Avaliar &amp; Aprovar Cotação
+              Visualizar PDFs &amp; Escolher Opção
             </a>
           </div>
 
@@ -1501,7 +1651,7 @@ export async function dispararNotificacaoCotacoesProntasLider(sol: ViagemSolicit
       cc: [EMAIL_AGENCIA_OFICIAL],
       assunto,
       html,
-      texto: `Cotação de viagem cadastrada pela Agência Fátima para ${sol.consultor} no valor de ${valorCotadoFmt} (${sol.projeto}). Acesse para aprovar: ${URL_SISTEMA_VIAGENS}`,
+      texto: `Cotações em PDF enviadas pela Agência Fátima para ${sol.consultor} (${sol.projeto}). Acesse para visualizar os arquivos e escolher a opção: ${URL_SISTEMA_VIAGENS}`,
     });
   } catch (err) {
     console.warn("Aviso ao disparar e-mail de cotação pronta para o líder:", err);
@@ -1515,28 +1665,55 @@ export async function dispararNotificacaoCotacaoAprovadaAgencia(sol: ViagemSolic
   try {
     const lider = obterDadosLiderViagem(sol);
     const periodoFmt = formatarPeriodoBR(sol.dataInicial, sol.dataFinal);
-    const valorAprovadoFmt = (sol.totalAprovado || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    const valorAprovadoFmt = (sol.totalAprovado || 0) > 0
+      ? (sol.totalAprovado || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
+      : "Definido conforme opções escolhidas nos PDFs (a informar na emissão)";
     const assunto = `✅ [COTAÇÃO APROVADA] Liberado para Compra e Emissão • ${sol.projeto} - ${sol.atividade}`;
+
+    // Monta resumo das opções textuais escolhidas pelo Líder em cada categoria
+    const linhasEscolhas = (sol.categorias || [])
+      .map((cat) => {
+        const altAprov = cat.alternativas.find((a) => a.id === cat.alternativaAprovadaId) || cat.alternativas.find((a) => a.selecionada);
+        const escolhaTexto = sol.justificativasLider?.[cat.categoria] || altAprov?.descricao;
+        if (!escolhaTexto) return "";
+        return `
+          <tr>
+            <td style="color: #166534; width: 150px; font-weight: 700; vertical-align: top;">${cat.nomeExibicao}:</td>
+            <td style="font-weight: 700; color: #0f172a;">${escolhaTexto}</td>
+          </tr>`;
+      })
+      .filter(Boolean)
+      .join("");
 
     const html = `
       <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 650px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; overflow: hidden; color: #1e293b;">
         <div style="background: linear-gradient(135deg, #00152f 0%, #0f2a4a 100%); padding: 22px 26px; color: #ffffff;">
           <h2 style="margin: 0; font-size: 19px; font-weight: 800; letter-spacing: 0.5px;">NNÓS VIAGENS &amp; LOGÍSTICA</h2>
-          <p style="margin: 4px 0 0; font-size: 13px; color: #94a3b8;">Cotação Aprovada · Autorização para Compra e Emissão</p>
+          <p style="margin: 4px 0 0; font-size: 13px; color: #94a3b8;">Escolhas Aprovadas · Autorização para Compra e Emissão</p>
         </div>
         <div style="padding: 24px;">
           <h3 style="color: #0f2a4a; font-size: 16px; margin-top: 0; font-weight: 700;">Olá, Fátima e Equipe de Viagens!</h3>
           <p style="font-size: 13.5px; line-height: 1.6; color: #334155;">
-            A cotação de viagem foi <strong>aprovada</strong> por <strong>${aprovadorNome || lider.nome}</strong>. A solicitação está liberada para efetivação das compras, preenchimento dos localizadores e upload dos vouchers em PDF.
+            O Líder de Projeto <strong>${aprovadorNome || lider.nome}</strong> analisou os PDFs de cotação e definiu as opções abaixo para compra. Após emitir, acesse o sistema para anexar os vouchers, informar os localizadores e registrar o <strong>Valor Final Pago (R$)</strong>.
           </p>
 
-          <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 18px; margin: 20px 0;">
-            <h4 style="margin: 0 0 12px; font-size: 12px; text-transform: uppercase; color: #166534; letter-spacing: 0.5px; font-weight: 800;">
-              ✅ ITENS APROVADOS:
+          ${linhasEscolhas ? `
+          <div style="background-color: #ecfdf5; border: 1.5px solid #6ee7b7; border-radius: 12px; padding: 18px; margin: 20px 0;">
+            <h4 style="margin: 0 0 12px; font-size: 12px; text-transform: uppercase; color: #065f46; letter-spacing: 0.5px; font-weight: 800;">
+              🎯 OPÇÕES ESCOLHIDAS PELO LÍDER PARA COMPRA:
+            </h4>
+            <table style="width: 100%; font-size: 13px; border-collapse: collapse; line-height: 1.7;">
+              ${linhasEscolhas}
+            </table>
+          </div>` : ""}
+
+          <div style="background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px; padding: 18px; margin: 20px 0;">
+            <h4 style="margin: 0 0 12px; font-size: 12px; text-transform: uppercase; color: #0369a1; letter-spacing: 0.5px; font-weight: 800;">
+              ✅ DADOS DA VIAGEM APROVADA:
             </h4>
             <table style="width: 100%; font-size: 13px; border-collapse: collapse; line-height: 1.7;">
               <tr>
-                <td style="color: #64748b; width: 140px; font-weight: 600;">Projeto / Atividade:</td>
+                <td style="color: #64748b; width: 150px; font-weight: 600;">Projeto / Atividade:</td>
                 <td style="font-weight: 700; color: #0f172a;">${sol.projeto} - ${sol.atividade}</td>
               </tr>
               <tr>
@@ -1556,15 +1733,15 @@ export async function dispararNotificacaoCotacaoAprovadaAgencia(sol: ViagemSolic
                 <td style="font-weight: 700; color: #0f172a;">${periodoFmt}</td>
               </tr>
               <tr>
-                <td style="color: #64748b; font-weight: 600;">Valor Aprovado:</td>
-                <td style="font-weight: 800; color: #166534; font-size: 14px;">${valorAprovadoFmt}</td>
+                <td style="color: #64748b; font-weight: 600;">Valor Referência:</td>
+                <td style="font-weight: 800; color: #166534; font-size: 13.5px;">${valorAprovadoFmt}</td>
               </tr>
             </table>
           </div>
 
           <div style="text-align: center; margin: 26px 0;">
             <a href="${URL_SISTEMA_VIAGENS}" target="_blank" style="display: inline-block; background-color: #0284c7; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-size: 13.5px; font-weight: 700; box-shadow: 0 2px 6px rgba(2, 132, 199, 0.35);">
-              Emitir Passagens &amp; Anexar Vouchers
+              Lançar Valores Finais &amp; Anexar Vouchers
             </a>
           </div>
 
@@ -1580,7 +1757,7 @@ export async function dispararNotificacaoCotacaoAprovadaAgencia(sol: ViagemSolic
       cc: [lider.email],
       assunto,
       html,
-      texto: `Cotação aprovada para ${sol.consultor} no valor de ${valorAprovadoFmt} (${sol.projeto}). Favor emitir as passagens/vouchers em: ${URL_SISTEMA_VIAGENS}`,
+      texto: `Cotação aprovada por ${aprovadorNome || lider.nome} para ${sol.consultor} (${sol.projeto}). Favor emitir os vouchers e informar os valores finais em: ${URL_SISTEMA_VIAGENS}`,
     });
   } catch (err) {
     console.warn("Aviso ao disparar e-mail de aprovação para agência:", err);

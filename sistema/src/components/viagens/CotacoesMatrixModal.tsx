@@ -95,14 +95,27 @@ export default function CotacoesMatrixModal({
     return init;
   });
 
-  // Estado para armazenar justificativas quando o Líder optar por cotação de valor superior
-  const [justificativasLider, setJustificativasLider] = useState<Record<string, string>>({});
+  // Armazena a opção escolhida pelo Líder por categoria (ou justificativa legada)
+  const [justificativasLider, setJustificativasLider] = useState<Record<string, string>>(
+    solicitacao.justificativasLider || {}
+  );
 
-  // Estados de contratação da Agência (valores finais e vouchers)
+  // Estados de contratação da Agência (fornecedor, valores finais, localizadores e vouchers)
+  const [fornecedoresContratados, setFornecedoresContratados] = useState<Record<string, string>>(() => {
+    const init: Record<string, string> = {};
+    solicitacao.categorias.forEach((c) => {
+      const altAprov = c.alternativas.find((a) => a.id === c.alternativaAprovadaId) || c.alternativas.find((a) => a.selecionada) || c.alternativas[0];
+      if (altAprov?.fornecedor) {
+        init[c.categoria] = altAprov.fornecedor;
+      }
+    });
+    return init;
+  });
+
   const [valoresContratados, setValoresContratados] = useState<Record<string, number>>(() => {
     const init: Record<string, number> = {};
     solicitacao.categorias.forEach((c) => {
-      const altAprov = c.alternativas.find((a) => a.id === c.alternativaAprovadaId) || c.alternativas.find((a) => a.selecionada);
+      const altAprov = c.alternativas.find((a) => a.id === c.alternativaAprovadaId) || c.alternativas.find((a) => a.selecionada) || c.alternativas[0];
       if (altAprov) {
         init[c.categoria] = altAprov.valorContratado ?? altAprov.valor ?? 0;
       }
@@ -113,7 +126,7 @@ export default function CotacoesMatrixModal({
   const [localizadores, setLocalizadores] = useState<Record<string, string>>(() => {
     const init: Record<string, string> = {};
     solicitacao.categorias.forEach((c) => {
-      const altAprov = c.alternativas.find((a) => a.id === c.alternativaAprovadaId) || c.alternativas.find((a) => a.selecionada);
+      const altAprov = c.alternativas.find((a) => a.id === c.alternativaAprovadaId) || c.alternativas.find((a) => a.selecionada) || c.alternativas[0];
       if (altAprov) {
         init[c.categoria] = altAprov.localizadorOuReserva || "";
       }
@@ -125,7 +138,7 @@ export default function CotacoesMatrixModal({
   const [diariaFinanceiro, setDiariaFinanceiro] = useState<number>(solicitacao.custoAlimentacaoDiaria || 0);
   const [obsFinanceiro, setObsFinanceiro] = useState(solicitacao.prestacaoContasObservacao || "");
 
-  // Controle de expansão de histórico de alternativas descartadas
+  // Controle de expansão de histórico de auditoria
   const [expandirHistorico, setExpandirHistorico] = useState(false);
 
   // Modo de edição explícito da Agência para solicitações já em andamento ou concluídas
@@ -137,6 +150,28 @@ export default function CotacoesMatrixModal({
 
   const brl = (v: number) =>
     (v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+  const montarPayloadCompras = (listaCats: CategoriaCotacoes[]) =>
+    listaCats
+      .filter(
+        (c) =>
+          c.necessaria ||
+          (c.alternativas && c.alternativas.some((a) => (a.vouchersDefinitivos?.length || 0) > 0 || (a.anexos?.length || 0) > 0)) ||
+          Boolean(localizadores[c.categoria]?.trim()) ||
+          Boolean(fornecedoresContratados[c.categoria]?.trim()) ||
+          Number(valoresContratados[c.categoria]) > 0
+      )
+      .map((c) => {
+        const altAprov = c.alternativas.find((a) => a.id === c.alternativaAprovadaId) || c.alternativas.find((a) => a.selecionada) || c.alternativas[0];
+        return {
+          categoria: c.categoria,
+          alternativaId: altAprov?.id || `alt-${c.categoria.toLowerCase()}-${sol.id}-1`,
+          fornecedor: fornecedoresContratados[c.categoria] ?? altAprov?.fornecedor ?? "",
+          valorContratado: valoresContratados[c.categoria] ?? altAprov?.valorContratado ?? altAprov?.valor ?? 0,
+          localizadorOuReserva: localizadores[c.categoria] ?? altAprov?.localizadorOuReserva ?? "",
+          vouchers: altAprov?.vouchersDefinitivos || [],
+        };
+      });
 
   const removerAnexo = async (categoria: CategoriaLogistica, altId: string, anexoId: string) => {
     const novasCategorias = categoriasState.map((cat) => {
@@ -165,33 +200,27 @@ export default function CotacoesMatrixModal({
 
     showToast("Anexo removido com sucesso.");
 
-    // Se a solicitação já estiver em fase de compra ou vouchers, persiste a remoção no servidor
-    try {
-      const comprasPayload = novasCategorias
-        .filter((c) => c.necessaria || (c.alternativas && c.alternativas.length > 0) || Boolean(localizadores[c.categoria]?.trim()) || Number(valoresContratados[c.categoria]) > 0)
-        .map((c) => {
-          const altAprov = c.alternativas.find((a) => a.id === c.alternativaAprovadaId) || c.alternativas.find((a) => a.selecionada) || c.alternativas[0];
-          return {
-            categoria: c.categoria,
-            alternativaId: altAprov?.id || `alt-${c.categoria.toLowerCase()}-${sol.id}-1`,
-            valorContratado: valoresContratados[c.categoria] ?? altAprov?.valorContratado ?? altAprov?.valor ?? 0,
-            localizadorOuReserva: localizadores[c.categoria] ?? altAprov?.localizadorOuReserva ?? "",
-            vouchers: altAprov?.vouchersDefinitivos || [],
-          };
-        });
+    // Só persiste via /api/viagens/comprar se a viagem já estiver em etapa de compra/vouchers
+    const emEtapaCompra =
+      sol.status !== "AGUARDANDO_COTACAO" &&
+      sol.status !== "EM_COTACAO" &&
+      sol.status !== "AGUARDANDO_APROVACAO";
 
-      await fetch("/api/viagens/comprar", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          solicitacaoId: sol.id,
-          compras: comprasPayload,
-          usuarioNome: "Agência Fátima",
-        }),
-      });
-      onAtualizar();
-    } catch (err) {
-      console.warn("Aviso ao persistir remoção de voucher:", err);
+    if (emEtapaCompra) {
+      try {
+        await fetch("/api/viagens/comprar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            solicitacaoId: sol.id,
+            compras: montarPayloadCompras(novasCategorias),
+            usuarioNome: "Agência Fátima",
+          }),
+        });
+        onAtualizar();
+      } catch (err) {
+        console.warn("Aviso ao persistir remoção de voucher:", err);
+      }
     }
   };
 
@@ -268,181 +297,163 @@ export default function CotacoesMatrixModal({
     setShowEmailPreviewModal(true);
   };
 
-  // Helper para adicionar alternativa de cotação (até 3)
-  const adicionarAlternativa = (categoria: CategoriaLogistica) => {
+  const toggleCategoriaNecessaria = (categoria: CategoriaLogistica) => {
+    setCategoriasState((prev) =>
+      prev.map((cat) =>
+        cat.categoria === categoria ? { ...cat, necessaria: !cat.necessaria } : cat
+      )
+    );
+  };
+
+  const atualizarObsCategoriaAgencia = (categoria: CategoriaLogistica, observacoes: string) => {
     setCategoriasState((prev) =>
       prev.map((cat) => {
-        if (cat.categoria === categoria) {
-          if (cat.alternativas.length >= 3) {
-            showToast("⚠️ Limite máximo de 3 alternativas por categoria já atingido.");
-            return cat;
-          }
-          const num = (cat.alternativas.length + 1) as 1 | 2 | 3;
+        if (cat.categoria !== categoria) return cat;
+        if (!cat.alternativas || cat.alternativas.length === 0) {
           const novaAlt: AlternativaCotacao = {
-            id: `alt-${categoria.toLowerCase()}-${sol.id}-${Date.now()}`,
-            alternativaNumero: num,
+            id: `alt-${categoria.toLowerCase()}-${sol.id}-1`,
+            alternativaNumero: 1,
             fornecedor: "",
             descricao: "",
             valor: 0,
             dataCotacao: new Date().toISOString().split("T")[0],
-            selecionada: num === 1,
+            selecionada: true,
+            observacoes,
             anexos: [],
           };
-          return { ...cat, alternativas: [...cat.alternativas, novaAlt] };
+          return { ...cat, alternativas: [novaAlt], alternativaAprovadaId: novaAlt.id };
         }
-        return cat;
+        return {
+          ...cat,
+          alternativas: cat.alternativas.map((alt, idx) =>
+            idx === 0 ? { ...alt, observacoes } : alt
+          ),
+        };
       })
     );
   };
 
-  const removerAlternativa = (categoria: CategoriaLogistica, altId: string) => {
-    setCategoriasState((prev) =>
-      prev.map((cat) => {
-        if (cat.categoria === categoria) {
-          const filtradas = cat.alternativas.filter((a) => a.id !== altId);
-          const reenumeradas = filtradas.map((a, i) => ({
-            ...a,
-            alternativaNumero: (i + 1) as 1 | 2 | 3,
-            selecionada: i === 0,
-          }));
-          return { ...cat, alternativas: reenumeradas };
-        }
-        return cat;
-      })
-    );
-    showToast("Cotação excluída com sucesso.");
-  };
-
-  const atualizarAlternativa = (
-    categoria: CategoriaLogistica,
-    altId: string,
-    campo: keyof AlternativaCotacao,
-    valor: any
-  ) => {
-    setCategoriasState((prev) =>
-      prev.map((cat) => {
-        if (cat.categoria === categoria) {
-          return {
-            ...cat,
-            alternativas: cat.alternativas.map((alt) =>
-              alt.id === altId ? { ...alt, [campo]: valor } : alt
-            ),
-          };
-        }
-        return cat;
-      })
-    );
-  };
-
-  const handleUploadAnexo = (
+  const handleUploadAnexo = async (
     e: React.ChangeEvent<HTMLInputElement>,
     categoria: CategoriaLogistica,
     altId: string,
     tipo: "ORCAMENTO" | "VOUCHER"
   ) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    e.target.value = "";
+    if (files.length === 0) return;
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = reader.result as string;
-      const novoAnexo: AnexoDocumento = {
-        id: `doc-${Date.now()}`,
-        nome: file.name,
-        tipo,
-        url: dataUrl,
-        mimeType: file.type || "application/octet-stream",
-        tamanhoFormatado: `${(file.size / 1024).toFixed(0)} KB`,
-        criadoEm: new Date().toISOString(),
-      };
+    const lerComoDataUrl = (file: File): Promise<AnexoDocumento> =>
+      new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          resolve({
+            id: `doc-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+            nome: file.name,
+            tipo,
+            url: reader.result as string,
+            mimeType: file.type || "application/pdf",
+            tamanhoFormatado: `${Math.max(1, Math.round(file.size / 1024))} KB`,
+            criadoEm: new Date().toISOString(),
+          });
+        };
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(file);
+      });
+
+    try {
+      const novosAnexos = await Promise.all(files.map(lerComoDataUrl));
 
       const novasCategorias = categoriasState.map((cat) => {
-        if (cat.categoria === categoria) {
-          let achouAlt = false;
-          const novasAlts = cat.alternativas.map((alt) => {
-            if (alt.id === altId) {
-              achouAlt = true;
-              if (tipo === "VOUCHER") {
-                return {
-                  ...alt,
-                  vouchersDefinitivos: [...(alt.vouchersDefinitivos || []), novoAnexo],
-                };
-              }
-              return { ...alt, anexos: [...(alt.anexos || []), novoAnexo] };
+        if (cat.categoria !== categoria) return cat;
+
+        let achouAlt = false;
+        const novasAlts = cat.alternativas.map((alt, idx) => {
+          if (alt.id === altId || (!altId && idx === 0)) {
+            achouAlt = true;
+            if (tipo === "VOUCHER") {
+              return {
+                ...alt,
+                vouchersDefinitivos: [...(alt.vouchersDefinitivos || []), ...novosAnexos],
+              };
             }
-            return alt;
-          });
-
-          if (!achouAlt) {
-            const novaAlt: AlternativaCotacao = {
-              id: altId || `alt-${categoria.toLowerCase()}-${sol.id}-${Date.now()}`,
-              alternativaNumero: 1,
-              fornecedor: categoria === "CARRO" ? "Locadora de Veículos" : "Agência de Viagens",
-              descricao: `Reserva de ${cat.nomeExibicao}`,
-              valor: valoresContratados[categoria] || 0,
-              valorContratado: valoresContratados[categoria] || 0,
-              dataCotacao: new Date().toISOString().split("T")[0],
-              selecionada: true,
-              localizadorOuReserva: localizadores[categoria] || "",
-              vouchersDefinitivos: tipo === "VOUCHER" ? [novoAnexo] : [],
-              anexos: tipo === "ORCAMENTO" ? [novoAnexo] : [],
-            };
-            novasAlts.push(novaAlt);
-            return {
-              ...cat,
-              necessaria: true,
-              alternativaAprovadaId: novaAlt.id,
-              alternativas: novasAlts,
-            };
+            return { ...alt, anexos: [...(alt.anexos || []), ...novosAnexos] };
           }
+          return alt;
+        });
 
+        if (!achouAlt) {
+          const novaAlt: AlternativaCotacao = {
+            id: altId || `alt-${categoria.toLowerCase()}-${sol.id}-1`,
+            alternativaNumero: 1,
+            fornecedor: fornecedoresContratados[categoria] || "",
+            descricao: justificativasLider[categoria] || `Cotação de ${cat.nomeExibicao}`,
+            valor: valoresContratados[categoria] || 0,
+            valorContratado: valoresContratados[categoria] || 0,
+            dataCotacao: new Date().toISOString().split("T")[0],
+            selecionada: true,
+            localizadorOuReserva: localizadores[categoria] || "",
+            vouchersDefinitivos: tipo === "VOUCHER" ? novosAnexos : [],
+            anexos: tipo === "ORCAMENTO" ? novosAnexos : [],
+          };
+          novasAlts.push(novaAlt);
           return {
             ...cat,
             necessaria: true,
+            alternativaAprovadaId: novaAlt.id,
             alternativas: novasAlts,
           };
         }
-        return cat;
+
+        return {
+          ...cat,
+          necessaria: true,
+          alternativaAprovadaId: cat.alternativaAprovadaId || novasAlts[0]?.id,
+          alternativas: novasAlts,
+        };
       });
 
       setCategoriasState(novasCategorias);
       setSol((prev) => ({ ...prev, categorias: novasCategorias }));
 
-      showToast(`Documento "${file.name}" anexado com sucesso!`);
+      showToast(
+        novosAnexos.length === 1
+          ? `Documento "${novosAnexos[0].nome}" anexado com sucesso!`
+          : `${novosAnexos.length} documentos anexados com sucesso!`
+      );
 
       if (tipo === "VOUCHER") {
-        try {
-          const comprasPayload = novasCategorias
-            .filter((c) => c.necessaria || (c.alternativas && c.alternativas.length > 0) || Boolean(localizadores[c.categoria]?.trim()) || Number(valoresContratados[c.categoria]) > 0)
-            .map((c) => {
-              const altAprov = c.alternativas.find((a) => a.id === c.alternativaAprovadaId) || c.alternativas.find((a) => a.selecionada) || c.alternativas[0];
-              return {
-                categoria: c.categoria,
-                alternativaId: altAprov?.id || `alt-${c.categoria.toLowerCase()}-${sol.id}-1`,
-                valorContratado: valoresContratados[c.categoria] ?? altAprov?.valorContratado ?? altAprov?.valor ?? 0,
-                localizadorOuReserva: localizadores[c.categoria] ?? altAprov?.localizadorOuReserva ?? "",
-                vouchers: altAprov?.vouchersDefinitivos || [],
-              };
-            });
-
-          fetch("/api/viagens/comprar", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              solicitacaoId: sol.id,
-              compras: comprasPayload,
-              usuarioNome: "Agência Fátima",
-            }),
-          }).then(() => onAtualizar()).catch(() => {});
-        } catch {}
+        fetch("/api/viagens/comprar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            solicitacaoId: sol.id,
+            compras: montarPayloadCompras(novasCategorias),
+            usuarioNome: "Agência Fátima",
+          }),
+        })
+          .then(() => onAtualizar())
+          .catch(() => {});
       }
-    };
-    reader.readAsDataURL(file);
-    e.target.value = "";
+    } catch {
+      showToast("Erro ao ler o(s) arquivo(s) selecionado(s).");
+    }
   };
 
-  // Ação 1: Agência salva ou envia para aprovação
+  // Ação 1: Agência envia PDFs de cotação ou salva rascunho
   const handleSalvarCotacoesAgencia = async (enviar: boolean) => {
+    if (enviar) {
+      const totalAnexos = categoriasState.reduce(
+        (acc, cat) =>
+          acc + (cat.alternativas || []).reduce((s, a) => s + (a.anexos?.length || 0), 0),
+        0
+      );
+      if (totalAnexos === 0) {
+        showToast("⚠️ Anexe pelo menos 1 arquivo PDF com as opções de cotação antes de enviar para aprovação.");
+        return;
+      }
+    }
+
     setLoading(true);
     try {
       const res = await fetch("/api/viagens/cotacoes", {
@@ -462,8 +473,8 @@ export default function CotacoesMatrixModal({
       setSol(data.solicitacao);
       showToast(
         enviar
-          ? "Cotações enviadas com sucesso para aprovação do Líder de Projeto!"
-          : "Cotações salvas em rascunho com sucesso!"
+          ? "PDFs de cotação enviados ao Líder de Projeto para escolha!"
+          : "Rascunho de cotação salvo com sucesso!"
       );
       onAtualizar();
       if (enviar) onClose();
@@ -474,20 +485,17 @@ export default function CotacoesMatrixModal({
     }
   };
 
-  // Ação 2: Líder de Projeto aprova a composição em 1 clique
+  // Ação 2: Líder de Projeto informa qual opção escolheu de cada PDF e aprova para compra
   const handleAprovarLider = async () => {
-    // Validação preventiva: Se alguma escolha for de valor superior à menor cotação válida, exige justificativa
-    for (const cat of sol.categorias.filter((c) => c.necessaria)) {
-      const altEscolhidaId = escolhasLider[cat.categoria] || cat.alternativas[0]?.id;
-      const altEscolhida = cat.alternativas.find((a) => a.id === altEscolhidaId);
-      const validas = cat.alternativas.filter((a) => (a.valor || 0) > 0);
-      const menorValor = validas.length > 0 ? Math.min(...validas.map((a) => a.valor || 0)) : 0;
-      if (altEscolhida && (altEscolhida.valor || 0) > menorValor && menorValor > 0) {
-        const just = (justificativasLider[cat.categoria] || "").trim();
-        if (!just) {
-          showToast(`⚠️ Por favor, informe a justificativa da escolha de maior valor em "${cat.nomeExibicao}".`);
-          return;
-        }
+    const categoriasComPdf = categoriasState.filter((c) =>
+      (c.alternativas || []).some((a) => (a.anexos?.length || 0) > 0)
+    );
+
+    for (const cat of categoriasComPdf) {
+      const escolha = (justificativasLider[cat.categoria] || "").trim();
+      if (!escolha) {
+        showToast(`⚠️ Informe qual opção do PDF foi escolhida em "${cat.nomeExibicao}" antes de aprovar.`);
+        return;
       }
     }
 
@@ -500,14 +508,14 @@ export default function CotacoesMatrixModal({
           solicitacaoId: sol.id,
           escolhas: escolhasLider,
           justificativas: justificativasLider,
-          aprovadorNome: "Líder de Projeto",
+          aprovadorNome: obterDadosLiderViagem(sol).nome || "Líder de Projeto",
         }),
       });
       const data = await res.json();
       if (!data.ok) throw new Error(data.error);
 
       setSol(data.solicitacao);
-      showToast("Composição de logística APROVADA com sucesso! Agência notificada para compra.");
+      showToast("Escolhas APROVADAS com sucesso! Agência notificada para compra e emissão.");
       onAtualizar();
       onClose();
     } catch (err: any) {
@@ -517,29 +525,16 @@ export default function CotacoesMatrixModal({
     }
   };
 
-  // Ação 3: Agência registra compras e valores finais contratados
+  // Ação 3: Agência registra compras, fornecedor, localizador e valor final pago
   const handleRegistrarComprasAgencia = async () => {
     setLoading(true);
     try {
-      const comprasPayload = categoriasState
-        .filter((c) => c.necessaria || (c.alternativas && c.alternativas.length > 0) || Boolean(localizadores[c.categoria]?.trim()) || Number(valoresContratados[c.categoria]) > 0)
-        .map((c) => {
-          const altAprov = c.alternativas.find((a) => a.id === c.alternativaAprovadaId) || c.alternativas.find((a) => a.selecionada) || c.alternativas[0];
-          return {
-            categoria: c.categoria,
-            alternativaId: altAprov?.id || `alt-${c.categoria.toLowerCase()}-${sol.id}-1`,
-            valorContratado: valoresContratados[c.categoria] ?? altAprov?.valorContratado ?? altAprov?.valor ?? 0,
-            localizadorOuReserva: localizadores[c.categoria] ?? altAprov?.localizadorOuReserva ?? "",
-            vouchers: altAprov?.vouchersDefinitivos || [],
-          };
-        });
-
       const res = await fetch("/api/viagens/comprar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           solicitacaoId: sol.id,
-          compras: comprasPayload,
+          compras: montarPayloadCompras(categoriasState),
           usuarioNome: "Agência Fátima",
         }),
       });
@@ -550,7 +545,7 @@ export default function CotacoesMatrixModal({
       if (data.requerReaprovacao) {
         showToast("ATENÇÃO: Valor contratado excedeu o aprovado! Solicitação enviada para reaprovação do líder.");
       } else {
-        showToast("Compras e reservas registradas com sucesso!");
+        showToast("Valores contratados, localizadores e vouchers salvos com sucesso!");
       }
       onAtualizar();
     } catch (err: any) {
@@ -560,54 +555,36 @@ export default function CotacoesMatrixModal({
     }
   };
 
-  // Ação 4: Agência envia vouchers ao viajante com cópias (com salvamento prévio das alterações de contratação)
+  // Ação 4: Agência salva valores contratados/vouchers e dispara e-mail ao viajante
   const handleEnviarVouchers = async () => {
     setLoading(true);
     try {
-      // 1. Salva valores contratados e localizadores caso tenham sofrido alteração
-      const comprasPayload = categoriasState
-        .filter((c) => c.necessaria || (c.alternativas && c.alternativas.length > 0) || Boolean(localizadores[c.categoria]?.trim()) || Number(valoresContratados[c.categoria]) > 0)
-        .map((c) => {
-          const altAprov = c.alternativas.find((a) => a.id === c.alternativaAprovadaId) || c.alternativas.find((a) => a.selecionada) || c.alternativas[0];
-          return {
-            categoria: c.categoria,
-            alternativaId: altAprov?.id || `alt-${c.categoria.toLowerCase()}-${sol.id}-1`,
-            valorContratado: valoresContratados[c.categoria] ?? altAprov?.valorContratado ?? altAprov?.valor ?? 0,
-            localizadorOuReserva: localizadores[c.categoria] ?? altAprov?.localizadorOuReserva ?? "",
-            vouchers: altAprov?.vouchersDefinitivos || [],
-          };
-        });
-
       const resComprar = await fetch("/api/viagens/comprar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           solicitacaoId: sol.id,
-          compras: comprasPayload,
+          compras: montarPayloadCompras(categoriasState),
           usuarioNome: "Agência Fátima",
         }),
       });
       const dataComprar = await resComprar.json();
       if (!dataComprar.ok) throw new Error(dataComprar.error);
 
-      // Se a alteração fez o valor contratado exceder o aprovado:
-      // Reinicia o fluxo de aprovação do Líder e confirmação do consultor, sem gerar reprovação automática!
       if (dataComprar.requerReaprovacao || dataComprar.solicitacao?.requerReaprovacao) {
         setSol(dataComprar.solicitacao);
-        showToast("⚠️ Alterações salvas! Como o valor excedeu o orçamento aprovado, o fluxo foi reiniciado e enviado para reaprovação do Líder. Após aprovado, os novos vouchers serão confirmados pelo consultor.");
+        showToast("⚠️ Alterações salvas! Como o valor excedeu o orçamento aprovado, o fluxo foi enviado para reaprovação do Líder.");
         onAtualizar();
         setModoEdicaoAgencia(false);
         return;
       }
 
-      // Se o valor está aprovado ou dentro do orçamento:
-      // 2. Dispara e-mail de vouchers para leonardo.campos@nnos.com.br
       const res = await fetch("/api/viagens/enviar-vouchers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           solicitacaoId: sol.id,
-          emailDestinatario: "leonardo.campos@nnos.com.br",
+          emailDestinatario: sol.consultorEmail || "leonardo.campos@nnos.com.br",
           usuarioNome: "Agência Fátima",
         }),
       });
@@ -616,7 +593,7 @@ export default function CotacoesMatrixModal({
 
       setSol(data.solicitacao);
       setShowEmailPreviewModal(false);
-      showToast(data.mensagem || "Vouchers atualizados com sucesso! Aguardando confirmação de recebimento do consultor.");
+      showToast(data.mensagem || "Vouchers enviados com sucesso!");
       onAtualizar();
       setModoEdicaoAgencia(false);
       onClose();
@@ -917,18 +894,58 @@ export default function CotacoesMatrixModal({
           {/* Corpo Rolável do Modal */}
           <div style={{ flex: 1, overflowY: "auto", padding: "20px 24px" }}>
             {/* Seção 1: Matriz Comparativa de Cotações por Categoria */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
               {categoriasState.map((cat) => {
                 const altEscolhidaId =
                   perfilAtivo === "LIDER"
                     ? escolhasLider[cat.categoria]
                     : cat.alternativaAprovadaId || cat.alternativas.find((a) => a.selecionada)?.id;
 
+                const altPrincipal =
+                  cat.alternativas.find((a) => a.id === altEscolhidaId) ||
+                  cat.alternativas.find((a) => a.selecionada) ||
+                  cat.alternativas[0];
+
+                const pdfsCotacao = (cat.alternativas || []).flatMap((a) =>
+                  (a.anexos || [])
+                    .filter((anx) => anx.tipo !== "VOUCHER")
+                    .map((anx) => ({ doc: anx, altId: a.id }))
+                );
+
+                const isEtapaCotacaoAgencia =
+                  perfilAtivo === "AGENCIA" &&
+                  (sol.status === "AGUARDANDO_COTACAO" || sol.status === "EM_COTACAO");
+
+                const isEtapaEscolhaLider =
+                  perfilAtivo === "LIDER" &&
+                  (sol.status === "AGUARDANDO_APROVACAO" || sol.status === "AGUARDANDO_REAPROVACAO" || sol.requerReaprovacao);
+
+                const escolhaSalvaTexto =
+                  justificativasLider[cat.categoria] ||
+                  sol.justificativasLider?.[cat.categoria] ||
+                  (altPrincipal?.descricao &&
+                  altPrincipal.descricao !== `Cotação de ${cat.nomeExibicao}` &&
+                  altPrincipal.descricao !== `Reserva de ${cat.nomeExibicao}`
+                    ? altPrincipal.descricao
+                    : "");
+
+                // Placeholder contextualizado por categoria
+                const placeholderEscolhaLider =
+                  cat.categoria === "HOTEL"
+                    ? "Ex: Hotel Ibis Styles Goiânia c/ café da manhã (R$ 886,93)"
+                    : cat.categoria === "CARRO"
+                    ? "Ex: Unidas Grupo EA Compacto Automático (R$ 487,14)"
+                    : cat.categoria === "SEGURO"
+                    ? "Ex: Apólice Corporativa Padrão"
+                    : "Ex: Voo Gol 1169 saída 11:00 c/ bagagem + Volta Latam 3545 saída 19:45";
+
                 return (
                   <div
                     key={cat.categoria}
                     style={{
-                      border: "1px solid var(--border, #e2e8f0)",
+                      border: pdfsCotacao.length > 0
+                        ? "1.5px solid var(--secondary, #00a896)"
+                        : "1px solid var(--border, #e2e8f0)",
                       borderRadius: "12px",
                       overflow: "hidden",
                       backgroundColor: "var(--surface, #ffffff)",
@@ -943,377 +960,343 @@ export default function CotacoesMatrixModal({
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "space-between",
+                        gap: "12px",
+                        flexWrap: "wrap",
                       }}
                     >
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                        <span className="material-symbols-outlined" style={{ fontSize: "18px", color: "var(--primary, #0f2a4a)" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                        <span className="material-symbols-outlined" style={{ fontSize: "19px", color: "var(--primary, #0f2a4a)" }}>
                           {cat.icone}
                         </span>
                         <strong style={{ fontSize: "14px", color: "var(--on-surface)" }}>
                           {cat.nomeExibicao}
                         </strong>
-                        <span style={{ fontSize: "11px", color: "var(--on-surface-variant)" }}>
-                          {cat.alternativas.length} alternativa(s) cotada(s)
-                        </span>
+                        {pdfsCotacao.length > 0 ? (
+                          <span
+                            style={{
+                              fontSize: "11px",
+                              fontWeight: 700,
+                              color: "#0f766e",
+                              backgroundColor: "#ccfbf1",
+                              padding: "2px 9px",
+                              borderRadius: "12px",
+                            }}
+                          >
+                            {pdfsCotacao.length} arquivo(s) de cotação anexado(s)
+                          </span>
+                        ) : cat.necessaria ? (
+                          <span
+                            style={{
+                              fontSize: "11px",
+                              fontWeight: 600,
+                              color: "#0369a1",
+                              backgroundColor: "#e0f2fe",
+                              padding: "2px 9px",
+                              borderRadius: "12px",
+                            }}
+                          >
+                            Solicitado na viagem
+                          </span>
+                        ) : (
+                          <span style={{ fontSize: "11px", color: "var(--on-surface-variant)" }}>
+                            Opcional / Sem cotação anexada
+                          </span>
+                        )}
                       </div>
 
-                      {/* Botão de Adicionar Cotação (Apenas Agência em etapa de cotação) */}
-                      {perfilAtivo === "AGENCIA" && (sol.status === "AGUARDANDO_COTACAO" || sol.status === "EM_COTACAO") && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (cat.alternativas.length >= 3) {
-                              showToast("⚠️ Limite máximo de 3 alternativas já foi atingido para esta categoria.");
-                              return;
-                            }
-                            adicionarAlternativa(cat.categoria);
-                          }}
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: "4px",
-                            padding: "4px 10px",
-                            borderRadius: "6px",
-                            fontSize: "11px",
-                            fontWeight: 600,
-                            color: cat.alternativas.length >= 3 ? "var(--on-surface-variant)" : "var(--primary)",
-                            backgroundColor: cat.alternativas.length >= 3 ? "rgba(100, 116, 139, 0.08)" : "var(--surface)",
-                            border: "1px solid var(--border)",
-                            cursor: "pointer",
-                          }}
-                          title={cat.alternativas.length >= 3 ? "Limite máximo de 3 alternativas já atingido" : "Adicionar nova cotação alternativa"}
-                        >
-                          <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>
-                            {cat.alternativas.length >= 3 ? "block" : "add"}
-                          </span>
-                          Adicionar Alternativa (até 3)
-                        </button>
+                      {isEtapaCotacaoAgencia && (
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                          <button
+                            type="button"
+                            onClick={() => toggleCategoriaNecessaria(cat.categoria)}
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "4px",
+                              padding: "5px 10px",
+                              borderRadius: "6px",
+                              fontSize: "11px",
+                              fontWeight: 600,
+                              color: cat.necessaria ? "#0369a1" : "var(--on-surface-variant)",
+                              backgroundColor: cat.necessaria ? "#e0f2fe" : "#ffffff",
+                              border: "1px solid var(--border)",
+                              cursor: "pointer",
+                            }}
+                          >
+                            <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>
+                              {cat.necessaria ? "check_box" : "check_box_outline_blank"}
+                            </span>
+                            <span>{cat.necessaria ? "Incluído na viagem" : "Incluir categoria"}</span>
+                          </button>
+
+                          <label
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "5px",
+                              padding: "5px 12px",
+                              borderRadius: "6px",
+                              fontSize: "11.5px",
+                              fontWeight: 700,
+                              color: "#ffffff",
+                              backgroundColor: "var(--primary, #0f2a4a)",
+                              cursor: "pointer",
+                            }}
+                          >
+                            <span className="material-symbols-outlined" style={{ fontSize: "15px" }}>upload_file</span>
+                            <span>Anexar PDF da Cotação</span>
+                            <input
+                              type="file"
+                              multiple
+                              accept="application/pdf,image/*"
+                              style={{ display: "none" }}
+                              onChange={(e) => handleUploadAnexo(e, cat.categoria, altPrincipal?.id || "", "ORCAMENTO")}
+                            />
+                          </label>
+                        </div>
                       )}
                     </div>
 
-                    {/* Alternativas Lado a Lado (Até 3 opções) */}
-                    <div
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns: `repeat(${Math.max(1, cat.alternativas.length)}, 1fr)`,
-                        gap: "12px",
-                        padding: "16px",
-                      }}
-                    >
-                      {cat.alternativas.length === 0 ? (
-                        <div style={{ textAlign: "center", padding: "20px", color: "var(--on-surface-variant)", fontSize: "13px" }}>
-                          Nenhuma cotação cadastrada para {cat.nomeExibicao}.
-                          {perfilAtivo === "AGENCIA" && " Clique em 'Adicionar Alternativa' acima."}
-                        </div>
-                      ) : (
-                        cat.alternativas.map((alt) => {
-                          const isAprovada = alt.id === altEscolhidaId;
-                          const isEditavelAgencia =
-                            perfilAtivo === "AGENCIA" &&
-                            (sol.status === "AGUARDANDO_COTACAO" || sol.status === "EM_COTACAO");
-
-                          return (
-                            <div
-                              key={alt.id}
-                              style={{
-                                border: isAprovada
-                                  ? "2px solid var(--primary, #0f2a4a)"
-                                  : "1px solid var(--border, #e2e8f0)",
-                                borderRadius: "10px",
-                                padding: "14px",
-                                backgroundColor: isAprovada
-                                  ? "rgba(15, 42, 74, 0.02)"
-                                  : "var(--surface, #ffffff)",
-                                opacity: !isAprovada && sol.status !== "AGUARDANDO_COTACAO" && sol.status !== "EM_COTACAO" && !expandirHistorico ? 0.65 : 1,
-                                transition: "all 0.2s ease",
-                                display: "flex",
-                                flexDirection: "column",
-                                justifyContent: "space-between",
-                                gap: "10px",
-                              }}
-                            >
-                              <div>
-                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                                  <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--on-surface-variant)", textTransform: "uppercase" }}>
-                                    Opção {alt.alternativaNumero}
-                                  </span>
-
-                                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                                    {isAprovada && (
-                                      <span
-                                        style={{
-                                          fontSize: "11px",
-                                          fontWeight: 700,
-                                          color: "var(--primary, #0f2a4a)",
-                                          backgroundColor: "rgba(15, 42, 74, 0.1)",
-                                          padding: "2px 8px",
-                                          borderRadius: "12px",
-                                          display: "flex",
-                                          alignItems: "center",
-                                          gap: "4px",
-                                        }}
-                                      >
-                                        <span className="material-symbols-outlined" style={{ fontSize: "12px" }}>check_circle</span>
-                                        Selecionada
-                                      </span>
-                                    )}
-
-                                    {/* Opção de Excluir Cotação (Agência na etapa de cotação) */}
-                                    {isEditavelAgencia && (
-                                      <button
-                                        type="button"
-                                        onClick={() => removerAlternativa(cat.categoria, alt.id)}
-                                        title="Excluir esta alternativa de cotação"
-                                        style={{
-                                          display: "inline-flex",
-                                          alignItems: "center",
-                                          gap: "2px",
-                                          padding: "2px 6px",
-                                          borderRadius: "4px",
-                                          border: "1px solid #fecaca",
-                                          backgroundColor: "#fff1f2",
-                                          color: "#e11d48",
-                                          fontSize: "10.5px",
-                                          fontWeight: 700,
-                                          cursor: "pointer",
-                                          transition: "all 0.15s ease",
-                                        }}
-                                      >
-                                        <span className="material-symbols-outlined" style={{ fontSize: "13px" }}>delete</span>
-                                        Excluir
-                                      </button>
-                                    )}
-                                  </div>
-                                </div>
-
-                                {/* Fornecedor */}
-                                <div style={{ marginBottom: "8px" }}>
-                                  <label style={{ fontSize: "11px", color: "var(--on-surface-variant)", display: "block" }}>Fornecedor</label>
-                                  {isEditavelAgencia ? (
-                                    <input
-                                      type="text"
-                                      value={alt.fornecedor}
-                                      onChange={(e) => atualizarAlternativa(cat.categoria, alt.id, "fornecedor", e.target.value)}
-                                      placeholder={
-                                        cat.categoria === "HOTEL"
-                                          ? "Ex: Hotel Ibis, Novotel, Blue Tree"
-                                          : cat.categoria === "CARRO"
-                                          ? "Ex: Localiza, Movida, Unidas"
-                                          : cat.categoria === "SEGURO"
-                                          ? "Ex: Porto Seguro, Allianz, Zurich"
-                                          : "Ex: Latam, Gol, Azul"
-                                      }
-                                      style={{ width: "100%", padding: "6px 8px", fontSize: "12px", borderRadius: "6px", border: "1px solid var(--border)" }}
-                                    />
-                                  ) : (
-                                    <strong style={{ fontSize: "13px", color: "var(--on-surface)" }}>{alt.fornecedor || "—"}</strong>
+                    {/* Corpo da Categoria: Etapa 1 (Upload PDFs), Etapa 2 (Escolha do Líder), Histórico */}
+                    <div style={{ padding: "14px 18px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                      {/* Arquivos PDF de Cotação Anexados */}
+                      {pdfsCotacao.length > 0 ? (
+                        <div>
+                          <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--on-surface-variant)", display: "block", marginBottom: "6px", textTransform: "uppercase" }}>
+                            Arquivos de Cotação da Agência ({cat.nomeExibicao})
+                          </span>
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                            {pdfsCotacao.map(({ doc, altId }) => (
+                              <div
+                                key={doc.id}
+                                style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "8px",
+                                  padding: "7px 12px",
+                                  borderRadius: "8px",
+                                  backgroundColor: "#f0f9ff",
+                                  border: "1px solid #bae6fd",
+                                  fontSize: "12px",
+                                }}
+                              >
+                                <span className="material-symbols-outlined" style={{ fontSize: "18px", color: "#0284c7" }}>
+                                  picture_as_pdf
+                                </span>
+                                <div style={{ display: "flex", flexDirection: "column" }}>
+                                  <strong style={{ color: "#0f172a", fontSize: "12px" }}>
+                                    {doc.nome || (doc as any).nomeOriginal || "Cotacao.pdf"}
+                                  </strong>
+                                  {doc.tamanhoFormatado && (
+                                    <span style={{ fontSize: "10.5px", color: "#64748b" }}>{doc.tamanhoFormatado}</span>
                                   )}
                                 </div>
-
-                                {/* Descrição */}
-                                <div style={{ marginBottom: "8px" }}>
-                                  <label style={{ fontSize: "11px", color: "var(--on-surface-variant)", display: "block" }}>Detalhes / Horários</label>
-                                  {isEditavelAgencia ? (
-                                    <textarea
-                                      rows={2}
-                                      value={alt.descricao}
-                                      onChange={(e) => atualizarAlternativa(cat.categoria, alt.id, "descricao", e.target.value)}
-                                      placeholder={
-                                        cat.categoria === "HOTEL"
-                                          ? "Ex: Check-in 18/10 às 14:00, Check-out 23/10 às 12:00"
-                                          : cat.categoria === "CARRO"
-                                          ? "Ex: Retirada 18/10 Aeroporto, Devolução 23/10 Balcão Localiza"
-                                          : cat.categoria === "SEGURO"
-                                          ? "Ex: Apólice corporativa padrão com cobertura integral"
-                                          : "Ex: Voo LA3210 saída 08:30"
-                                      }
-                                      style={{ width: "100%", padding: "6px 8px", fontSize: "12px", borderRadius: "6px", border: "1px solid var(--border)", resize: "none" }}
-                                    />
-                                  ) : (
-                                    <span style={{ fontSize: "12px", color: "var(--on-surface)" }}>{alt.descricao || "—"}</span>
-                                  )}
-                                </div>
-
-                                {/* Valor Cotado */}
-                                <div style={{ marginBottom: "8px" }}>
-                                  <label style={{ fontSize: "11px", color: "var(--on-surface-variant)", display: "block" }}>Valor Cotado</label>
-                                  {isEditavelAgencia ? (
-                                    <input
-                                      type="text"
-                                      inputMode="numeric"
-                                      value={formatarMoedaBRInput(alt.valor)}
-                                      onChange={(e) => atualizarAlternativa(cat.categoria, alt.id, "valor", parseMoedaBRInput(e.target.value))}
-                                      placeholder="0,00"
-                                      style={{ width: "100%", padding: "6px 8px", fontSize: "13px", fontWeight: 700, borderRadius: "6px", border: "1px solid var(--border)" }}
-                                    />
-                                  ) : (
-                                    <strong style={{ fontSize: "14px", color: "var(--primary)" }}>{brl(alt.valor)}</strong>
-                                  )}
-                                </div>
-
-                                {/* Documentos / Orçamentos Anexados */}
-                                <div>
-                                  <label style={{ fontSize: "11px", color: "var(--on-surface-variant)", display: "block", marginBottom: "4px" }}>
-                                    Documentos & Propostas
-                                  </label>
-                                  <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-                                    {(alt.anexos || []).map((doc) => (
-                                      <button
-                                        key={doc.id}
-                                        type="button"
-                                        onClick={() => setDocVisualizando(doc)}
-                                        style={{
-                                          display: "inline-flex",
-                                          alignItems: "center",
-                                          gap: "4px",
-                                          padding: "3px 8px",
-                                          borderRadius: "4px",
-                                          fontSize: "11px",
-                                          backgroundColor: "var(--surface-container)",
-                                          border: "1px solid var(--border)",
-                                          cursor: "pointer",
-                                          color: "var(--primary)",
-                                        }}
-                                        title="Clique para visualizar o documento diretamente"
-                                      >
-                                        <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>visibility</span>
-                                        <span>
-                                          {(() => {
-                                            const nomeDoc = doc?.nome || (doc as any)?.nomeOriginal || "Documento";
-                                            return nomeDoc.length > 15 ? nomeDoc.substring(0, 15) + "..." : nomeDoc;
-                                          })()}
-                                        </span>
-                                      </button>
-                                    ))}
-
-                                    {/* Upload de proposta pela Agência */}
-                                    {isEditavelAgencia && (
-                                      <label
-                                        style={{
-                                          display: "inline-flex",
-                                          alignItems: "center",
-                                          gap: "4px",
-                                          padding: "3px 8px",
-                                          borderRadius: "4px",
-                                          fontSize: "11px",
-                                          border: "1px dashed var(--border)",
-                                          cursor: "pointer",
-                                          color: "var(--on-surface-variant)",
-                                        }}
-                                      >
-                                        <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>attach_file</span>
-                                        <span>Anexar PDF/Img</span>
-                                        <input
-                                          type="file"
-                                          accept="application/pdf,image/*"
-                                          style={{ display: "none" }}
-                                          onChange={(e) => handleUploadAnexo(e, cat.categoria, alt.id, "ORCAMENTO")}
-                                        />
-                                      </label>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Ação do Líder: Selecionar Alternativa */}
-                              {perfilAtivo === "LIDER" && sol.status === "AGUARDANDO_APROVACAO" && (
                                 <button
                                   type="button"
-                                  onClick={() => setEscolhasLider((prev) => ({ ...prev, [cat.categoria]: alt.id }))}
+                                  onClick={() => setDocVisualizando(doc)}
                                   style={{
-                                    width: "100%",
-                                    padding: "8px",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "4px",
+                                    padding: "4px 9px",
                                     borderRadius: "6px",
-                                    fontSize: "12px",
+                                    backgroundColor: "#0284c7",
+                                    color: "#ffffff",
+                                    border: "none",
+                                    fontSize: "11px",
                                     fontWeight: 700,
                                     cursor: "pointer",
-                                    backgroundColor: isAprovada ? "var(--primary, #0f2a4a)" : "var(--surface)",
-                                    color: isAprovada ? "#ffffff" : "var(--on-surface)",
-                                    border: isAprovada ? "none" : "1px solid var(--border)",
                                   }}
+                                  title="Visualizar opções dentro do PDF na tela"
                                 >
-                                  {isAprovada ? "Opção Selecionada" : "Escolher Esta Alternativa"}
+                                  <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>visibility</span>
+                                  <span>Visualizar Opções</span>
                                 </button>
-                              )}
-                            </div>
-                          );
-                        })
+                                <button
+                                  type="button"
+                                  onClick={() => abrirEmNovaAbaSegura(doc.url, doc.nome)}
+                                  style={{
+                                    background: "transparent",
+                                    border: "1px solid #cbd5e1",
+                                    borderRadius: "6px",
+                                    color: "#475569",
+                                    cursor: "pointer",
+                                    padding: "3px 6px",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                  }}
+                                  title="Abrir PDF em nova aba"
+                                >
+                                  <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>open_in_new</span>
+                                </button>
+                                {isEtapaCotacaoAgencia && (
+                                  <button
+                                    type="button"
+                                    onClick={() => removerAnexo(cat.categoria, altId, doc.id)}
+                                    title="Remover arquivo"
+                                    style={{
+                                      background: "transparent",
+                                      border: "none",
+                                      cursor: "pointer",
+                                      color: "#dc2626",
+                                      fontSize: "15px",
+                                      fontWeight: 800,
+                                      padding: "0 4px",
+                                    }}
+                                  >
+                                    ×
+                                  </button>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : isEtapaCotacaoAgencia ? (
+                        <label
+                          style={{
+                            border: "1.5px dashed #cbd5e1",
+                            borderRadius: "10px",
+                            padding: "16px",
+                            backgroundColor: "#f8fafc",
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: "6px",
+                            cursor: "pointer",
+                            textAlign: "center",
+                          }}
+                        >
+                          <span className="material-symbols-outlined" style={{ fontSize: "24px", color: "#0284c7" }}>
+                            cloud_upload
+                          </span>
+                          <span style={{ fontSize: "12.5px", fontWeight: 700, color: "#0f172a" }}>
+                            Clique para anexar o arquivo PDF de {cat.nomeExibicao}
+                          </span>
+                          <span style={{ fontSize: "11px", color: "#64748b" }}>
+                            Envie diretamente o comparativo completo em PDF (EHTL / GDS / Locadora) sem precisar digitar as opções manualmente.
+                          </span>
+                          <input
+                            type="file"
+                            multiple
+                            accept="application/pdf,image/*"
+                            style={{ display: "none" }}
+                            onChange={(e) => handleUploadAnexo(e, cat.categoria, altPrincipal?.id || "", "ORCAMENTO")}
+                          />
+                        </label>
+                      ) : (
+                        !cat.necessaria && !altPrincipal?.valor && !altPrincipal?.valorContratado && (
+                          <div style={{ fontSize: "12px", color: "var(--on-surface-variant)", fontStyle: "italic" }}>
+                            Nenhum arquivo de cotação enviado para {cat.nomeExibicao}.
+                          </div>
+                        )
                       )}
+
+                      {/* Observação por categoria da Agência (Etapa 1 editável ou leitura) */}
+                      {isEtapaCotacaoAgencia && (cat.necessaria || pdfsCotacao.length > 0) ? (
+                        <div>
+                          <label style={{ fontSize: "11px", fontWeight: 600, color: "var(--on-surface-variant)", display: "block", marginBottom: "4px" }}>
+                            Observação da Agência para {cat.nomeExibicao} (opcional)
+                          </label>
+                          <input
+                            type="text"
+                            value={altPrincipal?.observacoes || ""}
+                            onChange={(e) => atualizarObsCategoriaAgencia(cat.categoria, e.target.value)}
+                            placeholder={`Ex: Tarifas de ${cat.nomeExibicao} válidas até amanhã às 18h / Opção com bagagem incluída`}
+                            style={{
+                              width: "100%",
+                              padding: "7px 10px",
+                              fontSize: "12px",
+                              borderRadius: "8px",
+                              border: "1px solid var(--border, #cbd5e1)",
+                              backgroundColor: "#ffffff",
+                            }}
+                          />
+                        </div>
+                      ) : altPrincipal?.observacoes ? (
+                        <div
+                          style={{
+                            padding: "8px 12px",
+                            borderRadius: "8px",
+                            backgroundColor: "#f8fafc",
+                            border: "1px solid #e2e8f0",
+                            fontSize: "12px",
+                            color: "#334155",
+                          }}
+                        >
+                          <strong style={{ color: "#0f2a4a" }}>Obs. da Agência:</strong> {altPrincipal.observacoes}
+                        </div>
+                      ) : null}
+
+                      {/* Dados legados (para histórico importado com fornecedor/valor já gravado) */}
+                      {!isEtapaCotacaoAgencia && pdfsCotacao.length === 0 && (altPrincipal?.fornecedor || (altPrincipal?.valor || 0) > 0) && (
+                        <div style={{ fontSize: "12px", color: "#475569", display: "flex", gap: "16px", flexWrap: "wrap" }}>
+                          {altPrincipal?.fornecedor && (
+                            <span><strong>Fornecedor:</strong> {altPrincipal.fornecedor}</span>
+                          )}
+                          {(altPrincipal?.valor || 0) > 0 && (
+                            <span><strong>Valor Ref.:</strong> {brl(altPrincipal.valor)}</span>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Etapa 2: Campo de Escolha do Líder de Projeto */}
+                      {isEtapaEscolhaLider && (pdfsCotacao.length > 0 || cat.necessaria) ? (
+                        <div
+                          style={{
+                            padding: "12px 14px",
+                            borderRadius: "10px",
+                            backgroundColor: "#f0fdf4",
+                            border: "1.5px solid #86efac",
+                          }}
+                        >
+                          <label style={{ fontSize: "12px", fontWeight: 800, color: "#166534", display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
+                            <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>fact_check</span>
+                            <span>
+                              Qual opção do PDF você escolhe para {cat.nomeExibicao}? {pdfsCotacao.length > 0 ? "*" : "(opcional)"}
+                            </span>
+                          </label>
+                          <textarea
+                            rows={2}
+                            value={justificativasLider[cat.categoria] || ""}
+                            onChange={(e) =>
+                              setJustificativasLider((prev) => ({
+                                ...prev,
+                                [cat.categoria]: e.target.value,
+                              }))
+                            }
+                            placeholder={placeholderEscolhaLider}
+                            style={{
+                              width: "100%",
+                              padding: "8px 10px",
+                              fontSize: "12.5px",
+                              borderRadius: "8px",
+                              border: "1px solid #22c55e",
+                              backgroundColor: "#ffffff",
+                              resize: "vertical",
+                            }}
+                          />
+                        </div>
+                      ) : escolhaSalvaTexto ? (
+                        <div
+                          style={{
+                            padding: "10px 14px",
+                            borderRadius: "8px",
+                            backgroundColor: "#ecfdf5",
+                            border: "1px solid #6ee7b7",
+                          }}
+                        >
+                          <div style={{ fontSize: "11px", fontWeight: 800, color: "#065f46", textTransform: "uppercase", marginBottom: "2px" }}>
+                            🎯 Opção Escolhida pelo Líder para Compra:
+                          </div>
+                          <div style={{ fontSize: "13px", fontWeight: 700, color: "#0f172a" }}>
+                            {escolhaSalvaTexto}
+                          </div>
+                        </div>
+                      ) : null}
                     </div>
 
-                    {/* Caixa de Justificativa do Líder se a cotação escolhida for maior que a menor disponível */}
-                    {(() => {
-                      const altEscolhida = cat.alternativas.find((a) => a.id === altEscolhidaId);
-                      const validas = cat.alternativas.filter((a) => (a.valor || 0) > 0);
-                      const menorValor = validas.length > 0 ? Math.min(...validas.map((a) => a.valor || 0)) : 0;
-                      const isMaiorQueMenor = Boolean(altEscolhida && (altEscolhida.valor || 0) > menorValor && menorValor > 0);
-
-                      if (perfilAtivo === "LIDER" && (sol.status === "AGUARDANDO_APROVACAO" || sol.requerReaprovacao) && isMaiorQueMenor) {
-                        return (
-                          <div
-                            style={{
-                              margin: "0 16px 16px 16px",
-                              padding: "12px 14px",
-                              borderRadius: "8px",
-                              backgroundColor: "#fffbeb",
-                              border: "1px solid #fde68a",
-                            }}
-                          >
-                            <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px", color: "#b45309" }}>
-                              <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>warning</span>
-                              <strong style={{ fontSize: "12px" }}>
-                                Opção de valor superior selecionada ({brl(altEscolhida?.valor || 0)} vs Menor {brl(menorValor)}). Justificativa obrigatória:
-                              </strong>
-                            </div>
-                            <textarea
-                              rows={2}
-                              value={justificativasLider[cat.categoria] || ""}
-                              onChange={(e) =>
-                                setJustificativasLider((prev) => ({
-                                  ...prev,
-                                  [cat.categoria]: e.target.value,
-                                }))
-                              }
-                              placeholder="Informe a justificativa operacional / técnica para escolher esta cotação (ex: horário mais adequado para a reunião, voo direto, etc)..."
-                              style={{
-                                width: "100%",
-                                padding: "8px",
-                                fontSize: "12px",
-                                borderRadius: "6px",
-                                border: "1px solid #d97706",
-                                backgroundColor: "#ffffff",
-                                resize: "none",
-                              }}
-                            />
-                          </div>
-                        );
-                      }
-
-                      if (sol.justificativasLider?.[cat.categoria]) {
-                        return (
-                          <div
-                            style={{
-                              margin: "0 16px 16px 16px",
-                              padding: "10px 14px",
-                              borderRadius: "8px",
-                              backgroundColor: "rgba(15, 42, 74, 0.05)",
-                              border: "1px solid rgba(15, 42, 74, 0.15)",
-                            }}
-                          >
-                            <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--primary)", marginBottom: "2px" }}>
-                              Justificativa do Líder:
-                            </div>
-                            <div style={{ fontSize: "12px", color: "var(--on-surface)" }}>
-                              {sol.justificativasLider[cat.categoria]}
-                            </div>
-                          </div>
-                        );
-                      }
-
-                      return null;
-                    })()}
-
-                    {/* Bloco de Contratação & Vouchers Definitivos (Visível quando aprovado) */}
+                    {/* Bloco de Contratação & Vouchers Definitivos (Etapa 3: Agência informa Valor Final, Localizador e Voucher) */}
                     {(() => {
                       const podeEditarAgencia = perfilAtivo === "AGENCIA" && (
                         sol.status === "APROVADO_AGUARDANDO_COMPRA" ||
@@ -1335,7 +1318,7 @@ export default function CotacoesMatrixModal({
                         return null;
                       }
 
-                      const altAprov = cat.alternativas.find((a) => a.id === cat.alternativaAprovadaId) || cat.alternativas.find((a) => a.selecionada) || cat.alternativas[0];
+                      const altAprov = altPrincipal;
                       const mapaVouchers = new Map<string, AnexoDocumento>();
                       (altAprov?.vouchersDefinitivos || []).forEach((v) => {
                         const chave = v.id || v.nome;
@@ -1353,8 +1336,8 @@ export default function CotacoesMatrixModal({
                         <div
                           style={{
                             backgroundColor: "rgba(0, 168, 150, 0.04)",
-                            borderTop: "1px solid rgba(0, 168, 150, 0.2)",
-                            padding: "12px 18px",
+                            borderTop: "1px solid rgba(0, 168, 150, 0.25)",
+                            padding: "14px 18px",
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "space-between",
@@ -1362,10 +1345,40 @@ export default function CotacoesMatrixModal({
                             flexWrap: "wrap",
                           }}
                         >
-                          <div style={{ display: "flex", alignItems: "center", gap: "16px", flex: 1, minWidth: "260px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "14px", flex: 1, minWidth: "300px", flexWrap: "wrap" }}>
                             <div>
-                              <span style={{ fontSize: "11px", color: "var(--on-surface-variant)", display: "block" }}>
-                                Valor Final Contratado
+                              <span style={{ fontSize: "11px", fontWeight: 600, color: "var(--on-surface-variant)", display: "block", marginBottom: "2px" }}>
+                                Fornecedor / Empresa Emitida
+                              </span>
+                              {podeEditarAgencia ? (
+                                <input
+                                  type="text"
+                                  value={fornecedoresContratados[cat.categoria] || ""}
+                                  onChange={(e) =>
+                                    setFornecedoresContratados((prev) => ({
+                                      ...prev,
+                                      [cat.categoria]: e.target.value,
+                                    }))
+                                  }
+                                  placeholder={
+                                    cat.categoria === "HOTEL"
+                                      ? "Ex: Ibis Styles"
+                                      : cat.categoria === "CARRO"
+                                      ? "Ex: Unidas / Localiza"
+                                      : "Ex: GOL / LATAM"
+                                  }
+                                  style={{ width: "160px", padding: "5px 8px", fontSize: "12px", borderRadius: "6px", border: "1px solid var(--border)", backgroundColor: "#ffffff" }}
+                                />
+                              ) : (
+                                <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--on-surface)" }}>
+                                  {fornecedoresContratados[cat.categoria] || altAprov?.fornecedor || "Não informado"}
+                                </span>
+                              )}
+                            </div>
+
+                            <div>
+                              <span style={{ fontSize: "11px", fontWeight: 600, color: "var(--on-surface-variant)", display: "block", marginBottom: "2px" }}>
+                                Valor Final Pago (R$)
                               </span>
                               {podeEditarAgencia ? (
                                 <input
@@ -1379,7 +1392,7 @@ export default function CotacoesMatrixModal({
                                     }))
                                   }
                                   placeholder="0,00"
-                                  style={{ width: "120px", padding: "4px 8px", fontSize: "13px", fontWeight: 700, borderRadius: "6px", border: "1px solid var(--border)", backgroundColor: "#ffffff" }}
+                                  style={{ width: "120px", padding: "5px 8px", fontSize: "13px", fontWeight: 700, borderRadius: "6px", border: "1px solid var(--border)", backgroundColor: "#ffffff" }}
                                 />
                               ) : (
                                 <strong style={{ fontSize: "14px", color: "var(--secondary, #00a896)" }}>
@@ -1389,7 +1402,7 @@ export default function CotacoesMatrixModal({
                             </div>
 
                             <div>
-                              <span style={{ fontSize: "11px", color: "var(--on-surface-variant)", display: "block" }}>
+                              <span style={{ fontSize: "11px", fontWeight: 600, color: "var(--on-surface-variant)", display: "block", marginBottom: "2px" }}>
                                 Localizador / Nº Reserva
                               </span>
                               {podeEditarAgencia ? (
@@ -1403,7 +1416,7 @@ export default function CotacoesMatrixModal({
                                     }))
                                   }
                                   placeholder="Ex: ABC123"
-                                  style={{ width: "130px", padding: "4px 8px", fontSize: "12px", borderRadius: "6px", border: "1px solid var(--border)", backgroundColor: "#ffffff" }}
+                                  style={{ width: "130px", padding: "5px 8px", fontSize: "12px", borderRadius: "6px", border: "1px solid var(--border)", backgroundColor: "#ffffff" }}
                                 />
                               ) : (
                                 <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--on-surface)" }}>
@@ -1415,8 +1428,8 @@ export default function CotacoesMatrixModal({
 
                           {/* Vouchers Definitivos */}
                           <div>
-                            <span style={{ fontSize: "11px", color: "var(--on-surface-variant)", display: "block", marginBottom: "4px" }}>
-                              Voucher Definitivo
+                            <span style={{ fontSize: "11px", fontWeight: 600, color: "var(--on-surface-variant)", display: "block", marginBottom: "4px" }}>
+                              Voucher / Bilhete Definitivo
                             </span>
                             <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "6px" }}>
                               {vouchersAlt.map((doc) => (
@@ -1500,10 +1513,10 @@ export default function CotacoesMatrixModal({
                                     display: "inline-flex",
                                     alignItems: "center",
                                     gap: "4px",
-                                    padding: "4px 10px",
+                                    padding: "5px 11px",
                                     borderRadius: "6px",
                                     fontSize: "11px",
-                                    fontWeight: 600,
+                                    fontWeight: 700,
                                     color: "var(--secondary)",
                                     backgroundColor: "var(--surface)",
                                     border: "1px solid var(--border)",
@@ -1515,12 +1528,13 @@ export default function CotacoesMatrixModal({
                                   <span>{vouchersAlt.length > 0 ? "Adicionar Outro Voucher" : "Anexar Voucher"}</span>
                                   <input
                                     type="file"
+                                    multiple
                                     accept="application/pdf,image/*"
                                     style={{ display: "none" }}
                                     onChange={(e) => {
                                       let altId = cat.alternativaAprovadaId || cat.alternativas.find((a) => a.selecionada)?.id || cat.alternativas[0]?.id;
                                       if (!altId) {
-                                        altId = `alt-${cat.categoria.toLowerCase()}-${sol.id}-${Date.now()}`;
+                                        altId = `alt-${cat.categoria.toLowerCase()}-${sol.id}-1`;
                                       }
                                       handleUploadAnexo(e, cat.categoria, altId, "VOUCHER");
                                     }}
@@ -1535,6 +1549,37 @@ export default function CotacoesMatrixModal({
                   </div>
                 );
               })}
+
+              {/* Observações Gerais da Cotação pela Agência (Etapa 1) */}
+              {perfilAtivo === "AGENCIA" && (sol.status === "AGUARDANDO_COTACAO" || sol.status === "EM_COTACAO") && (
+                <div
+                  style={{
+                    border: "1px solid var(--border, #e2e8f0)",
+                    borderRadius: "12px",
+                    padding: "14px 18px",
+                    backgroundColor: "#f8fafc",
+                  }}
+                >
+                  <label style={{ fontSize: "12px", fontWeight: 700, color: "var(--primary, #0f2a4a)", display: "block", marginBottom: "6px" }}>
+                    Observações Gerais para o Líder de Projeto (opcional)
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={obsAgencia}
+                    onChange={(e) => setObsAgencia(e.target.value)}
+                    placeholder="Ex: Seguem em anexo as opções de voos, hotéis em Goiânia e comparativo de locação de veículos para avaliação..."
+                    style={{
+                      width: "100%",
+                      padding: "8px 10px",
+                      fontSize: "12.5px",
+                      borderRadius: "8px",
+                      border: "1px solid var(--border, #cbd5e1)",
+                      backgroundColor: "#ffffff",
+                      resize: "vertical",
+                    }}
+                  />
+                </div>
+              )}
             </div>
 
             {/* Seção 2: Painel Exclusivo do Financeiro (Alimentação / Diária) */}
@@ -1734,65 +1779,66 @@ export default function CotacoesMatrixModal({
                     </>
                   )}
 
-                  {sol.status === "APROVADO_AGUARDANDO_COMPRA" && (
-                    <button
-                      type="button"
-                      disabled={loading}
-                      onClick={handleRegistrarComprasAgencia}
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "6px",
-                        padding: "8px 18px",
-                        borderRadius: "8px",
-                        fontSize: "13px",
-                        fontWeight: 700,
-                        color: "#ffffff",
-                        backgroundColor: "var(--primary, #0f2a4a)",
-                        border: "none",
-                        cursor: "pointer",
-                      }}
-                    >
-                      <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>shopping_cart_checkout</span>
-                      Confirmar Contratação das Reservas
-                    </button>
-                  )}
-
-                  {(sol.status === "VOUCHERS_PENDENTES" ||
+                  {(sol.status === "APROVADO_AGUARDANDO_COMPRA" ||
+                    sol.status === "VOUCHERS_PENDENTES" ||
                     sol.status === "VOUCHERS_ENVIADOS" ||
                     sol.status === "AGUARDANDO_PRESTACAO_CONTAS" ||
                     sol.status === "CONCLUIDO" ||
                     modoEdicaoAgencia) && (
                     <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-                      {/* Botão Editar Logística para permitir alterações e emissão de novos vouchers */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setModoEdicaoAgencia(!modoEdicaoAgencia);
-                          if (!modoEdicaoAgencia) {
-                            showToast("Modo de edição da logística ATIVADO. Você pode alterar valores, localizadores e vouchers.");
-                          }
-                        }}
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "6px",
-                          padding: "8px 14px",
-                          borderRadius: "8px",
-                          fontSize: "13px",
-                          fontWeight: 700,
-                          color: modoEdicaoAgencia ? "#dc2626" : "var(--primary, #0f2a4a)",
-                          backgroundColor: modoEdicaoAgencia ? "#fee2e2" : "var(--surface, #ffffff)",
-                          border: modoEdicaoAgencia ? "1px solid #fca5a5" : "1px solid var(--border, #cbd5e1)",
-                          cursor: "pointer",
-                        }}
-                        title="Habilita ou desabilita a edição dos campos de contratação, localizadores e anexos"
-                      >
-                        <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
-                          {modoEdicaoAgencia ? "edit_off" : "edit"}
-                        </span>
-                        <span>{modoEdicaoAgencia ? "Concluir Edição" : "Editar Logística"}</span>
-                      </button>
+                      {sol.status === "APROVADO_AGUARDANDO_COMPRA" ? (
+                        <button
+                          type="button"
+                          disabled={loading}
+                          onClick={handleRegistrarComprasAgencia}
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "6px",
+                            padding: "8px 14px",
+                            borderRadius: "8px",
+                            fontSize: "13px",
+                            fontWeight: 700,
+                            color: "var(--primary, #0f2a4a)",
+                            backgroundColor: "var(--surface, #ffffff)",
+                            border: "1px solid var(--primary, #0f2a4a)",
+                            cursor: "pointer",
+                          }}
+                        >
+                          <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>save</span>
+                          <span>Salvar Valores &amp; Reservas</span>
+                        </button>
+                      ) : (
+                        /* Botão Editar Logística para permitir alterações e emissão de novos vouchers */
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setModoEdicaoAgencia(!modoEdicaoAgencia);
+                            if (!modoEdicaoAgencia) {
+                              showToast("Modo de edição da logística ATIVADO. Você pode alterar valores, localizadores e vouchers.");
+                            }
+                          }}
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "6px",
+                            padding: "8px 14px",
+                            borderRadius: "8px",
+                            fontSize: "13px",
+                            fontWeight: 700,
+                            color: modoEdicaoAgencia ? "#dc2626" : "var(--primary, #0f2a4a)",
+                            backgroundColor: modoEdicaoAgencia ? "#fee2e2" : "var(--surface, #ffffff)",
+                            border: modoEdicaoAgencia ? "1px solid #fca5a5" : "1px solid var(--border, #cbd5e1)",
+                            cursor: "pointer",
+                          }}
+                          title="Habilita ou desabilita a edição dos campos de contratação, localizadores e anexos"
+                        >
+                          <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
+                            {modoEdicaoAgencia ? "edit_off" : "edit"}
+                          </span>
+                          <span>{modoEdicaoAgencia ? "Concluir Edição" : "Editar Logística"}</span>
+                        </button>
+                      )}
 
                       <button
                         type="button"
@@ -1849,7 +1895,7 @@ export default function CotacoesMatrixModal({
                 </>
               )}
 
-              {/* Botão do Perfil LÍDER DE PROJETO (Aprovação em 1 clique) */}
+              {/* Botão do Perfil LÍDER DE PROJETO (Aprovação e envio para compra) */}
               {perfilAtivo === "LIDER" && (sol.status === "AGUARDANDO_APROVACAO" || sol.status === "AGUARDANDO_REAPROVACAO" || sol.requerReaprovacao) && (
                 <button
                   type="button"
@@ -1871,7 +1917,7 @@ export default function CotacoesMatrixModal({
                   }}
                 >
                   <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>thumb_up</span>
-                  {sol.requerReaprovacao ? `Aprovar Novo Orçamento (${brl(sol.totalContratado)})` : "Aprovar Logística (1 Clique)"}
+                  {sol.requerReaprovacao ? `Aprovar Novo Orçamento (${brl(sol.totalContratado)})` : "Aprovar Escolhas & Autorizar Compra"}
                 </button>
               )}
 
