@@ -269,8 +269,10 @@ export async function GET(request: Request) {
         return mCons && mMes && mPer;
       });
 
-      const codigoBm = String(codigoContador).padStart(4, "0");
-      codigoContador++;
+      // Só consome um novo número sequencial se o consultor ainda não possuir BM emitido para este período
+      const codigoBm = bmExistente
+        ? bmExistente.codigo
+        : String(codigoContador++).padStart(4, "0");
 
       candidatos.push({
         id: `cand-${p.id || p.nome}-${Date.now()}`,
@@ -289,7 +291,7 @@ export async function GET(request: Request) {
         totalHoras,
         valorTotal: somaTotal,
         mediaHora: totalHoras > 0 ? Math.round((somaTotal / totalHoras) * 100) / 100 : 0,
-        codigoSugerido: bmExistente ? bmExistente.codigo : codigoBm,
+        codigoSugerido: codigoBm,
         bmExistente: Boolean(bmExistente),
         bmExistenteCodigo: bmExistente?.codigo,
         bmExistenteStatus: bmExistente?.status,
