@@ -25,6 +25,28 @@ const parseMoedaBRInput = (str: string): number => {
   return parseInt(digits, 10) / 100;
 };
 
+const FORNECEDORES_GENERICOS = new Set([
+  "locadora parceira",
+  "rede conveniada",
+  "agência fátima",
+  "agencia fatima",
+  "agência de viagens",
+  "agencia de viagens",
+  "seguradora corporativa",
+  "locadora de veículos",
+  "locadora de veiculos",
+  "passagem aérea",
+  "hotel / estadia",
+  "carro / translado",
+  "seguro / outros",
+]);
+
+const limparFornecedorGenerico = (fornecedor?: string | null): string => {
+  const val = (fornecedor || "").trim();
+  if (!val) return "";
+  return FORNECEDORES_GENERICOS.has(val.toLowerCase()) ? "" : val;
+};
+
 export function abrirEmNovaAbaSegura(url?: string, nome?: string) {
   if (!url) return;
   if (url.startsWith("data:")) {
@@ -71,7 +93,6 @@ export default function CotacoesMatrixModal({
   const [categoriasState, setCategoriasState] = useState<CategoriaCotacoes[]>(
     JSON.parse(JSON.stringify(solicitacao.categorias || []))
   );
-  const [obsAgencia, setObsAgencia] = useState(solicitacao.observacoesSolicitante || "");
 
   // Estados de aprovação do Líder com pré-seleção inteligente da menor cotação
   const [escolhasLider, setEscolhasLider] = useState<Record<string, string>>(() => {
@@ -105,8 +126,9 @@ export default function CotacoesMatrixModal({
     const init: Record<string, string> = {};
     solicitacao.categorias.forEach((c) => {
       const altAprov = c.alternativas.find((a) => a.id === c.alternativaAprovadaId) || c.alternativas.find((a) => a.selecionada) || c.alternativas[0];
-      if (altAprov?.fornecedor) {
-        init[c.categoria] = altAprov.fornecedor;
+      const fornecedorLimpo = limparFornecedorGenerico(altAprov?.fornecedor);
+      if (fornecedorLimpo) {
+        init[c.categoria] = fornecedorLimpo;
       }
     });
     return init;
@@ -237,7 +259,10 @@ export default function CotacoesMatrixModal({
     const todosAnexos: { id?: string; nome: string; categoria: string; url?: string; mimeType?: string }[] = [];
     categoriasState.forEach((c) => {
       c.alternativas.forEach((a) => {
-        const listaDocs = [...(a.vouchersDefinitivos || []), ...(a.anexos || [])];
+        const listaDocs = [
+          ...(a.vouchersDefinitivos || []),
+          ...(a.anexos || []).filter((doc) => doc.tipo === "VOUCHER"),
+        ];
         listaDocs.forEach((doc) => {
           if (!todosAnexos.some((ex) => ex.nome === doc.nome && ex.url === doc.url)) {
             todosAnexos.push({
@@ -472,13 +497,21 @@ export default function CotacoesMatrixModal({
 
     setLoading(true);
     try {
+      const obsPorCategoria = categoriasState
+        .map((cat) => {
+          const obs = (cat.alternativas?.[0]?.observacoes || "").trim();
+          return obs ? `${cat.nomeExibicao}: ${obs}` : "";
+        })
+        .filter(Boolean)
+        .join(" | ");
+
       const res = await fetch("/api/viagens/cotacoes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           solicitacaoId: sol.id,
           categorias: categoriasState,
-          observacoesAgencia: obsAgencia,
+          observacoesAgencia: obsPorCategoria,
           enviarParaAprovacao: enviar,
           usuarioNome: "Agência Fátima",
         }),
@@ -753,54 +786,48 @@ export default function CotacoesMatrixModal({
             </div>
 
             <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              {/* Badge indicativa do perfil ativo no momento */}
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  padding: "6px 12px",
-                  borderRadius: "8px",
-                  background:
-                    perfilAtivo === "AGENCIA"
-                      ? "rgba(0, 168, 150, 0.15)"
-                      : perfilAtivo === "LIDER"
-                      ? "rgba(15, 42, 74, 0.12)"
+              {/* Badge indicativa do perfil ativo no momento (oculta quando a própria Agência está operando) */}
+              {perfilAtivo !== "AGENCIA" && (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    padding: "6px 12px",
+                    borderRadius: "8px",
+                    background:
+                      perfilAtivo === "LIDER"
+                        ? "rgba(15, 42, 74, 0.12)"
+                        : perfilAtivo === "FINANCEIRO"
+                        ? "rgba(217, 119, 6, 0.15)"
+                        : "rgba(37, 99, 235, 0.15)",
+                    color:
+                      perfilAtivo === "LIDER"
+                        ? "var(--primary, #0f2a4a)"
+                        : perfilAtivo === "FINANCEIRO"
+                        ? "#d97706"
+                        : "#2563eb",
+                    fontSize: "12px",
+                    fontWeight: 700,
+                  }}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
+                    {perfilAtivo === "LIDER"
+                      ? "supervised_user_circle"
                       : perfilAtivo === "FINANCEIRO"
-                      ? "rgba(217, 119, 6, 0.15)"
-                      : "rgba(37, 99, 235, 0.15)",
-                  color:
-                    perfilAtivo === "AGENCIA"
-                      ? "var(--secondary, #00a896)"
-                      : perfilAtivo === "LIDER"
-                      ? "var(--primary, #0f2a4a)"
+                      ? "account_balance"
+                      : "badge"}
+                  </span>
+                  <span>
+                    Visão:{" "}
+                    {perfilAtivo === "LIDER"
+                      ? "Líder de Projeto"
                       : perfilAtivo === "FINANCEIRO"
-                      ? "#d97706"
-                      : "#2563eb",
-                  fontSize: "12px",
-                  fontWeight: 700,
-                }}
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
-                  {perfilAtivo === "AGENCIA"
-                    ? "travel_explore"
-                    : perfilAtivo === "LIDER"
-                    ? "supervised_user_circle"
-                    : perfilAtivo === "FINANCEIRO"
-                    ? "account_balance"
-                    : "badge"}
-                </span>
-                <span>
-                  Visão:{" "}
-                  {perfilAtivo === "AGENCIA"
-                    ? "Agência de Viagens"
-                    : perfilAtivo === "LIDER"
-                    ? "Líder de Projeto"
-                    : perfilAtivo === "FINANCEIRO"
-                    ? "Financeiro"
-                    : "Consultor"}
-                </span>
-              </div>
+                      ? "Financeiro"
+                      : "Consultor"}
+                  </span>
+                </div>
+              )}
 
               <button
                 type="button"
@@ -1387,7 +1414,7 @@ export default function CotacoesMatrixModal({
                                 />
                               ) : (
                                 <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--on-surface)" }}>
-                                  {fornecedoresContratados[cat.categoria] || altAprov?.fornecedor || "Não informado"}
+                                  {fornecedoresContratados[cat.categoria] || limparFornecedorGenerico(altAprov?.fornecedor) || "Não informado"}
                                 </span>
                               )}
                             </div>
@@ -1565,37 +1592,6 @@ export default function CotacoesMatrixModal({
                   </div>
                 );
               })}
-
-              {/* Observações Gerais da Cotação pela Agência (Etapa 1) */}
-              {perfilAtivo === "AGENCIA" && (sol.status === "AGUARDANDO_COTACAO" || sol.status === "EM_COTACAO") && (
-                <div
-                  style={{
-                    border: "1px solid var(--border, #e2e8f0)",
-                    borderRadius: "12px",
-                    padding: "14px 18px",
-                    backgroundColor: "#f8fafc",
-                  }}
-                >
-                  <label style={{ fontSize: "12px", fontWeight: 700, color: "var(--primary, #0f2a4a)", display: "block", marginBottom: "6px" }}>
-                    Observações Gerais para o Líder de Projeto (opcional)
-                  </label>
-                  <textarea
-                    rows={2}
-                    value={obsAgencia}
-                    onChange={(e) => setObsAgencia(e.target.value)}
-                    placeholder="Ex: Seguem em anexo as opções de voos, hotéis em Goiânia e comparativo de locação de veículos para avaliação..."
-                    style={{
-                      width: "100%",
-                      padding: "8px 10px",
-                      fontSize: "12.5px",
-                      borderRadius: "8px",
-                      border: "1px solid var(--border, #cbd5e1)",
-                      backgroundColor: "#ffffff",
-                      resize: "vertical",
-                    }}
-                  />
-                </div>
-              )}
             </div>
 
             {/* Seção 2: Painel Exclusivo do Financeiro (Alimentação / Diária) */}

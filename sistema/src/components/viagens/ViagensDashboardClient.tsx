@@ -81,7 +81,19 @@ export default function ViagensDashboardClient({
   // Filtragem da Lista
   const solicitacoesFiltradas = useMemo(() => {
     return solicitacoesEscopo.filter((s) => {
-      if (filtroStatus !== "TODOS" && s.status !== filtroStatus) return false;
+      if (filtroStatus !== "TODOS") {
+        if (filtroStatus === "AGUARDANDO_COTACAO") {
+          if (s.status !== "AGUARDANDO_COTACAO" && s.status !== "EM_COTACAO") return false;
+        } else if (filtroStatus === "AGUARDANDO_APROVACAO") {
+          if (s.status !== "AGUARDANDO_APROVACAO" && s.status !== "AGUARDANDO_REAPROVACAO" && !s.requerReaprovacao) return false;
+        } else if (filtroStatus === "APROVADO_AGUARDANDO_COMPRA") {
+          if (s.status !== "APROVADO_AGUARDANDO_COMPRA" && s.status !== "EM_CONTRATACAO" && s.status !== "VOUCHERS_PENDENTES") return false;
+        } else if (filtroStatus === "VOUCHERS_ENVIADOS") {
+          if (s.status !== "VOUCHERS_ENVIADOS" && s.status !== "AGUARDANDO_PRESTACAO_CONTAS") return false;
+        } else if (s.status !== filtroStatus) {
+          return false;
+        }
+      }
       if (busca.trim()) {
         const b = busca.toLowerCase();
         const mProj = s.projeto?.toLowerCase().includes(b);
@@ -98,8 +110,8 @@ export default function ViagensDashboardClient({
   const kpis = useMemo(() => {
     const total = solicitacoesEscopo.length;
     const aguardandoCotacao = solicitacoesEscopo.filter((s) => s.status === "AGUARDANDO_COTACAO" || s.status === "EM_COTACAO").length;
-    const aguardandoAprovacao = solicitacoesEscopo.filter((s) => s.status === "AGUARDANDO_APROVACAO" || s.requerReaprovacao).length;
-    const emContratacao = solicitacoesEscopo.filter((s) => s.status === "APROVADO_AGUARDANDO_COMPRA" || s.status === "EM_CONTRATACAO").length;
+    const aguardandoAprovacao = solicitacoesEscopo.filter((s) => s.status === "AGUARDANDO_APROVACAO" || s.status === "AGUARDANDO_REAPROVACAO" || s.requerReaprovacao).length;
+    const emContratacao = solicitacoesEscopo.filter((s) => s.status === "APROVADO_AGUARDANDO_COMPRA" || s.status === "EM_CONTRATACAO" || s.status === "VOUCHERS_PENDENTES").length;
     const vouchersEnviados = solicitacoesEscopo.filter((s) => s.status === "VOUCHERS_ENVIADOS" || s.status === "AGUARDANDO_PRESTACAO_CONTAS").length;
     const concluidas = solicitacoesEscopo.filter((s) => s.status === "CONCLUIDO").length;
     const totalCustoPrevisto = solicitacoesEscopo.reduce((acc, s) => acc + (s.totalAprovado || s.totalCotado || 0), 0);

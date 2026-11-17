@@ -244,7 +244,7 @@ export async function sincronizarSolicitacoesIniciais(competencia?: string): Pro
             {
               id: `alt-aereo-${l.id}-1`,
               alternativaNumero: 1,
-              fornecedor: v?.agencia || "Agência Fátima",
+              fornecedor: "",
               descricao: "Voo emitido conforme itinerário",
               valor: custoAereo,
               valorContratado: custoAereo,
@@ -264,7 +264,7 @@ export async function sincronizarSolicitacoesIniciais(competencia?: string): Pro
             {
               id: `alt-hotel-${l.id}-1`,
               alternativaNumero: 1,
-              fornecedor: "Rede Conveniada",
+              fornecedor: "",
               descricao: "Hospedagem faturada para o período",
               valor: custoHotel,
               valorContratado: custoHotel,
@@ -280,11 +280,11 @@ export async function sincronizarSolicitacoesIniciais(competencia?: string): Pro
           nomeExibicao: "Carro / Translado",
           icone: "directions_car",
           necessaria: precisaCarro,
-          alternativas: (custoCarro > 0 || precisaCarro) ? [
+          alternativas: custoCarro > 0 ? [
             {
               id: `alt-carro-${l.id}-1`,
               alternativaNumero: 1,
-              fornecedor: "Locadora Parceira",
+              fornecedor: "",
               descricao: "Locação de veículo categoria intermediária",
               valor: custoCarro,
               valorContratado: custoCarro,
@@ -293,7 +293,7 @@ export async function sincronizarSolicitacoesIniciais(competencia?: string): Pro
               anexos: [],
             }
           ] : [],
-          alternativaAprovadaId: (custoCarro > 0 || precisaCarro) ? `alt-carro-${l.id}-1` : undefined,
+          alternativaAprovadaId: custoCarro > 0 ? `alt-carro-${l.id}-1` : undefined,
         },
         {
           categoria: "SEGURO",
@@ -304,7 +304,7 @@ export async function sincronizarSolicitacoesIniciais(competencia?: string): Pro
             {
               id: `alt-seguro-${l.id}-1`,
               alternativaNumero: 1,
-              fornecedor: "Seguradora Corporativa",
+              fornecedor: "",
               descricao: "Apólice internacional de viagem",
               valor: custoSeguro,
               valorContratado: custoSeguro,
@@ -651,10 +651,6 @@ export async function salvarCotacoesAgencia(
     return temPdf ? { ...cat, necessaria: true } : cat;
   });
 
-  if (observacoesAgencia !== undefined) {
-    sol.observacoesSolicitante = observacoesAgencia;
-  }
-
   // Recalcula total cotado caso haja valores numéricos informados (no novo fluxo por PDF pode ser 0)
   let totalCot = 0;
   let totalAnexosPdf = 0;
@@ -729,7 +725,7 @@ export async function aprovarLogisticaLider(
         const altPadrao: AlternativaCotacao = {
           id: `alt-${cat.categoria.toLowerCase()}-${sol.id}-1`,
           alternativaNumero: 1,
-          fornecedor: cat.nomeExibicao,
+          fornecedor: "",
           descricao: textoEscolha,
           valor: 0,
           dataCotacao: agora.split("T")[0],
@@ -883,7 +879,7 @@ export async function registrarCompraAgencia(
       alt = {
         id: c.alternativaId || `alt-${c.categoria.toLowerCase()}-${sol.id}-${Date.now()}`,
         alternativaNumero: 1,
-        fornecedor: c.fornecedor || (c.categoria === "CARRO" ? "Locadora de Veículos" : "Agência de Viagens"),
+        fornecedor: (c.fornecedor || "").trim(),
         descricao: sol.justificativasLider?.[c.categoria] || `Reserva de ${cat.nomeExibicao}`,
         valor: Number(c.valorContratado) || 0,
         valorContratado: Number(c.valorContratado) || 0,
@@ -897,7 +893,7 @@ export async function registrarCompraAgencia(
       cat.necessaria = true;
       cat.alternativaAprovadaId = alt.id;
     } else {
-      if (c.fornecedor !== undefined && c.fornecedor.trim() !== "") {
+      if (c.fornecedor !== undefined) {
         alt.fornecedor = c.fornecedor.trim();
       }
       alt.valorContratado = Number(c.valorContratado) ?? alt.valor;
@@ -914,9 +910,9 @@ export async function registrarCompraAgencia(
 
   sol.totalContratado = Math.round(totalContratado * 100) / 100;
 
-  // No fluxo por PDF, a cotação aprovada pelo Líder não tinha valores digitados (totalAprovado === 0).
+  // No fluxo por PDF, a cotação aprovada pelo Líder não tinha valores digitados (totalCotado === 0).
   // Ao informar o valor final na Etapa 3, ele se torna o valor aprovado de referência sem bloquear por divergência.
-  const veioDoFluxoPdfSemValorPrevio = (sol.totalAprovado || 0) === 0;
+  const veioDoFluxoPdfSemValorPrevio = (sol.totalCotado || 0) === 0 || (sol.totalAprovado || 0) === 0;
   if (veioDoFluxoPdfSemValorPrevio) {
     sol.totalAprovado = sol.totalContratado;
     sol.diferencaValor = 0;
@@ -1019,7 +1015,10 @@ export async function enviarVouchersViajante(
   const todosAnexos: { nome: string; categoria: string; url?: string }[] = [];
   sol.categorias.forEach((c) => {
     c.alternativas.forEach((a) => {
-      const listaDocs = [...(a.vouchersDefinitivos || []), ...(a.anexos || [])];
+      const listaDocs = [
+        ...(a.vouchersDefinitivos || []),
+        ...(a.anexos || []).filter((doc) => doc.tipo === "VOUCHER"),
+      ];
       listaDocs.forEach((doc) => {
         if (!todosAnexos.some((ex) => ex.nome === doc.nome && ex.url === doc.url)) {
           todosAnexos.push({
@@ -1622,6 +1621,12 @@ export async function dispararNotificacaoCotacoesProntasLider(sol: ViagemSolicit
     const nomesArquivosPdf = (sol.categorias || [])
       .flatMap((c) => (c.alternativas || []).flatMap((a) => (a.anexos || []).map((anx) => `${c.nomeExibicao}: ${anx.nome}`)))
       .filter(Boolean);
+    const obsCategorias = (sol.categorias || [])
+      .map((c) => {
+        const obs = (c.alternativas?.[0]?.observacoes || "").trim();
+        return obs ? `<strong>${c.nomeExibicao}:</strong> ${obs}` : "";
+      })
+      .filter(Boolean);
     const assunto = `📋 [COTAÇÃO ENVIADA] Propostas em PDF Prontas para Escolha • ${sol.projeto} - ${sol.atividade}`;
 
     const html = `
@@ -1666,10 +1671,10 @@ export async function dispararNotificacaoCotacoesProntasLider(sol: ViagemSolicit
                 <td style="color: #64748b; font-weight: 600; vertical-align: top;">PDFs Anexados:</td>
                 <td style="color: #0f172a; font-weight: 600;">${nomesArquivosPdf.join("<br/>")}</td>
               </tr>` : ""}
-              ${observacoesAgencia ? `
+              ${obsCategorias.length > 0 ? `
               <tr>
-                <td style="color: #64748b; font-weight: 600;">Obs. da Agência:</td>
-                <td style="color: #334155; font-style: italic;">${observacoesAgencia}</td>
+                <td style="color: #64748b; font-weight: 600; vertical-align: top;">Obs. da Agência:</td>
+                <td style="color: #334155; font-style: italic;">${obsCategorias.join("<br/>")}</td>
               </tr>` : ""}
             </table>
           </div>
