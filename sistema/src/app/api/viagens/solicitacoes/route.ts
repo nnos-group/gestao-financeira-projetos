@@ -5,15 +5,21 @@ import {
   garantirSolicitacaoAtividade,
 } from "@/lib/viagens-service";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const competencia = searchParams.get("competencia") || undefined;
+    const ano = searchParams.get("ano") || undefined;
+    const mes = searchParams.get("mes") || undefined;
     const sincronizar = searchParams.get("sincronizar") === "true";
+
+    const compBusca = ano || competencia;
 
     let solicitacoes = carregarSolicitacoesArquivo();
     if (solicitacoes.length === 0 || sincronizar) {
-      solicitacoes = await sincronizarSolicitacoesIniciais(competencia);
+      solicitacoes = await sincronizarSolicitacoesIniciais(compBusca, sincronizar);
     }
 
     // Filtros opcionais
@@ -23,6 +29,17 @@ export async function GET(req: Request) {
     const busca = searchParams.get("busca");
 
     let filtradas = solicitacoes;
+
+    if (ano) {
+      if (mes && mes !== "todos") {
+        const prefixoMes = `${ano}-${String(mes).padStart(2, "0")}`;
+        filtradas = filtradas.filter((s) => s.dataInicial && s.dataInicial.startsWith(prefixoMes));
+      } else {
+        const prefixoAno = `${ano}-`;
+        const doAno = filtradas.filter((s) => s.dataInicial && s.dataInicial.startsWith(prefixoAno));
+        filtradas = doAno.length > 0 ? doAno : filtradas;
+      }
+    }
 
     if (status && status !== "TODOS") {
       filtradas = filtradas.filter((s) => s.status === status);
@@ -44,11 +61,18 @@ export async function GET(req: Request) {
       );
     }
 
-    return NextResponse.json({
-      ok: true,
-      total: filtradas.length,
-      solicitacoes: filtradas,
-    });
+    return NextResponse.json(
+      {
+        ok: true,
+        total: filtradas.length,
+        solicitacoes: filtradas,
+      },
+      {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate",
+        },
+      }
+    );
   } catch (err: any) {
     console.error("Erro ao listar solicitações de viagem:", err);
     return NextResponse.json(

@@ -57,18 +57,58 @@ export default function ViagensDashboardClient({
     });
   };
 
-  const recarregarSolicitacoes = async () => {
-    try {
-      const comp = `${anoSelecionado}-${String(mesSelecionado).padStart(2, "0")}-01`;
-      const res = await fetch(`/api/viagens/solicitacoes?competencia=${comp}&sincronizar=true`);
-      const data = await res.json();
-      if (data.ok && Array.isArray(data.solicitacoes)) {
-        setSolicitacoes(data.solicitacoes);
+  const recarregarSolicitacoes = React.useCallback(
+    async (solAtualizada?: ViagemSolicitacao) => {
+      if (solAtualizada?.id) {
+        setSolicitacoes((prev) => {
+          const existe = prev.some((s) => s.id === solAtualizada.id);
+          return existe
+            ? prev.map((s) => (s.id === solAtualizada.id ? solAtualizada : s))
+            : [solAtualizada, ...prev];
+        });
+        setModalItem((prev) => (prev && prev.id === solAtualizada.id ? solAtualizada : prev));
       }
-    } catch (e) {
-      console.warn("Erro ao recarregar solicitações:", e);
-    }
-  };
+
+      try {
+        const mesParam = mesSelecionado ? String(mesSelecionado) : "todos";
+        const res = await fetch(
+          `/api/viagens/solicitacoes?ano=${anoSelecionado}&mes=${mesParam}&sincronizar=true&t=${Date.now()}`,
+          { cache: "no-store" }
+        );
+        const data = await res.json();
+        if (data.ok && Array.isArray(data.solicitacoes)) {
+          setSolicitacoes(data.solicitacoes);
+          setModalItem((prev) => {
+            if (!prev) return prev;
+            const atual = (data.solicitacoes as ViagemSolicitacao[]).find((s) => s.id === prev.id);
+            return atual || prev;
+          });
+        }
+      } catch (e) {
+        console.warn("Erro ao recarregar solicitações:", e);
+      }
+    },
+    [anoSelecionado, mesSelecionado]
+  );
+
+  // Sincronização automática em background entre usuários/abas (foco, retorno à aba e a cada 15s)
+  React.useEffect(() => {
+    const atualizarSeVisivel = () => {
+      if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
+      if (modalItem) return;
+      recarregarSolicitacoes();
+    };
+
+    const intervalo = setInterval(atualizarSeVisivel, 15000);
+    window.addEventListener("focus", atualizarSeVisivel);
+    document.addEventListener("visibilitychange", atualizarSeVisivel);
+
+    return () => {
+      clearInterval(intervalo);
+      window.removeEventListener("focus", atualizarSeVisivel);
+      document.removeEventListener("visibilitychange", atualizarSeVisivel);
+    };
+  }, [modalItem, recarregarSolicitacoes]);
 
   const brl = (v: number) =>
     (v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });

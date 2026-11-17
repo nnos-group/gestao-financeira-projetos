@@ -57,6 +57,25 @@ export function salvarSolicitacoesArquivo(lista: ViagemSolicitacao[]): void {
 
 const PREFIXO_WORKFLOW_CLOUD = "viagem_wf_";
 
+function normalizarFluxoPdfSemTeto(sol: ViagemSolicitacao): boolean {
+  if ((sol.totalCotado || 0) === 0 && (sol.requerReaprovacao || sol.status === "AGUARDANDO_REAPROVACAO")) {
+    sol.requerReaprovacao = false;
+    sol.motivoReaprovacao = undefined;
+    sol.totalAprovado = sol.totalContratado || sol.totalAprovado || 0;
+    sol.diferencaValor = 0;
+    const temVouchers = (sol.categorias || []).some((c) =>
+      (c.alternativas || []).some((a) => (a.vouchersDefinitivos?.length || 0) > 0)
+    );
+    sol.status = sol.vouchersEnviadosEm
+      ? "VOUCHERS_ENVIADOS"
+      : temVouchers
+      ? "VOUCHERS_PENDENTES"
+      : "APROVADO_AGUARDANDO_COMPRA";
+    return true;
+  }
+  return false;
+}
+
 export async function carregarWorkflowCloud(): Promise<Map<string, ViagemSolicitacao>> {
   const mapa = new Map<string, ViagemSolicitacao>();
   try {
@@ -70,6 +89,7 @@ export async function carregarWorkflowCloud(): Promise<Map<string, ViagemSolicit
         if (!row?.descricao) continue;
         try {
           const parsed = JSON.parse(row.descricao) as ViagemSolicitacao;
+          normalizarFluxoPdfSemTeto(parsed);
           if (parsed?.id) mapa.set(parsed.id, parsed);
           if (parsed?.lancamentoId) mapa.set(parsed.lancamentoId, parsed);
         } catch {
@@ -93,7 +113,9 @@ export async function carregarSolicitacaoUnicaCloud(idOuLancId: string): Promise
       .eq("chave", `${PREFIXO_WORKFLOW_CLOUD}${idNorm}`)
       .maybeSingle();
     if (!error && data?.descricao) {
-      return JSON.parse(data.descricao) as ViagemSolicitacao;
+      const parsed = JSON.parse(data.descricao) as ViagemSolicitacao;
+      normalizarFluxoPdfSemTeto(parsed);
+      return parsed;
     }
   } catch {}
   return null;
@@ -121,11 +143,17 @@ export { formatarObservacoesAgenciaCard } from "./viagem-formatters";
 /**
  * Inicializa ou sincroniza solicitações a partir dos lançamentos do Supabase
  */
-export async function sincronizarSolicitacoesIniciais(competencia?: string): Promise<ViagemSolicitacao[]> {
+export async function sincronizarSolicitacoesIniciais(
+  competencia?: string,
+  forcar: boolean = false
+): Promise<ViagemSolicitacao[]> {
+  if (forcar) {
+    invalidarCacheViagens();
+  }
   const cacheKey = competencia || "todas";
   const emCache = cacheSincronizacao.get(cacheKey);
   const agora = Date.now();
-  if (emCache && agora - emCache.timestamp < CACHE_TTL_MS) {
+  if (!forcar && emCache && agora - emCache.timestamp < CACHE_TTL_MS) {
     return emCache.data;
   }
 
@@ -916,6 +944,8 @@ export async function registrarCompraAgencia(
   if (veioDoFluxoPdfSemValorPrevio) {
     sol.totalAprovado = sol.totalContratado;
     sol.diferencaValor = 0;
+    sol.requerReaprovacao = false;
+    sol.motivoReaprovacao = undefined;
   } else {
     sol.diferencaValor = Math.round((sol.totalContratado - sol.totalAprovado) * 100) / 100;
   }
@@ -941,6 +971,7 @@ export async function registrarCompraAgencia(
   } else {
     sol.status = "VOUCHERS_PENDENTES";
     sol.requerReaprovacao = false;
+    sol.motivoReaprovacao = undefined;
 
     sol.auditoria.push({
       id: `aud-${Date.now()}`,
@@ -953,6 +984,7 @@ export async function registrarCompraAgencia(
     });
   }
 
+  normalizarFluxoPdfSemTeto(sol);
   sol.atualizadoEm = agora;
   salvarSolicitacoesArquivo(lista);
   await salvarSolicitacaoWorkflowCloud(sol);
@@ -969,9 +1001,39 @@ export async function registrarCompraAgencia(
 export async function enviarVouchersViajante(
   solicitacaoId: string,
   emailDestinatario?: string,
-  usuarioNome: string = "Agência de Viagens"
+  usuarioNome: string = "Agência de Viagens",
+  compras?: {
+    categoria: CategoriaLogistica;
+    alternativaId: string;
+    fornecedor?: string;
+    valorContratado: number;
+    localizadorOuReserva?: string;
+    observacoes?: string;
+    vouchers?: any[];
+  }[]
 ): Promise<{ ok: boolean; mensagem: string; solicitacao: ViagemSolicitacao; emailPreview?: any }> {
-  const { sol, lista } = await obterSolicitacaoGarantida(solicitacaoId);
+  let sol: ViagemSolicitacao;
+  let lista: ViagemSolicitacao[];
+
+  if (Array.isArray(compras) && compras.length > 0) {
+    sol = await registrarCompraAgencia(solicitacaoId, { compras, usuarioNome });
+    lista = carregarSolicitacoesArquivo();
+    const idx = lista.findIndex((s) => s.id === sol.id);
+    if (idx >= 0) lista[idx] = sol;
+    else lista.unshift(sol);
+  } else {
+    const res = await obterSolicitacaoGarantida(solicitacaoId);
+    sol = res.sol;
+    lista = res.lista;
+  }
+
+  if (sol.requerReaprovacao) {
+    return {
+      ok: false,
+      mensagem: "Esta solicitação aguarda reaprovação do Líder de Projeto antes do envio dos vouchers.",
+      solicitacao: sol,
+    };
+  }
 
   const agora = new Date().toISOString();
   const destEmail = emailDestinatario || sol.consultorEmail || "leonardo.campos@nnos.com.br";
@@ -1250,6 +1312,7 @@ export async function enviarVouchersViajante(
       if (a.url.startsWith("data:")) {
         anexosEnvio.push({ filename: a.nome, content: a.url });
       } else if (a.url.startsWith("http")) {
+        let baixouViaHttp = false;
         try {
           const respArq = await fetch(a.url);
           if (respArq.ok) {
@@ -1259,9 +1322,28 @@ export async function enviarVouchersViajante(
               filename: a.nome,
               content: `data:${mime};base64,${Buffer.from(arrBuf).toString("base64")}`,
             });
+            baixouViaHttp = true;
           }
         } catch (errFetch) {
           console.warn("Aviso ao baixar anexo remoto para e-mail:", a.nome, errFetch);
+        }
+
+        if (!baixouViaHttp && a.url.includes("/viagens-documentos/")) {
+          try {
+            const storagePath = decodeURIComponent(a.url.split("/viagens-documentos/")[1]?.split("?")[0] || "");
+            if (storagePath) {
+              const { data: fileBlob, error: dlErr } = await db.storage.from("viagens-documentos").download(storagePath);
+              if (!dlErr && fileBlob) {
+                const arrBuf = await fileBlob.arrayBuffer();
+                anexosEnvio.push({
+                  filename: a.nome,
+                  content: `data:${fileBlob.type || "application/pdf"};base64,${Buffer.from(arrBuf).toString("base64")}`,
+                });
+              }
+            }
+          } catch (errStorage) {
+            console.warn("Aviso no fallback Storage ao baixar anexo para e-mail:", a.nome, errStorage);
+          }
         }
       } else if (a.url.startsWith("/api/viagens/anexo?id=")) {
         try {

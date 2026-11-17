@@ -74,7 +74,7 @@ interface CotacoesMatrixModalProps {
   solicitacao: ViagemSolicitacao;
   perfilAtivo: ViagensPerfil;
   onClose: () => void;
-  onAtualizar: () => void;
+  onAtualizar: (solAtualizada?: ViagemSolicitacao) => void;
   showToast: (msg: string) => void;
 }
 
@@ -230,7 +230,7 @@ export default function CotacoesMatrixModal({
 
     if (emEtapaCompra) {
       try {
-        await fetch("/api/viagens/comprar", {
+        const resComprar = await fetch("/api/viagens/comprar", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -239,7 +239,13 @@ export default function CotacoesMatrixModal({
             usuarioNome: "Agência Fátima",
           }),
         });
-        onAtualizar();
+        const dataComprar = await lerRespostaSegura(resComprar).catch(() => null);
+        if (resComprar.ok && dataComprar?.ok && dataComprar?.solicitacao) {
+          setSol(dataComprar.solicitacao);
+          onAtualizar(dataComprar.solicitacao);
+        } else {
+          onAtualizar();
+        }
       } catch (err) {
         console.warn("Aviso ao persistir remoção de voucher:", err);
       }
@@ -462,7 +468,7 @@ export default function CotacoesMatrixModal({
       );
 
       if (tipo === "VOUCHER") {
-        fetch("/api/viagens/comprar", {
+        const resComprar = await fetch("/api/viagens/comprar", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -470,9 +476,14 @@ export default function CotacoesMatrixModal({
             compras: montarPayloadCompras(novasCategorias),
             usuarioNome: "Agência Fátima",
           }),
-        })
-          .then(() => onAtualizar())
-          .catch(() => {});
+        });
+        const dataComprar = await lerRespostaSegura(resComprar);
+        if (resComprar.ok && dataComprar?.ok && dataComprar?.solicitacao) {
+          setSol(dataComprar.solicitacao);
+          onAtualizar(dataComprar.solicitacao);
+        } else {
+          onAtualizar();
+        }
       }
     } catch (err: any) {
       showToast(`Erro no upload: ${err?.message || "Falha ao enviar o(s) arquivo(s)."}`);
@@ -525,7 +536,7 @@ export default function CotacoesMatrixModal({
           ? "PDFs de cotação enviados ao Líder de Projeto para escolha!"
           : "Rascunho de cotação salvo com sucesso!"
       );
-      onAtualizar();
+      onAtualizar(data.solicitacao);
       if (enviar) onClose();
     } catch (err: any) {
       showToast(`Erro ao salvar cotações: ${err.message}`);
@@ -565,7 +576,7 @@ export default function CotacoesMatrixModal({
 
       setSol(data.solicitacao);
       showToast("Escolhas APROVADAS com sucesso! Agência notificada para compra e emissão.");
-      onAtualizar();
+      onAtualizar(data.solicitacao);
       onClose();
     } catch (err: any) {
       showToast(`Erro ao aprovar logística: ${err.message}`);
@@ -596,7 +607,7 @@ export default function CotacoesMatrixModal({
       } else {
         showToast("Valores contratados, localizadores e vouchers salvos com sucesso!");
       }
-      onAtualizar();
+      onAtualizar(data.solicitacao);
     } catch (err: any) {
       showToast(`Erro ao registrar compras: ${err.message}`);
     } finally {
@@ -608,12 +619,13 @@ export default function CotacoesMatrixModal({
   const handleEnviarVouchers = async () => {
     setLoading(true);
     try {
+      const payloadCompras = montarPayloadCompras(categoriasState);
       const resComprar = await fetch("/api/viagens/comprar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           solicitacaoId: sol.id,
-          compras: montarPayloadCompras(categoriasState),
+          compras: payloadCompras,
           usuarioNome: "Agência Fátima",
         }),
       });
@@ -623,7 +635,7 @@ export default function CotacoesMatrixModal({
       if (dataComprar.requerReaprovacao || dataComprar.solicitacao?.requerReaprovacao) {
         setSol(dataComprar.solicitacao);
         showToast("⚠️ Alterações salvas! Como o valor excedeu o orçamento aprovado, o fluxo foi enviado para reaprovação do Líder.");
-        onAtualizar();
+        onAtualizar(dataComprar.solicitacao);
         setModoEdicaoAgencia(false);
         return;
       }
@@ -635,15 +647,16 @@ export default function CotacoesMatrixModal({
           solicitacaoId: sol.id,
           emailDestinatario: sol.consultorEmail || "leonardo.campos@nnos.com.br",
           usuarioNome: "Agência Fátima",
+          compras: payloadCompras,
         }),
       });
       const data = await lerRespostaSegura(res);
-      if (!res.ok || !data.ok) throw new Error(data.error || "Falha ao enviar vouchers");
+      if (!res.ok || !data.ok) throw new Error(data.error || data.mensagem || "Falha ao enviar vouchers");
 
       setSol(data.solicitacao);
       setShowEmailPreviewModal(false);
       showToast(data.mensagem || "Vouchers enviados com sucesso!");
-      onAtualizar();
+      onAtualizar(data.solicitacao);
       setModoEdicaoAgencia(false);
       onClose();
     } catch (err: any) {
@@ -677,7 +690,7 @@ export default function CotacoesMatrixModal({
           ? "Prestação de contas CONCLUÍDA com sucesso! Total Viagem sincronizado."
           : "Valor de alimentação e diárias salvo com sucesso!"
       );
-      onAtualizar();
+      onAtualizar(data.solicitacao);
       if (concluir) onClose();
     } catch (err: any) {
       showToast(`Erro no Financeiro: ${err.message}`);
@@ -703,7 +716,7 @@ export default function CotacoesMatrixModal({
 
       setSol(data.solicitacao);
       showToast("Recebimento dos vouchers APROVADO com sucesso no sistema!");
-      onAtualizar();
+      onAtualizar(data.solicitacao);
     } catch (err: any) {
       showToast(`Erro ao aprovar vouchers: ${err.message}`);
     } finally {

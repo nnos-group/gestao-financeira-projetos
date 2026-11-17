@@ -4,7 +4,7 @@ import { enviarVouchersViajante } from "@/lib/viagens-service";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { solicitacaoId, emailDestinatario, usuarioNome } = body;
+    const { solicitacaoId, emailDestinatario, usuarioNome, compras } = body;
 
     if (!solicitacaoId) {
       return NextResponse.json(
@@ -16,7 +16,8 @@ export async function POST(req: Request) {
     const res = await enviarVouchersViajante(
       solicitacaoId,
       emailDestinatario,
-      usuarioNome || "Agência de Viagens"
+      usuarioNome || "Agência de Viagens",
+      compras
     );
 
     return NextResponse.json(res);
