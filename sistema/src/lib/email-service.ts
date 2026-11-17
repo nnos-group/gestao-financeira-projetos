@@ -26,12 +26,43 @@ export interface EnviarEmailResultado {
 }
 
 /**
+ * Aplica a fonte corporativa Segoe UI de forma global e compatível com Outlook, Gmail e Webmail.
+ */
+function aplicarFonteEmailPadrao(html: string): string {
+  if (!html) return html;
+  const trimmed = html.trim();
+  if (/<!doctype\s+html|<html[\s>]/i.test(trimmed)) {
+    return trimmed;
+  }
+
+  return `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body, div, table, td, th, p, span:not([style*="monospace"]), a, li, strong, em, h1, h2, h3, h4 {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    code, pre {
+      font-family: Consolas, 'Courier New', monospace;
+    }
+  </style>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #ffffff;">
+  ${html}
+</body>
+</html>`;
+}
+
+/**
  * Serviço flexível para envio de e-mails:
  * 1. Prioriza Resend se RESEND_API_KEY estiver configurado
  * 2. Usa Nodemailer se SMTP_HOST e SMTP_USER/PASS estiverem configurados
  * 3. Se nenhum provedor estiver preenchido, opera em modo Simulado com logs informativos
  */
 export async function dispararEmail(options: EnviarEmailOptions): Promise<EnviarEmailResultado> {
+  const htmlPadronizado = aplicarFonteEmailPadrao(options.html);
   const dePadrao = process.env.EMAIL_FROM || process.env.SMTP_FROM || "financeiro@nnos.com.br";
   const de = options.de || dePadrao;
 
@@ -72,7 +103,7 @@ export async function dispararEmail(options: EnviarEmailOptions): Promise<Enviar
           to: [options.para],
           cc: options.cc,
           subject: options.assunto,
-          html: options.html,
+          html: htmlPadronizado,
           text: options.texto,
           attachments: attachmentsPayload.length > 0 ? attachmentsPayload : undefined,
         }),
@@ -96,7 +127,7 @@ export async function dispararEmail(options: EnviarEmailOptions): Promise<Enviar
             to: [options.para],
             cc: options.cc,
             subject: options.assunto,
-            html: options.html,
+            html: htmlPadronizado,
             text: options.texto,
             attachments: attachmentsPayload.length > 0 ? attachmentsPayload : undefined,
           }),
@@ -173,7 +204,7 @@ export async function dispararEmail(options: EnviarEmailOptions): Promise<Enviar
         to: options.para,
         cc: options.cc,
         subject: options.assunto,
-        html: options.html,
+        html: htmlPadronizado,
         text: options.texto,
         attachments: attachmentsPayload,
       });

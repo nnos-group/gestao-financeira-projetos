@@ -2195,7 +2195,7 @@ export default function CotacoesMatrixModal({
                 overflowY: "auto",
                 padding: "24px 28px",
                 backgroundColor: "#ffffff",
-                fontFamily: "var(--font-sans, system-ui, sans-serif)",
+                fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
               }}
             >
               {/* Institutional Branding Header com a logomarca da NNÓS ao lado do nome */}

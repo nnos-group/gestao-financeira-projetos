@@ -1134,12 +1134,15 @@ export async function enviarVouchersViajante(
     observacoes: sol.observacoesSolicitante || "Seguir orientações da agência e NNÓS.",
   };
 
+  const urlBasePoliticas = `${process.env.NEXT_PUBLIC_SUPABASE_URL || "https://kqptrhxhoaxyyvgjevoq.supabase.co"}/storage/v1/object/public/viagens-documentos/politicas`;
+  const fonteSegoeUi = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
+
   // Montar HTML Corporativo refinado
   const htmlCorpo = `
-    <div style="font-family: Arial, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 680px; margin: 0 auto; color: #1e293b; line-height: 1.5; border: 1px solid #e2e8f0; border-radius: 14px; overflow: hidden; background-color: #ffffff;">
+    <div style="font-family: ${fonteSegoeUi}; max-width: 680px; margin: 0 auto; color: #1e293b; line-height: 1.5; border: 1px solid #e2e8f0; border-radius: 14px; overflow: hidden; background-color: #ffffff;">
       <!-- Header Institucional -->
       <div style="padding: 22px 26px 16px 26px; border-bottom: 2px solid #059669; background-color: #ffffff;">
-        <table style="width: 100%; border-collapse: collapse;">
+        <table style="width: 100%; border-collapse: collapse; font-family: ${fonteSegoeUi};">
           <tr>
             <td style="vertical-align: middle;">
               <h2 style="margin: 0; font-size: 18px; font-weight: 900; color: #002B49; letter-spacing: -0.3px; text-transform: uppercase;">NNÓS CONSULTORIA E TREINAMENTO</h2>
@@ -1162,7 +1165,7 @@ export async function enviarVouchersViajante(
 
         <!-- Resumo Operacional -->
         <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; margin-bottom: 20px;">
-          <table style="width: 100%; font-size: 13px; border-collapse: collapse;">
+          <table style="width: 100%; font-size: 13px; border-collapse: collapse; font-family: ${fonteSegoeUi};">
             <tr>
               <td style="color: #64748b; padding: 4px 0; width: 48%;">
                 <span style="font-size: 11px; font-weight: 700; text-transform: uppercase;">Destino da Atividade:</span><br/>
@@ -1179,7 +1182,7 @@ export async function enviarVouchersViajante(
         ${emailPreview.aereo ? `
         <!-- Voo -->
         <div style="border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; margin-bottom: 14px; background-color: #ffffff;">
-          <table style="width: 100%; border-collapse: collapse; margin-bottom: 6px;">
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 6px; font-family: ${fonteSegoeUi};">
             <tr>
               <td style="font-size: 14px; font-weight: 700; color: #0f2a4a;">✈️ Passagem Aérea (${emailPreview.aereo.fornecedor})</td>
               <td style="text-align: right;">
@@ -1199,7 +1202,7 @@ export async function enviarVouchersViajante(
         ${emailPreview.hotel ? `
         <!-- Hotel -->
         <div style="border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; margin-bottom: 14px; background-color: #ffffff;">
-          <table style="width: 100%; border-collapse: collapse; margin-bottom: 6px;">
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 6px; font-family: ${fonteSegoeUi};">
             <tr>
               <td style="font-size: 14px; font-weight: 700; color: #0f2a4a;">🏨 Hospedagem / Hotel (${emailPreview.hotel.hotel})</td>
               <td style="text-align: right;">
@@ -1219,7 +1222,7 @@ export async function enviarVouchersViajante(
         ${emailPreview.carro ? `
         <!-- Veículo / Translado -->
         <div style="border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; margin-bottom: 14px; background-color: #ffffff;">
-          <table style="width: 100%; border-collapse: collapse; margin-bottom: 6px;">
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 6px; font-family: ${fonteSegoeUi};">
             <tr>
               <td style="font-size: 14px; font-weight: 700; color: #0f2a4a;">🚗 Veículo / Locação (${emailPreview.carro.locadora})</td>
               <td style="text-align: right;">
@@ -1259,32 +1262,32 @@ export async function enviarVouchersViajante(
             <strong style="display: block; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.5px; color: #78350f; margin-bottom: 10px;">
               📁 Políticas de Viagem &amp; Reembolso (Clique na miniatura para abrir o PDF):
             </strong>
-            <table style="width: 100%; border-collapse: collapse; margin-top: 6px;">
+            <table style="width: 100%; border-collapse: collapse; margin-top: 6px; font-family: ${fonteSegoeUi};">
               <tr>
                 <td style="width: 25%; padding: 4px; vertical-align: top; text-align: center;">
-                  <a href="/politicas/politica-nnos.pdf" target="_blank" style="text-decoration: none; color: inherit; display: block; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px;">
-                    <img src="/politicas/politica-nnos-header.jpg" alt="Política NNÓS" style="width: 100%; height: 110px; object-fit: cover; object-position: top; border-radius: 4px; display: block; margin-bottom: 6px;" />
+                  <a href="${urlBasePoliticas}/politica-nnos.pdf" target="_blank" rel="noopener noreferrer" style="text-decoration: none; color: inherit; display: block; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px;">
+                    <img src="${urlBasePoliticas}/politica-nnos-header.jpg" alt="Política NNÓS" style="width: 100%; height: 110px; object-fit: cover; object-position: top; border-radius: 4px; display: block; margin-bottom: 6px;" />
                     <span style="display: block; font-size: 10px; font-weight: 800; color: #0d9488;">NNÓS (Padrão)</span>
                     <span style="display: inline-block; font-size: 10px; color: #2563eb; font-weight: 700; margin-top: 2px;">Abrir PDF &rarr;</span>
                   </a>
                 </td>
                 <td style="width: 25%; padding: 4px; vertical-align: top; text-align: center;">
-                  <a href="/politicas/politica-cnh.pdf" target="_blank" style="text-decoration: none; color: inherit; display: block; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px;">
-                    <img src="/politicas/politica-cnh-header.jpg" alt="Política CNH" style="width: 100%; height: 110px; object-fit: cover; object-position: top; border-radius: 4px; display: block; margin-bottom: 6px;" />
+                  <a href="${urlBasePoliticas}/politica-cnh.pdf" target="_blank" rel="noopener noreferrer" style="text-decoration: none; color: inherit; display: block; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px;">
+                    <img src="${urlBasePoliticas}/politica-cnh-header.jpg" alt="Política CNH" style="width: 100%; height: 110px; object-fit: cover; object-position: top; border-radius: 4px; display: block; margin-bottom: 6px;" />
                     <span style="display: block; font-size: 10px; font-weight: 800; color: #1e3a8a;">CNH Training</span>
                     <span style="display: inline-block; font-size: 10px; color: #2563eb; font-weight: 700; margin-top: 2px;">Abrir PDF &rarr;</span>
                   </a>
                 </td>
                 <td style="width: 25%; padding: 4px; vertical-align: top; text-align: center;">
-                  <a href="/politicas/politica-iveco.pdf" target="_blank" style="text-decoration: none; color: inherit; display: block; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px;">
-                    <img src="/politicas/politica-iveco-header.jpg" alt="Política Iveco" style="width: 100%; height: 110px; object-fit: cover; object-position: top; border-radius: 4px; display: block; margin-bottom: 6px;" />
+                  <a href="${urlBasePoliticas}/politica-iveco.pdf" target="_blank" rel="noopener noreferrer" style="text-decoration: none; color: inherit; display: block; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px;">
+                    <img src="${urlBasePoliticas}/politica-iveco-header.jpg" alt="Política Iveco" style="width: 100%; height: 110px; object-fit: cover; object-position: top; border-radius: 4px; display: block; margin-bottom: 6px;" />
                     <span style="display: block; font-size: 10px; font-weight: 800; color: #0284c7;">Iveco Group</span>
                     <span style="display: inline-block; font-size: 10px; color: #2563eb; font-weight: 700; margin-top: 2px;">Abrir PDF &rarr;</span>
                   </a>
                 </td>
                 <td style="width: 25%; padding: 4px; vertical-align: top; text-align: center;">
-                  <a href="/politicas/politica-reembolso-nnos.pdf" target="_blank" style="text-decoration: none; color: inherit; display: block; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px;">
-                    <img src="/politicas/politica-reembolso-nnos-header.jpg" alt="Reembolso Vexpenses" style="width: 100%; height: 110px; object-fit: cover; object-position: top; border-radius: 4px; display: block; margin-bottom: 6px;" />
+                  <a href="${urlBasePoliticas}/politica-reembolso-nnos.pdf" target="_blank" rel="noopener noreferrer" style="text-decoration: none; color: inherit; display: block; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px;">
+                    <img src="${urlBasePoliticas}/politica-reembolso-nnos-header.jpg" alt="Reembolso Vexpenses" style="width: 100%; height: 110px; object-fit: cover; object-position: top; border-radius: 4px; display: block; margin-bottom: 6px;" />
                     <span style="display: block; font-size: 10px; font-weight: 800; color: #059669;">Vexpenses (App)</span>
                     <span style="display: inline-block; font-size: 10px; color: #2563eb; font-weight: 700; margin-top: 2px;">Abrir PDF &rarr;</span>
                   </a>
@@ -1608,7 +1611,7 @@ export async function dispararNotificacaoNovaCotacaoAgencia(sol: ViagemSolicitac
     const assunto = `✈️ [NOVA COTAÇÃO] Solicitação de Viagem & Logística • ${sol.projeto} - ${sol.atividade}`;
 
     const html = `
-      <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 650px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; overflow: hidden; color: #1e293b;">
+      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 650px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; overflow: hidden; color: #1e293b;">
         <div style="background: linear-gradient(135deg, #00152f 0%, #0f2a4a 100%); padding: 22px 26px; color: #ffffff;">
           <h2 style="margin: 0; font-size: 19px; font-weight: 800; letter-spacing: 0.5px;">NNÓS VIAGENS &amp; LOGÍSTICA</h2>
           <p style="margin: 4px 0 0; font-size: 13px; color: #94a3b8;">Nova Ordem Logística para Elaboração de Cotação</p>
@@ -1623,7 +1626,7 @@ export async function dispararNotificacaoNovaCotacaoAgencia(sol: ViagemSolicitac
             <h4 style="margin: 0 0 12px; font-size: 12px; text-transform: uppercase; color: #0369a1; letter-spacing: 0.5px; font-weight: 800;">
               📋 DADOS DA VIAGEM:
             </h4>
-            <table style="width: 100%; font-size: 13px; border-collapse: collapse; line-height: 1.7;">
+            <table style="width: 100%; font-size: 13px; border-collapse: collapse; line-height: 1.7; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
               <tr>
                 <td style="color: #64748b; width: 140px; font-weight: 600;">Projeto:</td>
                 <td style="font-weight: 700; color: #0f172a;">${sol.projeto}</td>
@@ -1712,7 +1715,7 @@ export async function dispararNotificacaoCotacoesProntasLider(sol: ViagemSolicit
     const assunto = `📋 [COTAÇÃO ENVIADA] Propostas em PDF Prontas para Escolha • ${sol.projeto} - ${sol.atividade}`;
 
     const html = `
-      <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 650px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; overflow: hidden; color: #1e293b;">
+      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 650px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; overflow: hidden; color: #1e293b;">
         <div style="background: linear-gradient(135deg, #00152f 0%, #0f2a4a 100%); padding: 22px 26px; color: #ffffff;">
           <h2 style="margin: 0; font-size: 19px; font-weight: 800; letter-spacing: 0.5px;">NNÓS VIAGENS &amp; LOGÍSTICA</h2>
           <p style="margin: 4px 0 0; font-size: 13px; color: #94a3b8;">Arquivos de Cotação em PDF Aguardando Escolha do Líder</p>
@@ -1727,7 +1730,7 @@ export async function dispararNotificacaoCotacoesProntasLider(sol: ViagemSolicit
             <h4 style="margin: 0 0 12px; font-size: 12px; text-transform: uppercase; color: #0369a1; letter-spacing: 0.5px; font-weight: 800;">
               📋 RESUMO DAS COTAÇÕES:
             </h4>
-            <table style="width: 100%; font-size: 13px; border-collapse: collapse; line-height: 1.7;">
+            <table style="width: 100%; font-size: 13px; border-collapse: collapse; line-height: 1.7; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
               <tr>
                 <td style="color: #64748b; width: 150px; font-weight: 600;">Projeto / Atividade:</td>
                 <td style="font-weight: 700; color: #0f172a;">${sol.projeto} - ${sol.atividade}</td>
@@ -1814,7 +1817,7 @@ export async function dispararNotificacaoCotacaoAprovadaAgencia(sol: ViagemSolic
       .join("");
 
     const html = `
-      <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 650px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; overflow: hidden; color: #1e293b;">
+      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 650px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; overflow: hidden; color: #1e293b;">
         <div style="background: linear-gradient(135deg, #00152f 0%, #0f2a4a 100%); padding: 22px 26px; color: #ffffff;">
           <h2 style="margin: 0; font-size: 19px; font-weight: 800; letter-spacing: 0.5px;">NNÓS VIAGENS &amp; LOGÍSTICA</h2>
           <p style="margin: 4px 0 0; font-size: 13px; color: #94a3b8;">Escolhas Aprovadas · Autorização para Compra e Emissão</p>
@@ -1830,7 +1833,7 @@ export async function dispararNotificacaoCotacaoAprovadaAgencia(sol: ViagemSolic
             <h4 style="margin: 0 0 12px; font-size: 12px; text-transform: uppercase; color: #065f46; letter-spacing: 0.5px; font-weight: 800;">
               🎯 OPÇÕES ESCOLHIDAS PELO LÍDER PARA COMPRA:
             </h4>
-            <table style="width: 100%; font-size: 13px; border-collapse: collapse; line-height: 1.7;">
+            <table style="width: 100%; font-size: 13px; border-collapse: collapse; line-height: 1.7; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
               ${linhasEscolhas}
             </table>
           </div>` : ""}
@@ -1839,7 +1842,7 @@ export async function dispararNotificacaoCotacaoAprovadaAgencia(sol: ViagemSolic
             <h4 style="margin: 0 0 12px; font-size: 12px; text-transform: uppercase; color: #0369a1; letter-spacing: 0.5px; font-weight: 800;">
               ✅ DADOS DA VIAGEM APROVADA:
             </h4>
-            <table style="width: 100%; font-size: 13px; border-collapse: collapse; line-height: 1.7;">
+            <table style="width: 100%; font-size: 13px; border-collapse: collapse; line-height: 1.7; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
               <tr>
                 <td style="color: #64748b; width: 150px; font-weight: 600;">Projeto / Atividade:</td>
                 <td style="font-weight: 700; color: #0f172a;">${sol.projeto} - ${sol.atividade}</td>
