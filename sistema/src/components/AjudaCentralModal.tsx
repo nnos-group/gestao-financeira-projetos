@@ -437,13 +437,21 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
     }
   };
 
-  const sugestoesRapidas = [
-    "Como emitir um Boletim de Medição (BM)?",
-    "Como funciona a aprovação de Viagens & Logística?",
-    "Como aplicar o acréscimo de 6% para Sócios?",
-    "Onde consulto o Painel Financeiro por Líder?",
-    "Como cadastrar um novo consultor parceiro PJ?",
-  ];
+  const sugestoesRapidas =
+    perfilAtivoId === "AGENCIA"
+      ? [
+          "Como anexar os PDFs de cotação na viagem?",
+          "Como lançar os vouchers definitivos e localizadores?",
+          "Como visualizar os dados cadastrais de um viajante em Pessoas?",
+          "Quais são as etapas do fluxo de Viagens & Logística?",
+        ]
+      : [
+          "Como emitir um Boletim de Medição (BM)?",
+          "Como funciona a aprovação de Viagens & Logística?",
+          "Como aplicar o acréscimo de 6% para Sócios?",
+          "Onde consulto o Painel Financeiro por Líder?",
+          "Como cadastrar um novo consultor parceiro PJ?",
+        ];
 
   // Helper de cores por categoria de módulo
   const getCategoriaIconColors = (cat: string, id: string) => {
@@ -1466,47 +1474,50 @@ Você pode clicar em uma das sugestões abaixo ou digitar sua dúvida!`,
                       </span>
                     </button>
 
-                    {/* Card 2: Tabela de Preços Homologada */}
-                    <Link
-                      href="/tabela-precos"
-                      onClick={aoFechar}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        padding: "12px 14px",
-                        borderRadius: "12px",
-                        border: "1px solid #e2e8f0",
-                        textDecoration: "none",
-                        backgroundColor: "#ffffff",
-                        transition: "all 0.15s ease",
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = "#059669";
-                        e.currentTarget.style.boxShadow = "0 2px 8px rgba(5, 150, 105, 0.12)";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = "#e2e8f0";
-                        e.currentTarget.style.boxShadow = "none";
-                      }}
-                    >
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
-                        <div style={{ width: "32px", height: "32px", borderRadius: "8px", backgroundColor: "#ecfdf5", color: "#059669", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                          <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
-                            table_chart
-                          </span>
-                        </div>
-                        <div style={{ minWidth: 0 }}>
-                          <div style={{ fontSize: "12px", fontWeight: 700, color: "#0f2a4a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                            Tabela Preços 2026
+                    {/* Card 2: Tabela de Preços Homologada (restrita a perfis autorizados, oculta para Agência) */}
+                    {(perfilAtivoId === "ADMIN" || temAcessoModulo("tabela-precos") || temAcessoModulo("/tabela-precos")) &&
+                      perfilAtivoId !== "AGENCIA" && (
+                        <Link
+                          href="/tabela-precos"
+                          onClick={aoFechar}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            padding: "12px 14px",
+                            borderRadius: "12px",
+                            border: "1px solid #e2e8f0",
+                            textDecoration: "none",
+                            backgroundColor: "#ffffff",
+                            transition: "all 0.15s ease",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.borderColor = "#059669";
+                            e.currentTarget.style.boxShadow = "0 2px 8px rgba(5, 150, 105, 0.12)";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.borderColor = "#e2e8f0";
+                            e.currentTarget.style.boxShadow = "none";
+                          }}
+                        >
+                          <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
+                            <div style={{ width: "32px", height: "32px", borderRadius: "8px", backgroundColor: "#ecfdf5", color: "#059669", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                              <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
+                                table_chart
+                              </span>
+                            </div>
+                            <div style={{ minWidth: 0 }}>
+                              <div style={{ fontSize: "12px", fontWeight: 700, color: "#0f2a4a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                Tabela Preços 2026
+                              </div>
+                              <div style={{ fontSize: "10.5px", color: "#94a3b8" }}>Tarifas homologadas</div>
+                            </div>
                           </div>
-                          <div style={{ fontSize: "10.5px", color: "#94a3b8" }}>Tarifas homologadas</div>
-                        </div>
-                      </div>
-                      <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "#94a3b8" }}>
-                        arrow_forward
-                      </span>
-                    </Link>
+                          <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "#94a3b8" }}>
+                            arrow_forward
+                          </span>
+                        </Link>
+                      )}
 
                     {/* Card 3: Políticas de Viagem (Abre o Painel Oficial do Print 3) */}
                     <button
