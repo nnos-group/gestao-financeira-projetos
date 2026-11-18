@@ -156,7 +156,7 @@ export function PerfilAcessoProvider({ children }: { children: React.ReactNode }
   const pathname = usePathname();
 
   const [perfis, setPerfis] = useState<PerfilAcessoItem[]>(perfisIniciais as unknown as PerfilAcessoItem[]);
-  const [perfilAtivoId, setPerfilAtivoId] = useState<string>("ADMIN");
+  const [perfilAtivoId, setPerfilAtivoId] = useState<string>("");
   const [liderSimulado, setLiderSimuladoState] = useState<string>("BEATRIZ PICORELLI");
   const [usuarioLogado, setUsuarioLogado] = useState<any | null>(null);
   const [hidratado, setHidratado] = useState<boolean>(false);
@@ -223,30 +223,65 @@ export function PerfilAcessoProvider({ children }: { children: React.ReactNode }
   }, []);
 
   useEffect(() => {
+    let ativo = true;
+
+    const limparSessaoLocal = () => {
+      try {
+        localStorage.removeItem("nnos_usuario_logado_v1");
+        localStorage.removeItem("nnos_perfil_ativo_id");
+        localStorage.removeItem("nnos_lider_simulado_v1");
+        localStorage.removeItem("nnos_consultor_simulado_id");
+        localStorage.removeItem("nnos_consultor_simulado_nome");
+        localStorage.removeItem("nnos_consultor_simulado_obj");
+      } catch {}
+    };
+
+    const aplicarUsuarioSessao = (parsed: any) => {
+      if (!parsed || typeof parsed !== "object" || !parsed.perfilId) {
+        setUsuarioLogado(null);
+        setPerfilAtivoId("");
+        return;
+      }
+
+      setUsuarioLogado(parsed);
+      if (parsed.perfilId !== "ADMIN") {
+        setPerfilAtivoId(parsed.perfilId);
+        try {
+          localStorage.setItem("nnos_perfil_ativo_id", parsed.perfilId);
+        } catch {}
+      } else {
+        let perfilDesejado = "ADMIN";
+        try {
+          const savedPerfilId = localStorage.getItem("nnos_perfil_ativo_id");
+          if (savedPerfilId) perfilDesejado = savedPerfilId;
+          else localStorage.setItem("nnos_perfil_ativo_id", "ADMIN");
+        } catch {}
+        setPerfilAtivoId(perfilDesejado);
+      }
+
+      if (parsed.perfilId === "LIDER" && (parsed.liderVinculado || parsed.nome)) {
+        const liderNome = parsed.liderVinculado || parsed.nome;
+        setLiderSimuladoState(liderNome);
+        try {
+          localStorage.setItem("nnos_lider_simulado_v1", liderNome);
+        } catch {}
+      }
+    };
+
     const carregarUsuarioLogado = () => {
       try {
         const savedUser = localStorage.getItem("nnos_usuario_logado_v1");
         if (savedUser) {
           const parsed = JSON.parse(savedUser);
-          setUsuarioLogado(parsed);
-          // Se o usuário logado for não-admin, seu perfil ativo é obrigatoriamente o seu perfil real
-          if (parsed.perfilId && parsed.perfilId !== "ADMIN") {
-            setPerfilAtivoId(parsed.perfilId);
-            try {
-              localStorage.setItem("nnos_perfil_ativo_id", parsed.perfilId);
-            } catch {}
-          }
-          if (parsed.perfilId === "LIDER" && (parsed.liderVinculado || parsed.nome)) {
-            const liderNome = parsed.liderVinculado || parsed.nome;
-            setLiderSimuladoState(liderNome);
-            try {
-              localStorage.setItem("nnos_lider_simulado_v1", liderNome);
-            } catch {}
-          }
+          aplicarUsuarioSessao(parsed);
         } else {
           setUsuarioLogado(null);
+          setPerfilAtivoId("");
         }
-      } catch {}
+      } catch {
+        setUsuarioLogado(null);
+        setPerfilAtivoId("");
+      }
     };
 
     try {
@@ -257,10 +292,6 @@ export function PerfilAcessoProvider({ children }: { children: React.ReactNode }
           setPerfis(normalizarListaPerfis(parsed));
         }
       }
-      const savedPerfilId = localStorage.getItem("nnos_perfil_ativo_id");
-      if (savedPerfilId) {
-        setPerfilAtivoId(savedPerfilId);
-      }
       const savedLider = localStorage.getItem("nnos_lider_simulado_v1");
       if (savedLider) {
         setLiderSimuladoState(savedLider);
@@ -268,8 +299,46 @@ export function PerfilAcessoProvider({ children }: { children: React.ReactNode }
     } catch {}
 
     carregarUsuarioLogado();
-    setHidratado(true);
-    recarregarPerfis();
+
+    const validarSessaoServidor = async () => {
+      try {
+        const res = await fetch("/api/auth/login", { method: "GET", cache: "no-store" });
+        const data = await res.json().catch(() => null);
+        if (!ativo) return;
+
+        if (!res.ok || !data?.autenticado || !data?.usuario) {
+          limparSessaoLocal();
+          setUsuarioLogado(null);
+          setPerfilAtivoId("");
+          try {
+            window.dispatchEvent(new CustomEvent("nnos-user-updated"));
+          } catch {}
+          if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
+            window.location.replace("/login");
+          }
+          return;
+        }
+
+        try {
+          localStorage.setItem("nnos_usuario_logado_v1", JSON.stringify(data.usuario));
+        } catch {}
+        aplicarUsuarioSessao(data.usuario);
+        try {
+          window.dispatchEvent(new CustomEvent("nnos-user-updated"));
+        } catch {}
+        recarregarPerfis();
+      } catch {
+        if (!ativo) return;
+        const savedUser = typeof window !== "undefined" ? localStorage.getItem("nnos_usuario_logado_v1") : null;
+        if (!savedUser && typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
+          window.location.replace("/login");
+        }
+      } finally {
+        if (ativo) setHidratado(true);
+      }
+    };
+
+    validarSessaoServidor();
 
     const handleCustomUpdate = (e: Event) => {
       const customEvent = e as CustomEvent;
@@ -283,13 +352,14 @@ export function PerfilAcessoProvider({ children }: { children: React.ReactNode }
     window.addEventListener("nnos-perfis-updated", handleCustomUpdate);
     window.addEventListener("nnos-user-updated", carregarUsuarioLogado);
     return () => {
+      ativo = false;
       window.removeEventListener("nnos-perfis-updated", handleCustomUpdate);
       window.removeEventListener("nnos-user-updated", carregarUsuarioLogado);
     };
   }, [recarregarPerfis]);
 
   const isUsuarioAdminReal = useMemo(() => {
-    if (!usuarioLogado) return true;
+    if (!usuarioLogado) return false;
     return usuarioLogado.perfilId === "ADMIN";
   }, [usuarioLogado]);
 
@@ -391,11 +461,12 @@ export function PerfilAcessoProvider({ children }: { children: React.ReactNode }
   );
 
   const voltarParaAdmin = useCallback(() => {
+    if (!isUsuarioAdminReal) return;
     setPerfilAtivoId("ADMIN");
     try {
       localStorage.setItem("nnos_perfil_ativo_id", "ADMIN");
     } catch {}
-  }, []);
+  }, [isUsuarioAdminReal]);
 
   // Intercepta clique em <a href="/lider"> no menu lateral para ativar a visão Líder sem sair do sistema único
   useEffect(() => {
@@ -409,6 +480,10 @@ export function PerfilAcessoProvider({ children }: { children: React.ReactNode }
         e.preventDefault();
         ativarPerfil("LIDER", false);
       } else if (href === "/admin" && perfilAtivoId !== "ADMIN") {
+        if (!isUsuarioAdminReal) {
+          e.preventDefault();
+          return;
+        }
         // Permite ir ao painel de administrador restaurando a visão de Administrador
         setPerfilAtivoId("ADMIN");
         try {
@@ -419,7 +494,7 @@ export function PerfilAcessoProvider({ children }: { children: React.ReactNode }
 
     document.addEventListener("click", handleClick, true);
     return () => document.removeEventListener("click", handleClick, true);
-  }, [ativarPerfil, perfilAtivoId]);
+  }, [ativarPerfil, isUsuarioAdminReal, perfilAtivoId]);
 
   const pertenceAoLiderAtivo = useCallback(
     (
@@ -500,10 +575,10 @@ export function PerfilAcessoProvider({ children }: { children: React.ReactNode }
 
   // Verifica se a rota atual está bloqueada para o perfil ativo
   const rotaAtualBloqueada = useMemo(() => {
-    if (!hidratado || perfilAtivoId === "ADMIN") return false;
+    if (!hidratado || !usuarioLogado || perfilAtivoId === "ADMIN") return false;
     if (!pathname || pathname === "/" || pathname === "/lider" || pathname.startsWith("/login")) return false;
     return !temAcessoModulo(pathname);
-  }, [hidratado, perfilAtivoId, pathname, temAcessoModulo]);
+  }, [hidratado, usuarioLogado, perfilAtivoId, pathname, temAcessoModulo]);
 
   // Redirecionamento Automático Imediato: Se a rota acessada for restrita para o perfil ativo,
   // vai direto para a tela autorizada do usuário, sem modal ou telas intermediárias de aviso.
@@ -744,10 +819,10 @@ export function PerfilAcessoProvider({ children }: { children: React.ReactNode }
         </div>
       )}
 
-      {/* Bloqueio de Rota Não Autorizada para o Perfil Ativo - Redirecionamento Automático Imediato */}
-      {rotaAtualBloqueada ? (
-        <div style={{ minHeight: "100vh", backgroundColor: "var(--background)" }} />
-      ) : !hidratado ? (
+      {/* Bloqueio de Sessão Não Autenticada ou Rota Não Autorizada */}
+      {!pathname?.startsWith("/login") && (!hidratado || !usuarioLogado) ? (
+        <div style={{ minHeight: "100vh", background: "#f8fafc" }} />
+      ) : rotaAtualBloqueada ? (
         <div style={{ minHeight: "100vh", backgroundColor: "var(--background)" }} />
       ) : (
         children

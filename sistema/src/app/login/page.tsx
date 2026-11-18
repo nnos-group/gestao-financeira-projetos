@@ -145,7 +145,7 @@ export default function LoginPage() {
         return;
       }
       setIdentificadorRec(idAlvo);
-      setDicaCodigoDemo(data.codigoDemo || "123456");
+      setDicaCodigoDemo(null);
       setEtapaRecuperacao(2);
       setSucesso(data.mensagem);
     } catch {
@@ -635,22 +635,7 @@ export default function LoginPage() {
                       <strong style={{ display: "block", color: "#0f172a", marginBottom: "2px" }}>
                         Google Authenticator (TOTP)
                       </strong>
-                      Escaneie com o app no celular ou utilize o código de validação{" "}
-                      <code
-                        onClick={() => setCodigoMfa("123456")}
-                        style={{
-                          backgroundColor: "#e0f2fe",
-                          color: "#0369a1",
-                          padding: "1px 5px",
-                          borderRadius: "4px",
-                          fontWeight: 800,
-                          cursor: "pointer",
-                        }}
-                        title="Clique para preencher"
-                      >
-                        123456
-                      </code>
-                      .
+                      Escaneie o QR Code no aplicativo autenticador (Google ou Microsoft Authenticator) e informe o token dinâmico de 6 dígitos gerado pelo aplicativo.
                     </div>
                   </div>
                 )}
@@ -678,7 +663,7 @@ export default function LoginPage() {
                     placeholder={
                       modo === "MFA_GOOGLE"
                         ? "Digite os 6 dígitos do Google Authenticator"
-                        : "Código 6 dígitos (opcional ou 123456)"
+                        : "Código 6 dígitos (opcional)"
                     }
                     style={{
                       width: "100%",
@@ -813,28 +798,6 @@ export default function LoginPage() {
               </form>
             ) : (
               <form onSubmit={handleRedefinirSenha} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                {dicaCodigoDemo && (
-                  <div
-                    style={{
-                      padding: "8px 12px",
-                      borderRadius: "8px",
-                      backgroundColor: "#e0f2fe",
-                      color: "#0369a1",
-                      fontSize: "11.5px",
-                      fontWeight: 600,
-                    }}
-                  >
-                    Token TOTP gerado:{" "}
-                    <strong
-                      onClick={() => setCodigoRec(dicaCodigoDemo)}
-                      style={{ cursor: "pointer", textDecoration: "underline" }}
-                    >
-                      {dicaCodigoDemo}
-                    </strong>{" "}
-                    (clique para preencher)
-                  </div>
-                )}
-
                 <div>
                   <label style={{ display: "block", fontSize: "10.5px", fontWeight: 800, color: "#475569", textTransform: "uppercase", marginBottom: "4px" }}>
                     CÓDIGO DE 6 DÍGITOS (TOKEN OU GOOGLE AUTHENTICATOR)

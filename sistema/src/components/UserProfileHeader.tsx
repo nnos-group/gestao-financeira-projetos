@@ -51,6 +51,8 @@ export default function UserProfileHeader() {
         const savedUser = localStorage.getItem("nnos_usuario_logado_v1");
         if (savedUser) {
           setUsuarioSessao(JSON.parse(savedUser));
+        } else {
+          setUsuarioSessao(null);
         }
         const savedFotos = localStorage.getItem("nnos_fotos_usuarios_v1");
         if (savedFotos) {
@@ -64,10 +66,23 @@ export default function UserProfileHeader() {
     return () => window.removeEventListener("nnos-user-updated", carregarEstado);
   }, []);
 
-  // Determina a identidade exibida no topo conforme o perfil/líder ativo ou usuário logado
+  // Determina a identidade exibida no topo conforme o usuário autenticado (ou simulação exclusiva ADMIN)
   const identidadeAtiva: UsuarioAtivoInfo = React.useMemo(() => {
+    if (!usuarioSessao) {
+      return {
+        login: "",
+        nome: "Não autenticado",
+        email: "",
+        cargo: "",
+        fotoUrl: "",
+        mfaSecret: "",
+      };
+    }
+
+    const podeSimular = usuarioSessao.perfilId === "ADMIN";
+
     // 1. Se há um usuário real autenticado que não seja ADMIN, sua própria identidade é soberana
-    if (usuarioSessao && usuarioSessao.perfilId !== "ADMIN") {
+    if (!podeSimular) {
       const chave = (usuarioSessao.login || usuarioSessao.nome || "nnos").toLowerCase();
       return {
         ...usuarioSessao,
@@ -80,7 +95,7 @@ export default function UserProfileHeader() {
     }
 
     // 2. Administrador simulando perfil LIDER
-    if (perfilAtivoId === "LIDER" && liderSimulado && liderSimulado !== "TODOS") {
+    if (podeSimular && perfilAtivoId === "LIDER" && liderSimulado && liderSimulado !== "TODOS") {
       const infoLider = listaLideres.find(
         (l) => l.nome.toUpperCase() === liderSimulado.toUpperCase()
       );
@@ -99,13 +114,13 @@ export default function UserProfileHeader() {
         fotoUrl:
           fotosPorChave[chaveFoto] ||
           fotosPorChave[liderSimulado.toUpperCase()] ||
-          (usuarioSessao?.login === loginLider ? usuarioSessao.fotoUrl : "") ||
+          (usuarioSessao.login === loginLider ? usuarioSessao.fotoUrl : "") ||
           "",
-        mfaSecret: usuarioSessao?.mfaSecret || "JBSWY3DPEHPK3PXP",
+        mfaSecret: usuarioSessao.mfaSecret || "",
       };
     }
 
-    if (usuarioSessao && (perfilAtivoId === usuarioSessao.login || perfilAtivoId === "ADMIN")) {
+    if (perfilAtivoId === usuarioSessao.login || perfilAtivoId === "ADMIN") {
       const chave = (usuarioSessao.login || usuarioSessao.nome || "nnos").toLowerCase();
       return {
         ...usuarioSessao,
@@ -113,50 +128,54 @@ export default function UserProfileHeader() {
       };
     }
 
-    if (perfilAtivoId === "DIRETORIA") {
-      const loginDir = (usuarioSessao?.perfilId === "DIRETORIA" && usuarioSessao.login) ? usuarioSessao.login : "marcelo.lara";
+    if (podeSimular && perfilAtivoId === "DIRETORIA") {
       return {
-        login: loginDir,
-        nome: usuarioSessao?.perfilId === "DIRETORIA" ? usuarioSessao.nome : "Marcelo Lara",
-        email: usuarioSessao?.perfilId === "DIRETORIA" ? usuarioSessao.email : "marcelo.lara@nnos.com.br",
-        cargo: usuarioSessao?.perfilId === "DIRETORIA" ? usuarioSessao.cargo : "Sócio Diretor Executivo • Diretoria",
-        fotoUrl: fotosPorChave[loginDir] || (usuarioSessao?.perfilId === "DIRETORIA" ? usuarioSessao.fotoUrl : "") || "",
-        mfaSecret: "MARCELO2026NNOS",
+        login: "marcelo.lara",
+        nome: "Marcelo Lara",
+        email: "marcelo.lara@nnos.com.br",
+        cargo: "Sócio Diretor Executivo • Diretoria",
+        fotoUrl: fotosPorChave["marcelo.lara"] || "",
+        mfaSecret: "",
       };
     }
 
-    if (perfilAtivoId === "FINANCEIRO") {
+    if (podeSimular && perfilAtivoId === "FINANCEIRO") {
       return {
         login: "financeiro",
         nome: "Equipe Financeiro",
         email: "financeiro@nnos.com.br",
         cargo: "Financeiro & Controladoria",
         fotoUrl: fotosPorChave["financeiro"] || "",
-        mfaSecret: "FINAN2026NNOSKEY",
+        mfaSecret: "",
       };
     }
 
-    if (perfilAtivoId === "AGENCIA") {
+    if (podeSimular && perfilAtivoId === "AGENCIA") {
       return {
         login: "agencia.fatima",
         nome: "Agência de Viagens FÁTIMA",
         email: "fcconsultoriadeviagens@gmail.com",
         cargo: "Operação de Cotações & Vouchers",
         fotoUrl: fotosPorChave["agencia.viagens"] || "",
-        mfaSecret: "AGENC2026NNOSKEY",
+        mfaSecret: "",
       };
     }
 
-    const chaveDefault = (usuarioSessao?.login || "leonardo.campos").toLowerCase();
+    const chaveSessao = (usuarioSessao.login || usuarioSessao.nome || "").toLowerCase();
     return {
-      login: chaveDefault,
-      nome: usuarioSessao?.nome || "Leonardo Campos",
-      email: usuarioSessao?.email || "leonardo.campos@nnos.com.br",
-      cargo: usuarioSessao?.cargo || `${perfilAtivoObj?.nome || "Administrador"} • Planejamento & Finanças`,
-      fotoUrl: fotosPorChave[chaveDefault] || usuarioSessao?.fotoUrl || "",
-      mfaSecret: usuarioSessao?.mfaSecret || "JBSWY3DPEHPK3PXP",
+      ...usuarioSessao,
+      login: usuarioSessao.login || "",
+      nome: usuarioSessao.nome || "Usuário",
+      email: usuarioSessao.email || "",
+      cargo: usuarioSessao.cargo || `${perfilAtivoObj?.nome || ""}`,
+      fotoUrl: fotosPorChave[chaveSessao] || usuarioSessao.fotoUrl || "",
+      mfaSecret: usuarioSessao.mfaSecret || "",
     };
   }, [perfilAtivoId, perfilAtivoObj, liderSimulado, listaLideres, usuarioSessao, fotosPorChave]);
+
+  if (!mounted || !usuarioSessao) {
+    return null;
+  }
 
   const handleLogout = async () => {
     try {

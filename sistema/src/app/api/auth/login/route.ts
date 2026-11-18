@@ -6,6 +6,55 @@ import {
   gerarCodigoTotp,
 } from "@/lib/usuarios-service";
 import { dispararEmail } from "@/lib/email-service";
+import {
+  COOKIE_SESSION_NAME,
+  DURACAO_SESSAO_SEGUNDOS,
+  criarTokenSessao,
+  verificarTokenSessao,
+} from "@/lib/session-token";
+
+const OPCOES_COOKIE_SESSAO = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "lax" as const,
+  path: "/",
+};
+
+export async function GET(req: NextRequest) {
+  const token = req.cookies.get(COOKIE_SESSION_NAME)?.value;
+  const sessao = await verificarTokenSessao(token);
+
+  if (!sessao) {
+    const res = NextResponse.json(
+      { ok: false, autenticado: false },
+      { status: 401 }
+    );
+    if (token) {
+      res.cookies.set(COOKIE_SESSION_NAME, "", {
+        ...OPCOES_COOKIE_SESSAO,
+        maxAge: 0,
+      });
+    }
+    return res;
+  }
+
+  return NextResponse.json({
+    ok: true,
+    autenticado: true,
+    usuario: {
+      id: sessao.id,
+      login: sessao.login,
+      nome: sessao.nome,
+      email: sessao.email,
+      cargo: sessao.cargo,
+      perfilId: sessao.perfilId,
+      prestadorIdVinculado: sessao.prestadorIdVinculado,
+      liderVinculado: sessao.liderVinculado,
+      mfaAtivo: sessao.mfaAtivo,
+      fotoUrl: sessao.fotoUrl || "",
+    },
+  });
+}
 
 function extrairIpCliente(req: NextRequest): string {
   const forwarded = req.headers.get("x-forwarded-for");
@@ -34,10 +83,10 @@ export async function POST(req: NextRequest) {
     if (acao === "LOGOUT") {
       const { login, nome, email, perfilId } = body;
       await registrarLogSegurancaAsync({
-        usuarioLogin: login || "leonardo.campos",
-        usuarioNome: nome || "Leonardo Campos",
-        usuarioEmail: email || "leonardo.campos@nnos.com.br",
-        perfilId: perfilId || "ADMIN",
+        usuarioLogin: login || "desconhecido",
+        usuarioNome: nome || "Usuário",
+        usuarioEmail: email || "",
+        perfilId: perfilId || "DESCONHECIDO",
         evento: "LOGOUT_SESSAO",
         metodo: "Encerramento Voluntário",
         status: "SUCESSO",
@@ -45,7 +94,12 @@ export async function POST(req: NextRequest) {
         dispositivo: dispositivoResumo,
         detalhes: `Sessão encerrada pelo usuário ${nome || login || "Corporativo"}.`,
       });
-      return NextResponse.json({ ok: true });
+      const resLogout = NextResponse.json({ ok: true });
+      resLogout.cookies.set(COOKIE_SESSION_NAME, "", {
+        ...OPCOES_COOKIE_SESSAO,
+        maxAge: 0,
+      });
+      return resLogout;
     }
 
     // 2. ESQUECI MINHA SENHA - SOLICITAR CÓDIGO DE RECUPERAÇÃO
@@ -172,7 +226,8 @@ export async function POST(req: NextRequest) {
           nome: user.nome,
           email: user.email,
         },
-        codigoDemo: codigoRecuperacao,
+        emailDestino: user.email,
+        enviadoPorEmail: true,
         mensagem: `Enviamos as instruções e o código de recuperação para ${user.email}.`,
       });
     }
@@ -206,15 +261,17 @@ export async function POST(req: NextRequest) {
       const totpAnt = gerarCodigoTotp(secret, -1);
       const totpProx = gerarCodigoTotp(secret, 1);
 
-      // Código é válido se bater com o código enviado por e-mail (dentro dos 15 min),
-      // com o TOTP do Google Authenticator, ou com as chaves mestras de homologação
+      // Código é válido se bater com o código enviado por e-mail (dentro dos 15 min)
+      // ou com o TOTP do Google Authenticator do usuário
       const codigoValido =
-        (user.codigoRecuperacao && codigo === String(user.codigoRecuperacao).trim() && Date.now() <= (user.codigoRecuperacaoExpira || 0)) ||
+        Boolean(
+          user.codigoRecuperacao &&
+            codigo === String(user.codigoRecuperacao).trim() &&
+            Date.now() <= (user.codigoRecuperacaoExpira || 0)
+        ) ||
         codigo === totp0 ||
         codigo === totpAnt ||
-        codigo === totpProx ||
-        codigo === "123456" ||
-        codigo === "202600";
+        codigo === totpProx;
 
       if (!codigoValido) {
         await registrarLogSegurancaAsync({
@@ -325,8 +382,7 @@ export async function POST(req: NextRequest) {
       codigoMfa.length === 6 &&
       (codigoMfa === totp0 ||
         codigoMfa === totpAnt ||
-        codigoMfa === totpProx ||
-        codigoMfa === "123456");
+        codigoMfa === totpProx);
 
     // Se o usuário escolheu entrar direto com o código MFA do Google Authenticator
     if (modoSomenteMfa) {
@@ -415,21 +471,30 @@ export async function POST(req: NextRequest) {
         : `Acesso autenticado com sucesso (${user.nome}).`,
     });
 
-    return NextResponse.json({
+    const usuarioPublico = {
+      id: String(user.id || ""),
+      login: String(user.login || ""),
+      nome: String(user.nome || ""),
+      email: String(user.email || ""),
+      cargo: String(user.cargo || ""),
+      perfilId: String(user.perfilId || "CONSULTOR"),
+      prestadorIdVinculado: user.prestadorIdVinculado ? String(user.prestadorIdVinculado) : undefined,
+      liderVinculado: user.liderVinculado ? String(user.liderVinculado) : undefined,
+      mfaAtivo: Boolean(user.mfaAtivo),
+      fotoUrl: String(user.fotoUrl || ""),
+    };
+
+    const tokenSessao = await criarTokenSessao(usuarioPublico, DURACAO_SESSAO_SEGUNDOS);
+
+    const resLogin = NextResponse.json({
       ok: true,
-      usuario: {
-        id: user.id,
-        login: user.login,
-        nome: user.nome,
-        email: user.email,
-        cargo: user.cargo,
-        perfilId: user.perfilId,
-        liderVinculado: user.liderVinculado,
-        mfaAtivo: user.mfaAtivo,
-        mfaSecret: user.mfaSecret,
-        fotoUrl: user.fotoUrl || "",
-      },
+      usuario: usuarioPublico,
     });
+    resLogin.cookies.set(COOKIE_SESSION_NAME, tokenSessao, {
+      ...OPCOES_COOKIE_SESSAO,
+      maxAge: DURACAO_SESSAO_SEGUNDOS,
+    });
+    return resLogin;
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

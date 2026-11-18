@@ -222,7 +222,7 @@ export function gerarCodigoTotp(secretBase32: string, stepOffset = 0): string {
       1000000;
     return String(code).padStart(6, "0");
   } catch {
-    return "123456";
+    return "";
   }
 }
 

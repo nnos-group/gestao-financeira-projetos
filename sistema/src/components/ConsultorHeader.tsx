@@ -50,7 +50,7 @@ export default function ConsultorHeader({ tituloPagina = "Visão Geral" }: Consu
     return () => window.removeEventListener("nnos-user-updated", carregarUsuarioEFotos);
   }, []);
 
-  const isUsuarioAdmin = !usuarioLogado || usuarioLogado.perfilId === "ADMIN";
+  const isUsuarioAdmin = Boolean(usuarioLogado && usuarioLogado.perfilId === "ADMIN");
 
   const consultorIdentidade: IdentidadeUsuarioModal = useMemo(() => {
     const nome = consultorAtivo?.nome || usuarioLogado?.nome || "Consultor";
@@ -78,7 +78,7 @@ export default function ConsultorHeader({ tituloPagina = "Visão Geral" }: Consu
       email,
       cargo,
       fotoUrl: foto,
-      mfaSecret: usuarioLogado?.mfaSecret || "NNOSMFA2026KEY",
+      mfaSecret: usuarioLogado?.mfaSecret || "",
     };
   }, [consultorAtivo, usuarioLogado, fotosPorChave]);
 
