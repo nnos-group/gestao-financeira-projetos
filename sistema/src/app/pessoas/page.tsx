@@ -242,6 +242,10 @@ export default function PessoasPage() {
       .then(async (res) => {
         const json = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(json?.error || `HTTP ${res.status}`);
+        try {
+          localStorage.removeItem("nnos_perfis_acesso_v1");
+          window.dispatchEvent(new CustomEvent("nnos-perfis-updated"));
+        } catch {}
         setToastMsg("Ficha salva com sucesso");
         setTimeout(() => setToastMsg(null), 4000);
       })

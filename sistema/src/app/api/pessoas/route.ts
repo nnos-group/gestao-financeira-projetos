@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
+import { sincronizarPerfisEUsuariosComPessoas } from "@/lib/perfis-sync";
 
 const DATA_FILE = path.join(process.cwd(), "src/lib/consultores-base.json");
 const CHAVE_CLOUD = "pessoas_base_completa";
@@ -50,11 +51,14 @@ export async function POST(req: Request) {
     let erroCloud: string | null = null;
     try {
       const { supabaseAdmin } = await import("@/lib/supabase-server");
-      const { error } = await supabaseAdmin().from("configuracoes").upsert({
-        chave: CHAVE_CLOUD,
-        valor: body.length,
-        descricao: JSON.stringify(body),
-      });
+      const { error } = await supabaseAdmin().from("configuracoes").upsert(
+        {
+          chave: CHAVE_CLOUD,
+          valor: body.length,
+          descricao: JSON.stringify(body),
+        },
+        { onConflict: "chave" }
+      );
       if (error) erroCloud = error.message;
       else salvoCloud = true;
     } catch (e: any) {
@@ -76,7 +80,15 @@ export async function POST(req: Request) {
       );
     }
 
-    return NextResponse.json({ ok: true, count: body.length, salvoCloud, salvoLocal });
+    const syncResultado = await sincronizarPerfisEUsuariosComPessoas(body);
+
+    return NextResponse.json({
+      ok: true,
+      count: body.length,
+      salvoCloud,
+      salvoLocal,
+      ...syncResultado,
+    });
   } catch (err: any) {
     console.error("Erro ao salvar pessoas:", err);
     return NextResponse.json({ error: "Erro ao salvar base de pessoas" }, { status: 500 });

@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
-import { supabaseAdmin } from "@/lib/supabase-server";
 import perfisPadrao from "@/lib/perfis-acesso.json";
-import consultoresBase from "@/lib/consultores-base.json";
-
-const FILE_PATH = path.join(process.cwd(), "src/lib/perfis-acesso.json");
+import {
+  carregarPerfisPersistidos,
+  carregarPessoasAtualizadas,
+  reconciliarPerfisComPessoas,
+  salvarPerfisPersistidos,
+} from "@/lib/perfis-sync";
 
 function normalizarPerfisSeparados(lista: any[]): { perfis: any[]; migrado: boolean } {
   let migrado = false;
@@ -117,50 +117,18 @@ function normalizarPerfisSeparados(lista: any[]): { perfis: any[]; migrado: bool
 
 export async function GET() {
   try {
-    let perfis: any[] = perfisPadrao as any[];
+    let perfis: any[] = await carregarPerfisPersistidos();
+    const pessoasLista = await carregarPessoasAtualizadas();
 
-    if (fs.existsSync(FILE_PATH)) {
-      try {
-        const raw = fs.readFileSync(FILE_PATH, "utf-8");
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          perfis = parsed;
-        }
-      } catch {}
+    const norm = normalizarPerfisSeparados(perfis);
+    const rec = reconciliarPerfisComPessoas(norm.perfis, pessoasLista);
+    perfis = rec.perfis;
+
+    if (norm.migrado || rec.alterado) {
+      await salvarPerfisPersistidos(perfis);
     }
 
-    try {
-      const sb = supabaseAdmin();
-      const { data: cloud } = await sb
-        .from("configuracoes")
-        .select("descricao")
-        .eq("chave", "perfis_acesso_rbac")
-        .maybeSingle();
-
-      if (cloud?.descricao) {
-        const parsedCloud = JSON.parse(cloud.descricao);
-        if (Array.isArray(parsedCloud) && parsedCloud.length > 0) {
-          perfis = parsedCloud;
-        }
-      }
-
-      const norm = normalizarPerfisSeparados(perfis);
-      perfis = norm.perfis;
-      if (norm.migrado) {
-        await sb.from("configuracoes").upsert({
-          chave: "perfis_acesso_rbac",
-          valor: perfis.length,
-          descricao: JSON.stringify(perfis),
-        });
-        try {
-          fs.writeFileSync(FILE_PATH, JSON.stringify(perfis, null, 2), "utf-8");
-        } catch {}
-      }
-    } catch {
-      perfis = normalizarPerfisSeparados(perfis).perfis;
-    }
-
-    const pessoasDisponiveis = (consultoresBase as any[]).map((c) => ({
+    const pessoasDisponiveis = pessoasLista.map((c: any) => ({
       id: c.id,
       nome: c.nome,
       nome_completo: c.nome_completo || c.nome,
@@ -184,27 +152,17 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { perfis, restaurarPadrao } = body || {};
 
-    const listaFinal = restaurarPadrao ? perfisPadrao : perfis;
+    let listaFinal = restaurarPadrao ? perfisPadrao : perfis;
     if (!Array.isArray(listaFinal)) {
       return NextResponse.json({ error: "Formato inválido para lista de perfis." }, { status: 400 });
     }
 
-    try {
-      fs.writeFileSync(FILE_PATH, JSON.stringify(listaFinal, null, 2), "utf-8");
-    } catch (fsErr: any) {
-      console.warn("Aviso ao gravar perfis-acesso.json localmente:", fsErr.message);
+    if (restaurarPadrao) {
+      const pessoasLista = await carregarPessoasAtualizadas();
+      listaFinal = reconciliarPerfisComPessoas(listaFinal as any[], pessoasLista).perfis;
     }
 
-    try {
-      const sb = supabaseAdmin();
-      await sb.from("configuracoes").upsert({
-        chave: "perfis_acesso_rbac",
-        valor: listaFinal.length,
-        descricao: JSON.stringify(listaFinal),
-      });
-    } catch (sbErr: any) {
-      console.warn("Aviso ao salvar perfis_acesso_rbac no Supabase:", sbErr.message);
-    }
+    await salvarPerfisPersistidos(listaFinal as any[]);
 
     return NextResponse.json({ ok: true, perfis: listaFinal });
   } catch (err: any) {
