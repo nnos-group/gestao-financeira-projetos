@@ -25,12 +25,7 @@ export function gerarHashSenha(senhaPlana: string): string {
   return `scrypt$${salt}$${hash}`;
 }
 
-export function verificarSenha(
-  senhaInformada: string,
-  senhaArmazenada?: string | null
-): boolean {
-  const entrada = String(senhaInformada || "");
-  const salva = String(senhaArmazenada || "");
+function compararSenhaDireta(entrada: string, salva: string): boolean {
   if (!entrada || !salva) return false;
 
   if (salva.startsWith("scrypt$")) {
@@ -53,6 +48,26 @@ export function verificarSenha(
   const bufSalva = Buffer.from(salva, "utf8");
   if (bufEntrada.length !== bufSalva.length) return false;
   return crypto.timingSafeEqual(bufEntrada, bufSalva);
+}
+
+export function verificarSenha(
+  senhaInformada: string,
+  senhaArmazenada?: string | null
+): boolean {
+  const entrada = String(senhaInformada || "");
+  const salva = String(senhaArmazenada || "");
+  if (compararSenhaDireta(entrada, salva)) return true;
+
+  // Mantém compatibilidade com a senha inicial "nnos2026" informada no convite
+  // apenas enquanto o usuário ainda utilizar o hash padrão inicial ("lider2026" ou "fin2026").
+  if (entrada === "nnos2026") {
+    return (
+      compararSenhaDireta("lider2026", salva) ||
+      compararSenhaDireta("fin2026", salva)
+    );
+  }
+
+  return false;
 }
 
 export function sanitizarUsuarioSemSegredos(u: any) {

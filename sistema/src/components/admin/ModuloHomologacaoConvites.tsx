@@ -67,6 +67,34 @@ function obterCorAvatar(perfilId: string, nome: string): { bg: string; color: st
   return { bg: "#0284c7", color: "#ffffff" };
 }
 
+function ehPerfilAgencia(user: any): boolean {
+  if (!user) return false;
+  return (
+    user.perfilId === "AGENCIA" ||
+    String(user.email || "").toLowerCase().includes("fcconsultoriadeviagens") ||
+    String(user.login || "").toLowerCase().includes("agencia")
+  );
+}
+
+function ehPerfilConsultor(user: any): boolean {
+  if (!user || ehPerfilAgencia(user)) return false;
+  return (
+    user.perfilId === "CONSULTOR" ||
+    String(user.cargo || "").toLowerCase().includes("consultor") ||
+    String(user.cargo || "").toLowerCase().includes("instrutor")
+  );
+}
+
+function obterAssuntoConvite(user: any): string {
+  if (ehPerfilAgencia(user)) {
+    return "✈️ Novo Módulo de Viagens & Logística NNÓS | Acesso para Homologação e Testes Operacionais";
+  }
+  if (ehPerfilConsultor(user)) {
+    return "🎓 Boas-vindas ao Portal do Consultor NNÓS | Acesso para Homologação e Validação Operacional";
+  }
+  return "🚀 Boas-vindas ao novo Sistema NNÓS | Convocação para Homologação e Validação de Processos";
+}
+
 export default function ModuloHomologacaoConvites({ perfis, onToast }: Props) {
   const [usuarios, setUsuarios] = useState<any[]>([]);
   const [carregando, setCarregando] = useState(false);
@@ -162,6 +190,18 @@ export default function ModuloHomologacaoConvites({ perfis, onToast }: Props) {
     onToast(`Status de ${user.nome} atualizado para ${novoStatus}!`);
   };
 
+  const montarPayloadEmailHomologacao = (user: any) => ({
+    usuarioNome: user.nome,
+    usuarioEmail: user.email,
+    usuarioLogin: user.login,
+    usuarioCargo: user.cargo,
+    usuarioSenha: user.senha || (ehPerfilAgencia(user) ? "viagem2026" : "nnos2026"),
+    perfilId: user.perfilId,
+    perfilNome: perfis.find((p) => p.id === user.perfilId)?.nome || user.perfilId,
+    assuntoPersonalizado: obterAssuntoConvite(user),
+    corpoTextoPersonalizado: gerarTextoEmailPuro(user),
+  });
+
   // Registrar e Disparar Envio de E-mail Individual
   const handleRegistrarDisparo = async (user: any) => {
     await handleAtualizarStatus(user, "CONVITE_ENVIADO");
@@ -170,15 +210,7 @@ export default function ModuloHomologacaoConvites({ perfis, onToast }: Props) {
       const res = await fetch("/api/admin/homologacao/enviar-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          usuarioNome: user.nome,
-          usuarioEmail: user.email,
-          usuarioLogin: user.login,
-          usuarioSenha: user.senha || (user.perfilId === "AGENCIA" ? "viagem2026" : "nnos2026"),
-          perfilId: user.perfilId,
-          perfilNome: perfis.find((p) => p.id === user.perfilId)?.nome || user.perfilId,
-          corpoTextoPersonalizado: gerarTextoEmailPuro(user),
-        }),
+        body: JSON.stringify(montarPayloadEmailHomologacao(user)),
       });
 
       const data = await res.json();
@@ -220,15 +252,7 @@ export default function ModuloHomologacaoConvites({ perfis, onToast }: Props) {
         await fetch("/api/admin/homologacao/enviar-email", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            usuarioNome: user.nome,
-            usuarioEmail: user.email,
-            usuarioLogin: user.login,
-            usuarioSenha: user.senha || (user.perfilId === "AGENCIA" ? "viagem2026" : "nnos2026"),
-            perfilId: user.perfilId,
-            perfilNome: perfis.find((p) => p.id === user.perfilId)?.nome || user.perfilId,
-            corpoTextoPersonalizado: gerarTextoEmailPuro(user),
-          }),
+          body: JSON.stringify(montarPayloadEmailHomologacao(user)),
         });
 
         await fetch("/api/admin/logs-acesso", {
@@ -337,12 +361,38 @@ export default function ModuloHomologacaoConvites({ perfis, onToast }: Props) {
 
   // Gerador de Texto Completo do E-mail
   const gerarTextoEmailPuro = (user: any) => {
-    const ehAgencia = user.perfilId === "AGENCIA" || user.email.includes("fcconsultoriadeviagens") || user.login.includes("agencia");
-    const ehConsultor = user.perfilId === "CONSULTOR" || (user.cargo || "").toLowerCase().includes("consultor") || (user.cargo || "").toLowerCase().includes("instrutor");
+    const ehAgencia = ehPerfilAgencia(user);
+    const ehConsultor = ehPerfilConsultor(user);
     const linkAcesso = URL_OFICIAL_LOGIN;
+    const assuntoTexto = obterAssuntoConvite(user);
+
+    const blocoDuvidasTexto = `--------------------------------------------------
+🦉 DÚVIDAS? UTILIZE O GUIA E O AGENTE DE IA:
+--------------------------------------------------
+No topo direito (ou no botão flutuante com o ícone da coruja), clique em "Ajuda & IA":
+- Na aba Guia de Processos, você encontra o passo a passo e o macrofluxo das 7 etapas da NNÓS.
+- Na aba Agente de IA NNÓS, faça perguntas com suas próprias palavras para tirar dúvidas sobre regras corporativas.`;
+
+    const blocoApontamentosTexto = `--------------------------------------------------
+📝 COMO ENVIAR SEUS APONTAMENTOS DE MELHORIA:
+--------------------------------------------------
+Pedimos que envie seus feedbacks, processos divergentes ou sugestões diretamente pelo canal de Microsoft Teams da Equipe de Gestão NNÓS ou respondendo a este e-mail indicando:
+1. Em qual tela você estava navegando;
+2. O que ocorreu de diferente do seu processo real;
+3. Sugestão de melhoria ou print da tela.
+
+${
+  ehAgencia
+    ? "Muito obrigado pela parceria contínua!"
+    : "Contamos muito com sua colaboração para colocarmos no ar o melhor sistema de gestão que a NNÓS já teve!"
+}
+
+${ehAgencia ? "Atenciosamente," : "Um abraço,"}
+Leonardo Campos & Equipe de Gestão NNÓS
+NNÓS Consultoria e Treinamento`;
 
     if (ehAgencia) {
-      return `Assunto: ✈️ Novo Módulo de Viagens & Logística NNÓS | Acesso para Homologação e Testes Operacionais
+      return `Assunto: ${assuntoTexto}
 
 Olá, Fátima e Equipe, tudo bem?
 
@@ -365,29 +415,17 @@ Como parceiros estratégicos da nossa operação logística, convidamos vocês p
 --------------------------------------------------
 - Link Oficial de Acesso (Tela de Login): ${linkAcesso}
 - Seu Usuário / Login: ${user.login || "agencia.fatima"}
-- E-mail: ${user.email}
+- E-mail Cadastrado: ${user.email}
 - Senha Inicial: ${user.senha || "viagem2026"}
 * Nota: Ao efetuar o login com suas credenciais, seu acesso abrirá diretamente no módulo de Viagens & Logística (/viagens).
 
---------------------------------------------------
-🦉 DÚVIDAS? UTILIZE O GUIA E O AGENTE DE IA:
---------------------------------------------------
-Dentro do sistema, clique no botão "Ajuda & IA" (com o ícone da coruja) para consultar o passo a passo de todas as telas ou tirar dúvidas diretamente com o Guia Virtual NNÓS.
+${blocoDuvidasTexto}
 
---------------------------------------------------
-📝 CANAL DE APONTAMENTOS E MELHORIAS:
---------------------------------------------------
-Pedimos que qualquer processo divergente, sugestão ou ajuste seja enviado pelo canal de Microsoft Teams da Equipe de Gestão NNÓS ou respondendo a este e-mail.
-
-Muito obrigado pela parceria contínua!
-
-Atenciosamente,
-Leonardo Campos & Equipe de Gestão NNÓS
-NNÓS Consultoria e Treinamento`;
+${blocoApontamentosTexto}`;
     }
 
     if (ehConsultor) {
-      return `Assunto: 🎓 Boas-vindas ao Portal do Consultor NNÓS | Acesso para Homologação e Validação Operacional
+      return `Assunto: ${assuntoTexto}
 
 Olá, ${user.nome}, tudo bem?
 
@@ -398,7 +436,7 @@ Desenvolvemos esta área exclusiva para você acompanhar e gerenciar de forma tr
 Estamos na reta final para a liberação em produção e a sua validação prática é fundamental para garantirmos que a experiência do consultor seja simples, ágil e precisa no seu dia a dia.
 
 --------------------------------------------------
-🎯 O QUE PRECISAMOS QUE VOCÊ TESTE E VALIDE:
+🎯 O QUE PRECISAMOS QUE VOCÊ TESTE E VALIDE (PORTAL DO CONSULTOR):
 --------------------------------------------------
 1. Minha Agenda (/consultor/agenda): Consulte seus treinamentos e turmas programadas, conferindo datas, horários, concessionárias, cidades e detalhamentos da atividade.
 2. Minhas Viagens & Logística (/consultor/viagens): Acompanhe o status dos seus deslocamentos, passagens aéreas emitidas, hospedagens, translados e vouchers disponibilizados pela Agência Fátima.
@@ -414,27 +452,12 @@ Estamos na reta final para a liberação em produção e a sua validação prát
 - Senha Inicial: ${user.senha || "nnos2026"}
 * Nota: Ao efetuar o login com suas credenciais, seu acesso abrirá diretamente no seu Portal do Consultor (/consultor).
 
---------------------------------------------------
-🦉 DÚVIDAS? UTILIZE O GUIA E O AGENTE DE IA:
---------------------------------------------------
-No topo direito (ou no botão flutuante com o ícone da coruja), clique em "Ajuda & IA" para consultar o passo a passo ou tirar dúvidas diretamente com o Guia Virtual NNÓS.
+${blocoDuvidasTexto}
 
---------------------------------------------------
-📝 COMO ENVIAR SEUS APONTAMENTOS DE MELHORIA:
---------------------------------------------------
-Pedimos que envie seus feedbacks, processos divergentes ou sugestões diretamente pelo canal de Microsoft Teams da Equipe de Gestão NNÓS ou respondendo a este e-mail indicando:
-1. Em qual tela você estava navegando;
-2. O que ocorreu de diferente do seu processo real;
-3. Sugestão de melhoria ou print da tela.
-
-Contamos muito com sua colaboração para colocarmos no ar o melhor sistema de gestão que a NNÓS já teve!
-
-Um abraço,
-Leonardo Campos & Equipe de Gestão NNÓS
-NNÓS Consultoria e Treinamento`;
+${blocoApontamentosTexto}`;
     }
 
-    return `Assunto: 🚀 Boas-vindas ao novo Sistema NNÓS | Convocação para Homologação e Validação de Processos
+    return `Assunto: ${assuntoTexto}
 
 Olá, ${user.nome}, tudo bem?
 
@@ -460,26 +483,9 @@ Estamos na reta final para a liberação em produção e o seu olhar operacional
 - E-mail Cadastrado: ${user.email}
 - Senha Inicial: ${user.senha || "nnos2026"}
 
---------------------------------------------------
-🦉 DÚVIDAS? UTILIZE O GUIA E O AGENTE DE IA:
---------------------------------------------------
-No topo direito (ou no botão flutuante com o ícone da coruja), clique em "Ajuda & IA":
-- Na aba Guia de Processos, você encontra o passo a passo e o macrofluxo das 7 etapas da NNÓS.
-- Na aba Agente de IA NNÓS, faça perguntas com suas próprias palavras para tirar dúvidas sobre regras corporativas.
+${blocoDuvidasTexto}
 
---------------------------------------------------
-📝 COMO ENVIAR SEUS APONTAMENTOS DE MELHORIA:
---------------------------------------------------
-Pedimos que envie seus feedbacks, processos divergentes ou sugestões diretamente pelo canal de Microsoft Teams da Equipe de Gestão NNÓS ou respondendo a este e-mail indicando:
-1. Em qual tela você estava navegando;
-2. O que ocorreu de diferente do seu processo real;
-3. Sugestão de melhoria ou print da tela.
-
-Contamos muito com sua colaboração para colocarmos no ar o melhor sistema de gestão que a NNÓS já teve!
-
-Um abraço,
-Leonardo Campos & Equipe de Gestão NNÓS
-NNÓS Consultoria e Treinamento`;
+${blocoApontamentosTexto}`;
   };
 
   return (
@@ -1534,20 +1540,18 @@ NNÓS Consultoria e Treinamento`;
                 <div style={{ paddingBottom: "14px", borderBottom: "1px solid #f1f5f9", display: "flex", alignItems: "baseline", gap: "10px" }}>
                   <span style={{ fontWeight: 800, color: "#0f172a", flexShrink: 0 }}>Assunto:</span>
                   <span style={{ fontWeight: 700, color: "#0c4a6e" }}>
-                    {usuarioSelecionado.perfilId === "AGENCIA" ? (
-                      <>✈️ Novo Módulo de Viagens &amp; Logística NNÓS | Acesso para Homologação e Testes Operacionais</>
-                    ) : (
-                      <>🚀 Boas-vindas ao novo Sistema NNÓS | Convocação para Homologação e Validação de Processos</>
-                    )}
+                    {obterAssuntoConvite(usuarioSelecionado)}
                   </span>
                 </div>
 
                 {/* Saudação & Introdução */}
                 <div style={{ display: "flex", flexDirection: "column", gap: "12px", color: "#334155" }}>
                   <p style={{ margin: 0, fontWeight: 700, color: "#0f172a" }}>
-                    Olá, {usuarioSelecionado.nome}, tudo bem?
+                    {ehPerfilAgencia(usuarioSelecionado)
+                      ? "Olá, Fátima e Equipe, tudo bem?"
+                      : `Olá, ${usuarioSelecionado.nome}, tudo bem?`}
                   </p>
-                  {usuarioSelecionado.perfilId === "AGENCIA" ? (
+                  {ehPerfilAgencia(usuarioSelecionado) ? (
                     <>
                       <p style={{ margin: 0 }}>
                         Gostaríamos de dar as boas-vindas ao novo módulo de <strong style={{ color: "#0f172a" }}>Viagens &amp; Logística</strong> do sistema corporativo da NNÓS Consultoria!
@@ -1559,7 +1563,7 @@ NNÓS Consultoria e Treinamento`;
                         Como parceiros estratégicos da nossa operação logística, convidamos vocês para testar a ferramenta com as demandas reais e nos apontar quaisquer ajustes necessários antes da entrada em produção.
                       </p>
                     </>
-                  ) : (usuarioSelecionado.perfilId === "CONSULTOR" || (usuarioSelecionado.cargo || "").toLowerCase().includes("consultor") || (usuarioSelecionado.cargo || "").toLowerCase().includes("instrutor")) ? (
+                  ) : ehPerfilConsultor(usuarioSelecionado) ? (
                     <>
                       <p style={{ margin: 0 }}>
                         É com grande entusiasmo que convidamos você para fazer parte do primeiro grupo de validação do novo <strong style={{ color: "#0f172a" }}>Portal do Consultor</strong> no sistema NNÓS Gestão Financeira &amp; Projetos!
@@ -1613,15 +1617,15 @@ NNÓS Consultoria e Treinamento`;
                   >
                     <span>🎯</span>{" "}
                     <span>
-                      {usuarioSelecionado.perfilId === "AGENCIA"
+                      {ehPerfilAgencia(usuarioSelecionado)
                         ? "FOCO PRINCIPAL DA VALIDAÇÃO PELA AGÊNCIA FÁTIMA:"
-                        : (usuarioSelecionado.perfilId === "CONSULTOR" || (usuarioSelecionado.cargo || "").toLowerCase().includes("consultor") || (usuarioSelecionado.cargo || "").toLowerCase().includes("instrutor"))
+                        : ehPerfilConsultor(usuarioSelecionado)
                         ? "O QUE PRECISAMOS QUE VOCÊ TESTE E VALIDE (PORTAL DO CONSULTOR):"
                         : "O QUE PRECISAMOS QUE VOCÊ TESTE E VALIDE:"}
                     </span>
                   </h2>
 
-                  {usuarioSelecionado.perfilId === "AGENCIA" ? (
+                  {ehPerfilAgencia(usuarioSelecionado) ? (
                     <ol style={{ margin: 0, paddingLeft: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "10px" }}>
                       <li style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
                         <span style={{ fontWeight: 800, color: "#0284c7", minWidth: "18px" }}>1.</span>
@@ -1654,7 +1658,7 @@ NNÓS Consultoria e Treinamento`;
                         </div>
                       </li>
                     </ol>
-                  ) : (usuarioSelecionado.perfilId === "CONSULTOR" || (usuarioSelecionado.cargo || "").toLowerCase().includes("consultor") || (usuarioSelecionado.cargo || "").toLowerCase().includes("instrutor")) ? (
+                  ) : ehPerfilConsultor(usuarioSelecionado) ? (
                     <ol style={{ margin: 0, paddingLeft: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "10px" }}>
                       <li style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
                         <span style={{ fontWeight: 800, color: "#0284c7", minWidth: "18px" }}>1.</span>
@@ -1756,7 +1760,7 @@ NNÓS Consultoria e Treinamento`;
                   </h2>
                   <div style={{ display: "flex", flexDirection: "column", gap: "8px", fontSize: "13px" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-                      <span style={{ color: "#475569" }}>• Link Oficial (Tela de Login):</span>
+                      <span style={{ color: "#475569" }}>• Link Oficial de Acesso (Tela de Login):</span>
                       <a
                         href={URL_OFICIAL_LOGIN}
                         target="_blank"
@@ -1770,7 +1774,7 @@ NNÓS Consultoria e Treinamento`;
                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                       <span style={{ color: "#475569" }}>• Seu Usuário / Login:</span>
                       <span style={{ fontWeight: 800, color: "#0f172a", backgroundColor: "#ffffff", padding: "2px 8px", borderRadius: "6px", border: "1px solid #fde68a", fontFamily: "monospace", fontSize: "12px" }}>
-                        {usuarioSelecionado.login || (usuarioSelecionado.perfilId === "AGENCIA" ? "agencia.fatima" : "usuario")}
+                        {usuarioSelecionado.login || (ehPerfilAgencia(usuarioSelecionado) ? "agencia.fatima" : "usuario")}
                       </span>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -1780,14 +1784,18 @@ NNÓS Consultoria e Treinamento`;
                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                       <span style={{ color: "#475569" }}>• Senha Inicial:</span>
                       <span style={{ fontWeight: 800, color: "#0f172a", backgroundColor: "#ffffff", padding: "2px 8px", borderRadius: "6px", border: "1px solid #fde68a", fontFamily: "monospace", fontSize: "12px" }}>
-                        {usuarioSelecionado.senha || (usuarioSelecionado.perfilId === "AGENCIA" ? "viagem2026" : "nnos2026")}
+                        {usuarioSelecionado.senha || (ehPerfilAgencia(usuarioSelecionado) ? "viagem2026" : "nnos2026")}
                       </span>
                     </div>
-                    {usuarioSelecionado.perfilId === "AGENCIA" && (
+                    {ehPerfilAgencia(usuarioSelecionado) ? (
                       <p style={{ margin: "6px 0 0 0", fontSize: "12px", color: "#92400e", fontWeight: 600 }}>
                         * Nota: Ao efetuar o login com suas credenciais, seu acesso abrirá diretamente no módulo de Viagens &amp; Logística (/viagens).
                       </p>
-                    )}
+                    ) : ehPerfilConsultor(usuarioSelecionado) ? (
+                      <p style={{ margin: "6px 0 0 0", fontSize: "12px", color: "#0369a1", fontWeight: 600 }}>
+                        * Nota: Ao efetuar o login com suas credenciais, seu acesso abrirá diretamente no seu Portal do Consultor (/consultor).
+                      </p>
+                    ) : null}
                   </div>
                 </div>
 
@@ -1799,7 +1807,7 @@ NNÓS Consultoria e Treinamento`;
                     padding: "16px 18px",
                     border: "1px solid #bae6fd",
                     display: "flex",
-                    alignItems: "center",
+                    alignItems: "flex-start",
                     gap: "14px",
                     fontSize: "12.5px",
                     color: "#0369a1",
@@ -1816,32 +1824,47 @@ NNÓS Consultoria e Treinamento`;
                       alignItems: "center",
                       justifyContent: "center",
                       flexShrink: 0,
+                      marginTop: "2px",
                     }}
                   >
                     <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>psychology</span>
                   </div>
                   <div>
-                    <strong style={{ color: "#0f172a", display: "block", marginBottom: "2px" }}>
-                      Dúvidas? Utilize o Guia de Processos e o Agente de IA:
+                    <strong style={{ color: "#0f172a", display: "block", marginBottom: "4px", fontSize: "12px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                      🦉 DÚVIDAS? UTILIZE O GUIA E O AGENTE DE IA:
                     </strong>
-                    Dentro do sistema, clique no botão flutuante <strong>"Ajuda &amp; IA"</strong> (ícone da coruja) para consultar o passo a passo de todas as telas ou tirar dúvidas conceituais diretamente com a IA da NNÓS.
+                    <p style={{ margin: "0 0 6px 0", color: "#0c4a6e" }}>
+                      No topo direito (ou no botão flutuante com o ícone da coruja), clique em <strong>&quot;Ajuda &amp; IA&quot;</strong>:
+                    </p>
+                    <ul style={{ margin: 0, paddingLeft: "18px", display: "flex", flexDirection: "column", gap: "3px" }}>
+                      <li>Na aba <strong>Guia de Processos</strong>, você encontra o passo a passo e o macrofluxo das 7 etapas da NNÓS.</li>
+                      <li>Na aba <strong>Agente de IA NNÓS</strong>, faça perguntas com suas próprias palavras para tirar dúvidas sobre regras corporativas.</li>
+                    </ul>
                   </div>
                 </div>
 
                 {/* Seção 4: Canal de Apontamentos & Assinatura */}
                 <div style={{ paddingTop: "10px", borderTop: "1px solid #f1f5f9", fontSize: "12.5px", color: "#475569", display: "flex", flexDirection: "column", gap: "10px" }}>
+                  <h3 style={{ margin: 0, fontSize: "12px", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 800, color: "#0f172a" }}>
+                    📝 COMO ENVIAR SEUS APONTAMENTOS DE MELHORIA:
+                  </h3>
                   <p style={{ margin: 0 }}>
-                    Pedimos que qualquer processo divergente, sugestão ou ajuste seja enviado pelo canal de{" "}
+                    Pedimos que envie seus feedbacks, processos divergentes ou sugestões diretamente pelo canal de{" "}
                     <strong style={{ color: "#0f172a" }}>Microsoft Teams da Equipe de Gestão NNÓS</strong> ou respondendo a este e-mail indicando:
                   </p>
-                  <ul style={{ margin: 0, paddingLeft: "20px", display: "flex", flexDirection: "column", gap: "4px", color: "#64748b" }}>
+                  <ol style={{ margin: 0, paddingLeft: "20px", display: "flex", flexDirection: "column", gap: "4px", color: "#64748b" }}>
                     <li>Em qual tela você estava navegando;</li>
                     <li>O que ocorreu de diferente do seu processo real;</li>
                     <li>Sugestão de melhoria ou print da tela.</li>
-                  </ul>
-                  <div style={{ paddingTop: "10px" }}>
+                  </ol>
+                  <p style={{ margin: 0, color: "#334155" }}>
+                    {ehPerfilAgencia(usuarioSelecionado)
+                      ? "Muito obrigado pela parceria contínua!"
+                      : "Contamos muito com sua colaboração para colocarmos no ar o melhor sistema de gestão que a NNÓS já teve!"}
+                  </p>
+                  <div style={{ paddingTop: "6px" }}>
                     <p style={{ margin: 0, fontWeight: 700, color: "#1e293b" }}>
-                      {usuarioSelecionado.perfilId === "AGENCIA" ? "Atenciosamente," : "Um abraço,"}
+                      {ehPerfilAgencia(usuarioSelecionado) ? "Atenciosamente," : "Um abraço,"}
                     </p>
                     <p style={{ margin: "2px 0 0 0", fontWeight: 800, color: "#0f172a" }}>
                       Leonardo Campos &amp; Equipe de Gestão NNÓS
@@ -1895,9 +1918,7 @@ NNÓS Consultoria e Treinamento`;
 
                 <a
                   href={`mailto:${usuarioSelecionado.email}?subject=${encodeURIComponent(
-                    usuarioSelecionado.perfilId === "AGENCIA"
-                      ? "Novo Módulo de Viagens & Logística NNÓS | Acesso para Homologação"
-                      : "Boas-vindas ao novo Sistema NNÓS | Convocação para Homologação"
+                    obterAssuntoConvite(usuarioSelecionado)
                   )}&body=${encodeURIComponent(gerarTextoEmailPuro(usuarioSelecionado))}`}
                   style={{
                     display: "inline-flex",
