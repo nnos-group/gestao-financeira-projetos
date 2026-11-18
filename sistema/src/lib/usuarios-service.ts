@@ -16,6 +16,72 @@ function getSupabase() {
   return createClient(url, key, { auth: { persistSession: false } });
 }
 
+export function gerarHashSenha(senhaPlana: string): string {
+  const texto = String(senhaPlana || "");
+  if (!texto) return "";
+  if (texto.startsWith("scrypt$")) return texto;
+  const salt = crypto.randomBytes(16).toString("hex");
+  const hash = crypto.scryptSync(texto, salt, 64).toString("hex");
+  return `scrypt$${salt}$${hash}`;
+}
+
+export function verificarSenha(
+  senhaInformada: string,
+  senhaArmazenada?: string | null
+): boolean {
+  const entrada = String(senhaInformada || "");
+  const salva = String(senhaArmazenada || "");
+  if (!entrada || !salva) return false;
+
+  if (salva.startsWith("scrypt$")) {
+    const partes = salva.split("$");
+    if (partes.length !== 3) return false;
+    const [, salt, hashHex] = partes;
+    if (!salt || !hashHex) return false;
+    try {
+      const esperado = Buffer.from(hashHex, "hex");
+      const calculado = crypto.scryptSync(entrada, salt, esperado.length);
+      if (calculado.length !== esperado.length) return false;
+      return crypto.timingSafeEqual(calculado, esperado);
+    } catch {
+      return false;
+    }
+  }
+
+  // Fallback temporário apenas para registros legados ainda em transição
+  const bufEntrada = Buffer.from(entrada, "utf8");
+  const bufSalva = Buffer.from(salva, "utf8");
+  if (bufEntrada.length !== bufSalva.length) return false;
+  return crypto.timingSafeEqual(bufEntrada, bufSalva);
+}
+
+export function sanitizarUsuarioSemSegredos(u: any) {
+  if (!u || typeof u !== "object") return u;
+  const copia = { ...u };
+  delete copia.codigoRecuperacao;
+  delete copia.codigoRecuperacaoExpira;
+  copia.senha = "";
+  copia.senhaCriptografada = true;
+  return copia;
+}
+
+function normalizarHashesUsuarios(lista: any[]): { usuarios: any[]; alterou: boolean } {
+  let alterou = false;
+  const usuarios = (Array.isArray(lista) ? lista : []).map((u) => {
+    if (
+      u &&
+      typeof u.senha === "string" &&
+      u.senha.trim() &&
+      !u.senha.startsWith("scrypt$")
+    ) {
+      alterou = true;
+      return { ...u, senha: gerarHashSenha(u.senha.trim()) };
+    }
+    return u;
+  });
+  return { usuarios, alterou };
+}
+
 export function lerUsuarios(): any[] {
   try {
     if (fs.existsSync(USUARIOS_PATH)) {
@@ -30,6 +96,7 @@ export function lerUsuarios(): any[] {
 }
 
 export async function lerUsuariosAsync(): Promise<any[]> {
+  let lista: any[] = [];
   try {
     const db = getSupabase();
     if (db) {
@@ -40,33 +107,46 @@ export async function lerUsuariosAsync(): Promise<any[]> {
         .maybeSingle();
       if (!error && data?.descricao) {
         const parsed = JSON.parse(data.descricao);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          lista = parsed;
+        }
       }
     }
   } catch (e) {
     console.warn("Aviso ao ler usuarios_sistema no Supabase:", e);
   }
-  return lerUsuarios();
+
+  if (lista.length === 0) {
+    lista = lerUsuarios();
+  }
+
+  const norm = normalizarHashesUsuarios(lista);
+  if (norm.alterou) {
+    await salvarUsuariosAsync(norm.usuarios);
+  }
+  return norm.usuarios;
 }
 
 export function salvarUsuarios(lista: any[]) {
+  const norm = normalizarHashesUsuarios(lista);
   try {
-    fs.writeFileSync(USUARIOS_PATH, JSON.stringify(lista, null, 2), "utf-8");
+    fs.writeFileSync(USUARIOS_PATH, JSON.stringify(norm.usuarios, null, 2), "utf-8");
   } catch (e) {
     console.warn("Aviso ao gravar usuarios-sistema.json (FS read-only em serverless):", e);
   }
 }
 
 export async function salvarUsuariosAsync(lista: any[]) {
-  salvarUsuarios(lista);
+  const norm = normalizarHashesUsuarios(lista);
+  salvarUsuarios(norm.usuarios);
   try {
     const db = getSupabase();
     if (db) {
       await db.from("configuracoes").upsert(
         {
           chave: "usuarios_sistema",
-          valor: lista.length,
-          descricao: JSON.stringify(lista),
+          valor: norm.usuarios.length,
+          descricao: JSON.stringify(norm.usuarios),
         },
         { onConflict: "chave" }
       );

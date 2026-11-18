@@ -24,6 +24,8 @@ export default function LoginPage() {
   const [codigoRec, setCodigoRec] = useState("");
   const [novaSenhaRec, setNovaSenhaRec] = useState("");
   const [confirmaSenhaRec, setConfirmaSenhaRec] = useState("");
+  const [mostrarNovaSenhaRec, setMostrarNovaSenhaRec] = useState(false);
+  const [mostrarConfirmaSenhaRec, setMostrarConfirmaSenhaRec] = useState(false);
   const [dicaCodigoDemo, setDicaCodigoDemo] = useState<string | null>(null);
 
   const [carregando, setCarregando] = useState(false);
@@ -825,40 +827,90 @@ export default function LoginPage() {
                   <label style={{ display: "block", fontSize: "10.5px", fontWeight: 800, color: "#475569", textTransform: "uppercase", marginBottom: "4px" }}>
                     NOVA SENHA
                   </label>
-                  <input
-                    type="password"
-                    value={novaSenhaRec}
-                    onChange={(e) => setNovaSenhaRec(e.target.value)}
-                    placeholder="Mínimo de 4 caracteres"
-                    style={{
-                      width: "100%",
-                      padding: "10px 14px",
-                      borderRadius: "10px",
-                      border: "1px solid #cbd5e1",
-                      backgroundColor: "#ffffff",
-                      fontSize: "13px",
-                    }}
-                  />
+                  <div style={{ position: "relative" }}>
+                    <input
+                      type={mostrarNovaSenhaRec ? "text" : "password"}
+                      value={novaSenhaRec}
+                      onChange={(e) => setNovaSenhaRec(e.target.value)}
+                      placeholder="Mínimo de 4 caracteres"
+                      style={{
+                        width: "100%",
+                        padding: "10px 42px 10px 14px",
+                        borderRadius: "10px",
+                        border: "1px solid #cbd5e1",
+                        backgroundColor: "#ffffff",
+                        fontSize: "13px",
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setMostrarNovaSenhaRec((prev) => !prev)}
+                      aria-label={mostrarNovaSenhaRec ? "Ocultar nova senha" : "Visualizar nova senha"}
+                      title={mostrarNovaSenhaRec ? "Ocultar senha" : "Visualizar senha"}
+                      style={{
+                        position: "absolute",
+                        right: "10px",
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        background: "none",
+                        border: "none",
+                        padding: "2px",
+                        color: "#64748b",
+                        cursor: "pointer",
+                        display: "inline-flex",
+                        alignItems: "center",
+                      }}
+                    >
+                      <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
+                        {mostrarNovaSenhaRec ? "visibility_off" : "visibility"}
+                      </span>
+                    </button>
+                  </div>
                 </div>
 
                 <div>
                   <label style={{ display: "block", fontSize: "10.5px", fontWeight: 800, color: "#475569", textTransform: "uppercase", marginBottom: "4px" }}>
                     CONFIRMAR NOVA SENHA
                   </label>
-                  <input
-                    type="password"
-                    value={confirmaSenhaRec}
-                    onChange={(e) => setConfirmaSenhaRec(e.target.value)}
-                    placeholder="Repita a nova senha"
-                    style={{
-                      width: "100%",
-                      padding: "10px 14px",
-                      borderRadius: "10px",
-                      border: "1px solid #cbd5e1",
-                      backgroundColor: "#ffffff",
-                      fontSize: "13px",
-                    }}
-                  />
+                  <div style={{ position: "relative" }}>
+                    <input
+                      type={mostrarConfirmaSenhaRec ? "text" : "password"}
+                      value={confirmaSenhaRec}
+                      onChange={(e) => setConfirmaSenhaRec(e.target.value)}
+                      placeholder="Repita a nova senha"
+                      style={{
+                        width: "100%",
+                        padding: "10px 42px 10px 14px",
+                        borderRadius: "10px",
+                        border: "1px solid #cbd5e1",
+                        backgroundColor: "#ffffff",
+                        fontSize: "13px",
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setMostrarConfirmaSenhaRec((prev) => !prev)}
+                      aria-label={mostrarConfirmaSenhaRec ? "Ocultar confirmação de senha" : "Visualizar confirmação de senha"}
+                      title={mostrarConfirmaSenhaRec ? "Ocultar senha" : "Visualizar senha"}
+                      style={{
+                        position: "absolute",
+                        right: "10px",
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        background: "none",
+                        border: "none",
+                        padding: "2px",
+                        color: "#64748b",
+                        cursor: "pointer",
+                        display: "inline-flex",
+                        alignItems: "center",
+                      }}
+                    >
+                      <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
+                        {mostrarConfirmaSenhaRec ? "visibility_off" : "visibility"}
+                      </span>
+                    </button>
+                  </div>
                 </div>
 
                 <button

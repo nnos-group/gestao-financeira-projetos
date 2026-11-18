@@ -13,7 +13,6 @@ export async function middleware(req: NextRequest) {
 
   if (
     pathname.startsWith("/_next") ||
-    pathname.startsWith("/api") ||
     pathname.startsWith("/politicas") ||
     pathname === "/favicon.ico" ||
     EXTENSOES_ESTATICAS_REGEX.test(pathname)
@@ -21,8 +20,51 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
+  const isApi = pathname.startsWith("/api");
+  const isApiPublica =
+    pathname === "/api/auth/login" ||
+    pathname.startsWith("/api/webhooks/zoho-sign") ||
+    (pathname === "/api/viagens/anexo" && req.method === "GET");
+
+  if (isApiPublica) {
+    return NextResponse.next();
+  }
+
   const tokenBruto = req.cookies.get(COOKIE_SESSION_NAME)?.value;
   const sessao = await verificarTokenSessao(tokenBruto);
+
+  if (isApi) {
+    if (!sessao) {
+      const resApi = NextResponse.json(
+        { error: "Não autenticado. Faça login novamente." },
+        { status: 401 }
+      );
+      if (tokenBruto) {
+        resApi.cookies.set(COOKIE_SESSION_NAME, "", {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          path: "/",
+          maxAge: 0,
+        });
+      }
+      return resApi;
+    }
+
+    const exigeAdminApi =
+      pathname.startsWith("/api/admin/logs-acesso") ||
+      pathname.startsWith("/api/admin/homologacao") ||
+      (pathname.startsWith("/api/admin/usuarios") && req.method === "GET");
+
+    if (exigeAdminApi && sessao.perfilId !== "ADMIN") {
+      return NextResponse.json(
+        { error: "Acesso restrito ao Administrador." },
+        { status: 403 }
+      );
+    }
+
+    return NextResponse.next();
+  }
 
   if (!sessao) {
     if (pathname === "/login" || pathname.startsWith("/login/")) {

@@ -41,6 +41,8 @@ export default function ModalPerfilUsuario({
   const [fotoAtual, setFotoAtual] = useState<string>(identidade.fotoUrl || "");
   const [novaSenha, setNovaSenha] = useState("");
   const [confirmaSenha, setConfirmaSenha] = useState("");
+  const [mostrarNovaSenha, setMostrarNovaSenha] = useState(false);
+  const [mostrarConfirmaSenha, setMostrarConfirmaSenha] = useState(false);
   const [feedbackMsg, setFeedbackMsg] = useState<{ tipo: "ok" | "erro"; texto: string } | null>(null);
   const [salvando, setSalvando] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -58,6 +60,8 @@ export default function ModalPerfilUsuario({
       setFeedbackMsg(null);
       setNovaSenha("");
       setConfirmaSenha("");
+      setMostrarNovaSenha(false);
+      setMostrarConfirmaSenha(false);
     }
   }, [aberto]);
 
@@ -522,21 +526,47 @@ export default function ModalPerfilUsuario({
                 >
                   Nova Senha Corporativa
                 </label>
-                <input
-                  type="password"
-                  value={novaSenha}
-                  onChange={(e) => setNovaSenha(e.target.value)}
-                  placeholder="Digite a nova senha..."
-                  required
-                  style={{
-                    width: "100%",
-                    padding: "10px 12px",
-                    borderRadius: "10px",
-                    border: "1px solid var(--border)",
-                    backgroundColor: "var(--surface-container-low)",
-                    fontSize: "13px",
-                  }}
-                />
+                <div style={{ position: "relative" }}>
+                  <input
+                    type={mostrarNovaSenha ? "text" : "password"}
+                    value={novaSenha}
+                    onChange={(e) => setNovaSenha(e.target.value)}
+                    placeholder="Digite a nova senha..."
+                    required
+                    style={{
+                      width: "100%",
+                      padding: "10px 42px 10px 12px",
+                      borderRadius: "10px",
+                      border: "1px solid var(--border)",
+                      backgroundColor: "var(--surface-container-low)",
+                      fontSize: "13px",
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setMostrarNovaSenha((prev) => !prev)}
+                    aria-label={mostrarNovaSenha ? "Ocultar nova senha" : "Visualizar nova senha"}
+                    title={mostrarNovaSenha ? "Ocultar senha" : "Visualizar senha"}
+                    style={{
+                      position: "absolute",
+                      right: "10px",
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      background: "none",
+                      border: "none",
+                      padding: "2px",
+                      color: "var(--on-surface-variant)",
+                      cursor: "pointer",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: "19px" }}>
+                      {mostrarNovaSenha ? "visibility_off" : "visibility"}
+                    </span>
+                  </button>
+                </div>
               </div>
               <div>
                 <label
@@ -551,21 +581,47 @@ export default function ModalPerfilUsuario({
                 >
                   Confirmar Nova Senha
                 </label>
-                <input
-                  type="password"
-                  value={confirmaSenha}
-                  onChange={(e) => setConfirmaSenha(e.target.value)}
-                  placeholder="Repita a nova senha..."
-                  required
-                  style={{
-                    width: "100%",
-                    padding: "10px 12px",
-                    borderRadius: "10px",
-                    border: "1px solid var(--border)",
-                    backgroundColor: "var(--surface-container-low)",
-                    fontSize: "13px",
-                  }}
-                />
+                <div style={{ position: "relative" }}>
+                  <input
+                    type={mostrarConfirmaSenha ? "text" : "password"}
+                    value={confirmaSenha}
+                    onChange={(e) => setConfirmaSenha(e.target.value)}
+                    placeholder="Repita a nova senha..."
+                    required
+                    style={{
+                      width: "100%",
+                      padding: "10px 42px 10px 12px",
+                      borderRadius: "10px",
+                      border: "1px solid var(--border)",
+                      backgroundColor: "var(--surface-container-low)",
+                      fontSize: "13px",
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setMostrarConfirmaSenha((prev) => !prev)}
+                    aria-label={mostrarConfirmaSenha ? "Ocultar confirmação de senha" : "Visualizar confirmação de senha"}
+                    title={mostrarConfirmaSenha ? "Ocultar senha" : "Visualizar senha"}
+                    style={{
+                      position: "absolute",
+                      right: "10px",
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      background: "none",
+                      border: "none",
+                      padding: "2px",
+                      color: "var(--on-surface-variant)",
+                      cursor: "pointer",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: "19px" }}>
+                      {mostrarConfirmaSenha ? "visibility_off" : "visibility"}
+                    </span>
+                  </button>
+                </div>
               </div>
               <button
                 type="submit"

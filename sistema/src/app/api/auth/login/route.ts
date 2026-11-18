@@ -4,6 +4,8 @@ import {
   salvarUsuariosAsync,
   registrarLogSegurancaAsync,
   gerarCodigoTotp,
+  gerarHashSenha,
+  verificarSenha,
 } from "@/lib/usuarios-service";
 import { dispararEmail } from "@/lib/email-service";
 import {
@@ -336,7 +338,7 @@ export async function POST(req: NextRequest) {
 
       usuarios[idx] = {
         ...user,
-        senha: novaSenha,
+        senha: gerarHashSenha(novaSenha),
         status: "ATIVO",
         codigoRecuperacao: null,
         codigoRecuperacaoExpira: null,
@@ -447,8 +449,8 @@ export async function POST(req: NextRequest) {
         );
       }
     } else {
-      // Validação de senha
-      if (user.senha !== senha) {
+      // Validação de senha com hash scrypt + comparação em tempo constante
+      if (!verificarSenha(senha, user.senha)) {
         await registrarLogSegurancaAsync({
           usuarioLogin: user.login,
           usuarioNome: user.nome,

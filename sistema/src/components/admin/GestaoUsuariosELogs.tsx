@@ -40,7 +40,7 @@ export default function GestaoUsuariosELogs({ modo, perfis, onToast }: Props) {
   const [buscaUsuario, setBuscaUsuario] = useState("");
   const [filtroPerfilUser, setFiltroPerfilUser] = useState("TODOS");
   const [filtroStatusUser, setFiltroStatusUser] = useState("TODOS");
-  const [senhasVisiveis, setSenhasVisiveis] = useState<Record<string, boolean>>({});
+  const [mostrarSenhaModal, setMostrarSenhaModal] = useState(false);
 
   // Modal de Edição / Criação de Usuário
   const [modalUsuarioAberto, setModalUsuarioAberto] = useState(false);
@@ -107,6 +107,7 @@ export default function GestaoUsuariosELogs({ modo, perfis, onToast }: Props) {
   // AÇÕES DE GESTÃO DE USUÁRIOS
   // ───────────────────────────────────────────────────────────────────────────
   const abrirModalNovoUsuario = () => {
+    setMostrarSenhaModal(false);
     setFormUser({
       id: "",
       login: "",
@@ -115,7 +116,7 @@ export default function GestaoUsuariosELogs({ modo, perfis, onToast }: Props) {
       cargo: "Líder de Projeto",
       perfilId: "LIDER",
       liderVinculado: "TODOS",
-      senha: "nnos2026",
+      senha: "",
       mfaAtivo: true,
       mfaSecret: "",
       status: "ATIVO",
@@ -125,6 +126,7 @@ export default function GestaoUsuariosELogs({ modo, perfis, onToast }: Props) {
   };
 
   const abrirModalEditarUsuario = (u: any) => {
+    setMostrarSenhaModal(false);
     setFormUser({
       id: u.id,
       login: u.login,
@@ -133,7 +135,7 @@ export default function GestaoUsuariosELogs({ modo, perfis, onToast }: Props) {
       cargo: u.cargo,
       perfilId: u.perfilId || "LIDER",
       liderVinculado: u.liderVinculado || "TODOS",
-      senha: u.senha || "nnos2026",
+      senha: "",
       mfaAtivo: Boolean(u.mfaAtivo),
       mfaSecret: u.mfaSecret || "",
       status: u.status || "ATIVO",
@@ -498,7 +500,6 @@ export default function GestaoUsuariosELogs({ modo, perfis, onToast }: Props) {
                   cor: "#0284c7",
                   bgCor: "#e0f2fe",
                 };
-                const verSenha = !!senhasVisiveis[u.id];
 
                 return (
                   <tr key={u.id} style={{ borderBottom: "1px solid var(--border)" }}>
@@ -582,37 +583,26 @@ export default function GestaoUsuariosELogs({ modo, perfis, onToast }: Props) {
                     </td>
 
                     <td style={{ padding: "12px 14px" }}>
-                      <div style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
-                        <span
-                          style={{
-                            fontFamily: "monospace",
-                            fontWeight: 700,
-                            fontSize: "12.5px",
-                            color: "var(--on-surface)",
-                          }}
-                        >
-                          {verSenha ? u.senha : "••••••••"}
+                      <span
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "5px",
+                          padding: "3px 9px",
+                          borderRadius: "999px",
+                          backgroundColor: "#ecfdf5",
+                          color: "#047857",
+                          fontSize: "11px",
+                          fontWeight: 700,
+                          whiteSpace: "nowrap",
+                        }}
+                        title="Senha armazenada com hash criptográfico irreversível (scrypt + salt)"
+                      >
+                        <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>
+                          lock
                         </span>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setSenhasVisiveis((prev) => ({ ...prev, [u.id]: !prev[u.id] }))
-                          }
-                          style={{
-                            border: "none",
-                            background: "transparent",
-                            cursor: "pointer",
-                            color: "var(--on-surface-variant)",
-                            padding: "2px",
-                            display: "inline-flex",
-                          }}
-                          title={verSenha ? "Ocultar senha" : "Ver senha"}
-                        >
-                          <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
-                            {verSenha ? "visibility_off" : "visibility"}
-                          </span>
-                        </button>
-                      </div>
+                        <span>Criptografada (scrypt)</span>
+                      </span>
                     </td>
 
                     <td style={{ padding: "12px 14px" }}>
@@ -649,7 +639,7 @@ export default function GestaoUsuariosELogs({ modo, perfis, onToast }: Props) {
                           <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>
                             qr_code_2
                           </span>
-                          <span>QR / {u.totpAtual || "123456"}</span>
+                          <span>QR / {u.totpAtual || "------"}</span>
                         </button>
                       </div>
                     </td>
@@ -954,14 +944,50 @@ export default function GestaoUsuariosELogs({ modo, perfis, onToast }: Props) {
 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                   <div>
-                    <label style={{ display: "block", fontSize: "11px", fontWeight: 700, marginBottom: "4px" }}>Senha de Acesso *</label>
-                    <input
-                      type="text"
-                      value={formUser.senha}
-                      onChange={(e) => setFormUser({ ...formUser, senha: e.target.value })}
-                      placeholder="Digite ou redefina a senha"
-                      style={{ width: "100%", padding: "9px 12px", borderRadius: "9px", border: "1px solid var(--border)", fontSize: "13px", fontFamily: "monospace", fontWeight: 700 }}
-                    />
+                    <label style={{ display: "block", fontSize: "11px", fontWeight: 700, marginBottom: "4px" }}>
+                      {formUser.id ? "Nova Senha (opcional)" : "Senha de Acesso *"}
+                    </label>
+                    <div style={{ position: "relative" }}>
+                      <input
+                        type={mostrarSenhaModal ? "text" : "password"}
+                        value={formUser.senha}
+                        onChange={(e) => setFormUser({ ...formUser, senha: e.target.value })}
+                        placeholder={formUser.id ? "Deixe em branco para manter a atual" : "Digite a senha inicial"}
+                        required={!formUser.id}
+                        style={{
+                          width: "100%",
+                          padding: "9px 38px 9px 12px",
+                          borderRadius: "9px",
+                          border: "1px solid var(--border)",
+                          fontSize: "13px",
+                          fontFamily: "monospace",
+                          fontWeight: 700,
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setMostrarSenhaModal((prev) => !prev)}
+                        aria-label={mostrarSenhaModal ? "Ocultar senha" : "Visualizar senha"}
+                        title={mostrarSenhaModal ? "Ocultar senha" : "Visualizar senha"}
+                        style={{
+                          position: "absolute",
+                          right: "8px",
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          background: "none",
+                          border: "none",
+                          padding: "2px",
+                          color: "var(--on-surface-variant)",
+                          cursor: "pointer",
+                          display: "inline-flex",
+                          alignItems: "center",
+                        }}
+                      >
+                        <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
+                          {mostrarSenhaModal ? "visibility_off" : "visibility"}
+                        </span>
+                      </button>
+                    </div>
                   </div>
                   <div>
                     <label style={{ display: "block", fontSize: "11px", fontWeight: 700, marginBottom: "4px" }}>Status da Conta</label>
@@ -1093,7 +1119,7 @@ export default function GestaoUsuariosELogs({ modo, perfis, onToast }: Props) {
                 Chave Secreta Base32: <strong style={{ fontFamily: "monospace", color: "var(--primary)" }}>{usuarioQrModal.mfaSecret}</strong>
               </div>
               <div style={{ padding: "8px 16px", borderRadius: "10px", backgroundColor: "#e0f2fe", color: "#0369a1", fontSize: "13px", fontWeight: 800 }}>
-                Código TOTP Atual (30s): <span style={{ letterSpacing: "0.15em" }}>{usuarioQrModal.totpAtual || "123456"}</span>
+                Código TOTP Atual (30s): <span style={{ letterSpacing: "0.15em" }}>{usuarioQrModal.totpAtual || "------"}</span>
               </div>
               <div style={{ display: "flex", gap: "8px", marginTop: "4px" }}>
                 <button
