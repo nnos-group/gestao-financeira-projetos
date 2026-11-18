@@ -16,7 +16,6 @@ export interface SessaoPayload {
   perfilId: string;
   prestadorIdVinculado?: string;
   liderVinculado?: string;
-  fotoUrl?: string;
   mfaAtivo?: boolean;
   iat: number;
   exp: number;
@@ -82,8 +81,17 @@ export async function criarTokenSessao(
   duracaoSegundos: number = DURACAO_SESSAO_SEGUNDOS
 ): Promise<string> {
   const agora = Math.floor(Date.now() / 1000);
+  // Mantém apenas campos compactos no cookie (< 4 KB; nunca inclui fotoUrl Base64)
   const payload: SessaoPayload = {
-    ...usuario,
+    id: String(usuario.id || ""),
+    login: String(usuario.login || ""),
+    nome: String(usuario.nome || ""),
+    email: String(usuario.email || ""),
+    cargo: String(usuario.cargo || ""),
+    perfilId: String(usuario.perfilId || "CONSULTOR"),
+    ...(usuario.prestadorIdVinculado ? { prestadorIdVinculado: String(usuario.prestadorIdVinculado) } : {}),
+    ...(usuario.liderVinculado ? { liderVinculado: String(usuario.liderVinculado) } : {}),
+    ...(usuario.mfaAtivo !== undefined ? { mfaAtivo: Boolean(usuario.mfaAtivo) } : {}),
     iat: agora,
     exp: agora + duracaoSegundos,
   };

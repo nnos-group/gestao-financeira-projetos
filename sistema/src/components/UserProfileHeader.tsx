@@ -38,22 +38,22 @@ function obterIniciais(nome: string): string {
 
 export default function UserProfileHeader() {
   const router = useRouter();
-  const { perfilAtivoId, perfilAtivoObj, liderSimulado, listaLideres } = usePerfilAcesso();
+  const {
+    perfilAtivoId,
+    perfilAtivoObj,
+    liderSimulado,
+    listaLideres,
+    usuarioLogado,
+    hidratado,
+  } = usePerfilAcesso();
   const [mounted, setMounted] = useState(false);
   const [modalAberto, setModalAberto] = useState(false);
   const [fotosPorChave, setFotosPorChave] = useState<Record<string, string>>({});
-  const [usuarioSessao, setUsuarioSessao] = useState<UsuarioAtivoInfo | null>(null);
 
   useEffect(() => {
     setMounted(true);
     const carregarEstado = () => {
       try {
-        const savedUser = localStorage.getItem("nnos_usuario_logado_v1");
-        if (savedUser) {
-          setUsuarioSessao(JSON.parse(savedUser));
-        } else {
-          setUsuarioSessao(null);
-        }
         const savedFotos = localStorage.getItem("nnos_fotos_usuarios_v1");
         if (savedFotos) {
           setFotosPorChave(JSON.parse(savedFotos));
@@ -65,6 +65,8 @@ export default function UserProfileHeader() {
     window.addEventListener("nnos-user-updated", carregarEstado);
     return () => window.removeEventListener("nnos-user-updated", carregarEstado);
   }, []);
+
+  const usuarioSessao: UsuarioAtivoInfo | null = hidratado ? (usuarioLogado as UsuarioAtivoInfo | null) : null;
 
   // Determina a identidade exibida no topo conforme o usuário autenticado (ou simulação exclusiva ADMIN)
   const identidadeAtiva: UsuarioAtivoInfo = React.useMemo(() => {
@@ -95,28 +97,38 @@ export default function UserProfileHeader() {
     }
 
     // 2. Administrador simulando perfil LIDER
-    if (podeSimular && perfilAtivoId === "LIDER" && liderSimulado && liderSimulado !== "TODOS") {
-      const infoLider = listaLideres.find(
-        (l) => l.nome.toUpperCase() === liderSimulado.toUpperCase()
-      );
-      const nomeFmt = formatarNomeTitulo(liderSimulado);
-      const loginLider = liderSimulado
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .toLowerCase()
-        .replace(/\s+/g, ".");
-      const chaveFoto = loginLider;
+    if (podeSimular && perfilAtivoId === "LIDER") {
+      if (liderSimulado && liderSimulado !== "TODOS") {
+        const infoLider = listaLideres.find(
+          (l) => l.nome.toUpperCase() === liderSimulado.toUpperCase()
+        );
+        const nomeFmt = formatarNomeTitulo(liderSimulado);
+        const loginLider = liderSimulado
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .toLowerCase()
+          .replace(/\s+/g, ".");
+        const chaveFoto = loginLider;
+        return {
+          login: loginLider,
+          nome: nomeFmt,
+          email: infoLider?.email || `${loginLider}@nnos.com.br`,
+          cargo: `Líder de Projeto • ${infoLider?.area || "Projetos"}`,
+          fotoUrl:
+            fotosPorChave[chaveFoto] ||
+            fotosPorChave[liderSimulado.toUpperCase()] ||
+            (usuarioSessao.login === loginLider ? usuarioSessao.fotoUrl : "") ||
+            "",
+          mfaSecret: usuarioSessao.mfaSecret || "",
+        };
+      }
       return {
-        login: loginLider,
-        nome: nomeFmt,
-        email: infoLider?.email || `${loginLider}@nnos.com.br`,
-        cargo: `Líder de Projeto • ${infoLider?.area || "Projetos"}`,
-        fotoUrl:
-          fotosPorChave[chaveFoto] ||
-          fotosPorChave[liderSimulado.toUpperCase()] ||
-          (usuarioSessao.login === loginLider ? usuarioSessao.fotoUrl : "") ||
-          "",
-        mfaSecret: usuarioSessao.mfaSecret || "",
+        login: "lider.todos",
+        nome: "Visão Consolidada • Líderes",
+        email: usuarioSessao.email || "",
+        cargo: "Simulação de Perfil • Líder de Projeto",
+        fotoUrl: "",
+        mfaSecret: "",
       };
     }
 
@@ -161,6 +173,28 @@ export default function UserProfileHeader() {
       };
     }
 
+    if (podeSimular && perfilAtivoId === "SOCIO") {
+      return {
+        login: "socio.consultor",
+        nome: "Sócio Consultor (Simulação)",
+        email: usuarioSessao.email || "",
+        cargo: "Simulação de Perfil • Sócio",
+        fotoUrl: "",
+        mfaSecret: "",
+      };
+    }
+
+    if (podeSimular && perfilAtivoId === "CONSULTOR") {
+      return {
+        login: "consultor.parceiro",
+        nome: "Consultor Parceiro (Simulação)",
+        email: usuarioSessao.email || "",
+        cargo: "Simulação de Perfil • Consultor",
+        fotoUrl: "",
+        mfaSecret: "",
+      };
+    }
+
     const chaveSessao = (usuarioSessao.login || usuarioSessao.nome || "").toLowerCase();
     return {
       ...usuarioSessao,
@@ -173,7 +207,7 @@ export default function UserProfileHeader() {
     };
   }, [perfilAtivoId, perfilAtivoObj, liderSimulado, listaLideres, usuarioSessao, fotosPorChave]);
 
-  if (!mounted || !usuarioSessao) {
+  if (!mounted || !hidratado || !usuarioSessao) {
     return null;
   }
 

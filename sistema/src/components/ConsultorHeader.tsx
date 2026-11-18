@@ -7,6 +7,7 @@ import ModernDropdown from "@/components/ModernDropdown";
 import BotaoAjudaCentral from "@/components/BotaoAjudaCentral";
 import ModalPerfilUsuario, { IdentidadeUsuarioModal } from "@/components/ModalPerfilUsuario";
 import { useConsultor } from "@/contexts/ConsultorContext";
+import { usePerfilAcesso } from "@/contexts/PerfilAcessoContext";
 
 interface ConsultorHeaderProps {
   tituloPagina?: string;
@@ -25,19 +26,15 @@ function obterIniciais(nome: string): string {
 export default function ConsultorHeader({ tituloPagina = "Visão Geral" }: ConsultorHeaderProps) {
   const router = useRouter();
   const { consultorAtivo, selecionarConsultorPorId, listaConsultores, carregando } = useConsultor();
-  const [usuarioLogado, setUsuarioLogado] = useState<any | null>(null);
+  const { usuarioLogado: usuarioContexto, hidratado } = usePerfilAcesso();
   const [fotosPorChave, setFotosPorChave] = useState<Record<string, string>>({});
   const [modalPerfilAberto, setModalPerfilAberto] = useState(false);
 
+  const usuarioLogado = hidratado ? usuarioContexto : null;
+
   useEffect(() => {
-    const carregarUsuarioEFotos = () => {
+    const carregarFotos = () => {
       try {
-        const saved = localStorage.getItem("nnos_usuario_logado_v1");
-        if (saved) {
-          setUsuarioLogado(JSON.parse(saved));
-        } else {
-          setUsuarioLogado(null);
-        }
         const savedFotos = localStorage.getItem("nnos_fotos_usuarios_v1");
         if (savedFotos) {
           setFotosPorChave(JSON.parse(savedFotos));
@@ -45,9 +42,9 @@ export default function ConsultorHeader({ tituloPagina = "Visão Geral" }: Consu
       } catch {}
     };
 
-    carregarUsuarioEFotos();
-    window.addEventListener("nnos-user-updated", carregarUsuarioEFotos);
-    return () => window.removeEventListener("nnos-user-updated", carregarUsuarioEFotos);
+    carregarFotos();
+    window.addEventListener("nnos-user-updated", carregarFotos);
+    return () => window.removeEventListener("nnos-user-updated", carregarFotos);
   }, []);
 
   const isUsuarioAdmin = Boolean(usuarioLogado && usuarioLogado.perfilId === "ADMIN");

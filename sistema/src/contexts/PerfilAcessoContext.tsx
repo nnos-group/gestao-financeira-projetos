@@ -59,6 +59,7 @@ interface PerfilAcessoContextData {
   temAcessoModulo: (moduloIdOuRota: string) => boolean;
   nivelModulo: (moduloIdOuRota: string) => NivelAcessoModulo;
   regraAtiva: (chave: string) => boolean;
+  usuarioLogado: any | null;
   hidratado: boolean;
 }
 
@@ -257,6 +258,11 @@ export function PerfilAcessoProvider({ children }: { children: React.ReactNode }
           else localStorage.setItem("nnos_perfil_ativo_id", "ADMIN");
         } catch {}
         setPerfilAtivoId(perfilDesejado);
+
+        try {
+          const savedLider = localStorage.getItem("nnos_lider_simulado_v1");
+          if (savedLider) setLiderSimuladoState(savedLider);
+        } catch {}
       }
 
       if (parsed.perfilId === "LIDER" && (parsed.liderVinculado || parsed.nome)) {
@@ -292,13 +298,7 @@ export function PerfilAcessoProvider({ children }: { children: React.ReactNode }
           setPerfis(normalizarListaPerfis(parsed));
         }
       }
-      const savedLider = localStorage.getItem("nnos_lider_simulado_v1");
-      if (savedLider) {
-        setLiderSimuladoState(savedLider);
-      }
     } catch {}
-
-    carregarUsuarioLogado();
 
     const validarSessaoServidor = async () => {
       try {
@@ -319,6 +319,27 @@ export function PerfilAcessoProvider({ children }: { children: React.ReactNode }
           return;
         }
 
+        let usuarioAnterior: any = null;
+        try {
+          const rawAnterior = localStorage.getItem("nnos_usuario_logado_v1");
+          if (rawAnterior) usuarioAnterior = JSON.parse(rawAnterior);
+        } catch {}
+
+        const trocouUsuario =
+          !usuarioAnterior ||
+          String(usuarioAnterior.id || "") !== String(data.usuario.id || "") ||
+          String(usuarioAnterior.login || "").toLowerCase() !== String(data.usuario.login || "").toLowerCase();
+
+        if (trocouUsuario) {
+          try {
+            localStorage.removeItem("nnos_perfil_ativo_id");
+            localStorage.removeItem("nnos_lider_simulado_v1");
+            localStorage.removeItem("nnos_consultor_simulado_id");
+            localStorage.removeItem("nnos_consultor_simulado_nome");
+            localStorage.removeItem("nnos_consultor_simulado_obj");
+          } catch {}
+        }
+
         try {
           localStorage.setItem("nnos_usuario_logado_v1", JSON.stringify(data.usuario));
         } catch {}
@@ -329,8 +350,10 @@ export function PerfilAcessoProvider({ children }: { children: React.ReactNode }
         recarregarPerfis();
       } catch {
         if (!ativo) return;
-        const savedUser = typeof window !== "undefined" ? localStorage.getItem("nnos_usuario_logado_v1") : null;
-        if (!savedUser && typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
+        limparSessaoLocal();
+        setUsuarioLogado(null);
+        setPerfilAtivoId("");
+        if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
           window.location.replace("/login");
         }
       } finally {
@@ -642,6 +665,7 @@ export function PerfilAcessoProvider({ children }: { children: React.ReactNode }
         temAcessoModulo,
         nivelModulo,
         regraAtiva,
+        usuarioLogado,
         hidratado,
       }}
     >

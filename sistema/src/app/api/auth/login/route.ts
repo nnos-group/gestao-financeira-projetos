@@ -38,22 +38,64 @@ export async function GET(req: NextRequest) {
     return res;
   }
 
-  return NextResponse.json({
-    ok: true,
-    autenticado: true,
-    usuario: {
-      id: sessao.id,
-      login: sessao.login,
-      nome: sessao.nome,
-      email: sessao.email,
-      cargo: sessao.cargo,
-      perfilId: sessao.perfilId,
-      prestadorIdVinculado: sessao.prestadorIdVinculado,
-      liderVinculado: sessao.liderVinculado,
-      mfaAtivo: sessao.mfaAtivo,
-      fotoUrl: sessao.fotoUrl || "",
-    },
-  });
+  try {
+    const usuarios = await lerUsuariosAsync();
+    const usuarioAtual = usuarios.find(
+      (u: any) =>
+        String(u.id || "") === String(sessao.id || "") ||
+        String(u.login || "").toLowerCase() === String(sessao.login || "").toLowerCase()
+    );
+
+    if (!usuarioAtual || usuarioAtual.status === "BLOQUEADO") {
+      const resBloqueado = NextResponse.json(
+        { ok: false, autenticado: false },
+        { status: 401 }
+      );
+      resBloqueado.cookies.set(COOKIE_SESSION_NAME, "", {
+        ...OPCOES_COOKIE_SESSAO,
+        maxAge: 0,
+      });
+      return resBloqueado;
+    }
+
+    return NextResponse.json({
+      ok: true,
+      autenticado: true,
+      usuario: {
+        id: String(usuarioAtual.id || sessao.id),
+        login: String(usuarioAtual.login || sessao.login),
+        nome: String(usuarioAtual.nome || sessao.nome),
+        email: String(usuarioAtual.email || sessao.email),
+        cargo: String(usuarioAtual.cargo || sessao.cargo),
+        perfilId: String(usuarioAtual.perfilId || sessao.perfilId),
+        prestadorIdVinculado: usuarioAtual.prestadorIdVinculado
+          ? String(usuarioAtual.prestadorIdVinculado)
+          : sessao.prestadorIdVinculado,
+        liderVinculado: usuarioAtual.liderVinculado
+          ? String(usuarioAtual.liderVinculado)
+          : sessao.liderVinculado,
+        mfaAtivo: Boolean(usuarioAtual.mfaAtivo),
+        fotoUrl: String(usuarioAtual.fotoUrl || ""),
+      },
+    });
+  } catch {
+    return NextResponse.json({
+      ok: true,
+      autenticado: true,
+      usuario: {
+        id: sessao.id,
+        login: sessao.login,
+        nome: sessao.nome,
+        email: sessao.email,
+        cargo: sessao.cargo,
+        perfilId: sessao.perfilId,
+        prestadorIdVinculado: sessao.prestadorIdVinculado,
+        liderVinculado: sessao.liderVinculado,
+        mfaAtivo: sessao.mfaAtivo,
+        fotoUrl: "",
+      },
+    });
+  }
 }
 
 function extrairIpCliente(req: NextRequest): string {
@@ -471,7 +513,7 @@ export async function POST(req: NextRequest) {
         : `Acesso autenticado com sucesso (${user.nome}).`,
     });
 
-    const usuarioPublico = {
+    const dadosTokenCompacto = {
       id: String(user.id || ""),
       login: String(user.login || ""),
       nome: String(user.nome || ""),
@@ -481,10 +523,14 @@ export async function POST(req: NextRequest) {
       prestadorIdVinculado: user.prestadorIdVinculado ? String(user.prestadorIdVinculado) : undefined,
       liderVinculado: user.liderVinculado ? String(user.liderVinculado) : undefined,
       mfaAtivo: Boolean(user.mfaAtivo),
+    };
+
+    const usuarioPublico = {
+      ...dadosTokenCompacto,
       fotoUrl: String(user.fotoUrl || ""),
     };
 
-    const tokenSessao = await criarTokenSessao(usuarioPublico, DURACAO_SESSAO_SEGUNDOS);
+    const tokenSessao = await criarTokenSessao(dadosTokenCompacto, DURACAO_SESSAO_SEGUNDOS);
 
     const resLogin = NextResponse.json({
       ok: true,
