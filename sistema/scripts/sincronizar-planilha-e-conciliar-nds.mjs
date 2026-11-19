@@ -154,7 +154,7 @@ for (let m = 0; m < 12; m++) {
 
     let custoFinal = custoBruto;
     if (custoBruto != null && custoBruto > 0 && ehSocio && !ehComissao && !ehExcecao) {
-      custoFinal = Math.round(custoBruto * 1.06 * 100) / 100;
+      custoFinal = Math.round((custoBruto / 0.94) * 100) / 100;
     }
 
     const key = `${m}-${idx}`;
