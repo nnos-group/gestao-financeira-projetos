@@ -487,7 +487,7 @@ export default function ViagensDashboardClient({
               padding: "10px 18px",
               borderRadius: "10px",
               fontSize: "13px",
-              fontWeight: 800,
+              fontWeight: 400,
               cursor: "pointer",
               border:
                 abaAtiva === "ESTEIRA"
@@ -512,7 +512,7 @@ export default function ViagensDashboardClient({
                 padding: "2px 8px",
                 borderRadius: "999px",
                 fontSize: "11px",
-                fontWeight: 800,
+                fontWeight: 400,
                 backgroundColor:
                   abaAtiva === "ESTEIRA"
                     ? "rgba(255, 255, 255, 0.2)"
@@ -534,7 +534,7 @@ export default function ViagensDashboardClient({
               padding: "10px 18px",
               borderRadius: "10px",
               fontSize: "13px",
-              fontWeight: 800,
+              fontWeight: 400,
               cursor: "pointer",
               border:
                 abaAtiva === "CREDITOS"
@@ -560,7 +560,7 @@ export default function ViagensDashboardClient({
                   padding: "2px 8px",
                   borderRadius: "999px",
                   fontSize: "11px",
-                  fontWeight: 800,
+                  fontWeight: 400,
                   backgroundColor:
                     abaAtiva === "CREDITOS" ? "#fbbf24" : "#fef3c7",
                   color: "#92400e",

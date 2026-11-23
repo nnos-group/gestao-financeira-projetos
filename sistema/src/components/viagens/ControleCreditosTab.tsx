@@ -79,10 +79,10 @@ export default function ControleCreditosTab({
   const [consultoresBase, setConsultoresBase] = useState<string[]>([]);
   const [carregando, setCarregando] = useState(true);
 
-  // Filtros
+  // Filtros (fixado por padrão em "NÃO" = Disponível para Uso)
   const [busca, setBusca] = useState("");
   const [filtroProjeto, setFiltroProjeto] = useState<string>("TODOS");
-  const [filtroStatus, setFiltroStatus] = useState<string>("TODOS");
+  const [filtroStatus, setFiltroStatus] = useState<string>("NÃO");
   const [filtroCia, setFiltroCia] = useState<string>("TODAS");
   const [filtroLider, setFiltroLider] = useState<string>("TODOS");
 
@@ -245,12 +245,9 @@ export default function ControleCreditosTab({
     ];
   }, [listaLideres, creditos, obterLiderDoProjeto]);
 
-  // Lista final filtrada
-  const creditosFiltrados = useMemo(() => {
+  // Base filtrada por escopo, líder, projeto, cia e busca (independente do filtroStatus para manter os 4 KPIs sempre visíveis)
+  const creditosBaseKpi = useMemo(() => {
     return creditosEscopo.filter((c) => {
-      if (filtroStatus !== "TODOS" && c.creditoUtilizado !== filtroStatus) {
-        return false;
-      }
       if (filtroCia !== "TODAS" && c.ciaAereaHotel.toUpperCase() !== filtroCia) {
         return false;
       }
@@ -279,17 +276,23 @@ export default function ControleCreditosTab({
       }
       return true;
     });
-  }, [creditosEscopo, filtroStatus, filtroCia, filtroProjeto, filtroLider, isVisaoLider, busca, obterLiderDoProjeto]);
+  }, [creditosEscopo, filtroCia, filtroProjeto, filtroLider, isVisaoLider, busca, obterLiderDoProjeto]);
 
-  // KPIs calculados sobre os itens filtrados
+  // Lista final filtrada pelo Status selecionado (padrão: "NÃO" = Disponível para Uso)
+  const creditosFiltrados = useMemo(() => {
+    if (filtroStatus === "TODOS") return creditosBaseKpi;
+    return creditosBaseKpi.filter((c) => c.creditoUtilizado === filtroStatus);
+  }, [creditosBaseKpi, filtroStatus]);
+
+  // KPIs calculados sobre a base filtrada (mantendo os totais de Disponíveis, Utilizados e Geral sempre visíveis)
   const kpis = useMemo(() => {
-    const totalRegistros = creditosFiltrados.length;
-    const disponiveis = creditosFiltrados.filter((c) => c.creditoUtilizado === "NÃO");
-    const utilizados = creditosFiltrados.filter((c) => c.creditoUtilizado === "SIM");
+    const totalRegistros = creditosBaseKpi.length;
+    const disponiveis = creditosBaseKpi.filter((c) => c.creditoUtilizado === "NÃO");
+    const utilizados = creditosBaseKpi.filter((c) => c.creditoUtilizado === "SIM");
 
-    const valorOriginalTotal = creditosFiltrados.reduce((acc, c) => acc + (Number(c.valor) || 0), 0);
-    const multaTotal = creditosFiltrados.reduce((acc, c) => acc + (Number(c.multaTaxa) || 0), 0);
-    const creditoTotal = creditosFiltrados.reduce((acc, c) => acc + (Number(c.credito) || 0), 0);
+    const valorOriginalTotal = creditosBaseKpi.reduce((acc, c) => acc + (Number(c.valor) || 0), 0);
+    const multaTotal = creditosBaseKpi.reduce((acc, c) => acc + (Number(c.multaTaxa) || 0), 0);
+    const creditoTotal = creditosBaseKpi.reduce((acc, c) => acc + (Number(c.credito) || 0), 0);
     const saldoDisponivel = disponiveis.reduce((acc, c) => acc + (Number(c.credito) || 0), 0);
     const saldoUtilizado = utilizados.reduce((acc, c) => acc + (Number(c.credito) || 0), 0);
 
@@ -303,7 +306,7 @@ export default function ControleCreditosTab({
       saldoDisponivel,
       saldoUtilizado,
     };
-  }, [creditosFiltrados]);
+  }, [creditosBaseKpi]);
 
   // Cálculo automático do Crédito Líquido no formulário
   const creditoLiquidoForm = useMemo(() => {
@@ -839,26 +842,26 @@ export default function ControleCreditosTab({
                 style={{
                   background: "var(--primary, #0f2a4a)",
                   color: "#ffffff",
-                  textAlign: "left",
+                  textAlign: "center",
                   fontSize: "11px",
                   fontWeight: 700,
                   textTransform: "uppercase",
                   letterSpacing: "0.03em",
                 }}
               >
-                <th style={{ padding: "12px 14px" }}>Projeto (Origem)</th>
-                <th style={{ padding: "12px 10px", whiteSpace: "nowrap" }}>Período Original</th>
-                <th style={{ padding: "12px 12px" }}>Instrutor</th>
-                <th style={{ padding: "12px 10px", textAlign: "center" }}>Cia Aérea / Hotel</th>
-                <th style={{ padding: "12px 12px", textAlign: "right" }}>Valor</th>
-                <th style={{ padding: "12px 12px", textAlign: "right" }}>Multa + Taxa</th>
-                <th style={{ padding: "12px 12px", textAlign: "right" }}>Crédito</th>
-                <th style={{ padding: "12px 10px", textAlign: "center" }}>Nota de Débito</th>
-                <th style={{ padding: "12px 10px", textAlign: "center" }}>Crédito Utilizado</th>
-                <th style={{ padding: "12px 10px", textAlign: "center" }}>Dias sem Utilização</th>
-                <th style={{ padding: "12px 14px" }}>Crédito Utilizado no Projeto / Período</th>
+                <th style={{ padding: "12px 14px", textAlign: "center", verticalAlign: "middle" }}>Projeto (Origem)</th>
+                <th style={{ padding: "12px 10px", whiteSpace: "nowrap", textAlign: "center", verticalAlign: "middle" }}>Período Original</th>
+                <th style={{ padding: "12px 12px", textAlign: "center", verticalAlign: "middle" }}>Instrutor</th>
+                <th style={{ padding: "12px 10px", textAlign: "center", verticalAlign: "middle" }}>Cia Aérea / Hotel</th>
+                <th style={{ padding: "12px 12px", textAlign: "center", verticalAlign: "middle" }}>Valor</th>
+                <th style={{ padding: "12px 12px", textAlign: "center", verticalAlign: "middle" }}>Multa + Taxa</th>
+                <th style={{ padding: "12px 12px", textAlign: "center", verticalAlign: "middle" }}>Crédito</th>
+                <th style={{ padding: "12px 10px", textAlign: "center", verticalAlign: "middle" }}>Nota de Débito</th>
+                <th style={{ padding: "12px 10px", textAlign: "center", verticalAlign: "middle" }}>Crédito Utilizado</th>
+                <th style={{ padding: "12px 10px", textAlign: "center", verticalAlign: "middle" }}>Dias sem Utilização</th>
+                <th style={{ padding: "12px 14px", textAlign: "center", verticalAlign: "middle" }}>Crédito Utilizado no Projeto / Período</th>
                 {podeAlimentar && (
-                  <th style={{ padding: "12px 14px", textAlign: "center" }}>Ações Agência</th>
+                  <th style={{ padding: "12px 14px", textAlign: "center", verticalAlign: "middle" }}>Ações Agência</th>
                 )}
               </tr>
             </thead>
@@ -920,8 +923,8 @@ export default function ControleCreditosTab({
                       }}
                     >
                       {/* 1. PROJETO */}
-                      <td style={{ padding: "12px 14px", fontWeight: 700, color: "var(--on-surface)" }}>
-                        <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                      <td style={{ padding: "12px 14px", fontWeight: 700, color: "var(--on-surface)", textAlign: "center", verticalAlign: "middle" }}>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "2px", alignItems: "center" }}>
                           <span>
                             {item.projeto || (
                               <span style={{ color: "#d97706", fontStyle: "italic", fontWeight: 600 }}>
@@ -950,9 +953,11 @@ export default function ControleCreditosTab({
                           whiteSpace: "nowrap",
                           color: "var(--on-surface-variant)",
                           fontWeight: 600,
+                          textAlign: "center",
+                          verticalAlign: "middle",
                         }}
                       >
-                        <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "2px", alignItems: "center" }}>
                           <span>{periodoOrig}</span>
                           {item.dataInicial && item.dataFinal && item.dataInicial !== item.dataFinal && (
                             <span style={{ fontSize: "10px", color: "var(--outline)" }}>
@@ -963,12 +968,12 @@ export default function ControleCreditosTab({
                       </td>
 
                       {/* 3. INSTRUTOR */}
-                      <td style={{ padding: "12px 12px", fontWeight: 700, color: "var(--on-surface)" }}>
+                      <td style={{ padding: "12px 12px", fontWeight: 700, color: "var(--on-surface)", textAlign: "center", verticalAlign: "middle" }}>
                         {item.instrutor || "—"}
                       </td>
 
                       {/* 4. CIA AÉREA / HOTEL */}
-                      <td style={{ padding: "12px 10px", textAlign: "center" }}>
+                      <td style={{ padding: "12px 10px", textAlign: "center", verticalAlign: "middle" }}>
                         <span
                           style={{
                             display: "inline-flex",
@@ -994,7 +999,8 @@ export default function ControleCreditosTab({
                       <td
                         style={{
                           padding: "12px 12px",
-                          textAlign: "right",
+                          textAlign: "center",
+                          verticalAlign: "middle",
                           fontWeight: 600,
                           color: "var(--on-surface)",
                           whiteSpace: "nowrap",
@@ -1007,7 +1013,8 @@ export default function ControleCreditosTab({
                       <td
                         style={{
                           padding: "12px 12px",
-                          textAlign: "right",
+                          textAlign: "center",
+                          verticalAlign: "middle",
                           fontWeight: 600,
                           color: "#dc2626",
                           whiteSpace: "nowrap",
@@ -1020,7 +1027,8 @@ export default function ControleCreditosTab({
                       <td
                         style={{
                           padding: "12px 12px",
-                          textAlign: "right",
+                          textAlign: "center",
+                          verticalAlign: "middle",
                           fontWeight: 800,
                           color:
                             item.creditoUtilizado === "NÃO"
@@ -1037,6 +1045,7 @@ export default function ControleCreditosTab({
                         style={{
                           padding: "12px 10px",
                           textAlign: "center",
+                          verticalAlign: "middle",
                           fontWeight: 600,
                           color: "var(--on-surface-variant)",
                         }}
@@ -1059,7 +1068,7 @@ export default function ControleCreditosTab({
                       </td>
 
                       {/* 9. CRÉDITO UTILIZADO (SIM / NÃO) */}
-                      <td style={{ padding: "12px 10px", textAlign: "center" }}>
+                      <td style={{ padding: "12px 10px", textAlign: "center", verticalAlign: "middle" }}>
                         {item.creditoUtilizado === "SIM" ? (
                           <span
                             style={{
@@ -1102,7 +1111,7 @@ export default function ControleCreditosTab({
                       </td>
 
                       {/* 10. DIAS SEM UTILIZAÇÃO */}
-                      <td style={{ padding: "12px 10px", textAlign: "center", whiteSpace: "nowrap" }}>
+                      <td style={{ padding: "12px 10px", textAlign: "center", verticalAlign: "middle", whiteSpace: "nowrap" }}>
                         {item.creditoUtilizado === "SIM" ? (
                           <span
                             style={{
@@ -1144,9 +1153,9 @@ export default function ControleCreditosTab({
                       </td>
 
                       {/* 11. CRÉDITO UTILIZADO NO PROJETO / DATAS */}
-                      <td style={{ padding: "12px 14px" }}>
+                      <td style={{ padding: "12px 14px", textAlign: "center", verticalAlign: "middle" }}>
                         {item.creditoUtilizado === "SIM" ? (
-                          <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "2px", alignItems: "center" }}>
                             <span style={{ fontWeight: 700, color: "var(--on-surface)" }}>
                               {item.projetoUtilizado || item.projeto || "Utilizado (mesmo projeto)"}
                             </span>
@@ -1316,11 +1325,12 @@ export default function ControleCreditosTab({
                     display: "grid",
                     gridTemplateColumns: "1.4fr 1fr",
                     gap: "12px",
+                    alignItems: "end",
                   }}
                 >
                   <div className="form-field">
+                    <label>Projeto (Origem do Crédito)</label>
                     <ModernDropdown
-                      label="PROJETO (ORIGEM DO CRÉDITO)"
                       value={formProjeto}
                       onChange={(val) => setFormProjeto(String(val))}
                       options={opcoesFormProjeto}
@@ -1328,12 +1338,13 @@ export default function ControleCreditosTab({
                       searchable
                       searchPlaceholder="Buscar projeto..."
                       style={{ width: "100%" }}
+                      buttonStyle={{ height: "37px" }}
                     />
                   </div>
 
                   <div className="form-field">
+                    <label>Instrutor / Viajante *</label>
                     <ModernDropdown
-                      label="INSTRUTOR / VIAJANTE *"
                       value={formInstrutor}
                       onChange={(val) => setFormInstrutor(String(val))}
                       options={opcoesFormInstrutor}
@@ -1341,6 +1352,7 @@ export default function ControleCreditosTab({
                       searchable
                       searchPlaceholder="Buscar instrutor..."
                       style={{ width: "100%" }}
+                      buttonStyle={{ height: "37px" }}
                     />
                   </div>
                 </div>
@@ -1351,27 +1363,30 @@ export default function ControleCreditosTab({
                     display: "grid",
                     gridTemplateColumns: "1fr 1fr 1fr 1fr",
                     gap: "12px",
+                    alignItems: "end",
                   }}
                 >
                   <div className="form-field">
-                    <label>Data Inicial (Original)</label>
+                    <label style={{ whiteSpace: "nowrap" }}>Data Inicial (Original)</label>
                     <input
                       type="date"
                       value={formDataInicial}
                       onChange={(e) => setFormDataInicial(e.target.value)}
+                      style={{ height: "37px" }}
                     />
                   </div>
                   <div className="form-field">
-                    <label>Data Final (Original)</label>
+                    <label style={{ whiteSpace: "nowrap" }}>Data Final (Original)</label>
                     <input
                       type="date"
                       value={formDataFinal}
                       onChange={(e) => setFormDataFinal(e.target.value)}
+                      style={{ height: "37px" }}
                     />
                   </div>
                   <div className="form-field">
+                    <label style={{ whiteSpace: "nowrap" }}>Cia Aérea / Hotel *</label>
                     <ModernDropdown
-                      label="CIA AÉREA / HOTEL *"
                       value={formCia}
                       onChange={(val) => setFormCia(String(val))}
                       options={[
@@ -1382,15 +1397,17 @@ export default function ControleCreditosTab({
                       ]}
                       icon="flight"
                       style={{ width: "100%" }}
+                      buttonStyle={{ height: "37px" }}
                     />
                   </div>
                   <div className="form-field">
-                    <label>Nota de Débito</label>
+                    <label style={{ whiteSpace: "nowrap" }}>Nota de Débito</label>
                     <input
                       type="text"
                       placeholder="Ex: 0845"
                       value={formNotaDebito}
                       onChange={(e) => setFormNotaDebito(e.target.value)}
+                      style={{ height: "37px" }}
                     />
                   </div>
                 </div>
@@ -1466,10 +1483,10 @@ export default function ControleCreditosTab({
                     gap: "12px",
                   }}
                 >
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1.4fr", gap: "12px" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1.4fr", gap: "12px", alignItems: "end" }}>
                     <div className="form-field">
+                      <label>Crédito Utilizado? *</label>
                       <ModernDropdown
-                        label="CRÉDITO UTILIZADO? *"
                         value={formCreditoUtilizado}
                         onChange={(val) => setFormCreditoUtilizado(val as "SIM" | "NÃO")}
                         options={[
@@ -1478,13 +1495,14 @@ export default function ControleCreditosTab({
                         ]}
                         icon="check_circle"
                         style={{ width: "100%" }}
+                        buttonStyle={{ height: "37px" }}
                       />
                     </div>
 
                     {formCreditoUtilizado === "SIM" && (
                       <div className="form-field">
+                        <label>Crédito Utilizado no Projeto</label>
                         <ModernDropdown
-                          label="CRÉDITO UTILIZADO NO PROJETO"
                           value={formProjetoUtilizado}
                           onChange={(val) => setFormProjetoUtilizado(String(val))}
                           options={opcoesFormProjeto}
@@ -1492,6 +1510,7 @@ export default function ControleCreditosTab({
                           searchable
                           searchPlaceholder="Projeto onde foi utilizado..."
                           style={{ width: "100%" }}
+                          buttonStyle={{ height: "37px" }}
                         />
                       </div>
                     )}
