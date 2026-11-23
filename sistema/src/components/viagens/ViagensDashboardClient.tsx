@@ -10,6 +10,7 @@ import AnoSelector from "@/components/AnoSelector";
 import { ViagemSolicitacao, StatusViagem } from "@/lib/viagens-types";
 import ViagensRoleSelector, { ViagensPerfil } from "./ViagensRoleSelector";
 import CotacoesMatrixModal from "./CotacoesMatrixModal";
+import ControleCreditosTab from "./ControleCreditosTab";
 import { formatarDataBR, formatarPeriodoBR } from "@/lib/date-utils";
 import { usePerfilAcesso } from "@/contexts/PerfilAcessoContext";
 
@@ -42,6 +43,11 @@ export default function ViagensDashboardClient({
   const [modalItem, setModalItem] = useState<ViagemSolicitacao | null>(null);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [cardsExpandidos, setCardsExpandidos] = useState<Set<string>>(new Set());
+  const [abaAtiva, setAbaAtiva] = useState<"ESTEIRA" | "CREDITOS">("ESTEIRA");
+  const [resumoCreditos, setResumoCreditos] = useState<{ qtdDisponiveis: number; saldoDisponivel: number }>({
+    qtdDisponiveis: 0,
+    saldoDisponivel: 0,
+  });
 
   const showToast = (msg: string) => {
     setToastMsg(msg);
@@ -459,6 +465,125 @@ export default function ViagensDashboardClient({
           </div>
         </header>
 
+        {/* Seletor de Abas: Esteira de Viagens vs. Logística - Controle de Crédito */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            marginBottom: "22px",
+            borderBottom: "1px solid var(--border)",
+            paddingBottom: "12px",
+            flexWrap: "wrap",
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => setAbaAtiva("ESTEIRA")}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "8px",
+              padding: "10px 18px",
+              borderRadius: "10px",
+              fontSize: "13px",
+              fontWeight: 800,
+              cursor: "pointer",
+              border:
+                abaAtiva === "ESTEIRA"
+                  ? "1.5px solid var(--primary, #0f2a4a)"
+                  : "1px solid var(--border)",
+              backgroundColor:
+                abaAtiva === "ESTEIRA"
+                  ? "var(--primary, #0f2a4a)"
+                  : "var(--surface-container-lowest, #ffffff)",
+              color: abaAtiva === "ESTEIRA" ? "#ffffff" : "var(--on-surface)",
+              boxShadow:
+                abaAtiva === "ESTEIRA" ? "0 3px 10px rgba(15, 42, 74, 0.18)" : "none",
+              transition: "all 0.15s ease",
+            }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
+              flight_takeoff
+            </span>
+            <span>Esteira de Solicitações & Cotações</span>
+            <span
+              style={{
+                padding: "2px 8px",
+                borderRadius: "999px",
+                fontSize: "11px",
+                fontWeight: 800,
+                backgroundColor:
+                  abaAtiva === "ESTEIRA"
+                    ? "rgba(255, 255, 255, 0.2)"
+                    : "var(--surface-container)",
+                color: abaAtiva === "ESTEIRA" ? "#ffffff" : "var(--on-surface-variant)",
+              }}
+            >
+              {kpis.total}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setAbaAtiva("CREDITOS")}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "8px",
+              padding: "10px 18px",
+              borderRadius: "10px",
+              fontSize: "13px",
+              fontWeight: 800,
+              cursor: "pointer",
+              border:
+                abaAtiva === "CREDITOS"
+                  ? "1.5px solid var(--primary, #0f2a4a)"
+                  : "1px solid var(--border)",
+              backgroundColor:
+                abaAtiva === "CREDITOS"
+                  ? "var(--primary, #0f2a4a)"
+                  : "var(--surface-container-lowest, #ffffff)",
+              color: abaAtiva === "CREDITOS" ? "#ffffff" : "var(--on-surface)",
+              boxShadow:
+                abaAtiva === "CREDITOS" ? "0 3px 10px rgba(15, 42, 74, 0.18)" : "none",
+              transition: "all 0.15s ease",
+            }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
+              credit_score
+            </span>
+            <span>Logística · Controle de Crédito</span>
+            {resumoCreditos.qtdDisponiveis > 0 && (
+              <span
+                style={{
+                  padding: "2px 8px",
+                  borderRadius: "999px",
+                  fontSize: "11px",
+                  fontWeight: 800,
+                  backgroundColor:
+                    abaAtiva === "CREDITOS" ? "#fbbf24" : "#fef3c7",
+                  color: "#92400e",
+                }}
+                title="Créditos em aberto disponíveis para reaproveitamento"
+              >
+                {resumoCreditos.qtdDisponiveis} disp. ({brl(resumoCreditos.saldoDisponivel)})
+              </span>
+            )}
+          </button>
+        </div>
+
+        {/* Aba 2: Logística - Controle de Crédito */}
+        <div style={{ display: abaAtiva === "CREDITOS" ? "block" : "none" }}>
+          <ControleCreditosTab
+            perfilAtivo={perfilAtivo}
+            showToast={showToast}
+            onResumoChange={setResumoCreditos}
+          />
+        </div>
+
+        {/* Aba 1: Esteira de Solicitações & Cotações */}
+        <div style={{ display: abaAtiva === "ESTEIRA" ? "block" : "none" }}>
         {/* Alerta de Ação Pendente para o Perfil Conectado */}
         {perfilAtivo === "LIDER" && kpis.aguardandoAprovacao > 0 && (
           <div
@@ -1111,6 +1236,7 @@ export default function ViagensDashboardClient({
               );
             })
           )}
+        </div>
         </div>
       </main>
     </div>
