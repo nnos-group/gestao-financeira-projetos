@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
 import { garantirSolicitacaoAtividade } from "@/lib/viagens-service";
+import { salvarObservacaoLancamento } from "@/lib/lancamentos-observacoes-service";
 
 export async function POST(request: Request) {
   try {
@@ -88,6 +89,12 @@ export async function POST(request: Request) {
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    // Salva Anotações / Observações gerais da atividade (quando informadas)
+    if (lancamento?.id) {
+      const obsSalva = await salvarObservacaoLancamento(lancamento.id, body.observacoes);
+      (lancamento as Record<string, unknown>).observacoes = obsSalva;
     }
 
     // Se demanda logística for verdadeira, inicializa o registro de viagem com agência e instruções

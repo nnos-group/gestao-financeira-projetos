@@ -6,6 +6,7 @@ import FloatingCardsList, { LancamentoItem } from "@/components/FloatingCardsLis
 import NovaAtividadeBotao from "@/components/NovaAtividadeBotao";
 import AnoSelector from "@/components/AnoSelector";
 import { carregarSolicitacoesArquivo } from "@/lib/viagens-service";
+import { carregarMapaObservacoesLancamentos } from "@/lib/lancamentos-observacoes-service";
 
 const MESES = [
   "Jan",
@@ -52,11 +53,12 @@ export default async function ProjetosPage({
 
   // Em paralelo: faixa de anos (menor/maior competência, apenas 1 linha cada), projetos e consultores.
   // Antes: baixava até 3000 linhas só para calcular os anos e consultava tudo em cascata.
-  const [minCompRes, maxCompRes, projetosRes, consultoresRes] = await Promise.all([
+  const [minCompRes, maxCompRes, projetosRes, consultoresRes, mapaObservacoes] = await Promise.all([
     db.from("lancamentos").select("competencia").not("competencia", "is", null).order("competencia", { ascending: true }).limit(1),
     db.from("lancamentos").select("competencia").not("competencia", "is", null).order("competencia", { ascending: false }).limit(1),
     db.from("projetos").select("id, nome, centros_custo(codigo, contrato)").order("nome"),
     db.from("consultores").select("id, nome, tipo").order("nome"),
+    carregarMapaObservacoesLancamentos(),
   ]);
 
   const anoDe = (r: { data: { competencia: string | null }[] | null }) => {
@@ -202,15 +204,20 @@ export default async function ProjetosPage({
     }));
 
 
-  const itens = ((data ?? []) as unknown as LancamentoItem[]).filter(
-    (l) =>
-      Boolean(l.atividade) ||
-      Boolean(l.status) ||
-      (l.faturar ?? 0) !== 0 ||
-      (l.repasse ?? 0) !== 0 ||
-      (l.custo_consultor ?? 0) !== 0 ||
-      (Array.isArray(l.viagens) ? l.viagens[0]?.total : l.viagens?.total ?? 0) > 0
-  );
+  const itens = ((data ?? []) as unknown as LancamentoItem[])
+    .map((l) => ({
+      ...l,
+      observacoes: mapaObservacoes.get(l.id) ?? l.observacoes ?? null,
+    }))
+    .filter(
+      (l) =>
+        Boolean(l.atividade) ||
+        Boolean(l.status) ||
+        (l.faturar ?? 0) !== 0 ||
+        (l.repasse ?? 0) !== 0 ||
+        (l.custo_consultor ?? 0) !== 0 ||
+        (Array.isArray(l.viagens) ? l.viagens[0]?.total : l.viagens?.total ?? 0) > 0
+    );
 
   // Organizar painel por Projeto em ordem alfabética (A-Z), com ADM E CONTROLE sempre por último
   itens.sort((a, b) => {

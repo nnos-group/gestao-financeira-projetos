@@ -4,6 +4,10 @@ import {
   garantirSolicitacaoAtividade,
   removerSolicitacaoPorLancamento,
 } from "@/lib/viagens-service";
+import {
+  salvarObservacaoLancamento,
+  removerObservacaoLancamento,
+} from "@/lib/lancamentos-observacoes-service";
 
 export async function PATCH(
   request: Request,
@@ -73,6 +77,12 @@ export async function PATCH(
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    // Atualiza Anotações / Observações gerais da atividade se enviadas no payload
+    if ("observacoes" in body) {
+      const obsSalva = await salvarObservacaoLancamento(id, body.observacoes);
+      (data as Record<string, unknown>).observacoes = obsSalva;
     }
 
     // Atualiza dados de agência e observação de orientações na tabela viagens do Supabase
@@ -150,9 +160,12 @@ export async function DELETE(
       await db.from("viagens").delete().eq("lancamento_id", id);
     } catch {}
 
-    // Limpa esteira de viagens
+    // Limpa esteira de viagens e anotações
     try {
       await removerSolicitacaoPorLancamento(id);
+    } catch {}
+    try {
+      await removerObservacaoLancamento(id);
     } catch {}
 
     const { error } = await db.from("lancamentos").delete().eq("id", id);

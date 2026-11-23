@@ -39,6 +39,7 @@ export type LancamentoItem = {
   custo_consultor: number | null;
   status: string | null;
   precisa_logistica: boolean | null;
+  observacoes?: string | null;
   projetos: {
     nome: string;
     centros_custo?: {
@@ -458,6 +459,7 @@ export default function FloatingCardsList({
   const [logVeiculoObs, setLogVeiculoObs] = useState("");
   const [logSeguroViagem, setLogSeguroViagem] = useState<"Não" | "Sim">("Não");
   const [logSeguroObs, setLogSeguroObs] = useState("");
+  const [novoObservacoes, setNovoObservacoes] = useState("");
 
   const [salvandoRepasseId, setSalvandoRepasseId] = useState<string | null>(null);
   const [editandoNdId, setEditandoNdId] = useState<string | null>(null);
@@ -507,6 +509,7 @@ export default function FloatingCardsList({
   const [modalLocalTexto, setModalLocalTexto] = useState("");
   const [modalDataInicial, setModalDataInicial] = useState("");
   const [modalDataFinal, setModalDataFinal] = useState("");
+  const [modalObservacoes, setModalObservacoes] = useState("");
 
   // Bloqueios de Agenda dos Consultores
   const [bloqueiosAgenda, setBloqueiosAgenda] = useState<AgendaBloqueio[]>([]);
@@ -598,6 +601,7 @@ export default function FloatingCardsList({
       setModalRegiao((modalItem.regiao as "BRA" | "LATAM") || "BRA");
       setModalCustoConsultor(formatarMoedaValor(modalItem.custo_consultor));
       setModalFaturar(formatarMoedaValor(modalItem.faturar));
+      setModalObservacoes(modalItem.observacoes || "");
     }
   }, [modalItem, todosProjetos, consultoresLista]);
 
@@ -828,6 +832,7 @@ export default function FloatingCardsList({
     setNovaRegiao((item.regiao as "BRA" | "LATAM") || "BRA");
     setNovoCustoConsultor(formatarMoedaValor(item.custo_consultor));
     setNovoFaturar(formatarMoedaValor(item.faturar));
+    setNovoObservacoes(item.observacoes || "");
 
     setModalItem(null);
     setModalNovoAberto(true);
@@ -1092,6 +1097,7 @@ export default function FloatingCardsList({
       faturar: parseMoeda(faturarRaw),
       repasse: parseMoeda(repasseRaw),
       custo_consultor: parseMoeda(consultorRaw),
+      observacoes: modalObservacoes.trim() || null,
     };
 
     try {
@@ -1303,6 +1309,7 @@ export default function FloatingCardsList({
       precisa_logistica: demandaLogistica,
       agencia: demandaLogistica ? agenciaSelecionada : null,
       observacao_agencia: demandaLogistica ? observacaoAgencia : null,
+      observacoes: novoObservacoes.trim() || null,
     };
 
     try {
@@ -1358,6 +1365,7 @@ export default function FloatingCardsList({
         setLogVeiculoObs("");
         setLogSeguroViagem("Não");
         setLogSeguroObs("");
+        setNovoObservacoes("");
       } else {
         alert("Erro ao cadastrar atividade: " + (data.error || "Tente novamente."));
       }
@@ -2182,6 +2190,48 @@ export default function FloatingCardsList({
                       </div>
                     </div>
 
+                    {/* Anotações / Observações da Atividade */}
+                    {it.observacoes && (
+                      <div
+                        style={{
+                          marginBottom: "10px",
+                          padding: "10px 14px",
+                          borderRadius: "10px",
+                          background: "var(--surface-container-low, #f8fafc)",
+                          border: "1px solid var(--border, #e2e8f0)",
+                          display: "flex",
+                          alignItems: "flex-start",
+                          gap: "10px",
+                        }}
+                      >
+                        <span
+                          className="material-symbols-outlined"
+                          style={{ fontSize: "18px", color: "var(--primary, #003057)", marginTop: "1px", flexShrink: 0 }}
+                        >
+                          sticky_note_2
+                        </span>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "2px", minWidth: 0 }}>
+                          <span
+                            className="font-label-sm"
+                            style={{ color: "var(--on-surface-variant)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.03em" }}
+                          >
+                            Anotações / Observações
+                          </span>
+                          <span
+                            style={{
+                              fontSize: "12.5px",
+                              color: "var(--on-surface)",
+                              lineHeight: 1.45,
+                              whiteSpace: "pre-wrap",
+                              wordBreak: "break-word",
+                            }}
+                          >
+                            {it.observacoes}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Rodapé do Drawer: Prestação de Contas & Observações */}
                     <div className="drawer-footer-bar">
                       {(() => {
@@ -2946,6 +2996,18 @@ export default function FloatingCardsList({
                       title="Este campo é calculado automaticamente pelas Notas de Débito conciliadas"
                     />
                   </div>
+                </div>
+
+                {/* Anotações / Observações */}
+                <div className="form-field">
+                  <label>Anotações / Observações</label>
+                  <textarea
+                    name="observacoes"
+                    rows={3}
+                    placeholder="Registre anotações, alinhamentos, detalhes do cliente ou observações gerais desta atividade..."
+                    value={modalObservacoes}
+                    onChange={(e) => setModalObservacoes(e.target.value)}
+                  />
                 </div>
 
                 {/* Demanda Logística Compacta + Agência ao Lado (Idêntico a Nova Atividade) */}
@@ -3844,6 +3906,18 @@ export default function FloatingCardsList({
                       }}
                     />
                   </div>
+                </div>
+
+                {/* Anotações / Observações */}
+                <div className="form-field">
+                  <label>Anotações / Observações</label>
+                  <textarea
+                    name="observacoes"
+                    rows={3}
+                    placeholder="Registre anotações, alinhamentos, detalhes do cliente ou observações gerais desta atividade..."
+                    value={novoObservacoes}
+                    onChange={(e) => setNovoObservacoes(e.target.value)}
+                  />
                 </div>
 
                 {/* Demanda Logística Compacta + Agência ao Lado */}

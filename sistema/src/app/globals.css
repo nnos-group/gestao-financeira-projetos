@@ -1847,7 +1847,8 @@ body {
 }
 
 .form-field input,
-.form-field select {
+.form-field select,
+.form-field textarea {
   font-family: var(--font-inter);
   font-size: 13px;
   padding: 8px 12px;
@@ -1859,8 +1860,15 @@ body {
   transition: all 0.15s ease;
 }
 
+.form-field textarea {
+  resize: vertical;
+  min-height: 76px;
+  line-height: 1.45;
+}
+
 .form-field input:focus,
-.form-field select:focus {
+.form-field select:focus,
+.form-field textarea:focus {
   border-color: var(--primary);
   background-color: var(--surface-container-lowest);
   box-shadow: 0 0 0 2px rgba(0, 48, 87, 0.12);
