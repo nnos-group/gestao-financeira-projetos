@@ -424,7 +424,7 @@ export default async function ProjetosPage({
               <FloatingCardsList
                 key={`projetos-${anoSelecionado}-${isTodosMeses ? "todos" : mes}`}
                 itens={itens}
-                competencia={competencia}
+                competencia={isTodosMeses ? undefined : competencia}
                 todosProjetos={todosProjetos}
                 todosConsultores={todosConsultores}
                 faturasLogistica={faturasLogistica}

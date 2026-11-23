@@ -1079,9 +1079,16 @@ export default function FloatingCardsList({
       observacaoAgenciaModal = blocos.join("\n");
     }
 
+    const dataRefModal = dataInicialModal || dataFinalModal;
+    const compModalCalculada =
+      dataRefModal && /^\d{4}-\d{2}/.test(dataRefModal)
+        ? `${dataRefModal.slice(0, 7)}-01`
+        : modalItem.competencia;
+
     const payload = {
       projeto_id: modalProjetoSelecionado?.id || modalItem.projeto_id,
       consultor_id: modalConsultorSelecionadoId || modalItem.consultor_id || null,
+      competencia: compModalCalculada,
       atividade: modalAtividadeTexto || (formData.get("atividade") as string) || null,
       modalidade: (formData.get("modalidade") as "PRESENCIAL" | "VIRTUAL") || null,
       local: modalLocalTexto || (formData.get("local") as string) || null,
@@ -1107,6 +1114,14 @@ export default function FloatingCardsList({
         body: JSON.stringify(payload),
       });
       if (res.ok) {
+        // Se a atividade teve sua data alterada para outro mês diferente do filtro atual, remove da lista do mês atual
+        if (competencia && compModalCalculada && compModalCalculada !== competencia) {
+          setLista((prev) => prev.filter((it) => it.id !== modalItem.id));
+          setModalItem(null);
+          router.refresh();
+          return;
+        }
+
         const projetoObj = todosProjetos.find((p) => p.id === payload.projeto_id);
         const consultorObj = consultoresLista.find((c) => c.id === payload.consultor_id);
 
@@ -1248,9 +1263,10 @@ export default function FloatingCardsList({
       }
     }
 
-    // Constrói a competência correspondente à data inicial para garantir visibilidade correta
-    const compCalculada = dataInicialStr && dataInicialStr.length >= 7
-      ? `${dataInicialStr.slice(0, 7)}-01`
+    // Constrói a competência correspondente à data inicial (ou data final) para garantir visibilidade correta
+    const dataRefNova = dataInicialStr || dataFinalStr;
+    const compCalculada = dataRefNova && /^\d{4}-\d{2}/.test(dataRefNova)
+      ? `${dataRefNova.slice(0, 7)}-01`
       : (competencia || "2026-10-01");
 
     // Constrói a observação da agência estruturada com os campos de logística

@@ -26,6 +26,7 @@ export async function PATCH(
     const camposPermitidos = [
       "projeto_id",
       "consultor_id",
+      "competencia",
       "atividade",
       "modalidade",
       "local",
@@ -66,6 +67,12 @@ export async function PATCH(
           { status: 400 }
         );
       }
+    }
+
+    // Sincroniza obrigatoriamente a competência com o mês da data_inicial (ou data_final)
+    const dataRefComp = novaDataIni || novaDataFim;
+    if (dataRefComp && typeof dataRefComp === "string" && /^\d{4}-\d{2}/.test(dataRefComp)) {
+      payload.competencia = `${dataRefComp.slice(0, 7)}-01`;
     }
 
     const { data, error } = await db

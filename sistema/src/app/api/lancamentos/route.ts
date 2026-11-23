@@ -50,10 +50,11 @@ export async function POST(request: Request) {
       }
     }
 
-    // Deriva a competência a partir da data_inicial se disponível, para manter consistência cronológica
+    // Deriva a competência a partir da data_inicial (ou data_final) se disponível, para manter consistência cronológica
     let compFinal = competencia;
-    if (data_inicial && typeof data_inicial === "string" && data_inicial.length >= 7) {
-      compFinal = `${data_inicial.slice(0, 7)}-01`;
+    const dataRefComp = data_inicial || data_final;
+    if (dataRefComp && typeof dataRefComp === "string" && /^\d{4}-\d{2}/.test(dataRefComp)) {
+      compFinal = `${dataRefComp.slice(0, 7)}-01`;
     }
 
     if (!compFinal) {
