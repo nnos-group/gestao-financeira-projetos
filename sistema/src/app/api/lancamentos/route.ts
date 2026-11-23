@@ -35,6 +35,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "O nome da Atividade é obrigatório." }, { status: 400 });
     }
 
+    if (!data_inicial || !data_final || typeof data_inicial !== "string" || typeof data_final !== "string" || !data_inicial.trim() || !data_final.trim()) {
+      return NextResponse.json(
+        { error: "O período da atividade (Data Inicial e Data Final) é obrigatório." },
+        { status: 400 }
+      );
+    }
+
+    if (data_final < data_inicial) {
+      return NextResponse.json(
+        { error: "A Data Final não pode ser anterior à Data Inicial." },
+        { status: 400 }
+      );
+    }
+
     // Validação de Período Operacional: a atividade deve iniciar e terminar no mesmo mês
     if (data_inicial && data_final && typeof data_inicial === "string" && typeof data_final === "string") {
       const mesIni = data_inicial.slice(0, 7);

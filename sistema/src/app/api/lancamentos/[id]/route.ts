@@ -52,9 +52,37 @@ export async function PATCH(
       }
     }
 
-    // Validação de Período Operacional: a atividade deve iniciar e terminar no mesmo mês
+    // Validação de Período Operacional: obrigatório em edições de atividade e dentro do mesmo mês
+    const isEdicaoAtividade =
+      "data_inicial" in body ||
+      "data_final" in body ||
+      "atividade" in body ||
+      "projeto_id" in body;
     const novaDataIni = (payload.data_inicial as string) || (body.data_inicial as string);
     const novaDataFim = (payload.data_final as string) || (body.data_final as string);
+
+    if (isEdicaoAtividade) {
+      if (
+        !novaDataIni ||
+        !novaDataFim ||
+        typeof novaDataIni !== "string" ||
+        typeof novaDataFim !== "string" ||
+        !novaDataIni.trim() ||
+        !novaDataFim.trim()
+      ) {
+        return NextResponse.json(
+          { error: "O período da atividade (Data Inicial e Data Final) é obrigatório." },
+          { status: 400 }
+        );
+      }
+      if (novaDataFim < novaDataIni) {
+        return NextResponse.json(
+          { error: "A Data Final não pode ser anterior à Data Inicial." },
+          { status: 400 }
+        );
+      }
+    }
+
     if (novaDataIni && novaDataFim && typeof novaDataIni === "string" && typeof novaDataFim === "string") {
       const mesIni = novaDataIni.slice(0, 7);
       const mesFim = novaDataFim.slice(0, 7);

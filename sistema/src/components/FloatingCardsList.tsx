@@ -1031,6 +1031,18 @@ export default function FloatingCardsList({
     const dataInicialModal = (formData.get("data_inicial") as string) || null;
     const dataFinalModal = (formData.get("data_final") as string) || null;
 
+    if (!dataInicialModal || !dataFinalModal || !dataInicialModal.trim() || !dataFinalModal.trim()) {
+      alert("Atenção: O período da atividade (Data Inicial e Data Final) é obrigatório.");
+      setSalvandoModal(false);
+      return;
+    }
+
+    if (dataFinalModal < dataInicialModal) {
+      alert("Atenção: A Data Final não pode ser anterior à Data Inicial.");
+      setSalvandoModal(false);
+      return;
+    }
+
     if (dataInicialModal && dataFinalModal && dataInicialModal.slice(0, 7) !== dataFinalModal.slice(0, 7)) {
       alert(
         "Atenção: O período da atividade deve ficar exclusivamente dentro do mesmo mês.\n\nPara atividades que cruzam a virada do mês, cadastre em dois lançamentos distintos (ex: até o último dia do mês e do 1º dia em diante no mês seguinte)."
@@ -1238,6 +1250,18 @@ export default function FloatingCardsList({
     const horasRaw = formData.get("horas") as string;
     const dataInicialStr = (formData.get("data_inicial") as string) || null;
     const dataFinalStr = (formData.get("data_final") as string) || null;
+
+    if (!dataInicialStr || !dataFinalStr || !dataInicialStr.trim() || !dataFinalStr.trim()) {
+      alert("Atenção: O período da atividade (Data Inicial e Data Final) é obrigatório.");
+      setSalvandoNovo(false);
+      return;
+    }
+
+    if (dataFinalStr < dataInicialStr) {
+      alert("Atenção: A Data Final não pode ser anterior à Data Inicial.");
+      setSalvandoNovo(false);
+      return;
+    }
 
     // Regra de Negócio: O período da atividade deve ficar exclusivamente dentro do mês
     if (dataInicialStr && dataFinalStr && dataInicialStr.slice(0, 7) !== dataFinalStr.slice(0, 7)) {
@@ -2814,19 +2838,21 @@ export default function FloatingCardsList({
 
                 <div className="modal-grid-3">
                   <div className="form-field">
-                    <label>Data Inicial</label>
+                    <label>Data Inicial *</label>
                     <input
                       type="date"
                       name="data_inicial"
+                      required
                       value={modalDataInicial}
                       onChange={(e) => setModalDataInicial(e.target.value)}
                     />
                   </div>
                   <div className="form-field">
-                    <label>Data Final</label>
+                    <label>Data Final *</label>
                     <input
                       type="date"
                       name="data_final"
+                      required
                       value={modalDataFinal}
                       onChange={(e) => setModalDataFinal(e.target.value)}
                     />
@@ -3709,19 +3735,21 @@ export default function FloatingCardsList({
 
                 <div className="modal-grid-3">
                   <div className="form-field">
-                    <label>Data Inicial</label>
+                    <label>Data Inicial *</label>
                     <input
                       type="date"
                       name="data_inicial"
+                      required
                       defaultValue={dadosDuplicacao?.data_inicial || ""}
                       onChange={(e) => setNovaDataInicial(e.target.value)}
                     />
                   </div>
                   <div className="form-field">
-                    <label>Data Final</label>
+                    <label>Data Final *</label>
                     <input
                       type="date"
                       name="data_final"
+                      required
                       defaultValue={dadosDuplicacao?.data_final || ""}
                       onChange={(e) => setNovaDataFinal(e.target.value)}
                     />
