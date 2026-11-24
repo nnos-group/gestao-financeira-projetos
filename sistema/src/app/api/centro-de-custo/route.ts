@@ -2,31 +2,76 @@ import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import ccBase from "@/lib/centros-de-custo.json";
+import { supabaseAdmin } from "@/lib/supabase-server";
 
 const ccFilePath = path.join(process.cwd(), "src/lib/centros-de-custo.json");
+const CHAVE_CLOUD_CC = "centros_custo_matriz_v1";
+
+async function carregarDadosCentroCusto(): Promise<any> {
+  let baseLocal: any = ccBase;
+  if (fs.existsSync(ccFilePath)) {
+    try {
+      baseLocal = JSON.parse(fs.readFileSync(ccFilePath, "utf8"));
+    } catch {}
+  }
+
+  try {
+    const db = supabaseAdmin();
+    const { data, error } = await db
+      .from("configuracoes")
+      .select("descricao")
+      .eq("chave", CHAVE_CLOUD_CC)
+      .maybeSingle();
+
+    if (!error && data?.descricao) {
+      const parsed = JSON.parse(data.descricao);
+      if (parsed && Array.isArray(parsed.centrosDeCusto) && parsed.centrosDeCusto.length > 0) {
+        return parsed;
+      }
+    }
+  } catch (err) {
+    console.warn("Aviso ao consultar centros_custo_matriz_v1 no Supabase:", err);
+  }
+
+  return baseLocal;
+}
+
+async function salvarDadosCentroCusto(dados: any): Promise<void> {
+  try {
+    fs.writeFileSync(ccFilePath, JSON.stringify(dados, null, 2), "utf8");
+  } catch {
+    // Em ambiente serverless (Vercel), o sistema de arquivos local é somente leitura
+  }
+
+  try {
+    const db = supabaseAdmin();
+    await db.from("configuracoes").upsert(
+      {
+        chave: CHAVE_CLOUD_CC,
+        valor: Array.isArray(dados?.centrosDeCusto) ? dados.centrosDeCusto.length : 1,
+        descricao: JSON.stringify(dados),
+      },
+      { onConflict: "chave" }
+    );
+  } catch (err) {
+    console.warn("Aviso ao persistir centros_custo_matriz_v1 no Supabase:", err);
+  }
+}
 
 export async function GET() {
   try {
-    if (fs.existsSync(ccFilePath)) {
-      const data = JSON.parse(fs.readFileSync(ccFilePath, "utf8"));
-      return NextResponse.json(data);
-    }
+    const data = await carregarDadosCentroCusto();
+    return NextResponse.json(data);
   } catch (err) {
-    console.error("Erro ao ler centros-de-custo.json:", err);
+    console.error("Erro ao ler centros de custo:", err);
+    return NextResponse.json(ccBase);
   }
-  return NextResponse.json(ccBase);
 }
 
 export async function POST(request: Request) {
   try {
     const payload = await request.json();
-    
-    let currentData = ccBase;
-    if (fs.existsSync(ccFilePath)) {
-      try {
-        currentData = JSON.parse(fs.readFileSync(ccFilePath, "utf8"));
-      } catch (e) {}
-    }
+    const currentData = await carregarDadosCentroCusto();
 
     // 1. Criar novo Centro de Custo
     if (payload.action === "criar-centro-custo" && payload.centro) {
@@ -41,7 +86,7 @@ export async function POST(request: Request) {
       }
     }
 
-    // 2. Editar Centro de Custo existente
+    // 2. Editar Centro de Custo existente (incluindo líder substituto / cobertura)
     if (payload.action === "editar-centro-custo" && payload.centro) {
       const ccEditado = payload.centro;
       const index = currentData.centrosDeCusto.findIndex(
@@ -53,6 +98,26 @@ export async function POST(request: Request) {
           ...ccEditado,
         };
       }
+    }
+
+    // 2b. Programar ou encerrar Cobertura de Férias / Ausência em Lote
+    if (payload.action === "programar-cobertura-lote" && Array.isArray(payload.codigosCC)) {
+      const codigosSet = new Set(payload.codigosCC.map((c: string) => String(c).trim()));
+      const liderSubstituto = String(payload.liderSubstituto || "").trim().toUpperCase();
+      const coberturaInicio = liderSubstituto ? String(payload.coberturaInicio || "").trim() : "";
+      const coberturaFim = liderSubstituto ? String(payload.coberturaFim || "").trim() : "";
+      const coberturaMotivo = liderSubstituto ? String(payload.coberturaMotivo || "Férias").trim() : "";
+
+      currentData.centrosDeCusto = currentData.centrosDeCusto.map((c: any) => {
+        if (!codigosSet.has(String(c.centroDeCusto).trim())) return c;
+        return {
+          ...c,
+          liderSubstituto,
+          coberturaInicio,
+          coberturaFim,
+          coberturaMotivo,
+        };
+      });
     }
 
     // 3. Excluir Centro de Custo
@@ -117,8 +182,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Persistir no arquivo JSON
-    fs.writeFileSync(ccFilePath, JSON.stringify(currentData, null, 2), "utf8");
+    await salvarDadosCentroCusto(currentData);
 
     return NextResponse.json({ success: true, data: currentData });
   } catch (error: any) {

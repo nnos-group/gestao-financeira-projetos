@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import perfisIniciais from "@/lib/perfis-acesso.json";
 import ccBase from "@/lib/centros-de-custo.json";
 import ModernDropdown from "@/components/ModernDropdown";
+import { verificarStatusCoberturaLider } from "@/lib/lider-utils";
 
 export type NivelAcessoModulo = "TOTAL" | "EDITAR_APROVAR" | "VISUALIZAR" | "BLOQUEADO";
 
@@ -161,14 +162,44 @@ export function PerfilAcessoProvider({ children }: { children: React.ReactNode }
   const [liderSimulado, setLiderSimuladoState] = useState<string>("BEATRIZ PICORELLI");
   const [usuarioLogado, setUsuarioLogado] = useState<any | null>(null);
   const [hidratado, setHidratado] = useState<boolean>(false);
+  const [centrosCustoAtuais, setCentrosCustoAtuais] = useState<any[]>((ccBase as any)?.centrosDeCusto || []);
 
-  // Mapa rápido de Projeto / Centro de Custo -> Líder de Projeto
-  const { mapaPorProjeto, mapaPorCC, listaLideres } = useMemo(() => {
+  useEffect(() => {
+    const carregarCentrosAtualizados = () => {
+      try {
+        const saved = localStorage.getItem("nnos_centros_custo_v2");
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed?.centrosDeCusto) && parsed.centrosDeCusto.length > 0) {
+            setCentrosCustoAtuais(parsed.centrosDeCusto);
+          }
+        }
+      } catch {}
+
+      fetch("/api/centro-de-custo")
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => {
+          if (Array.isArray(data?.centrosDeCusto) && data.centrosDeCusto.length > 0) {
+            setCentrosCustoAtuais(data.centrosDeCusto);
+          }
+        })
+        .catch(() => {});
+    };
+
+    carregarCentrosAtualizados();
+    window.addEventListener("nnos-centros-custo-updated", carregarCentrosAtualizados);
+    return () => window.removeEventListener("nnos-centros-custo-updated", carregarCentrosAtualizados);
+  }, []);
+
+  // Mapa rápido de Projeto / Centro de Custo -> Líder de Projeto (Titular + Substituto em Cobertura Vigente)
+  const { mapaPorProjeto, mapaPorCC, mapaSubPorProjeto, mapaSubPorCC, listaLideres } = useMemo(() => {
     const porProj = new Map<string, string>();
     const porCC = new Map<string, string>();
+    const subPorProj = new Map<string, string>();
+    const subPorCC = new Map<string, string>();
     const contagemPorLider = new Map<string, { qtd: number; area: string }>();
 
-    const centros = (ccBase as any)?.centrosDeCusto || [];
+    const centros = centrosCustoAtuais || (ccBase as any)?.centrosDeCusto || [];
     for (const item of centros) {
       const liderNorm = normalizarTexto(item.liderProjeto);
       const projNorm = normalizarTexto(item.projeto);
@@ -177,6 +208,14 @@ export function PerfilAcessoProvider({ children }: { children: React.ReactNode }
 
       if (projNorm) porProj.set(projNorm, liderNorm);
       if (ccNorm) porCC.set(ccNorm, liderNorm);
+
+      if (verificarStatusCoberturaLider(item) === "VIGENTE" && item.liderSubstituto) {
+        const subNorm = normalizarTexto(item.liderSubstituto);
+        if (subNorm && subNorm !== "-" && subNorm !== "—") {
+          if (projNorm) subPorProj.set(projNorm, subNorm);
+          if (ccNorm) subPorCC.set(ccNorm, subNorm);
+        }
+      }
 
       // Reabilita nomes originais com acento se conhecidos
       const chaveExibicao =
@@ -201,9 +240,11 @@ export function PerfilAcessoProvider({ children }: { children: React.ReactNode }
     return {
       mapaPorProjeto: porProj,
       mapaPorCC: porCC,
+      mapaSubPorProjeto: subPorProj,
+      mapaSubPorCC: subPorCC,
       listaLideres: opcoes,
     };
-  }, []);
+  }, [centrosCustoAtuais]);
 
   const recarregarPerfis = useCallback(async () => {
     try {
@@ -531,23 +572,32 @@ export function PerfilAcessoProvider({ children }: { children: React.ReactNode }
 
       const alvoNorm = normalizarTexto(liderSimulado);
 
-      // 1. Autoridade Primária por Centro de Custo
+      // 1. Autoridade Primária por Centro de Custo (Titular ou Substituto em Cobertura Vigente)
       if (centroCustoCodigo) {
         const ccNorm = normalizarTexto(centroCustoCodigo);
         const donoCC = mapaPorCC.get(ccNorm);
+        const subCC = mapaSubPorCC.get(ccNorm);
+        if (subCC === alvoNorm) return true;
         if (donoCC) {
           return donoCC === alvoNorm;
         }
       }
 
-      // 2. Autoridade Primária por Projeto / Contrato
+      // 2. Autoridade Primária por Projeto / Contrato (Titular ou Substituto em Cobertura Vigente)
       if (projetoNome) {
         const projNorm = normalizarTexto(projetoNome);
         const donoProj = mapaPorProjeto.get(projNorm);
+        const subProj = mapaSubPorProjeto.get(projNorm);
+        if (subProj === alvoNorm) return true;
         if (donoProj) {
           return donoProj === alvoNorm;
         }
         // Busca parcial caso o nome do projeto tenha sufixo/prefixo
+        for (const [kProj, kSub] of mapaSubPorProjeto.entries()) {
+          if ((projNorm.includes(kProj) || kProj.includes(projNorm)) && kSub === alvoNorm) {
+            return true;
+          }
+        }
         for (const [kProj, kLider] of mapaPorProjeto.entries()) {
           if (projNorm.includes(kProj) || kProj.includes(projNorm)) {
             return kLider === alvoNorm;
@@ -565,7 +615,7 @@ export function PerfilAcessoProvider({ children }: { children: React.ReactNode }
 
       return false;
     },
-    [perfilAtivoId, regraAtiva, liderSimulado, mapaPorCC, mapaPorProjeto]
+    [perfilAtivoId, regraAtiva, liderSimulado, mapaPorCC, mapaPorProjeto, mapaSubPorCC, mapaSubPorProjeto]
   );
 
   // CSS Dinâmico para ocultar do menu lateral (.sidebar-nav) os módulos não autorizados para o perfil ativo

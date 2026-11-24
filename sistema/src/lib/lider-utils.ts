@@ -28,6 +28,48 @@ export function normalizarTextoLider(str?: string | null): string {
     .toUpperCase();
 }
 
+export type StatusCoberturaLider = "INATIVA" | "VIGENTE" | "AGENDADA" | "EXPIRADA";
+
+export function verificarStatusCoberturaLider(
+  item?: {
+    liderSubstituto?: string | null;
+    coberturaInicio?: string | null;
+    coberturaFim?: string | null;
+  } | null,
+  dataRefISO?: string
+): StatusCoberturaLider {
+  const substituto = String(item?.liderSubstituto || "").trim();
+  if (!substituto || substituto === "-" || substituto === "—") {
+    return "INATIVA";
+  }
+
+  const agora = new Date();
+  const hojeISO =
+    dataRefISO ||
+    `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, "0")}-${String(
+      agora.getDate()
+    ).padStart(2, "0")}`;
+
+  const ini = String(item?.coberturaInicio || "").trim().slice(0, 10);
+  const fim = String(item?.coberturaFim || "").trim().slice(0, 10);
+
+  if (ini && /^\d{4}-\d{2}-\d{2}$/.test(ini) && hojeISO < ini) {
+    return "AGENDADA";
+  }
+  if (fim && /^\d{4}-\d{2}-\d{2}$/.test(fim) && hojeISO > fim) {
+    return "EXPIRADA";
+  }
+  return "VIGENTE";
+}
+
+function resolverLiderEfetivoCentroCusto(cc: any): string {
+  if (!cc) return "";
+  if (verificarStatusCoberturaLider(cc) === "VIGENTE" && cc.liderSubstituto) {
+    return String(cc.liderSubstituto).trim();
+  }
+  return String(cc.liderProjeto || "").trim();
+}
+
 /**
  * Resolve com máxima precisão o Líder de Projeto responsável pela atividade/demanda.
  * NUNCA retorna gestao.projetos@nnos.com.br pois o endereço não existe.
@@ -86,13 +128,14 @@ export function obterDadosLiderViagem(sol?: {
   const centros: any[] = (ccBase as any)?.centrosDeCusto || [];
 
   if (projetoBusca) {
-    // Busca exata pelo nome do projeto
+    // Busca exata pelo nome do projeto (considerando líder substituto caso esteja em cobertura vigente)
     const matchExato = centros.find((c) => normalizarTextoLider(c.projeto) === projetoBusca);
-    if (matchExato?.liderProjeto) {
-      const nomeNorm = normalizarTextoLider(matchExato.liderProjeto);
+    const liderExato = resolverLiderEfetivoCentroCusto(matchExato);
+    if (liderExato) {
+      const nomeNorm = normalizarTextoLider(liderExato);
       const meta = LIDERES_METADATA[nomeNorm] || Object.entries(LIDERES_METADATA).find(([k]) => normalizarTextoLider(k) === nomeNorm)?.[1];
       if (meta?.email) {
-        return { nome: matchExato.liderProjeto, email: meta.email, areaPadrao: meta.areaPadrao };
+        return { nome: liderExato, email: meta.email, areaPadrao: meta.areaPadrao };
       }
     }
 
@@ -101,11 +144,12 @@ export function obterDadosLiderViagem(sol?: {
       const pNorm = normalizarTextoLider(c.projeto);
       return pNorm && (projetoBusca.includes(pNorm) || pNorm.includes(projetoBusca));
     });
-    if (matchParcial?.liderProjeto) {
-      const nomeNorm = normalizarTextoLider(matchParcial.liderProjeto);
+    const liderParcial = resolverLiderEfetivoCentroCusto(matchParcial);
+    if (liderParcial) {
+      const nomeNorm = normalizarTextoLider(liderParcial);
       const meta = LIDERES_METADATA[nomeNorm] || Object.entries(LIDERES_METADATA).find(([k]) => normalizarTextoLider(k) === nomeNorm)?.[1];
       if (meta?.email) {
-        return { nome: matchParcial.liderProjeto, email: meta.email, areaPadrao: meta.areaPadrao };
+        return { nome: liderParcial, email: meta.email, areaPadrao: meta.areaPadrao };
       }
     }
   }
@@ -117,3 +161,4 @@ export function obterDadosLiderViagem(sol?: {
     areaPadrao: "Diretoria & Adm",
   };
 }
+
