@@ -60,35 +60,43 @@
 }
 
 [data-theme="dark"] {
+  color-scheme: dark;
+
   --background: #090e17;
-  --on-background: #e1e7f5;
-  --surface: #0e1524;
-  --on-surface: #e1e7f5;
+  --on-background: #f1f5f9;
+  --surface: #0e1626;
+  --on-surface: #f1f5f9;
   --surface-dim: #090e17;
-  --surface-bright: #1c273d;
-  --surface-container-lowest: #0c1322;
-  --surface-container-low: #121c30;
-  --surface-container: #16223b;
-  --surface-container-high: #1d2c4b;
-  --surface-container-highest: #243559;
-  --on-surface-variant: #a0aec0;
-  --outline: #718096;
-  --outline-variant: #2d3748;
-  --border: #1e2a42;
-  --border-subtle: #172238;
+  --surface-bright: #1e2d4a;
+  --surface-container-lowest: #111b2e;
+  --surface-container-low: #16233a;
+  --surface-container: #1b2b46;
+  --surface-container-high: #233758;
+  --surface-container-highest: #2c436a;
+  --on-surface-variant: #94a3b8;
+  --outline: #64748b;
+  --outline-variant: #334155;
+  --border: #22324f;
+  --border-subtle: #18253d;
 
-  --primary: #d4e3ff;
-  --primary-container: #172b4d;
-  --on-primary: #001c3a;
-  --on-primary-container: #b0c8f0;
+  --primary: #e2edff;
+  --primary-container: #1d4ed8;
+  --on-primary: #06152d;
+  --on-primary-container: #ffffff;
 
-  --secondary: #7bd2f4;
-  --secondary-container: #004d62;
+  --secondary: #38bdf8;
+  --secondary-container: #0369a1;
   --on-secondary: #001f29;
-  --on-secondary-container: #baeaff;
+  --on-secondary-container: #e0f2fe;
 
-  --secondary-fixed: #003646;
-  --on-secondary-fixed: #7bd2f4;
+  --secondary-fixed: rgba(56, 189, 248, 0.16);
+  --on-secondary-fixed: #7dd3fc;
+
+  --tertiary-fixed: rgba(245, 158, 11, 0.18);
+  --on-tertiary-fixed: #fcd34d;
+
+  --error-container: rgba(239, 68, 68, 0.18);
+  --on-error-container: #fca5a5;
 }
 
 /* ========================================================
@@ -2273,6 +2281,438 @@ body {
   font-weight: 600;
   letter-spacing: 0.01em;
 }
+
+/* ========================================================
+   HARMONIZAÇÃO COMPLETA DO MODO ESCURO ([data-theme="dark"])
+   Escopo estrito para não alterar absolutamente nada no Modo Claro
+   ======================================================== */
+
+/* 1. Sidebar, Navegação e Chips de Mês */
+[data-theme="dark"] .app-sidebar {
+  background-color: #0b1220;
+  border-right: 1px solid var(--border);
+}
+
+[data-theme="dark"] .nav-item {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .nav-item:hover {
+  background-color: var(--surface-container-low);
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .nav-item.active {
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(29, 78, 216, 0.35);
+  border: 1px solid rgba(96, 165, 250, 0.35);
+}
+
+[data-theme="dark"] .nav-item.active .material-symbols-outlined {
+  color: #93c5fd !important;
+}
+
+[data-theme="dark"] .month-chip.active {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+}
+
+[data-theme="dark"] .btn-expand-toggle:hover,
+[data-theme="dark"] .btn-expand-toggle.active,
+[data-theme="dark"] .searchable-item.selected {
+  background-color: #2563eb !important;
+  color: #ffffff !important;
+}
+
+/* 2. Botões Principais e Secundários */
+[data-theme="dark"] .btn-primary {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: #ffffff !important;
+  border: 1px solid rgba(96, 165, 250, 0.35);
+  box-shadow: 0 4px 12px rgba(29, 78, 216, 0.3);
+}
+
+[data-theme="dark"] .btn-primary:hover {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .btn-secondary {
+  background-color: var(--surface-container);
+  color: var(--on-surface);
+  border: 1px solid var(--border);
+}
+
+[data-theme="dark"] .btn-secondary:hover {
+  background-color: var(--surface-container-high);
+}
+
+[data-theme="dark"] .btn-edit-action {
+  background-color: var(--surface-container);
+  color: #e2e8f0;
+  border: 1px solid var(--border);
+}
+
+[data-theme="dark"] .btn-edit-action:hover {
+  background-color: #2563eb;
+  color: #ffffff;
+  border-color: #3b82f6;
+}
+
+/* 3. Cards, Filtros, Paginação e Tabelas Base */
+[data-theme="dark"] .kpi-card,
+[data-theme="dark"] .month-strip,
+[data-theme="dark"] .filter-strip,
+[data-theme="dark"] .floating-card-row,
+[data-theme="dark"] .pagination-strip {
+  background-color: var(--surface-container-lowest);
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.28);
+}
+
+[data-theme="dark"] .floating-card-row:hover {
+  background-color: var(--surface-container-low);
+  border-color: #2e446b;
+}
+
+[data-theme="dark"] .card-expand-btn {
+  background-color: var(--surface-container);
+  color: var(--on-surface-variant);
+  border: 1px solid var(--border);
+}
+
+[data-theme="dark"] .card-expand-btn:hover {
+  background-color: #2563eb;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .card-detail-drawer {
+  background-color: #0b1322;
+  border-top: 1px solid var(--border);
+}
+
+[data-theme="dark"] .detail-block {
+  background-color: var(--surface-container-lowest);
+  border: 1px solid var(--border);
+}
+
+[data-theme="dark"] .cost-box {
+  background-color: var(--surface-container-low);
+  border: 1px solid var(--border);
+}
+
+[data-theme="dark"] .cost-box.highlight {
+  background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(96, 165, 250, 0.4) !important;
+}
+
+[data-theme="dark"] .cost-box.highlight .cost-box-header {
+  color: #bfdbfe !important;
+}
+
+[data-theme="dark"] .cost-box.highlight .cost-box-value {
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .cost-box.highlight .cost-box-note {
+  color: #7dd3fc !important;
+}
+
+/* 4. Inputs, Selects, Formulários e Modais */
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+  color-scheme: dark;
+}
+
+[data-theme="dark"] .filter-search-input,
+[data-theme="dark"] .filter-select,
+[data-theme="dark"] .form-input,
+[data-theme="dark"] .form-select {
+  background-color: var(--surface-container-low) !important;
+  color: var(--on-surface) !important;
+  border: 1px solid var(--border) !important;
+}
+
+[data-theme="dark"] .filter-search-input::placeholder,
+[data-theme="dark"] .form-input::placeholder,
+[data-theme="dark"] textarea::placeholder,
+[data-theme="dark"] input::placeholder {
+  color: #64748b !important;
+}
+
+[data-theme="dark"] .logistics-instruction-panel {
+  background-color: var(--surface-container-low) !important;
+  border-color: var(--border) !important;
+}
+
+[data-theme="dark"] .logistics-instruction-panel input,
+[data-theme="dark"] .logistics-instruction-panel select {
+  background-color: var(--surface-container-lowest) !important;
+  color: var(--on-surface) !important;
+  border-color: var(--border) !important;
+}
+
+[data-theme="dark"] .modal-container {
+  background-color: var(--surface-container-lowest) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.6) !important;
+}
+
+[data-theme="dark"] .modal-header,
+[data-theme="dark"] .modal-footer {
+  background-color: var(--surface-container-low) !important;
+  border-color: var(--border) !important;
+}
+
+/* 5. Badges de Status e Ícones de KPIs no Modo Escuro */
+[data-theme="dark"] .status-confirmado {
+  background-color: rgba(16, 185, 129, 0.16);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+[data-theme="dark"] .status-previsto {
+  background-color: rgba(245, 158, 11, 0.16);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+[data-theme="dark"] .status-realizado {
+  background-color: rgba(56, 189, 248, 0.16);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+[data-theme="dark"] .status-cancelado {
+  background-color: rgba(239, 68, 68, 0.16);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+[data-theme="dark"] .status-a-confirmar {
+  background-color: rgba(148, 163, 184, 0.16);
+  color: #cbd5e1;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+[data-theme="dark"] .kpi-icon-green {
+  background-color: rgba(16, 185, 129, 0.16);
+  color: #34d399;
+}
+
+[data-theme="dark"] .kpi-icon-blue {
+  background-color: rgba(59, 130, 246, 0.18);
+  color: #60a5fa;
+}
+
+[data-theme="dark"] .kpi-icon-cyan {
+  background-color: rgba(14, 165, 233, 0.18);
+  color: #38bdf8;
+}
+
+[data-theme="dark"] .kpi-icon-amber {
+  background-color: rgba(245, 158, 11, 0.18);
+  color: #fbbf24;
+}
+
+/* 6. Adaptação Inteligente de Inline Styles (Páginas com cores claras hardcoded)
+   Exclui a folha de impressão .a4-sheet do Boletim de Medição */
+
+/* Botões, abas e pills ativos que usam background var(--primary) com texto branco */
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="background-color: var(--primary"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="background: var(--primary"] {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+  color: #ffffff !important;
+  border-color: rgba(96, 165, 250, 0.4) !important;
+}
+
+/* Superfícies brancas hardcoded (#ffffff / rgb(255, 255, 255)) -> Surface Container Lowest */
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="background: rgb(255, 255, 255)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="background-color: rgb(255, 255, 255)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="background:#ffffff"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="background: #ffffff"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="background-color:#ffffff"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="background-color: #ffffff"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="background: #fff;"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="background-color: #fff;"] {
+  background-color: var(--surface-container-lowest) !important;
+  color: var(--on-surface);
+}
+
+/* Superfícies cinza-claro hardcoded (#f8fafc, #f9fafb, #fcfcfd, #fafbfc) -> Surface Container Low */
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="background: rgb(248, 250, 252)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="background-color: rgb(248, 250, 252)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="background: #f8fafc"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="background-color: #f8fafc"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="background: rgb(249, 250, 251)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="background-color: rgb(249, 250, 251)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="background: rgb(250, 251, 252)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="background-color: rgb(250, 251, 252)"] {
+  background-color: var(--surface-container-low) !important;
+}
+
+/* Superfícies slate secundárias (#f1f5f9, #e2e8f0, #f0f9ff, #eff6ff) -> Surface Container */
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="background: rgb(241, 245, 249)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="background-color: rgb(241, 245, 249)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="background: #f1f5f9"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="background-color: #f1f5f9"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="background: rgb(240, 249, 255)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="background-color: rgb(240, 249, 255)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="background: rgb(239, 246, 255)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="background-color: rgb(239, 246, 255)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="background: rgb(240, 244, 248)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="background-color: rgb(240, 244, 248)"] {
+  background-color: var(--surface-container) !important;
+}
+
+/* Hover e linhas alternadas de tabelas no Modo Escuro */
+[data-theme="dark"] tbody tr:hover {
+  background-color: var(--surface-container) !important;
+}
+
+/* Textos escuros hardcoded (#0f172a, #1e293b, #0f2a4a, #111827) -> Texto claro legível */
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="color: rgb(15, 23, 42)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="color: #0f172a"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="color: rgb(30, 41, 59)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="color: #1e293b"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="color: rgb(15, 42, 74)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="color: #0f2a4a"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="color: rgb(17, 24, 39)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="color: rgb(0, 28, 58)"] {
+  color: var(--on-surface) !important;
+}
+
+/* Textos intermediários hardcoded (#334155, #475569, #64748b) -> Subtítulo legível */
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="color: rgb(51, 65, 85)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="color: #334155"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="color: rgb(71, 85, 105)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="color: #475569"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="color: rgb(100, 116, 139)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="color: #64748b"] {
+  color: var(--on-surface-variant) !important;
+}
+
+/* Cabeçalhos ou botões navy (#0f2a4a / #1e293b / #0f172a) com texto branco permanecem com texto branco */
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="background-color: rgb(15, 42, 74)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="background: rgb(15, 42, 74)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="background-color: rgb(15, 23, 42)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="background: rgb(15, 23, 42)"] {
+  background-color: #152642 !important;
+  color: #ffffff !important;
+  border-color: var(--border) !important;
+}
+
+/* Bordas claras hardcoded (#e2e8f0, #f1f5f9, #cbd5e1, #e5e7eb) -> Borda sutil escura */
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="border: 1px solid rgb(226, 232, 240)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="border: 1px solid rgb(241, 245, 249)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="border: 1px solid rgb(203, 213, 225)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="border: 1.5px solid rgb(226, 232, 240)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="border-color: rgb(226, 232, 240)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="border-color: rgb(241, 245, 249)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="border-color: rgb(203, 213, 225)"] {
+  border-color: var(--border) !important;
+}
+
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="border-bottom: 1px solid rgb(226, 232, 240)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="border-bottom: 1px solid rgb(241, 245, 249)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="border-bottom: 2px solid rgb(226, 232, 240)"] {
+  border-bottom-color: var(--border) !important;
+}
+
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="border-top: 1px solid rgb(226, 232, 240)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="border-top: 1px solid rgb(241, 245, 249)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="border-top: 2px solid rgb(226, 232, 240)"] {
+  border-top-color: var(--border) !important;
+}
+
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="border-right: 1px solid rgb(226, 232, 240)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="border-right: 1px solid rgb(241, 245, 249)"] {
+  border-right-color: var(--border) !important;
+}
+
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="border-left: 1px solid rgb(226, 232, 240)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="border-left: 1px solid rgb(241, 245, 249)"] {
+  border-left-color: var(--border) !important;
+}
+
+/* Badges pastéis inline (âmbar, verde, azul, roxo, vermelho) com contraste harmônico no escuro */
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="background-color: rgb(254, 243, 199)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="background: rgb(254, 243, 199)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="background-color: rgb(255, 251, 235)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="background: rgb(255, 251, 235)"] {
+  background-color: rgba(245, 158, 11, 0.16) !important;
+  color: #fcd34d !important;
+  border-color: rgba(245, 158, 11, 0.32) !important;
+}
+
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="background-color: rgb(220, 252, 231)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="background: rgb(220, 252, 231)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="background-color: rgb(236, 253, 245)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="background: rgb(236, 253, 245)"] {
+  background-color: rgba(16, 185, 129, 0.16) !important;
+  color: #6ee7b7 !important;
+  border-color: rgba(16, 185, 129, 0.32) !important;
+}
+
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="background-color: rgb(224, 242, 254)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="background: rgb(224, 242, 254)"] {
+  background-color: rgba(14, 165, 233, 0.16) !important;
+  color: #7dd3fc !important;
+  border-color: rgba(14, 165, 233, 0.32) !important;
+}
+
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="background-color: rgb(254, 226, 226)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="background: rgb(254, 226, 226)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="background-color: rgb(254, 242, 242)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="background: rgb(254, 242, 242)"] {
+  background-color: rgba(239, 68, 68, 0.16) !important;
+  color: #fca5a5 !important;
+  border-color: rgba(239, 68, 68, 0.32) !important;
+}
+
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="background-color: rgb(237, 233, 254)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="background: rgb(237, 233, 254)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="background-color: rgb(245, 243, 255)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="background: rgb(245, 243, 255)"] {
+  background-color: rgba(139, 92, 246, 0.18) !important;
+  color: #c4b5fd !important;
+  border-color: rgba(139, 92, 246, 0.34) !important;
+}
+
+/* Textos coloridos dentro de badges ou boxes pastéis no modo escuro */
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="color: rgb(146, 64, 14)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="color: rgb(180, 83, 9)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="color: rgb(194, 65, 12)"] {
+  color: #fcd34d !important;
+}
+
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="color: rgb(21, 128, 61)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="color: rgb(4, 120, 87)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="color: rgb(6, 95, 70)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="color: rgb(5, 150, 105)"] {
+  color: #34d399 !important;
+}
+
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="color: rgb(3, 105, 161)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="color: rgb(2, 132, 199)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="color: rgb(29, 78, 216)"] {
+  color: #7dd3fc !important;
+}
+
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="color: rgb(185, 28, 28)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="color: rgb(220, 38, 38)"] {
+  color: #f87171 !important;
+}
+
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="color: rgb(109, 40, 217)"],
+[data-theme="dark"] *:not(.a4-sheet):not(.a4-sheet *)[style*="color: rgb(124, 58, 237)"] {
+  color: #c4b5fd !important;
+}
+
 
 
 
