@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import * as XLSX from "xlsx";
 import DocumentPreviewModal from "./viagens/DocumentPreviewModal";
 import { ViagemSolicitacao, AnexoDocumento } from "@/lib/viagens-types";
 import { calcularPrazoPrestacaoContas, formatarPeriodoBR } from "@/lib/date-utils";
@@ -1524,6 +1525,117 @@ export default function FloatingCardsList({
       totalCanceladoValor,
     };
   }, [filtrados]);
+
+  const handleExportarXls = useCallback(() => {
+    if (!filtrados || filtrados.length === 0) {
+      alert("Nenhuma atividade encontrada nos filtros atuais para exportar.");
+      return;
+    }
+
+    const podeVerFaturar = regraAtiva("verFaturamentoCliente");
+
+    const linhas = filtrados.map((it) => {
+      const v = Array.isArray(it.viagens) ? it.viagens[0] : it.viagens;
+      const ndsAgencia = (it.notas_debito || [])
+        .filter((n) => n.destino === "agencia" && n.numero)
+        .map((n) => n.numero)
+        .join(", ");
+      const ndsConsultor = (it.notas_debito || [])
+        .filter((n) => n.destino === "consultor" && n.numero)
+        .map((n) => n.numero)
+        .join(", ");
+
+      const compParts = (it.competencia || "").split("-");
+      const compFormatada =
+        compParts.length >= 2 ? `${compParts[1]}/${compParts[0]}` : it.competencia || "—";
+
+      const linha: Record<string, string | number> = {
+        "Competência": compFormatada,
+        "Centro de Custo": it.projetos?.centros_custo?.codigo || "—",
+        "Contrato": it.projetos?.centros_custo?.contrato || "—",
+        "Área": it.projetos?.centros_custo?.areas?.nome || "—",
+        "Líder do Projeto": it.projetos?.centros_custo?.lideres?.nome || "—",
+        "Projeto": it.projetos?.nome || "—",
+        "Atividade Operacional": it.atividade || "—",
+        "Modalidade": it.modalidade || "—",
+        "Local / Concessionária": it.local || "—",
+        "Região": it.regiao || "BRA",
+        "Data Inicial": dataBR(it.data_inicial),
+        "Data Final": dataBR(it.data_final),
+        "Carga Horária (h)": Number(it.horas ?? 0),
+        "Instrutor / Consultor": it.consultores?.nome || "Sem Consultor",
+        "Vínculo": it.consultores?.tipo ? it.consultores.tipo.toUpperCase() : "—",
+        "Perfil": it.perfil || "—",
+        "Status": it.status || "—",
+        "Consultor (R$)": Number(it.custo_consultor ?? 0),
+      };
+
+      if (podeVerFaturar) {
+        linha["Faturar (R$)"] = Number(it.faturar ?? 0);
+      }
+
+      linha["Logística Total (R$)"] = Number(v?.total ?? 0);
+      linha["Passagem Aérea (R$)"] = Number(v?.custo_1 ?? 0);
+      linha["Hotel / Hospedagem (R$)"] = Number(v?.custo_2 ?? 0);
+      linha["Locação Veículo (R$)"] = Number(v?.custo_3 ?? 0);
+      linha["Seguro / Outros (R$)"] = Number(v?.custo_4 ?? 0);
+      linha["Alimentação / Diária (R$)"] = Number(v?.custo_5 ?? 0);
+      linha["Repasse ND (R$)"] = Number(it.repasse ?? 0);
+      linha["Demanda Logística?"] = it.precisa_logistica ? "SIM" : "NÃO";
+      linha["Agência de Viagens"] = v?.agencia || "—";
+      linha["ND Agência"] = ndsAgencia || "—";
+      linha["ND Consultor"] = ndsConsultor || "—";
+      linha["Anotações / Observações"] = it.observacoes || "";
+
+      return linha;
+    });
+
+    const ws = XLSX.utils.json_to_sheet(linhas);
+    ws["!cols"] = [
+      { wch: 13 }, // Competência
+      { wch: 16 }, // Centro de Custo
+      { wch: 20 }, // Contrato
+      { wch: 24 }, // Área
+      { wch: 22 }, // Líder do Projeto
+      { wch: 30 }, // Projeto
+      { wch: 34 }, // Atividade Operacional
+      { wch: 14 }, // Modalidade
+      { wch: 26 }, // Local / Concessionária
+      { wch: 10 }, // Região
+      { wch: 13 }, // Data Inicial
+      { wch: 13 }, // Data Final
+      { wch: 16 }, // Carga Horária
+      { wch: 24 }, // Instrutor / Consultor
+      { wch: 13 }, // Vínculo
+      { wch: 12 }, // Perfil
+      { wch: 15 }, // Status
+      { wch: 16 }, // Consultor (R$)
+      ...(podeVerFaturar ? [{ wch: 16 }] : []), // Faturar (R$)
+      { wch: 18 }, // Logística Total
+      { wch: 18 }, // Passagem Aérea
+      { wch: 20 }, // Hotel / Hospedagem
+      { wch: 18 }, // Locação Veículo
+      { wch: 18 }, // Seguro / Outros
+      { wch: 20 }, // Alimentação / Diária
+      { wch: 16 }, // Repasse ND
+      { wch: 18 }, // Demanda Logística?
+      { wch: 18 }, // Agência
+      { wch: 14 }, // ND Agência
+      { wch: 14 }, // ND Consultor
+      { wch: 40 }, // Anotações / Observações
+    ];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Projetos e Atividades");
+
+    const sufixoComp = competencia ? competencia.slice(0, 7) : "Consolidado";
+    XLSX.writeFile(wb, `Gestao_Projetos_NNOS_${sufixoComp}.xlsx`);
+  }, [filtrados, regraAtiva, competencia]);
+
+  useEffect(() => {
+    window.addEventListener("exportar-xls-atividades", handleExportarXls);
+    return () => window.removeEventListener("exportar-xls-atividades", handleExportarXls);
+  }, [handleExportarXls]);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>

@@ -46,7 +46,12 @@ export async function POST(req: NextRequest) {
 
     const ehConsultor =
       !ehAgencia &&
+      perfilId !== "DIRETORIA" &&
+      perfilId !== "LIDER" &&
+      perfilId !== "FINANCEIRO" &&
+      perfilId !== "ADMIN" &&
       (perfilId === "CONSULTOR" ||
+        perfilId === "SOCIO" ||
         (perfilNome || "").toUpperCase().includes("CONSULTOR") ||
         (perfilNome || "").toUpperCase().includes("INSTRUTOR") ||
         (usuarioCargo || "").toUpperCase().includes("CONSULTOR") ||

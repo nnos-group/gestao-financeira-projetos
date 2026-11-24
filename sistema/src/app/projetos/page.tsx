@@ -4,6 +4,7 @@ import ThemeToggle from "@/components/ThemeToggle";
 import UserProfileHeader from "@/components/UserProfileHeader";
 import FloatingCardsList, { LancamentoItem } from "@/components/FloatingCardsList";
 import NovaAtividadeBotao from "@/components/NovaAtividadeBotao";
+import ExportarXlsBotao from "@/components/ExportarXlsBotao";
 import AnoSelector from "@/components/AnoSelector";
 import { carregarSolicitacoesArquivo } from "@/lib/viagens-service";
 import { carregarMapaObservacoesLancamentos } from "@/lib/lancamentos-observacoes-service";
@@ -406,12 +407,7 @@ export default async function ProjetosPage({
             </div>
 
             <div className="action-buttons">
-              <button type="button" className="btn-secondary">
-                <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
-                  download
-                </span>
-                <span>Exportar XLS</span>
-              </button>
+              <ExportarXlsBotao />
 
               <NovaAtividadeBotao />
             </div>

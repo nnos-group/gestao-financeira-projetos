@@ -78,8 +78,17 @@ function ehPerfilAgencia(user: any): boolean {
 
 function ehPerfilConsultor(user: any): boolean {
   if (!user || ehPerfilAgencia(user)) return false;
+  if (
+    user.perfilId === "DIRETORIA" ||
+    user.perfilId === "LIDER" ||
+    user.perfilId === "FINANCEIRO" ||
+    user.perfilId === "ADMIN"
+  ) {
+    return false;
+  }
   return (
     user.perfilId === "CONSULTOR" ||
+    user.perfilId === "SOCIO" ||
     String(user.cargo || "").toLowerCase().includes("consultor") ||
     String(user.cargo || "").toLowerCase().includes("instrutor")
   );
@@ -102,7 +111,7 @@ export default function ModuloHomologacaoConvites({ perfis, onToast }: Props) {
 
   // Filtros
   const [busca, setBusca] = useState("");
-  const [filtroGrupo, setFiltroGrupo] = useState("LIDERES_E_AGENCIA");
+  const [filtroGrupo, setFiltroGrupo] = useState("TODOS");
   const [filtroStatus, setFiltroStatus] = useState("TODOS");
 
   // Seleção de linhas para disparo em massa

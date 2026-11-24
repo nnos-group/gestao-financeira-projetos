@@ -133,6 +133,27 @@ export async function lerUsuariosAsync(): Promise<any[]> {
 
   if (lista.length === 0) {
     lista = lerUsuarios();
+  } else {
+    // Garante que novos usuários incluídos na base padrão (ex: Pedro Colares) sejam mesclados no Supabase
+    const baseLocal = lerUsuarios();
+    let adicionouNovo = false;
+    for (const uPadrao of baseLocal) {
+      const jaExiste = lista.some(
+        (u) =>
+          String(u.id || "") === String(uPadrao.id || "") ||
+          String(u.login || "").toLowerCase() === String(uPadrao.login || "").toLowerCase() ||
+          String(u.email || "").toLowerCase() === String(uPadrao.email || "").toLowerCase()
+      );
+      if (!jaExiste) {
+        lista.push(uPadrao);
+        adicionouNovo = true;
+      }
+    }
+    if (adicionouNovo) {
+      const normNovo = normalizarHashesUsuarios(lista);
+      await salvarUsuariosAsync(normNovo.usuarios);
+      return normNovo.usuarios;
+    }
   }
 
   const norm = normalizarHashesUsuarios(lista);
