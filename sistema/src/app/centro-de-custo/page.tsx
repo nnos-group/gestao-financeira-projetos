@@ -41,6 +41,7 @@ const OPCOES_CONTRATO_PADRAO = ["Avulso", "Comercial", "CRM", "DM", "N/A", "Stel
 
 export default function CentroDeCustoPage() {
   const { perfilAtivoId, pertenceAoLiderAtivo, nivelModulo } = usePerfilAcesso();
+  const isAdmin = perfilAtivoId === "ADMIN";
   const somenteVisualizar = nivelModulo("centro-de-custo") === "VISUALIZAR" || perfilAtivoId === "LIDER";
   const [busca, setBusca] = useState("");
   const [filtroArea, setFiltroArea] = useState("TODAS");
@@ -870,29 +871,31 @@ export default function CentroDeCustoPage() {
                     <span>MATRIZ OFICIAL DE CENTROS DE CUSTO</span>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                    <button
-                      type="button"
-                      onClick={abrirModalCoberturaLote}
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "6px",
-                        padding: "5px 12px",
-                        borderRadius: "6px",
-                        backgroundColor: "#0284c7",
-                        color: "#ffffff",
-                        border: "1px solid rgba(255,255,255,0.25)",
-                        fontSize: "11.5px",
-                        fontWeight: 700,
-                        cursor: "pointer",
-                      }}
-                      title="Delegar projetos de um líder para outro durante férias ou ausência temporária"
-                    >
-                      <span className="material-symbols-outlined" style={{ fontSize: "15px" }}>
-                        beach_access
-                      </span>
-                      <span>Programar Cobertura / Férias</span>
-                    </button>
+                    {isAdmin && (
+                      <button
+                        type="button"
+                        onClick={abrirModalCoberturaLote}
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "6px",
+                          padding: "5px 12px",
+                          borderRadius: "6px",
+                          backgroundColor: "#0284c7",
+                          color: "#ffffff",
+                          border: "1px solid rgba(255,255,255,0.25)",
+                          fontSize: "11.5px",
+                          fontWeight: 700,
+                          cursor: "pointer",
+                        }}
+                        title="Delegar projetos de um líder para outro durante férias ou ausência temporária (Exclusivo Administrador)"
+                      >
+                        <span className="material-symbols-outlined" style={{ fontSize: "15px" }}>
+                          beach_access
+                        </span>
+                        <span>Programar Cobertura / Férias</span>
+                      </button>
+                    )}
                     <span style={{ fontSize: "11px", backgroundColor: "rgba(255,255,255,0.15)", padding: "4px 10px", borderRadius: "4px" }}>
                       {centrosFiltrados.length} Registros Exibidos
                     </span>
@@ -1447,8 +1450,8 @@ export default function CentroDeCustoPage() {
       {/* MODAL PARA EDITAR CENTRO DE CUSTO */}
       {modalEditCCAberto && ccEmEdicao && (
         <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.5)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }}>
-          <div style={{ backgroundColor: "#ffffff", borderRadius: "14px", width: "100%", maxWidth: "520px", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.2)", overflow: "hidden" }}>
-            <div style={{ padding: "16px 20px", backgroundColor: "#0f2a4a", color: "#ffffff", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ backgroundColor: "#ffffff", borderRadius: "14px", width: "100%", maxWidth: "520px", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.2)", overflow: "visible" }}>
+            <div style={{ padding: "16px 20px", backgroundColor: "#0f2a4a", color: "#ffffff", display: "flex", justifyContent: "space-between", alignItems: "center", borderTopLeftRadius: "14px", borderTopRightRadius: "14px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                 <span className="material-symbols-outlined" style={{ fontSize: "20px", color: "#38bdf8" }}>account_tree</span>
                 <h3 style={{ fontSize: "15px", fontWeight: 800, margin: 0 }}>
@@ -1545,122 +1548,153 @@ export default function CentroDeCustoPage() {
                 </div>
               </div>
 
-              {/* Bloco de Cobertura Temporária / Férias */}
-              <div
-                style={{
-                  backgroundColor: "#f8fafc",
-                  border: "1px solid #e2e8f0",
-                  borderRadius: "10px",
-                  padding: "14px",
-                  marginBottom: "18px",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "12px",
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                    <span className="material-symbols-outlined" style={{ fontSize: "17px", color: "#0284c7" }}>
-                      beach_access
-                    </span>
-                    <span style={{ fontSize: "11.5px", fontWeight: 800, color: "#0f2a4a", textTransform: "uppercase" }}>
-                      Cobertura Temporária / Férias (Líder Substituto)
-                    </span>
+              {/* Bloco de Cobertura Temporária / Férias (Exclusivo Administrador) */}
+              {isAdmin && (
+                <div
+                  style={{
+                    backgroundColor: "#f8fafc",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "10px",
+                    padding: "14px",
+                    marginBottom: "18px",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "12px",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      <span className="material-symbols-outlined" style={{ fontSize: "17px", color: "#0284c7" }}>
+                        beach_access
+                      </span>
+                      <span style={{ fontSize: "11.5px", fontWeight: 800, color: "#0f2a4a", textTransform: "uppercase" }}>
+                        Cobertura Temporária / Férias (Líder Substituto)
+                      </span>
+                    </div>
+                    {editLiderSubstituto && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditLiderSubstituto("");
+                          setEditCoberturaInicio("");
+                          setEditCoberturaFim("");
+                        }}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          color: "#dc2626",
+                          fontSize: "11px",
+                          fontWeight: 700,
+                          cursor: "pointer",
+                        }}
+                      >
+                        Limpar cobertura
+                      </button>
+                    )}
                   </div>
-                  {editLiderSubstituto && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setEditLiderSubstituto("");
-                        setEditCoberturaInicio("");
-                        setEditCoberturaFim("");
-                      }}
-                      style={{
-                        background: "none",
-                        border: "none",
-                        color: "#dc2626",
-                        fontSize: "11px",
-                        fontWeight: 700,
-                        cursor: "pointer",
-                      }}
-                    >
-                      Limpar cobertura
-                    </button>
-                  )}
-                </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: editLiderSubstituto ? "1.3fr 1fr" : "1fr", gap: "10px" }}>
-                  <ModernDropdown
-                    label="LÍDER SUBSTITUTO (QUEM VAI COBRIR)"
-                    value={editLiderSubstituto}
-                    onChange={(val) => setEditLiderSubstituto(String(val))}
-                    options={[
-                      { value: "", label: "Sem cobertura ativa (Apenas Líder Titular)" },
-                      ...lideresUnicos
-                        .filter((l) => l !== editLider)
-                        .map((l) => ({ value: l, label: l })),
-                    ]}
-                    icon="swap_horiz"
-                    style={{ width: "100%" }}
-                  />
-
-                  {editLiderSubstituto && (
+                  <div style={{ display: "grid", gridTemplateColumns: editLiderSubstituto ? "1.3fr 1fr" : "1fr", gap: "10px", alignItems: "end" }}>
                     <ModernDropdown
-                      label="MOTIVO DA COBERTURA"
-                      value={editCoberturaMotivo}
-                      onChange={(val) => setEditCoberturaMotivo(String(val))}
+                      label="LÍDER SUBSTITUTO (QUEM VAI COBRIR)"
+                      value={editLiderSubstituto}
+                      onChange={(val) => setEditLiderSubstituto(String(val))}
                       options={[
-                        { value: "Férias", label: "Férias" },
-                        { value: "Ausência Temporária", label: "Ausência Temporária / Licença" },
-                        { value: "Apoio Operacional", label: "Apoio Operacional" },
+                        { value: "", label: "Sem cobertura ativa (Apenas Líder Titular)" },
+                        ...lideresUnicos
+                          .filter((l) => l !== editLider)
+                          .map((l) => ({ value: l, label: l })),
                       ]}
-                      icon="event_note"
+                      icon="swap_horiz"
                       style={{ width: "100%" }}
+                      dropdownStyle={{ bottom: "calc(100% + 6px)", top: "auto", maxHeight: "230px" }}
                     />
+
+                    {editLiderSubstituto && (
+                      <ModernDropdown
+                        label="MOTIVO DA COBERTURA"
+                        value={editCoberturaMotivo}
+                        onChange={(val) => setEditCoberturaMotivo(String(val))}
+                        options={[
+                          { value: "Férias", label: "Férias" },
+                          { value: "Ausência Temporária", label: "Ausência Temporária / Licença" },
+                          { value: "Apoio Operacional", label: "Apoio Operacional" },
+                        ]}
+                        icon="event_note"
+                        style={{ width: "100%" }}
+                        dropdownStyle={{ bottom: "calc(100% + 6px)", top: "auto", maxHeight: "220px" }}
+                      />
+                    )}
+                  </div>
+
+                  {editLiderSubstituto && (
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", alignItems: "end" }}>
+                      <div>
+                        <label
+                          style={{
+                            display: "block",
+                            fontSize: "11px",
+                            fontWeight: 700,
+                            marginBottom: "4px",
+                            color: "#475569",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          INÍCIO DA COBERTURA
+                        </label>
+                        <input
+                          type="date"
+                          value={editCoberturaInicio}
+                          onChange={(e) => setEditCoberturaInicio(e.target.value)}
+                          style={{
+                            width: "100%",
+                            height: "36px",
+                            padding: "7px 10px",
+                            borderRadius: "10px",
+                            border: "1px solid var(--border, #cbd5e1)",
+                            fontFamily: "var(--font-inter), Inter, sans-serif",
+                            fontSize: "12.5px",
+                            fontWeight: 600,
+                            color: "var(--on-surface, #1e293b)",
+                            backgroundColor: "#ffffff",
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <label
+                          style={{
+                            display: "block",
+                            fontSize: "11px",
+                            fontWeight: 700,
+                            marginBottom: "4px",
+                            color: "#475569",
+                            whiteSpace: "nowrap",
+                          }}
+                          title="Após esta data, a cobertura é encerrada automaticamente"
+                        >
+                          FIM DA COBERTURA
+                        </label>
+                        <input
+                          type="date"
+                          value={editCoberturaFim}
+                          onChange={(e) => setEditCoberturaFim(e.target.value)}
+                          style={{
+                            width: "100%",
+                            height: "36px",
+                            padding: "7px 10px",
+                            borderRadius: "10px",
+                            border: "1px solid var(--border, #cbd5e1)",
+                            fontFamily: "var(--font-inter), Inter, sans-serif",
+                            fontSize: "12.5px",
+                            fontWeight: 600,
+                            color: "var(--on-surface, #1e293b)",
+                            backgroundColor: "#ffffff",
+                          }}
+                        />
+                      </div>
+                    </div>
                   )}
                 </div>
-
-                {editLiderSubstituto && (
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-                    <div>
-                      <label style={{ display: "block", fontSize: "11px", fontWeight: 700, marginBottom: "4px", color: "#475569" }}>
-                        INÍCIO DA COBERTURA
-                      </label>
-                      <input
-                        type="date"
-                        value={editCoberturaInicio}
-                        onChange={(e) => setEditCoberturaInicio(e.target.value)}
-                        style={{
-                          width: "100%",
-                          padding: "8px 10px",
-                          borderRadius: "8px",
-                          border: "1px solid var(--border)",
-                          fontSize: "12.5px",
-                          backgroundColor: "#ffffff",
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <label style={{ display: "block", fontSize: "11px", fontWeight: 700, marginBottom: "4px", color: "#475569" }}>
-                        FIM DA COBERTURA (EXPIRAÇÃO AUTOMÁTICA)
-                      </label>
-                      <input
-                        type="date"
-                        value={editCoberturaFim}
-                        onChange={(e) => setEditCoberturaFim(e.target.value)}
-                        style={{
-                          width: "100%",
-                          padding: "8px 10px",
-                          borderRadius: "8px",
-                          border: "1px solid var(--border)",
-                          fontSize: "12.5px",
-                          backgroundColor: "#ffffff",
-                        }}
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
+              )}
 
               <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", borderTop: "1px solid var(--border)", paddingTop: "14px" }}>
                 <button
@@ -1817,8 +1851,8 @@ export default function CentroDeCustoPage() {
         </div>
       )}
 
-      {/* MODAL PARA PROGRAMAR COBERTURA / FÉRIAS EM LOTE */}
-      {modalCoberturaLoteAberto && (
+      {/* MODAL PARA PROGRAMAR COBERTURA / FÉRIAS EM LOTE (EXCLUSIVO ADMINISTRADOR) */}
+      {isAdmin && modalCoberturaLoteAberto && (
         <div
           style={{
             position: "fixed",
@@ -1839,7 +1873,7 @@ export default function CentroDeCustoPage() {
               width: "100%",
               maxWidth: "680px",
               boxShadow: "0 20px 25px -5px rgba(0,0,0,0.25)",
-              overflow: "hidden",
+              overflow: "visible",
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -1851,6 +1885,8 @@ export default function CentroDeCustoPage() {
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
+                borderTopLeftRadius: "14px",
+                borderTopRightRadius: "14px",
               }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
@@ -1909,6 +1945,7 @@ export default function CentroDeCustoPage() {
                     display: "grid",
                     gridTemplateColumns: "1fr 1fr 1fr",
                     gap: "12px",
+                    alignItems: "end",
                     backgroundColor: "#f8fafc",
                     padding: "12px 14px",
                     borderRadius: "10px",
@@ -1916,8 +1953,17 @@ export default function CentroDeCustoPage() {
                   }}
                 >
                   <div>
-                    <label style={{ display: "block", fontSize: "11px", fontWeight: 700, marginBottom: "4px", color: "#475569" }}>
-                      DATA INICIAL DA COBERTURA
+                    <label
+                      style={{
+                        display: "block",
+                        fontSize: "11px",
+                        fontWeight: 700,
+                        marginBottom: "4px",
+                        color: "#475569",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      INÍCIO DA COBERTURA
                     </label>
                     <input
                       type="date"
@@ -1925,17 +1971,30 @@ export default function CentroDeCustoPage() {
                       onChange={(e) => setLoteDataInicio(e.target.value)}
                       style={{
                         width: "100%",
-                        padding: "8px 10px",
-                        borderRadius: "8px",
-                        border: "1px solid var(--border)",
+                        height: "36px",
+                        padding: "7px 10px",
+                        borderRadius: "10px",
+                        border: "1px solid var(--border, #cbd5e1)",
+                        fontFamily: "var(--font-inter), Inter, sans-serif",
                         fontSize: "12.5px",
+                        fontWeight: 600,
+                        color: "var(--on-surface, #1e293b)",
                         backgroundColor: "#ffffff",
                       }}
                     />
                   </div>
                   <div>
-                    <label style={{ display: "block", fontSize: "11px", fontWeight: 700, marginBottom: "4px", color: "#475569" }}>
-                      DATA FINAL (ENCERRAMENTO AUTOMÁTICO)
+                    <label
+                      style={{
+                        display: "block",
+                        fontSize: "11px",
+                        fontWeight: 700,
+                        marginBottom: "4px",
+                        color: "#475569",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      FIM DA COBERTURA
                     </label>
                     <input
                       type="date"
@@ -1943,10 +2002,14 @@ export default function CentroDeCustoPage() {
                       onChange={(e) => setLoteDataFim(e.target.value)}
                       style={{
                         width: "100%",
-                        padding: "8px 10px",
-                        borderRadius: "8px",
-                        border: "1px solid var(--border)",
+                        height: "36px",
+                        padding: "7px 10px",
+                        borderRadius: "10px",
+                        border: "1px solid var(--border, #cbd5e1)",
+                        fontFamily: "var(--font-inter), Inter, sans-serif",
                         fontSize: "12.5px",
+                        fontWeight: 600,
+                        color: "var(--on-surface, #1e293b)",
                         backgroundColor: "#ffffff",
                       }}
                     />
