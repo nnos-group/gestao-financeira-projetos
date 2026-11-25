@@ -17311,6 +17311,156 @@
   },
   {
     "id": "pgto-26-1155",
+    "realizado": "OUTUBRO",
+    "dataPagto": "24/11/2026",
+    "consultor": "ANTONIO PEREZ",
+    "tipo": "SÓCIO",
+    "projeto": "TAPE RUVICHA",
+    "numeroNota": "COMISSÃO",
+    "tipoDespesa": "Acordo Societário / Pró-Labore",
+    "valor": 1764,
+    "status": "Pago",
+    "bm": "",
+    "centroCusto": "01.07.010.039",
+    "observacoes": ""
+  },
+  {
+    "id": "pgto-26-1156",
+    "realizado": "OUTUBRO",
+    "dataPagto": "25/11/2026",
+    "consultor": "TATIANA AZEVEDO",
+    "tipo": "PARCEIRO",
+    "projeto": "CAMPUS BH (UNIV. VEIGA DE ALMEIDA)",
+    "numeroNota": "7",
+    "tipoDespesa": "BM Homologado",
+    "valor": 1548.39,
+    "status": "Pago",
+    "bm": "932",
+    "centroCusto": "01.08.010.058",
+    "observacoes": ""
+  },
+  {
+    "id": "pgto-26-1157",
+    "realizado": "NOVEMBRO",
+    "dataPagto": "01/12/2026",
+    "consultor": "IGOR PICORELLI",
+    "tipo": "PARCEIRO",
+    "projeto": "ADM E CONTROLE",
+    "numeroNota": "—",
+    "tipoDespesa": "Honorário / Prestação de Serviços",
+    "valor": 7500,
+    "status": "A Pagar",
+    "bm": "",
+    "centroCusto": "01.01",
+    "observacoes": ""
+  },
+  {
+    "id": "pgto-26-1158",
+    "realizado": "NOVEMBRO",
+    "dataPagto": "01/12/2026",
+    "consultor": "JEFFERSON SOUZA",
+    "tipo": "SÓCIO",
+    "projeto": "DM - BACK OFFICE",
+    "numeroNota": "—",
+    "tipoDespesa": "Acordo Societário / Pró-Labore",
+    "valor": 6800,
+    "status": "A Pagar",
+    "bm": "",
+    "centroCusto": "01.04.001.021",
+    "observacoes": ""
+  },
+  {
+    "id": "pgto-26-1159",
+    "realizado": "NOVEMBRO",
+    "dataPagto": "01/12/2026",
+    "consultor": "JEFFERSON SOUZA",
+    "tipo": "SÓCIO",
+    "projeto": "DM - BACK OFFICE",
+    "numeroNota": "ATIVIDADE",
+    "tipoDespesa": "Acordo Societário / Pró-Labore",
+    "valor": 700,
+    "status": "A Pagar",
+    "bm": "",
+    "centroCusto": "01.04.001.021",
+    "observacoes": ""
+  },
+  {
+    "id": "pgto-26-1160",
+    "realizado": "NOVEMBRO",
+    "dataPagto": "01/12/2026",
+    "consultor": "LEONARDO CAMPOS",
+    "tipo": "SÓCIO",
+    "projeto": "ADM E CONTROLE",
+    "numeroNota": "—",
+    "tipoDespesa": "Acordo Societário / Pró-Labore",
+    "valor": 17000,
+    "status": "A Pagar",
+    "bm": "",
+    "centroCusto": "01.01",
+    "observacoes": ""
+  },
+  {
+    "id": "pgto-26-1161",
+    "realizado": "NOVEMBRO",
+    "dataPagto": "01/12/2026",
+    "consultor": "LEONARDO CAMPOS",
+    "tipo": "SÓCIO",
+    "projeto": "ADM E CONTROLE",
+    "numeroNota": "—",
+    "tipoDespesa": "Acordo Societário / Pró-Labore",
+    "valor": 354,
+    "status": "A Pagar",
+    "bm": "",
+    "centroCusto": "01.01",
+    "observacoes": "Diferença de Imposto NF Pedro Lage"
+  },
+  {
+    "id": "pgto-26-1162",
+    "realizado": "NOVEMBRO",
+    "dataPagto": "01/12/2026",
+    "consultor": "LEONARDO CAMPOS",
+    "tipo": "SÓCIO",
+    "projeto": "BACKOFFICE CNHI",
+    "numeroNota": "—",
+    "tipoDespesa": "Acordo Societário / Pró-Labore",
+    "valor": 2074.3,
+    "status": "A Pagar",
+    "bm": "",
+    "centroCusto": "01.05.001.033",
+    "observacoes": ""
+  },
+  {
+    "id": "pgto-26-1163",
+    "realizado": "NOVEMBRO",
+    "dataPagto": "01/12/2026",
+    "consultor": "BEATRIZ PICORELLI",
+    "tipo": "SÓCIO",
+    "projeto": "ADM E CONTROLE",
+    "numeroNota": "—",
+    "tipoDespesa": "Acordo Societário / Pró-Labore",
+    "valor": 8976.83,
+    "status": "A Pagar",
+    "bm": "",
+    "centroCusto": "01.01",
+    "observacoes": ""
+  },
+  {
+    "id": "pgto-26-1164",
+    "realizado": "NOVEMBRO",
+    "dataPagto": "01/12/2026",
+    "consultor": "VINICIUS SOUZA",
+    "tipo": "PARCEIRO",
+    "projeto": "ADM E CONTROLE",
+    "numeroNota": "14",
+    "tipoDespesa": "Honorário / Prestação de Serviços",
+    "valor": 6000,
+    "status": "Pago",
+    "bm": "",
+    "centroCusto": "01.01",
+    "observacoes": ""
+  },
+  {
+    "id": "pgto-26-1165",
     "realizado": "NOVEMBRO",
     "dataPagto": "18/11/2026",
     "consultor": "ERIC LAIA",
@@ -17325,7 +17475,7 @@
     "observacoes": ""
   },
   {
-    "id": "pgto-26-1156",
+    "id": "pgto-26-1166",
     "realizado": "NOVEMBRO",
     "dataPagto": "18/11/2026",
     "consultor": "VINICIUS SOUZA",
@@ -17340,7 +17490,7 @@
     "observacoes": ""
   },
   {
-    "id": "pgto-26-1157",
+    "id": "pgto-26-1167",
     "realizado": "NOVEMBRO",
     "dataPagto": "18/11/2026",
     "consultor": "VINICIUS SOUZA",
@@ -17355,7 +17505,7 @@
     "observacoes": ""
   },
   {
-    "id": "pgto-26-1158",
+    "id": "pgto-26-1168",
     "realizado": "NOVEMBRO",
     "dataPagto": "18/11/2026",
     "consultor": "VINICIUS SOUZA",
@@ -17370,7 +17520,7 @@
     "observacoes": ""
   },
   {
-    "id": "pgto-26-1159",
+    "id": "pgto-26-1169",
     "realizado": "NOVEMBRO",
     "dataPagto": "18/11/2026",
     "consultor": "BEATRIZ PICORELLI",
@@ -17385,7 +17535,7 @@
     "observacoes": ""
   },
   {
-    "id": "pgto-26-1160",
+    "id": "pgto-26-1170",
     "realizado": "NOVEMBRO",
     "dataPagto": "18/11/2026",
     "consultor": "PEDRO COLARES",
@@ -17400,7 +17550,7 @@
     "observacoes": ""
   },
   {
-    "id": "pgto-26-1161",
+    "id": "pgto-26-1171",
     "realizado": "NOVEMBRO",
     "dataPagto": "18/11/2026",
     "consultor": "BEATRIZ PICORELLI",
@@ -17415,7 +17565,7 @@
     "observacoes": ""
   },
   {
-    "id": "pgto-26-1162",
+    "id": "pgto-26-1172",
     "realizado": "NOVEMBRO",
     "dataPagto": "18/11/2026",
     "consultor": "CEZAR HENRIQUE",
@@ -17430,7 +17580,7 @@
     "observacoes": ""
   },
   {
-    "id": "pgto-26-1163",
+    "id": "pgto-26-1173",
     "realizado": "NOVEMBRO",
     "dataPagto": "04/11/2026",
     "consultor": "TIAGO ANGELO",
@@ -17445,7 +17595,7 @@
     "observacoes": ""
   },
   {
-    "id": "pgto-26-1164",
+    "id": "pgto-26-1174",
     "realizado": "NOVEMBRO",
     "dataPagto": "25/11/2026",
     "consultor": "LOURIVAL JORDÃO",
@@ -17460,7 +17610,7 @@
     "observacoes": ""
   },
   {
-    "id": "pgto-26-1165",
+    "id": "pgto-26-1175",
     "realizado": "NOVEMBRO",
     "dataPagto": "25/11/2026",
     "consultor": "MARCELO LARA",
@@ -17475,7 +17625,7 @@
     "observacoes": ""
   },
   {
-    "id": "pgto-26-1166",
+    "id": "pgto-26-1176",
     "realizado": "NOVEMBRO",
     "dataPagto": "25/11/2026",
     "consultor": "MARCELO LARA",
@@ -17490,7 +17640,7 @@
     "observacoes": ""
   },
   {
-    "id": "pgto-26-1167",
+    "id": "pgto-26-1177",
     "realizado": "NOVEMBRO",
     "dataPagto": "25/11/2026",
     "consultor": "EDUARDO OLIVEIRA",
@@ -17505,7 +17655,7 @@
     "observacoes": ""
   },
   {
-    "id": "pgto-26-1168",
+    "id": "pgto-26-1178",
     "realizado": "NOVEMBRO",
     "dataPagto": "10/12/2026",
     "consultor": "ALEJANDRO LAPUENTE",
@@ -17520,7 +17670,7 @@
     "observacoes": ""
   },
   {
-    "id": "pgto-26-1169",
+    "id": "pgto-26-1179",
     "realizado": "NOVEMBRO",
     "dataPagto": "10/12/2026",
     "consultor": "ADILSON PASINI",
@@ -17535,7 +17685,7 @@
     "observacoes": ""
   },
   {
-    "id": "pgto-26-1170",
+    "id": "pgto-26-1180",
     "realizado": "NOVEMBRO",
     "dataPagto": "18/11/2026",
     "consultor": "TIAGO ANGELO",
@@ -17550,7 +17700,7 @@
     "observacoes": ""
   },
   {
-    "id": "pgto-26-1171",
+    "id": "pgto-26-1181",
     "realizado": "NOVEMBRO",
     "dataPagto": "30/10/2026",
     "consultor": "ANDRÉ GARCIA",
@@ -17565,7 +17715,7 @@
     "observacoes": ""
   },
   {
-    "id": "pgto-26-1172",
+    "id": "pgto-26-1182",
     "realizado": "NOVEMBRO",
     "dataPagto": "25/11/2026",
     "consultor": "ANDRÉ GARCIA",
@@ -17580,7 +17730,7 @@
     "observacoes": ""
   },
   {
-    "id": "pgto-26-1173",
+    "id": "pgto-26-1183",
     "realizado": "NOVEMBRO",
     "dataPagto": "25/11/2026",
     "consultor": "JULIANO MULLER",
@@ -17595,7 +17745,7 @@
     "observacoes": ""
   },
   {
-    "id": "pgto-26-1174",
+    "id": "pgto-26-1184",
     "realizado": "NOVEMBRO",
     "dataPagto": "30/10/2026",
     "consultor": "JULIANO MULLER",
@@ -17610,7 +17760,7 @@
     "observacoes": ""
   },
   {
-    "id": "pgto-26-1175",
+    "id": "pgto-26-1185",
     "realizado": "NOVEMBRO",
     "dataPagto": "30/10/2026",
     "consultor": "JULIANO MULLER",
@@ -17625,7 +17775,7 @@
     "observacoes": ""
   },
   {
-    "id": "pgto-26-1176",
+    "id": "pgto-26-1186",
     "realizado": "NOVEMBRO",
     "dataPagto": "25/11/2026",
     "consultor": "FLÁVIO SOUZA",
@@ -17640,7 +17790,7 @@
     "observacoes": ""
   },
   {
-    "id": "pgto-26-1177",
+    "id": "pgto-26-1187",
     "realizado": "NOVEMBRO",
     "dataPagto": "25/11/2026",
     "consultor": "TAINARA MORAIS",
@@ -17655,7 +17805,7 @@
     "observacoes": ""
   },
   {
-    "id": "pgto-26-1178",
+    "id": "pgto-26-1188",
     "realizado": "NOVEMBRO",
     "dataPagto": "25/11/2026",
     "consultor": "FELIPE MARTINS",
@@ -17667,6 +17817,81 @@
     "status": "Pago",
     "bm": "",
     "centroCusto": "01.05.012.067",
+    "observacoes": ""
+  },
+  {
+    "id": "pgto-26-1189",
+    "realizado": "NOVEMBRO",
+    "dataPagto": "01/12/2026",
+    "consultor": "RODRIGO BARDIM",
+    "tipo": "PARCEIRO",
+    "projeto": "PARTS ACADEMY",
+    "numeroNota": "1",
+    "tipoDespesa": "Honorário / Prestação de Serviços",
+    "valor": 16800,
+    "status": "Pago",
+    "bm": "",
+    "centroCusto": "01.06.003.012",
+    "observacoes": ""
+  },
+  {
+    "id": "pgto-26-1190",
+    "realizado": "NOVEMBRO",
+    "dataPagto": "25/11/2026",
+    "consultor": "BEATRIZ PICORELLI",
+    "tipo": "SÓCIO",
+    "projeto": "DDN - BUSINESS ASSESSMENT",
+    "numeroNota": "RDV 12113791",
+    "tipoDespesa": "Relatório de Viagem (RDV)",
+    "valor": 29.99,
+    "status": "Pago",
+    "bm": "",
+    "centroCusto": "01.04.002.077",
+    "observacoes": ""
+  },
+  {
+    "id": "pgto-26-1191",
+    "realizado": "NOVEMBRO",
+    "dataPagto": "25/11/2026",
+    "consultor": "PEDRO COLARES",
+    "tipo": "SÓCIO",
+    "projeto": "PROSPECÇÃO",
+    "numeroNota": "RDV 12174113",
+    "tipoDespesa": "Relatório de Viagem (RDV)",
+    "valor": 759.28,
+    "status": "Pago",
+    "bm": "",
+    "centroCusto": "01.00.10.013",
+    "observacoes": ""
+  },
+  {
+    "id": "pgto-26-1192",
+    "realizado": "NOVEMBRO",
+    "dataPagto": "25/11/2026",
+    "consultor": "MARCELO LARA",
+    "tipo": "SÓCIO",
+    "projeto": "DDN - BUSINESS ASSESSMENT",
+    "numeroNota": "RDV 12101564",
+    "tipoDespesa": "Relatório de Viagem (RDV)",
+    "valor": 507.91,
+    "status": "Pago",
+    "bm": "",
+    "centroCusto": "01.04.002.077",
+    "observacoes": ""
+  },
+  {
+    "id": "pgto-26-1193",
+    "realizado": "NOVEMBRO",
+    "dataPagto": "25/11/2026",
+    "consultor": "MARCELO LARA",
+    "tipo": "SÓCIO",
+    "projeto": "DDN - BUSINESS ASSESSMENT",
+    "numeroNota": "RDV 12101564",
+    "tipoDespesa": "Cartão Corporativo",
+    "valor": 5323.64,
+    "status": "Cartão Corporativo",
+    "bm": "",
+    "centroCusto": "01.04.002.077",
     "observacoes": ""
   }
 ]

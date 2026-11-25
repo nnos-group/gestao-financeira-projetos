@@ -1,7 +1,7 @@
 [
   {
     "id": "cred-001",
-    "projeto": "EXCELÊNCIA EM SERVIÇOS IVECO",
+    "projeto": "EXCELÊNCIA EM SERVIÇOS IVECO",
     "dataInicial": "2024-06-02",
     "dataFinal": "2024-06-07",
     "instrutor": "PEDRO COLARES",
@@ -11,10 +11,12 @@
     "credito": 1326.1,
     "notaDebito": "",
     "creditoUtilizado": "NÃO",
-    "projetoUtilizado": "",
+    "projetoUtilizado": "901 DIAS",
     "dataInicialUtilizacao": "",
     "dataFinalUtilizacao": "",
-    "observacoes": ""
+    "observacoes": "",
+    "atualizadoEm": "2026-11-25T14:26:35.912Z",
+    "atualizadoPor": "Planilha Oficial"
   },
   {
     "id": "cred-002",
@@ -28,10 +30,12 @@
     "credito": 1812.9,
     "notaDebito": "",
     "creditoUtilizado": "SIM",
-    "projetoUtilizado": "",
+    "projetoUtilizado": "CONCLUÍDO",
     "dataInicialUtilizacao": "",
     "dataFinalUtilizacao": "",
-    "observacoes": ""
+    "observacoes": "",
+    "atualizadoEm": "2026-11-25T14:26:35.912Z",
+    "atualizadoPor": "Planilha Oficial"
   },
   {
     "id": "cred-003",
@@ -45,10 +49,12 @@
     "credito": 154.58,
     "notaDebito": "",
     "creditoUtilizado": "SIM",
-    "projetoUtilizado": "DM - PROCESSOS DE PÓS VENDA BR",
-    "dataInicialUtilizacao": "2025-01-13",
-    "dataFinalUtilizacao": "2025-01-17",
-    "observacoes": ""
+    "projetoUtilizado": "CONCLUÍDO",
+    "dataInicialUtilizacao": "DM - PROCESSOS DE PÓS VENDA BR",
+    "dataFinalUtilizacao": "2025-01-13",
+    "observacoes": "",
+    "atualizadoEm": "2026-11-25T14:26:35.912Z",
+    "atualizadoPor": "Planilha Oficial"
   },
   {
     "id": "cred-004",
@@ -62,10 +68,12 @@
     "credito": 857.31,
     "notaDebito": "",
     "creditoUtilizado": "SIM",
-    "projetoUtilizado": "DM - PROCESSOS DE PÓS VENDA BR",
-    "dataInicialUtilizacao": "2025-01-13",
-    "dataFinalUtilizacao": "2025-01-17",
-    "observacoes": ""
+    "projetoUtilizado": "CONCLUÍDO",
+    "dataInicialUtilizacao": "DM - PROCESSOS DE PÓS VENDA BR",
+    "dataFinalUtilizacao": "2025-01-13",
+    "observacoes": "",
+    "atualizadoEm": "2026-11-25T14:26:35.912Z",
+    "atualizadoPor": "Planilha Oficial"
   },
   {
     "id": "cred-005",
@@ -79,10 +87,12 @@
     "credito": 710.53,
     "notaDebito": "",
     "creditoUtilizado": "NÃO",
-    "projetoUtilizado": "",
+    "projetoUtilizado": "607 DIAS",
     "dataInicialUtilizacao": "",
     "dataFinalUtilizacao": "",
-    "observacoes": ""
+    "observacoes": "",
+    "atualizadoEm": "2026-11-25T14:26:35.912Z",
+    "atualizadoPor": "Planilha Oficial"
   },
   {
     "id": "cred-006",
@@ -96,10 +106,12 @@
     "credito": 539.09,
     "notaDebito": "",
     "creditoUtilizado": "SIM",
-    "projetoUtilizado": "",
+    "projetoUtilizado": "CONCLUÍDO",
     "dataInicialUtilizacao": "",
     "dataFinalUtilizacao": "",
-    "observacoes": ""
+    "observacoes": "",
+    "atualizadoEm": "2026-11-25T14:26:35.912Z",
+    "atualizadoPor": "Planilha Oficial"
   },
   {
     "id": "cred-007",
@@ -113,10 +125,12 @@
     "credito": 995.67,
     "notaDebito": "",
     "creditoUtilizado": "NÃO",
-    "projetoUtilizado": "",
+    "projetoUtilizado": "544 DIAS",
     "dataInicialUtilizacao": "",
     "dataFinalUtilizacao": "",
-    "observacoes": ""
+    "observacoes": "",
+    "atualizadoEm": "2026-11-25T14:26:35.912Z",
+    "atualizadoPor": "Planilha Oficial"
   },
   {
     "id": "cred-008",
@@ -130,10 +144,12 @@
     "credito": 887.46,
     "notaDebito": "",
     "creditoUtilizado": "SIM",
-    "projetoUtilizado": "",
+    "projetoUtilizado": "CONCLUÍDO",
     "dataInicialUtilizacao": "",
     "dataFinalUtilizacao": "",
-    "observacoes": ""
+    "observacoes": "",
+    "atualizadoEm": "2026-11-25T14:26:35.912Z",
+    "atualizadoPor": "Planilha Oficial"
   },
   {
     "id": "cred-009",
@@ -147,10 +163,12 @@
     "credito": 887.46,
     "notaDebito": "",
     "creditoUtilizado": "NÃO",
-    "projetoUtilizado": "",
+    "projetoUtilizado": "504 DIAS",
     "dataInicialUtilizacao": "",
     "dataFinalUtilizacao": "",
-    "observacoes": ""
+    "observacoes": "",
+    "atualizadoEm": "2026-11-25T14:26:35.912Z",
+    "atualizadoPor": "Planilha Oficial"
   },
   {
     "id": "cred-010",
@@ -164,10 +182,12 @@
     "credito": 130,
     "notaDebito": "",
     "creditoUtilizado": "NÃO",
-    "projetoUtilizado": "",
+    "projetoUtilizado": "504 DIAS",
     "dataInicialUtilizacao": "",
     "dataFinalUtilizacao": "",
-    "observacoes": ""
+    "observacoes": "",
+    "atualizadoEm": "2026-11-25T14:26:35.912Z",
+    "atualizadoPor": "Planilha Oficial"
   },
   {
     "id": "cred-011",
@@ -181,10 +201,12 @@
     "credito": 130,
     "notaDebito": "",
     "creditoUtilizado": "NÃO",
-    "projetoUtilizado": "",
+    "projetoUtilizado": "504 DIAS",
     "dataInicialUtilizacao": "",
     "dataFinalUtilizacao": "",
-    "observacoes": ""
+    "observacoes": "",
+    "atualizadoEm": "2026-11-25T14:26:35.912Z",
+    "atualizadoPor": "Planilha Oficial"
   },
   {
     "id": "cred-012",
@@ -198,10 +220,12 @@
     "credito": 1769.78,
     "notaDebito": "",
     "creditoUtilizado": "SIM",
-    "projetoUtilizado": "SERVIÇOS CNH",
-    "dataInicialUtilizacao": "2026-04-14",
-    "dataFinalUtilizacao": "",
-    "observacoes": ""
+    "projetoUtilizado": "CONCLUÍDO",
+    "dataInicialUtilizacao": "SERVIÇOS CNH",
+    "dataFinalUtilizacao": "2026-04-14",
+    "observacoes": "",
+    "atualizadoEm": "2026-11-25T14:26:35.912Z",
+    "atualizadoPor": "Planilha Oficial"
   },
   {
     "id": "cred-013",
@@ -215,10 +239,12 @@
     "credito": 1517.23,
     "notaDebito": "",
     "creditoUtilizado": "SIM",
-    "projetoUtilizado": "",
+    "projetoUtilizado": "CONCLUÍDO",
     "dataInicialUtilizacao": "",
     "dataFinalUtilizacao": "",
-    "observacoes": ""
+    "observacoes": "",
+    "atualizadoEm": "2026-11-25T14:26:35.912Z",
+    "atualizadoPor": "Planilha Oficial"
   },
   {
     "id": "cred-014",
@@ -232,10 +258,12 @@
     "credito": 527.7,
     "notaDebito": "",
     "creditoUtilizado": "NÃO",
-    "projetoUtilizado": "",
+    "projetoUtilizado": "153 DIAS",
     "dataInicialUtilizacao": "",
     "dataFinalUtilizacao": "",
-    "observacoes": ""
+    "observacoes": "",
+    "atualizadoEm": "2026-11-25T14:26:35.912Z",
+    "atualizadoPor": "Planilha Oficial"
   },
   {
     "id": "cred-015",
@@ -252,6 +280,8 @@
     "projetoUtilizado": "",
     "dataInicialUtilizacao": "",
     "dataFinalUtilizacao": "",
-    "observacoes": ""
+    "observacoes": "",
+    "atualizadoEm": "2026-11-25T14:26:35.912Z",
+    "atualizadoPor": "Planilha Oficial"
   }
 ]
