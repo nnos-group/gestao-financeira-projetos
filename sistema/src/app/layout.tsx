@@ -36,7 +36,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{var t=localStorage.getItem('tema');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}`,
+            __html: `try{if(window.location.pathname.indexOf('/login')===0){document.documentElement.setAttribute('data-theme','light')}else{var t=localStorage.getItem('tema');if(t)document.documentElement.setAttribute('data-theme',t)}}catch(e){}`,
           }}
         />
         {/* Proteção Global contra F12, DevTools, Exibir Código e Clique Direito */}

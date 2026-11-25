@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { usePerfilAcesso } from "@/contexts/PerfilAcessoContext";
 
@@ -9,6 +9,19 @@ type ModoTelaLogin = "PADRAO" | "MFA_GOOGLE" | "ESQUECI_SENHA";
 export default function LoginPage() {
   const router = useRouter();
   const { ativarPerfil, setLiderSimulado } = usePerfilAcesso();
+
+  // Garante que a tela de Login seja SEMPRE exibida no Modo Claro
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", "light");
+    return () => {
+      try {
+        const temaSalvo = localStorage.getItem("tema");
+        if (temaSalvo) {
+          document.documentElement.setAttribute("data-theme", temaSalvo);
+        }
+      } catch {}
+    };
+  }, []);
 
   const [modo, setModo] = useState<ModoTelaLogin>("PADRAO");
   const [usuario, setUsuario] = useState("");
@@ -211,6 +224,7 @@ export default function LoginPage() {
 
   return (
     <div
+      className="login-light-only"
       style={{
         minHeight: "100vh",
         width: "100%",
@@ -223,6 +237,7 @@ export default function LoginPage() {
         justifyContent: "center",
         padding: "32px 16px",
         fontFamily: "var(--font-jakarta, 'Plus Jakarta Sans', sans-serif)",
+        colorScheme: "light",
       }}
     >
       {/* Card Central no Padrão Clean do Print 3 */}
