@@ -110,6 +110,45 @@ export async function POST(request: Request) {
     if (lancamento?.id) {
       const obsSalva = await salvarObservacaoLancamento(lancamento.id, body.observacoes);
       (lancamento as Record<string, unknown>).observacoes = obsSalva;
+
+      // Registra no backup de atividades criadas pelo sistema web para preservação em sincronizações da planilha
+      try {
+        const { data: cfg } = await db
+          .from("configuracoes")
+          .select("descricao")
+          .eq("chave", "lancamentos_sistema_web_v1")
+          .maybeSingle();
+        const listaWeb: any[] = cfg?.descricao ? JSON.parse(cfg.descricao) : [];
+        const registroLimpo = {
+          id: lancamento.id,
+          competencia: lancamento.competencia,
+          projeto_id: lancamento.projeto_id,
+          consultor_id: lancamento.consultor_id,
+          atividade: lancamento.atividade,
+          modalidade: lancamento.modalidade,
+          local: lancamento.local,
+          regiao: lancamento.regiao,
+          data_inicial: lancamento.data_inicial,
+          data_final: lancamento.data_final,
+          perfil: lancamento.perfil,
+          horas: lancamento.horas,
+          faturar: lancamento.faturar,
+          repasse: lancamento.repasse,
+          custo_consultor: lancamento.custo_consultor,
+          logistica: lancamento.logistica,
+          status: lancamento.status,
+          precisa_logistica: lancamento.precisa_logistica,
+          criado_em: lancamento.criado_em,
+          atualizado_em: lancamento.atualizado_em,
+        };
+        const filtrada = listaWeb.filter((x: any) => x?.id !== lancamento.id);
+        filtrada.push(registroLimpo);
+        await db
+          .from("configuracoes")
+          .upsert({ chave: "lancamentos_sistema_web_v1", descricao: JSON.stringify(filtrada) }, { onConflict: "chave" });
+      } catch (e) {
+        console.warn("Aviso ao registrar backup de lançamento web:", e);
+      }
     }
 
     // Se demanda logística for verdadeira, inicializa o registro de viagem com agência e instruções

@@ -120,6 +120,45 @@ export async function PATCH(
       (data as Record<string, unknown>).observacoes = obsSalva;
     }
 
+    // Atualiza o registro no backup de lançamentos do sistema web (se já existir lá ou foi editado)
+    try {
+      const { data: cfg } = await db
+        .from("configuracoes")
+        .select("descricao")
+        .eq("chave", "lancamentos_sistema_web_v1")
+        .maybeSingle();
+      const listaWeb: any[] = cfg?.descricao ? JSON.parse(cfg.descricao) : [];
+      if (listaWeb.some((x: any) => x?.id === id) && data) {
+        const atualizada = listaWeb.map((x: any) =>
+          x?.id === id
+            ? {
+                ...x,
+                competencia: data.competencia,
+                projeto_id: data.projeto_id,
+                consultor_id: data.consultor_id,
+                atividade: data.atividade,
+                modalidade: data.modalidade,
+                local: data.local,
+                regiao: data.regiao,
+                data_inicial: data.data_inicial,
+                data_final: data.data_final,
+                perfil: data.perfil,
+                horas: data.horas,
+                faturar: data.faturar,
+                repasse: data.repasse,
+                custo_consultor: data.custo_consultor,
+                status: data.status,
+                precisa_logistica: data.precisa_logistica,
+                atualizado_em: data.atualizado_em,
+              }
+            : x
+        );
+        await db
+          .from("configuracoes")
+          .upsert({ chave: "lancamentos_sistema_web_v1", descricao: JSON.stringify(atualizada) }, { onConflict: "chave" });
+      }
+    } catch {}
+
     // Atualiza dados de agência e observação de orientações na tabela viagens do Supabase
     if (body.observacao_agencia !== undefined || body.agencia !== undefined) {
       const { data: vExist } = await db
@@ -201,6 +240,20 @@ export async function DELETE(
     } catch {}
     try {
       await removerObservacaoLancamento(id);
+    } catch {}
+    try {
+      const { data: cfg } = await db
+        .from("configuracoes")
+        .select("descricao")
+        .eq("chave", "lancamentos_sistema_web_v1")
+        .maybeSingle();
+      if (cfg?.descricao) {
+        const listaWeb: any[] = JSON.parse(cfg.descricao);
+        const filtrada = listaWeb.filter((x: any) => x?.id !== id);
+        await db
+          .from("configuracoes")
+          .upsert({ chave: "lancamentos_sistema_web_v1", descricao: JSON.stringify(filtrada) }, { onConflict: "chave" });
+      }
     } catch {}
 
     const { error } = await db.from("lancamentos").delete().eq("id", id);

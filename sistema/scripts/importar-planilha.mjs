@@ -141,7 +141,17 @@ check(await sb.from('consultores').upsert(
   [...consultoresVistos.values()].map(({ nome, tipo, fornecedor }) => ({ nome, tipo, fornecedor })), { onConflict: 'nome' }));
 const consultorId = Object.fromEntries(check(await sb.from('consultores').select('id,nome')).map((c) => [c.nome, c.id]));
 
-// ---------- 4. Carga de lançamentos (limpa e recarrega) ----------
+// ---------- 4. Carga de lançamentos (limpa e recarrega preservando cadastros web) ----------
+const { data: cfgWeb } = await sb
+  .from('configuracoes')
+  .select('descricao')
+  .eq('chave', 'lancamentos_sistema_web_v1')
+  .maybeSingle();
+const lancamentosWebSalvos = cfgWeb?.descricao ? JSON.parse(cfgWeb.descricao) : [];
+const assinaturasPlanilha = new Set(
+  lancs.map((l) => `${l.projeto}|${l.instrutor || ''}|${up(l.atividade)}|${l.data_inicial || ''}|${l.data_final || ''}`)
+);
+
 console.log('Limpando lançamentos anteriores...');
 check(await sb.from('lancamentos').delete().gte('competencia', `${ANO}-01-01`).lte('competencia', `${ANO}-12-31`));
 
@@ -156,6 +166,28 @@ for (let i = 0; i < paraInserir.length; i += 500) {
 }
 const idPorKey = new Map(lancs.map((l, i) => [l._key, idsPorOrdem[i]]));
 await inserirLotes('viagens', viagensRaw.map(({ _key, ...v }) => ({ ...v, lancamento_id: idPorKey.get(_key) })));
+
+const nomeProjPorId = Object.fromEntries(Object.entries(projetoId).map(([nome, id]) => [id, nome]));
+const nomeConsPorId = Object.fromEntries(Object.entries(consultorId).map(([nome, id]) => [id, nome]));
+for (const lw of lancamentosWebSalvos) {
+  if (!lw || !lw.id) continue;
+  const pNome = up(nomeProjPorId[lw.projeto_id] || '');
+  const cNome = up(nomeConsPorId[lw.consultor_id] || '');
+  const assinatura = `${pNome}|${cNome}|${up(lw.atividade)}|${lw.data_inicial || ''}|${lw.data_final || ''}`;
+  if (!assinaturasPlanilha.has(assinatura)) {
+    await sb.from('lancamentos').upsert(lw, { onConflict: 'id' });
+    if (lw.precisa_logistica) {
+      const { data: vEx } = await sb.from('viagens').select('id').eq('lancamento_id', lw.id);
+      if (!vEx || vEx.length === 0) {
+        await sb.from('viagens').insert({
+          lancamento_id: lw.id,
+          agencia: 'FÁTIMA',
+          custo_1: 0, custo_2: 0, custo_3: 0, custo_4: 0, custo_5: 0,
+        });
+      }
+    }
+  }
+}
 
 // ---------- 5. Resumo ----------
 const soma = (k) => lancs.reduce((s, l) => s + (l[k] ?? 0), 0);
