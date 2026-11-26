@@ -29,6 +29,11 @@ interface ItemProjetoValor {
   valor: number;
 }
 
+interface IndicadorInicialOverride {
+  pct: number;
+  ehPositivo: boolean;
+}
+
 export interface RelatorioSemanalItem {
   id: string;
   dataReferencia: string;
@@ -80,6 +85,13 @@ export interface RelatorioSemanalItem {
   totalAReceber: number;
   projetosMes: ItemProjetoValor[];
   totalProjetos: number;
+  indicadoresIniciais?: {
+    posicaoFinanceira?: IndicadorInicialOverride;
+    contasAPagar?: IndicadorInicialOverride;
+    contasAReceber?: IndicadorInicialOverride;
+    aReceberEmAtraso?: IndicadorInicialOverride;
+    projetosMes?: IndicadorInicialOverride;
+  };
 }
 
 function fmtNum(v: number | undefined | null, casas = 2): string {
@@ -95,6 +107,72 @@ function fmtCompactoOuDecimal(v: number | undefined | null): string {
   if (n === 0) return "0";
   if (Number.isInteger(n) && n < 1000) return String(n);
   return fmtNum(n, 2);
+}
+
+// Input Monetário formatado no padrão brasileiro 0.000,00 (com suporte a sinal negativo)
+function InputMoedaBR({
+  value,
+  onChange,
+  style,
+}: {
+  value: number;
+  onChange: (novoValor: number) => void;
+  style?: React.CSSProperties;
+}) {
+  const formatarMoeda = (num: number) => {
+    const n = Number(num) || 0;
+    const negativo = n < 0;
+    const abs = Math.abs(n);
+    const fmt = abs.toLocaleString("pt-BR", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+    return negativo ? `-${fmt}` : fmt;
+  };
+
+  const [texto, setTexto] = useState<string>(() => formatarMoeda(value));
+  const [focado, setFocado] = useState(false);
+
+  useEffect(() => {
+    if (!focado) {
+      setTexto(formatarMoeda(value));
+    }
+  }, [value, focado]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value;
+    const negativo = raw.trim().startsWith("-");
+    const apenasDigitos = raw.replace(/\D/g, "");
+    const centavos = parseInt(apenasDigitos || "0", 10);
+    const numero = (negativo ? -1 : 1) * (centavos / 100);
+    setTexto(formatarMoeda(numero));
+    onChange(Math.round(numero * 100) / 100);
+  };
+
+  return (
+    <input
+      type="text"
+      inputMode="decimal"
+      value={texto}
+      onFocus={() => setFocado(true)}
+      onBlur={() => {
+        setFocado(false);
+        setTexto(formatarMoeda(value));
+      }}
+      onChange={handleChange}
+      className="form-input"
+      style={{
+        width: "100%",
+        padding: "7px 10px",
+        borderRadius: "7px",
+        border: "1px solid #cbd5e1",
+        fontFamily: "var(--font-jakarta, 'Plus Jakarta Sans', sans-serif)",
+        fontSize: "13px",
+        fontWeight: 600,
+        ...style,
+      }}
+    />
+  );
 }
 
 function calcularVariacao(atual: number, anterior?: number | null): {
@@ -114,22 +192,31 @@ function IndicadorVariacaoSeta({
   atual,
   anterior,
   inverterSemantica = false,
+  overrideSemAnterior,
   tamanho = "md",
 }: {
   atual: number;
   anterior?: number | null;
   inverterSemantica?: boolean;
+  overrideSemAnterior?: IndicadorInicialOverride;
   tamanho?: "sm" | "md" | "lg";
 }) {
-  const { pct, subiu } = calcularVariacao(atual, anterior);
-  // Para Posição Financeira, Contas a Receber e Projetos: subir é positivo (verde), cair é negativo (rosa/vermelho)
-  // Para A Receber em Atraso: subir o atraso é negativo (rosa/vermelho, seta para baixo no estilo do print), cair é positivo (verde)
-  const ehPositivo = inverterSemantica ? !subiu : subiu;
+  let pct = 0;
+  let ehPositivo = true;
+
+  if (anterior !== undefined && anterior !== null && anterior !== 0) {
+    const calc = calcularVariacao(atual, anterior);
+    pct = calc.pct;
+    ehPositivo = inverterSemantica ? !calc.subiu : calc.subiu;
+  } else if (overrideSemAnterior) {
+    pct = overrideSemAnterior.pct;
+    ehPositivo = overrideSemAnterior.ehPositivo;
+  }
 
   const corBorda = ehPositivo ? "#a7dec7" : "#f5b5b8";
   const corSeta = ehPositivo ? "#9fd8be" : "#f2a6aa";
   const corTexto = "#334155";
-  const setaParaCima = inverterSemantica ? !subiu : subiu;
+  const setaParaCima = ehPositivo;
 
   const dim = tamanho === "lg" ? 48 : tamanho === "sm" ? 36 : 42;
   const fontPct = tamanho === "lg" ? "13px" : tamanho === "sm" ? "10.5px" : "11.5px";
@@ -139,7 +226,7 @@ function IndicadorVariacaoSeta({
       title={
         anterior != null
           ? `Variação em relação ao relatório anterior (${fmtNum(anterior)} -> ${fmtNum(atual)})`
-          : "Sem relatório anterior para comparação"
+          : "Indicador comparativo em relação ao relatório anterior"
       }
       style={{
         display: "inline-flex",
@@ -207,6 +294,10 @@ export default function AcompanhamentoSemanalPage() {
     usuarioLogado?.perfilId === "DIRETORIA" ||
     usuarioLogado?.perfilId === "ADMIN";
 
+  // Modo de edição e criação de novo Relatório Semanal permitido APENAS pelo Adm
+  const podeEditarRelatorio =
+    perfilAtivoId === "ADMIN" || (!perfilAtivoId && usuarioLogado?.perfilId === "ADMIN");
+
   const [historico, setHistorico] = useState<RelatorioSemanalItem[]>(
     historicoInicial as unknown as RelatorioSemanalItem[]
   );
@@ -245,7 +336,7 @@ export default function AcompanhamentoSemanalPage() {
   const { relatorioAtivo, relatorioAnterior } = useMemo(() => {
     const idx = historico.findIndex((r) => r.id === relatorioSelecionadoId);
     const ativo = idx >= 0 ? historico[idx] : historico[0];
-    const anterior = idx >= 0 && idx + 1 < historico.length ? historico[idx + 1] : historico[1] || null;
+    const anterior = idx >= 0 && idx + 1 < historico.length ? historico[idx + 1] : null;
     return { relatorioAtivo: ativo, relatorioAnterior: anterior };
   }, [historico, relatorioSelecionadoId]);
 
@@ -260,12 +351,13 @@ export default function AcompanhamentoSemanalPage() {
   }, [historico]);
 
   const abrirModalEditarAtual = () => {
-    if (!relatorioAtivo) return;
+    if (!podeEditarRelatorio || !relatorioAtivo) return;
     setFormRelatorio(JSON.parse(JSON.stringify(relatorioAtivo)));
     setModalEdicaoAberto(true);
   };
 
   const abrirModalNovoRelatorio = async () => {
+    if (!podeEditarRelatorio) return;
     const base = relatorioAtivo || historico[0];
     const hojeISO = new Date().toISOString().slice(0, 10);
     const MESES = [
@@ -290,12 +382,11 @@ export default function AcompanhamentoSemanalPage() {
     copia.dataReferencia = hojeISO;
     copia.mesReferencia = mesCorrente;
     copia.anoReferencia = dt.getFullYear();
-    copia.criadoPor = usuarioLogado?.nome || "Diretoria Executiva";
+    copia.criadoPor = usuarioLogado?.nome || "Administrador";
 
     setFormRelatorio(copia);
     setModalEdicaoAberto(true);
 
-    // Já puxa os dados em tempo real da base de dados para a nova data
     await sincronizarDadosBaseNoForm(hojeISO, copia);
   };
 
@@ -334,6 +425,7 @@ export default function AcompanhamentoSemanalPage() {
 
   const handleSalvarRelatorio = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!podeEditarRelatorio) return;
     try {
       setSalvando(true);
       const res = await fetch("/api/relatorios/acompanhamento-semanal", {
@@ -342,7 +434,7 @@ export default function AcompanhamentoSemanalPage() {
         body: JSON.stringify({
           ...formRelatorio,
           id: `sem-${formRelatorio.dataReferencia}`,
-          criadoPor: usuarioLogado?.nome || formRelatorio.criadoPor || "Diretoria Executiva",
+          criadoPor: usuarioLogado?.nome || formRelatorio.criadoPor || "Administrador",
         }),
       });
       const json = await res.json();
@@ -364,6 +456,7 @@ export default function AcompanhamentoSemanalPage() {
   };
 
   const handleExcluirRelatorio = async (id: string, dataRef: string) => {
+    if (!podeEditarRelatorio) return;
     if (historico.length <= 1) {
       alert("Não é permitido excluir o único relatório do histórico.");
       return;
@@ -384,7 +477,7 @@ export default function AcompanhamentoSemanalPage() {
     } catch {}
   };
 
-  // Bloqueio estrito para perfis que não sejam Diretoria Executiva
+  // Bloqueio estrito para perfis que não sejam Diretoria Executiva ou Admin
   if (!temAcessoDiretoria) {
     return (
       <RelatorioShell titulo="Acompanhamento Semanal">
@@ -453,7 +546,7 @@ export default function AcompanhamentoSemanalPage() {
         </div>
       )}
 
-      {/* Barra de Ferramentas Executiva: Seletor de Histórico, Comparativo, Edição Manual e Novo Envio */}
+      {/* Barra de Ferramentas Executiva: Seletor de Histórico, Comparativo e Ações do Admin */}
       <div
         style={{
           display: "flex",
@@ -533,50 +626,54 @@ export default function AcompanhamentoSemanalPage() {
             <span>Histórico de Envios ({historico.length})</span>
           </button>
 
-          <button
-            type="button"
-            onClick={abrirModalEditarAtual}
-            className="btn-secondary"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "6px",
-              padding: "8px 14px",
-              borderRadius: "10px",
-              fontSize: "12px",
-              fontWeight: 700,
-              cursor: "pointer",
-            }}
-          >
-            <span className="material-symbols-outlined" style={{ fontSize: "17px" }}>
-              edit_note
-            </span>
-            <span>Editar Valores Manuais</span>
-          </button>
+          {podeEditarRelatorio && (
+            <>
+              <button
+                type="button"
+                onClick={abrirModalEditarAtual}
+                className="btn-secondary"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  padding: "8px 14px",
+                  borderRadius: "10px",
+                  fontSize: "12px",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: "17px" }}>
+                  edit_note
+                </span>
+                <span>Editar Valores Manuais</span>
+              </button>
 
-          <button
-            type="button"
-            onClick={abrirModalNovoRelatorio}
-            className="btn-primary"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "6px",
-              padding: "8px 16px",
-              borderRadius: "10px",
-              fontSize: "12px",
-              fontWeight: 700,
-              cursor: "pointer",
-              background: "linear-gradient(135deg, #0083ca 0%, #0a4e82 100%)",
-              color: "#ffffff",
-              border: "none",
-            }}
-          >
-            <span className="material-symbols-outlined" style={{ fontSize: "17px" }}>
-              add_chart
-            </span>
-            <span>Novo Relatório Semanal</span>
-          </button>
+              <button
+                type="button"
+                onClick={abrirModalNovoRelatorio}
+                className="btn-primary"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  padding: "8px 16px",
+                  borderRadius: "10px",
+                  fontSize: "12px",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  background: "linear-gradient(135deg, #0083ca 0%, #0a4e82 100%)",
+                  color: "#ffffff",
+                  border: "none",
+                }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: "17px" }}>
+                  add_chart
+                </span>
+                <span>Novo Relatório Semanal</span>
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -761,6 +858,7 @@ export default function AcompanhamentoSemanalPage() {
                 <IndicadorVariacaoSeta
                   atual={relatorioAtivo.posicaoFinanceira.total}
                   anterior={relatorioAnterior?.posicaoFinanceira?.total}
+                  overrideSemAnterior={relatorioAtivo.indicadoresIniciais?.posicaoFinanceira}
                   tamanho="lg"
                 />
               </div>
@@ -972,6 +1070,8 @@ export default function AcompanhamentoSemanalPage() {
                     <IndicadorVariacaoSeta
                       atual={relatorioAtivo.contasAPagar.totalPeriodo}
                       anterior={relatorioAnterior?.contasAPagar?.totalPeriodo}
+                      inverterSemantica={true}
+                      overrideSemAnterior={relatorioAtivo.indicadoresIniciais?.contasAPagar}
                       tamanho="sm"
                     />
                   </div>
@@ -1111,6 +1211,7 @@ export default function AcompanhamentoSemanalPage() {
                     <IndicadorVariacaoSeta
                       atual={relatorioAtivo.contasAReceber.totalPeriodo}
                       anterior={relatorioAnterior?.contasAReceber?.totalPeriodo}
+                      overrideSemAnterior={relatorioAtivo.indicadoresIniciais?.contasAReceber}
                       tamanho="sm"
                     />
                   </div>
@@ -1210,7 +1311,7 @@ export default function AcompanhamentoSemanalPage() {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "minmax(480px, 1.85fr) minmax(240px, 0.85fr) minmax(300px, 1.15fr)",
+              gridTemplateColumns: "minmax(520px, 1.95fr) minmax(235px, 0.82fr) minmax(290px, 1.12fr)",
               gap: "18px",
               alignItems: "stretch",
             }}
@@ -1221,7 +1322,7 @@ export default function AcompanhamentoSemanalPage() {
                 style={{
                   backgroundColor: "#ffffff",
                   borderRadius: "16px",
-                  padding: "16px 18px",
+                  padding: "14px 16px",
                   boxShadow: "0 2px 10px rgba(15, 42, 74, 0.04)",
                   border: "1px solid #e2e8f0",
                   flex: 1,
@@ -1229,7 +1330,15 @@ export default function AcompanhamentoSemanalPage() {
                   flexDirection: "column",
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
+                {/* Cabeçalho com Título + Indicador Posicionado Conforme Seta do Print 1 */}
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    marginBottom: "8px",
+                  }}
+                >
                   <div
                     style={{
                       width: "32px",
@@ -1249,126 +1358,125 @@ export default function AcompanhamentoSemanalPage() {
                   <span style={{ fontSize: "17px", fontWeight: 500, color: "#1e293b", textTransform: "uppercase" }}>
                     A RECEBER EM ATRASO
                   </span>
-                </div>
-
-                <div style={{ display: "flex", alignItems: "center", gap: "10px", flex: 1 }}>
-                  {/* Seta Comparativa Lateral */}
-                  <div style={{ flexShrink: 0 }}>
+                  <div style={{ marginLeft: "4px" }}>
                     <IndicadorVariacaoSeta
                       atual={relatorioAtivo.totalAtraso}
                       anterior={relatorioAnterior?.totalAtraso}
                       inverterSemantica={true}
-                      tamanho="md"
+                      overrideSemAnterior={relatorioAtivo.indicadoresIniciais?.aReceberEmAtraso}
+                      tamanho="sm"
                     />
                   </div>
+                </div>
 
-                  {/* Tabela A Receber em Atraso */}
-                  <div style={{ flex: 1, overflowX: "auto", borderRadius: "6px", border: "1px solid #cbd5e1" }}>
-                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "10.5px" }}>
-                      <thead>
+                {/* Tabela A Receber em Atraso Ocupando 100% da Largura sem Quebra de Linha nos Projetos */}
+                <div style={{ width: "100%", overflowX: "auto", borderRadius: "6px", border: "1px solid #cbd5e1" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "10px" }}>
+                    <thead>
+                      <tr
+                        style={{
+                          backgroundColor: "#0a3254",
+                          color: "#ffffff",
+                          textTransform: "uppercase",
+                          fontWeight: 700,
+                          fontSize: "9.5px",
+                          letterSpacing: "0.02em",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        <th style={{ padding: "6px 6px", textAlign: "center" }}>REALIZADO</th>
+                        <th style={{ padding: "6px 6px", textAlign: "center" }}>FATURADO</th>
+                        <th style={{ padding: "6px 8px", textAlign: "center" }}>PROJETO</th>
+                        <th style={{ padding: "6px 6px", textAlign: "center" }}>PERFIL</th>
+                        <th style={{ padding: "6px 6px", textAlign: "center", whiteSpace: "nowrap" }}>Nº NOTA</th>
+                        <th style={{ padding: "6px 8px", textAlign: "right" }}>VALOR</th>
+                        <th style={{ padding: "6px 6px", textAlign: "center" }}>DIAS</th>
+                        <th style={{ padding: "6px 8px", textAlign: "center" }}>VENCIMENTO</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {relatorioAtivo.aReceberEmAtraso.map((item, idx) => (
                         <tr
+                          key={`${item.numeroNota}-${item.projeto}-${idx}`}
                           style={{
-                            backgroundColor: "#0a3254",
-                            color: "#ffffff",
-                            textTransform: "uppercase",
-                            fontWeight: 700,
-                            fontSize: "9.5px",
-                            letterSpacing: "0.03em",
+                            backgroundColor: idx % 2 === 0 ? "#ffffff" : "#f1f5f9",
+                            borderBottom: "1px solid #e2e8f0",
+                            color: "#475569",
                           }}
                         >
-                          <th style={{ padding: "6px 6px", textAlign: "center" }}>REALIZADO</th>
-                          <th style={{ padding: "6px 6px", textAlign: "center" }}>FATURADO</th>
-                          <th style={{ padding: "6px 8px", textAlign: "center" }}>PROJETO</th>
-                          <th style={{ padding: "6px 6px", textAlign: "center" }}>PERFIL</th>
-                          <th style={{ padding: "6px 6px", textAlign: "center" }}>Nº NOTA</th>
-                          <th style={{ padding: "6px 8px", textAlign: "right" }}>VALOR</th>
-                          <th style={{ padding: "6px 6px", textAlign: "center" }}>DIAS</th>
-                          <th style={{ padding: "6px 8px", textAlign: "center" }}>VENCIMENTO</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {relatorioAtivo.aReceberEmAtraso.map((item, idx) => (
-                          <tr
-                            key={`${item.numeroNota}-${item.projeto}-${idx}`}
+                          <td style={{ padding: "4.5px 6px", textAlign: "center", whiteSpace: "nowrap" }}>
+                            {item.realizado}
+                          </td>
+                          <td style={{ padding: "4.5px 6px", textAlign: "center", whiteSpace: "nowrap" }}>
+                            {item.faturado}
+                          </td>
+                          <td
                             style={{
-                              backgroundColor: idx % 2 === 0 ? "#ffffff" : "#f1f5f9",
-                              borderBottom: "1px solid #e2e8f0",
-                              color: "#475569",
+                              padding: "4.5px 8px",
+                              textAlign: "center",
+                              fontWeight: 600,
+                              color: "#334155",
+                              fontSize: "9.2px",
+                              whiteSpace: "nowrap",
                             }}
                           >
-                            <td style={{ padding: "4px 6px", textAlign: "center", whiteSpace: "nowrap" }}>
-                              {item.realizado}
-                            </td>
-                            <td style={{ padding: "4px 6px", textAlign: "center", whiteSpace: "nowrap" }}>
-                              {item.faturado}
-                            </td>
-                            <td
-                              style={{
-                                padding: "4px 8px",
-                                textAlign: "center",
-                                fontWeight: 600,
-                                color: "#334155",
-                                maxWidth: "180px",
-                              }}
-                            >
-                              {item.projeto}
-                            </td>
-                            <td style={{ padding: "4px 6px", textAlign: "center", whiteSpace: "nowrap" }}>
-                              {item.perfil}
-                            </td>
-                            <td style={{ padding: "4px 6px", textAlign: "center", whiteSpace: "nowrap" }}>
-                              {item.numeroNota}
-                            </td>
-                            <td
-                              style={{
-                                padding: "4px 8px",
-                                textAlign: "right",
-                                fontWeight: 600,
-                                color: "#334155",
-                                whiteSpace: "nowrap",
-                              }}
-                            >
-                              {fmtNum(item.valor)}
-                            </td>
-                            <td
-                              style={{
-                                padding: "4px 6px",
-                                textAlign: "center",
-                                fontWeight: 800,
-                                color: "#c00000",
-                                whiteSpace: "nowrap",
-                              }}
-                            >
-                              {item.dias}
-                            </td>
-                            <td style={{ padding: "4px 8px", textAlign: "center", whiteSpace: "nowrap" }}>
-                              {formatarDataBR(item.vencimento)}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                      <tfoot>
-                        <tr
-                          style={{
-                            backgroundColor: "#0a3254",
-                            color: "#ffffff",
-                            fontWeight: 800,
-                            fontSize: "11px",
-                          }}
-                        >
-                          <td colSpan={5} style={{ padding: "6px 10px", textAlign: "right" }}>
-                            TOTAL
+                            {item.projeto}
                           </td>
-                          <td style={{ padding: "6px 8px", textAlign: "right", whiteSpace: "nowrap" }}>
-                            {fmtNum(relatorioAtivo.totalAtraso)}
+                          <td style={{ padding: "4.5px 6px", textAlign: "center", whiteSpace: "nowrap" }}>
+                            {item.perfil}
                           </td>
-                          <td colSpan={2} style={{ padding: "6px 8px", textAlign: "center" }}>
-                            -
+                          <td style={{ padding: "4.5px 6px", textAlign: "center", whiteSpace: "nowrap" }}>
+                            {item.numeroNota}
+                          </td>
+                          <td
+                            style={{
+                              padding: "4.5px 8px",
+                              textAlign: "right",
+                              fontWeight: 600,
+                              color: "#334155",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {fmtNum(item.valor)}
+                          </td>
+                          <td
+                            style={{
+                              padding: "4.5px 6px",
+                              textAlign: "center",
+                              fontWeight: 800,
+                              color: "#c00000",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {item.dias}
+                          </td>
+                          <td style={{ padding: "4.5px 8px", textAlign: "center", whiteSpace: "nowrap" }}>
+                            {formatarDataBR(item.vencimento)}
                           </td>
                         </tr>
-                      </tfoot>
-                    </table>
-                  </div>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr
+                        style={{
+                          backgroundColor: "#0a3254",
+                          color: "#ffffff",
+                          fontWeight: 800,
+                          fontSize: "10.5px",
+                        }}
+                      >
+                        <td colSpan={5} style={{ padding: "6px 10px", textAlign: "right" }}>
+                          TOTAL
+                        </td>
+                        <td style={{ padding: "6px 8px", textAlign: "right", whiteSpace: "nowrap" }}>
+                          {fmtNum(relatorioAtivo.totalAtraso)}
+                        </td>
+                        <td colSpan={2} style={{ padding: "6px 8px", textAlign: "center" }}>
+                          -
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
                 </div>
               </div>
 
@@ -1441,7 +1549,7 @@ export default function AcompanhamentoSemanalPage() {
               </div>
             </div>
 
-            {/* COLUNA 2: CASH BACK & CLARA DESCONTO NA FATURA (Manual no valor + Gráfico Automático) */}
+            {/* COLUNA 2: CASH BACK & CLARA DESCONTO NA FATURA (Posicionado logo abaixo conforme Print 1) */}
             <div
               style={{
                 backgroundColor: "#ffffff",
@@ -1451,17 +1559,17 @@ export default function AcompanhamentoSemanalPage() {
                 border: "1px solid #e2e8f0",
                 display: "flex",
                 flexDirection: "column",
-                justifyContent: "space-between",
+                justifyContent: "flex-start",
                 gap: "18px",
               }}
             >
               {/* BLOCO SUPERIOR: CASH BACK */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                   <div
                     style={{
-                      width: "38px",
-                      height: "38px",
+                      width: "36px",
+                      height: "36px",
                       borderRadius: "50%",
                       background: "linear-gradient(135deg, #c2f0c2 0%, #68b8e8 100%)",
                       color: "#1d4ed8",
@@ -1470,7 +1578,7 @@ export default function AcompanhamentoSemanalPage() {
                       justifyContent: "center",
                     }}
                   >
-                    <span className="material-symbols-outlined" style={{ fontSize: "22px" }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: "21px" }}>
                       flight_takeoff
                     </span>
                   </div>
@@ -1484,14 +1592,14 @@ export default function AcompanhamentoSemanalPage() {
                 </div>
 
                 {/* Gráfico Dinâmico de Colunas Cash Back (2023-2026) */}
-                <div style={{ marginTop: "4px" }}>
+                <div style={{ marginTop: "2px" }}>
                   <div
                     style={{
                       display: "grid",
                       gridTemplateColumns: "48px 1fr",
                       gap: "4px",
                       alignItems: "stretch",
-                      height: "120px",
+                      height: "118px",
                     }}
                   >
                     {/* Eixo Y */}
@@ -1623,12 +1731,12 @@ export default function AcompanhamentoSemanalPage() {
                 </div>
               </div>
 
-              {/* BLOCO INFERIOR: CLARA DESCONTO NA FATURA */}
+              {/* BLOCO INFERIOR: CLARA DESCONTO NA FATURA (Logo abaixo do Cash Back) */}
               <div
                 style={{
                   display: "flex",
                   flexDirection: "column",
-                  gap: "8px",
+                  gap: "6px",
                   borderTop: "1px dashed #e2e8f0",
                   paddingTop: "14px",
                 }}
@@ -1651,14 +1759,14 @@ export default function AcompanhamentoSemanalPage() {
                 </div>
 
                 {/* Gráfico Dinâmico de Colunas Clara Desconto (2023-2026) */}
-                <div style={{ marginTop: "4px" }}>
+                <div style={{ marginTop: "2px" }}>
                   <div
                     style={{
                       display: "grid",
                       gridTemplateColumns: "48px 1fr",
                       gap: "4px",
                       alignItems: "stretch",
-                      height: "120px",
+                      height: "118px",
                     }}
                   >
                     {/* Eixo Y */}
@@ -1797,7 +1905,7 @@ export default function AcompanhamentoSemanalPage() {
               style={{
                 backgroundColor: "#ffffff",
                 borderRadius: "16px",
-                padding: "16px 18px",
+                padding: "14px 16px",
                 boxShadow: "0 2px 10px rgba(15, 42, 74, 0.04)",
                 border: "1px solid #e2e8f0",
                 display: "flex",
@@ -1811,7 +1919,7 @@ export default function AcompanhamentoSemanalPage() {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
-                  marginBottom: "10px",
+                  marginBottom: "8px",
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -1839,6 +1947,7 @@ export default function AcompanhamentoSemanalPage() {
                 <IndicadorVariacaoSeta
                   atual={relatorioAtivo.totalProjetos}
                   anterior={relatorioAnterior?.totalProjetos}
+                  overrideSemAnterior={relatorioAtivo.indicadoresIniciais?.projetosMes}
                   tamanho="md"
                 />
 
@@ -1849,7 +1958,7 @@ export default function AcompanhamentoSemanalPage() {
 
               {/* Lista de Projetos do Mês Corrente */}
               <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "11px" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "10.5px" }}>
                   <tbody>
                     {relatorioAtivo.projetosMes.map((p, idx) => (
                       <tr
@@ -1860,17 +1969,18 @@ export default function AcompanhamentoSemanalPage() {
                       >
                         <td
                           style={{
-                            padding: "4.5px 8px",
+                            padding: "4px 8px",
                             color: "#64748b",
                             fontWeight: 500,
                             textTransform: "uppercase",
+                            whiteSpace: "nowrap",
                           }}
                         >
                           {p.projeto}
                         </td>
                         <td
                           style={{
-                            padding: "4.5px 8px",
+                            padding: "4px 8px",
                             textAlign: "right",
                             color: "#475569",
                             fontWeight: 600,
@@ -1888,11 +1998,11 @@ export default function AcompanhamentoSemanalPage() {
                         backgroundColor: "#0a3254",
                         color: "#ffffff",
                         fontWeight: 800,
-                        fontSize: "12px",
+                        fontSize: "11.5px",
                       }}
                     >
-                      <td style={{ padding: "7px 10px" }}>TOTAL</td>
-                      <td style={{ padding: "7px 10px", textAlign: "right", whiteSpace: "nowrap" }}>
+                      <td style={{ padding: "6px 10px" }}>TOTAL</td>
+                      <td style={{ padding: "6px 10px", textAlign: "right", whiteSpace: "nowrap" }}>
                         {fmtNum(relatorioAtivo.totalProjetos)}
                       </td>
                     </tr>
@@ -1951,7 +2061,7 @@ export default function AcompanhamentoSemanalPage() {
                 <span className="material-symbols-outlined" style={{ color: "#38bdf8" }}>
                   history
                 </span>
-                <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 800 }}>
+                <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 800, color: "#ffffff" }}>
                   Histórico de Relatórios de Acompanhamento Semanal Enviados
                 </h3>
               </div>
@@ -2055,9 +2165,9 @@ export default function AcompanhamentoSemanalPage() {
                                 cursor: "pointer",
                               }}
                             >
-                              {isAtual ? "Em Exibição" : "Visualizar"}
+                              {isAtual ? "Em Exibição" : "Carregar Relatório"}
                             </button>
-                            {historico.length > 1 && (
+                            {podeEditarRelatorio && historico.length > 1 && (
                               <button
                                 type="button"
                                 onClick={() => handleExcluirRelatorio(item.id, item.dataReferencia)}
@@ -2088,9 +2198,9 @@ export default function AcompanhamentoSemanalPage() {
       )}
 
       {/* =====================================================================
-          MODAL 2: PREENCHIMENTO MANUAL & SINCRONIZAÇÃO COM A BASE DE DADOS
+          MODAL 2: PREENCHIMENTO MANUAL & SINCRONIZAÇÃO COM A BASE (EXCLUSIVO ADMIN)
          ===================================================================== */}
-      {modalEdicaoAberto && (
+      {modalEdicaoAberto && podeEditarRelatorio && (
         <div
           className="modal-backdrop"
           onClick={() => setModalEdicaoAberto(false)}
@@ -2120,9 +2230,10 @@ export default function AcompanhamentoSemanalPage() {
               flexDirection: "column",
               overflow: "hidden",
               boxShadow: "0 24px 60px rgba(0, 0, 0, 0.35)",
+              fontFamily: "var(--font-jakarta, 'Plus Jakarta Sans', sans-serif)",
             }}
           >
-            {/* Header do Modal */}
+            {/* Header do Modal (Print 2: Fonte Branca Nítida) */}
             <div
               className="modal-header"
               style={{
@@ -2139,10 +2250,10 @@ export default function AcompanhamentoSemanalPage() {
                   edit_document
                 </span>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 800 }}>
+                  <h3 style={{ margin: 0, fontSize: "16.5px", fontWeight: 800, color: "#ffffff" }}>
                     Configurar &amp; Publicar Relatório de Acompanhamento Semanal
                   </h3>
-                  <span style={{ fontSize: "11.5px", color: "#bae6fd" }}>
+                  <span style={{ fontSize: "12px", color: "#e0f2fe", fontWeight: 500 }}>
                     Preenchimento manual de Posição Financeira, Contas a Pagar/Receber, Cash Back e Clara + Dados
                     automáticos da Base
                   </span>
@@ -2168,11 +2279,11 @@ export default function AcompanhamentoSemanalPage() {
               onSubmit={handleSalvarRelatorio}
               style={{ padding: "20px 24px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "18px" }}
             >
-              {/* 1. Data de Referência, Mês Corrente e Botão de Sincronização com a Base */}
+              {/* 1. Data de Referência (Mesma Fonte dos Demais Campos), Mês Corrente e Botão de Sincronização */}
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "180px 180px 1fr",
+                  gridTemplateColumns: "190px 190px 1fr",
                   gap: "14px",
                   alignItems: "end",
                   padding: "14px 16px",
@@ -2197,7 +2308,15 @@ export default function AcompanhamentoSemanalPage() {
                       }))
                     }
                     className="form-input"
-                    style={{ width: "100%", padding: "8px 10px", borderRadius: "8px", border: "1px solid #cbd5e1" }}
+                    style={{
+                      width: "100%",
+                      padding: "7px 10px",
+                      borderRadius: "7px",
+                      border: "1px solid #cbd5e1",
+                      fontFamily: "var(--font-jakarta, 'Plus Jakarta Sans', sans-serif)",
+                      fontSize: "13px",
+                      fontWeight: 600,
+                    }}
                   />
                 </div>
 
@@ -2213,7 +2332,15 @@ export default function AcompanhamentoSemanalPage() {
                       setFormRelatorio((prev) => ({ ...prev, mesReferencia: e.target.value.toUpperCase() }))
                     }
                     className="form-input"
-                    style={{ width: "100%", padding: "8px 10px", borderRadius: "8px", border: "1px solid #cbd5e1" }}
+                    style={{
+                      width: "100%",
+                      padding: "7px 10px",
+                      borderRadius: "7px",
+                      border: "1px solid #cbd5e1",
+                      fontFamily: "var(--font-jakarta, 'Plus Jakarta Sans', sans-serif)",
+                      fontSize: "13px",
+                      fontWeight: 600,
+                    }}
                   />
                 </div>
 
@@ -2234,6 +2361,7 @@ export default function AcompanhamentoSemanalPage() {
                       fontSize: "12px",
                       fontWeight: 700,
                       cursor: sincronizandoBase ? "wait" : "pointer",
+                      fontFamily: "var(--font-jakarta, 'Plus Jakarta Sans', sans-serif)",
                     }}
                   >
                     <span className="material-symbols-outlined" style={{ fontSize: "17px" }}>
@@ -2248,7 +2376,7 @@ export default function AcompanhamentoSemanalPage() {
                 </div>
               </div>
 
-              {/* 2. POSIÇÃO FINANCEIRA (Preenchimento Manual) */}
+              {/* 2. POSIÇÃO FINANCEIRA (Preenchimento Manual em formato 0.000,00) */}
               <div
                 style={{
                   padding: "14px 16px",
@@ -2281,7 +2409,7 @@ export default function AcompanhamentoSemanalPage() {
                     key={inst}
                     style={{
                       display: "grid",
-                      gridTemplateColumns: "110px 1fr 1fr 140px",
+                      gridTemplateColumns: "110px 1fr 1fr 150px",
                       gap: "10px",
                       alignItems: "center",
                     }}
@@ -2290,47 +2418,43 @@ export default function AcompanhamentoSemanalPage() {
                       {inst === "itau" ? "ITAÚ" : inst.toUpperCase()}
                     </span>
                     <div>
-                      <label style={{ fontSize: "10px", fontWeight: 700 }}>CAIXA (R$)</label>
-                      <input
-                        type="number"
-                        step="0.01"
+                      <label style={{ fontSize: "10px", fontWeight: 700, display: "block", marginBottom: "2px" }}>
+                        CAIXA (R$)
+                      </label>
+                      <InputMoedaBR
                         value={formRelatorio.posicaoFinanceira[inst].caixa}
-                        onChange={(e) => {
-                          const val = parseFloat(e.target.value) || 0;
+                        onChange={(val) =>
                           setFormRelatorio((prev) => ({
                             ...prev,
                             posicaoFinanceira: {
                               ...prev.posicaoFinanceira,
                               [inst]: { ...prev.posicaoFinanceira[inst], caixa: val },
                             },
-                          }));
-                        }}
-                        className="form-input"
-                        style={{ width: "100%", padding: "6px 8px", borderRadius: "6px", border: "1px solid #cbd5e1" }}
+                          }))
+                        }
                       />
                     </div>
                     <div>
-                      <label style={{ fontSize: "10px", fontWeight: 700 }}>APLICAÇÃO (R$)</label>
-                      <input
-                        type="number"
-                        step="0.01"
+                      <label style={{ fontSize: "10px", fontWeight: 700, display: "block", marginBottom: "2px" }}>
+                        APLICAÇÃO (R$)
+                      </label>
+                      <InputMoedaBR
                         value={formRelatorio.posicaoFinanceira[inst].aplicacao}
-                        onChange={(e) => {
-                          const val = parseFloat(e.target.value) || 0;
+                        onChange={(val) =>
                           setFormRelatorio((prev) => ({
                             ...prev,
                             posicaoFinanceira: {
                               ...prev.posicaoFinanceira,
                               [inst]: { ...prev.posicaoFinanceira[inst], aplicacao: val },
                             },
-                          }));
-                        }}
-                        className="form-input"
-                        style={{ width: "100%", padding: "6px 8px", borderRadius: "6px", border: "1px solid #cbd5e1" }}
+                          }))
+                        }
                       />
                     </div>
                     <div>
-                      <label style={{ fontSize: "10px", fontWeight: 700 }}>RENTABILIDADE</label>
+                      <label style={{ fontSize: "10px", fontWeight: 700, display: "block", marginBottom: "2px" }}>
+                        RENTABILIDADE
+                      </label>
                       <input
                         type="text"
                         value={formRelatorio.posicaoFinanceira[inst].rentabilidade}
@@ -2345,14 +2469,22 @@ export default function AcompanhamentoSemanalPage() {
                           }));
                         }}
                         className="form-input"
-                        style={{ width: "100%", padding: "6px 8px", borderRadius: "6px", border: "1px solid #cbd5e1" }}
+                        style={{
+                          width: "100%",
+                          padding: "7px 10px",
+                          borderRadius: "7px",
+                          border: "1px solid #cbd5e1",
+                          fontFamily: "var(--font-jakarta, 'Plus Jakarta Sans', sans-serif)",
+                          fontSize: "13px",
+                          fontWeight: 600,
+                        }}
                       />
                     </div>
                   </div>
                 ))}
               </div>
 
-              {/* 3. CONTAS A PAGAR & CONTAS A RECEBER (Preenchimento Manual) */}
+              {/* 3. CONTAS A PAGAR & CONTAS A RECEBER (Preenchimento Manual em formato 0.000,00) */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
                 {/* Contas a Pagar */}
                 <div
@@ -2370,13 +2502,12 @@ export default function AcompanhamentoSemanalPage() {
                   </strong>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
                     <div>
-                      <label style={{ fontSize: "10px", fontWeight: 700 }}>VENCIDOS (R$)</label>
-                      <input
-                        type="number"
-                        step="0.01"
+                      <label style={{ fontSize: "10px", fontWeight: 700, display: "block", marginBottom: "2px" }}>
+                        VENCIDOS (R$)
+                      </label>
+                      <InputMoedaBR
                         value={formRelatorio.contasAPagar.vencidos}
-                        onChange={(e) => {
-                          const v = parseFloat(e.target.value) || 0;
+                        onChange={(v) =>
                           setFormRelatorio((prev) => ({
                             ...prev,
                             contasAPagar: {
@@ -2391,20 +2522,17 @@ export default function AcompanhamentoSemanalPage() {
                                     100
                                 ) / 100,
                             },
-                          }));
-                        }}
-                        className="form-input"
-                        style={{ width: "100%", padding: "6px 8px", borderRadius: "6px", border: "1px solid #cbd5e1" }}
+                          }))
+                        }
                       />
                     </div>
                     <div>
-                      <label style={{ fontSize: "10px", fontWeight: 700 }}>VENCEM HOJE (R$)</label>
-                      <input
-                        type="number"
-                        step="0.01"
+                      <label style={{ fontSize: "10px", fontWeight: 700, display: "block", marginBottom: "2px" }}>
+                        VENCEM HOJE (R$)
+                      </label>
+                      <InputMoedaBR
                         value={formRelatorio.contasAPagar.vencemHoje}
-                        onChange={(e) => {
-                          const v = parseFloat(e.target.value) || 0;
+                        onChange={(v) =>
                           setFormRelatorio((prev) => ({
                             ...prev,
                             contasAPagar: {
@@ -2419,20 +2547,17 @@ export default function AcompanhamentoSemanalPage() {
                                     100
                                 ) / 100,
                             },
-                          }));
-                        }}
-                        className="form-input"
-                        style={{ width: "100%", padding: "6px 8px", borderRadius: "6px", border: "1px solid #cbd5e1" }}
+                          }))
+                        }
                       />
                     </div>
                     <div>
-                      <label style={{ fontSize: "10px", fontWeight: 700 }}>A VENCER (R$)</label>
-                      <input
-                        type="number"
-                        step="0.01"
+                      <label style={{ fontSize: "10px", fontWeight: 700, display: "block", marginBottom: "2px" }}>
+                        A VENCER (R$)
+                      </label>
+                      <InputMoedaBR
                         value={formRelatorio.contasAPagar.aVencer}
-                        onChange={(e) => {
-                          const v = parseFloat(e.target.value) || 0;
+                        onChange={(v) =>
                           setFormRelatorio((prev) => ({
                             ...prev,
                             contasAPagar: {
@@ -2447,20 +2572,17 @@ export default function AcompanhamentoSemanalPage() {
                                     100
                                 ) / 100,
                             },
-                          }));
-                        }}
-                        className="form-input"
-                        style={{ width: "100%", padding: "6px 8px", borderRadius: "6px", border: "1px solid #cbd5e1" }}
+                          }))
+                        }
                       />
                     </div>
                     <div>
-                      <label style={{ fontSize: "10px", fontWeight: 700 }}>PAGOS (R$)</label>
-                      <input
-                        type="number"
-                        step="0.01"
+                      <label style={{ fontSize: "10px", fontWeight: 700, display: "block", marginBottom: "2px" }}>
+                        PAGOS (R$)
+                      </label>
+                      <InputMoedaBR
                         value={formRelatorio.contasAPagar.pagos}
-                        onChange={(e) => {
-                          const v = parseFloat(e.target.value) || 0;
+                        onChange={(v) =>
                           setFormRelatorio((prev) => ({
                             ...prev,
                             contasAPagar: {
@@ -2475,27 +2597,22 @@ export default function AcompanhamentoSemanalPage() {
                                     100
                                 ) / 100,
                             },
-                          }));
-                        }}
-                        className="form-input"
-                        style={{ width: "100%", padding: "6px 8px", borderRadius: "6px", border: "1px solid #cbd5e1" }}
+                          }))
+                        }
                       />
                     </div>
                     <div style={{ gridColumn: "1 / -1" }}>
-                      <label style={{ fontSize: "10px", fontWeight: 800 }}>TOTAL DO PERÍODO (R$)</label>
-                      <input
-                        type="number"
-                        step="0.01"
+                      <label style={{ fontSize: "10px", fontWeight: 800, display: "block", marginBottom: "2px" }}>
+                        TOTAL DO PERÍODO (R$)
+                      </label>
+                      <InputMoedaBR
                         value={formRelatorio.contasAPagar.totalPeriodo}
-                        onChange={(e) => {
-                          const v = parseFloat(e.target.value) || 0;
+                        onChange={(v) =>
                           setFormRelatorio((prev) => ({
                             ...prev,
                             contasAPagar: { ...prev.contasAPagar, totalPeriodo: v },
-                          }));
-                        }}
-                        className="form-input"
-                        style={{ width: "100%", padding: "6px 8px", borderRadius: "6px", border: "1px solid #cbd5e1" }}
+                          }))
+                        }
                       />
                     </div>
                   </div>
@@ -2517,13 +2634,12 @@ export default function AcompanhamentoSemanalPage() {
                   </strong>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
                     <div>
-                      <label style={{ fontSize: "10px", fontWeight: 700 }}>VENCIDOS (R$)</label>
-                      <input
-                        type="number"
-                        step="0.01"
+                      <label style={{ fontSize: "10px", fontWeight: 700, display: "block", marginBottom: "2px" }}>
+                        VENCIDOS (R$)
+                      </label>
+                      <InputMoedaBR
                         value={formRelatorio.contasAReceber.vencidos}
-                        onChange={(e) => {
-                          const v = parseFloat(e.target.value) || 0;
+                        onChange={(v) =>
                           setFormRelatorio((prev) => ({
                             ...prev,
                             contasAReceber: {
@@ -2538,20 +2654,17 @@ export default function AcompanhamentoSemanalPage() {
                                     100
                                 ) / 100,
                             },
-                          }));
-                        }}
-                        className="form-input"
-                        style={{ width: "100%", padding: "6px 8px", borderRadius: "6px", border: "1px solid #cbd5e1" }}
+                          }))
+                        }
                       />
                     </div>
                     <div>
-                      <label style={{ fontSize: "10px", fontWeight: 700 }}>VENCEM HOJE (R$)</label>
-                      <input
-                        type="number"
-                        step="0.01"
+                      <label style={{ fontSize: "10px", fontWeight: 700, display: "block", marginBottom: "2px" }}>
+                        VENCEM HOJE (R$)
+                      </label>
+                      <InputMoedaBR
                         value={formRelatorio.contasAReceber.vencemHoje}
-                        onChange={(e) => {
-                          const v = parseFloat(e.target.value) || 0;
+                        onChange={(v) =>
                           setFormRelatorio((prev) => ({
                             ...prev,
                             contasAReceber: {
@@ -2566,20 +2679,17 @@ export default function AcompanhamentoSemanalPage() {
                                     100
                                 ) / 100,
                             },
-                          }));
-                        }}
-                        className="form-input"
-                        style={{ width: "100%", padding: "6px 8px", borderRadius: "6px", border: "1px solid #cbd5e1" }}
+                          }))
+                        }
                       />
                     </div>
                     <div>
-                      <label style={{ fontSize: "10px", fontWeight: 700 }}>A VENCER (R$)</label>
-                      <input
-                        type="number"
-                        step="0.01"
+                      <label style={{ fontSize: "10px", fontWeight: 700, display: "block", marginBottom: "2px" }}>
+                        A VENCER (R$)
+                      </label>
+                      <InputMoedaBR
                         value={formRelatorio.contasAReceber.aVencer}
-                        onChange={(e) => {
-                          const v = parseFloat(e.target.value) || 0;
+                        onChange={(v) =>
                           setFormRelatorio((prev) => ({
                             ...prev,
                             contasAReceber: {
@@ -2594,20 +2704,17 @@ export default function AcompanhamentoSemanalPage() {
                                     100
                                 ) / 100,
                             },
-                          }));
-                        }}
-                        className="form-input"
-                        style={{ width: "100%", padding: "6px 8px", borderRadius: "6px", border: "1px solid #cbd5e1" }}
+                          }))
+                        }
                       />
                     </div>
                     <div>
-                      <label style={{ fontSize: "10px", fontWeight: 700 }}>PAGOS (R$)</label>
-                      <input
-                        type="number"
-                        step="0.01"
+                      <label style={{ fontSize: "10px", fontWeight: 700, display: "block", marginBottom: "2px" }}>
+                        PAGOS (R$)
+                      </label>
+                      <InputMoedaBR
                         value={formRelatorio.contasAReceber.pagos}
-                        onChange={(e) => {
-                          const v = parseFloat(e.target.value) || 0;
+                        onChange={(v) =>
                           setFormRelatorio((prev) => ({
                             ...prev,
                             contasAReceber: {
@@ -2622,34 +2729,29 @@ export default function AcompanhamentoSemanalPage() {
                                     100
                                 ) / 100,
                             },
-                          }));
-                        }}
-                        className="form-input"
-                        style={{ width: "100%", padding: "6px 8px", borderRadius: "6px", border: "1px solid #cbd5e1" }}
+                          }))
+                        }
                       />
                     </div>
                     <div style={{ gridColumn: "1 / -1" }}>
-                      <label style={{ fontSize: "10px", fontWeight: 800 }}>TOTAL DO PERÍODO (R$)</label>
-                      <input
-                        type="number"
-                        step="0.01"
+                      <label style={{ fontSize: "10px", fontWeight: 800, display: "block", marginBottom: "2px" }}>
+                        TOTAL DO PERÍODO (R$)
+                      </label>
+                      <InputMoedaBR
                         value={formRelatorio.contasAReceber.totalPeriodo}
-                        onChange={(e) => {
-                          const v = parseFloat(e.target.value) || 0;
+                        onChange={(v) =>
                           setFormRelatorio((prev) => ({
                             ...prev,
                             contasAReceber: { ...prev.contasAReceber, totalPeriodo: v },
-                          }));
-                        }}
-                        className="form-input"
-                        style={{ width: "100%", padding: "6px 8px", borderRadius: "6px", border: "1px solid #cbd5e1" }}
+                          }))
+                        }
                       />
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* 4. CASH BACK & CLARA DESCONTO (Preenchimento Manual -> Gráfico Ajustado Automaticamente) */}
+              {/* 4. CASH BACK & CLARA DESCONTO (Preenchimento Manual em formato 0.000,00 -> Gráfico Ajustado Automaticamente) */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
                 {/* Cash Back */}
                 <div
@@ -2668,13 +2770,12 @@ export default function AcompanhamentoSemanalPage() {
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "8px" }}>
                     {anosGrafico.map((ano) => (
                       <div key={ano}>
-                        <label style={{ fontSize: "10px", fontWeight: 700 }}>{ano} (R$)</label>
-                        <input
-                          type="number"
-                          step="0.01"
+                        <label style={{ fontSize: "10px", fontWeight: 700, display: "block", marginBottom: "2px" }}>
+                          {ano} (R$)
+                        </label>
+                        <InputMoedaBR
                           value={formRelatorio.cashBack.anos[ano]}
-                          onChange={(e) => {
-                            const v = parseFloat(e.target.value) || 0;
+                          onChange={(v) =>
                             setFormRelatorio((prev) => {
                               const novosAnos = { ...prev.cashBack.anos, [ano]: v };
                               const diffAno = v - (Number(prev.cashBack.anos[ano]) || 0);
@@ -2686,29 +2787,24 @@ export default function AcompanhamentoSemanalPage() {
                                     Math.round(((Number(prev.cashBack.totalAcumulado) || 0) + diffAno) * 100) / 100,
                                 },
                               };
-                            });
-                          }}
-                          className="form-input"
-                          style={{ width: "100%", padding: "6px", borderRadius: "6px", border: "1px solid #cbd5e1" }}
+                            })
+                          }
                         />
                       </div>
                     ))}
                   </div>
                   <div>
-                    <label style={{ fontSize: "10px", fontWeight: 800 }}>VALOR TOTAL EXIBIDO NO CARD (R$)</label>
-                    <input
-                      type="number"
-                      step="0.01"
+                    <label style={{ fontSize: "10px", fontWeight: 800, display: "block", marginBottom: "2px" }}>
+                      VALOR TOTAL EXIBIDO NO CARD (R$)
+                    </label>
+                    <InputMoedaBR
                       value={formRelatorio.cashBack.totalAcumulado}
-                      onChange={(e) => {
-                        const v = parseFloat(e.target.value) || 0;
+                      onChange={(v) =>
                         setFormRelatorio((prev) => ({
                           ...prev,
                           cashBack: { ...prev.cashBack, totalAcumulado: v },
-                        }));
-                      }}
-                      className="form-input"
-                      style={{ width: "100%", padding: "6px 8px", borderRadius: "6px", border: "1px solid #cbd5e1" }}
+                        }))
+                      }
                     />
                   </div>
                 </div>
@@ -2730,13 +2826,12 @@ export default function AcompanhamentoSemanalPage() {
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "8px" }}>
                     {anosGrafico.map((ano) => (
                       <div key={ano}>
-                        <label style={{ fontSize: "10px", fontWeight: 700 }}>{ano} (R$)</label>
-                        <input
-                          type="number"
-                          step="0.01"
+                        <label style={{ fontSize: "10px", fontWeight: 700, display: "block", marginBottom: "2px" }}>
+                          {ano} (R$)
+                        </label>
+                        <InputMoedaBR
                           value={formRelatorio.claraDesconto.anos[ano]}
-                          onChange={(e) => {
-                            const v = parseFloat(e.target.value) || 0;
+                          onChange={(v) =>
                             setFormRelatorio((prev) => {
                               const novosAnos = { ...prev.claraDesconto.anos, [ano]: v };
                               const soma =
@@ -2750,29 +2845,24 @@ export default function AcompanhamentoSemanalPage() {
                                   totalAcumulado: soma,
                                 },
                               };
-                            });
-                          }}
-                          className="form-input"
-                          style={{ width: "100%", padding: "6px", borderRadius: "6px", border: "1px solid #cbd5e1" }}
+                            })
+                          }
                         />
                       </div>
                     ))}
                   </div>
                   <div>
-                    <label style={{ fontSize: "10px", fontWeight: 800 }}>VALOR TOTAL EXIBIDO NO CARD (R$)</label>
-                    <input
-                      type="number"
-                      step="0.01"
+                    <label style={{ fontSize: "10px", fontWeight: 800, display: "block", marginBottom: "2px" }}>
+                      VALOR TOTAL EXIBIDO NO CARD (R$)
+                    </label>
+                    <InputMoedaBR
                       value={formRelatorio.claraDesconto.totalAcumulado}
-                      onChange={(e) => {
-                        const v = parseFloat(e.target.value) || 0;
+                      onChange={(v) =>
                         setFormRelatorio((prev) => ({
                           ...prev,
                           claraDesconto: { ...prev.claraDesconto, totalAcumulado: v },
-                        }));
-                      }}
-                      className="form-input"
-                      style={{ width: "100%", padding: "6px 8px", borderRadius: "6px", border: "1px solid #cbd5e1" }}
+                        }))
+                      }
                     />
                   </div>
                 </div>
