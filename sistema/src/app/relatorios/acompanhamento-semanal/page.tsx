@@ -676,9 +676,10 @@ export default function AcompanhamentoSemanalPage() {
             <img
               src="/logo-horizontal-branca.png"
               alt="NNÓS - Transformando Estratégias em Realidade"
-              style={{ height: "54px", width: "auto", objectFit: "contain" }}
-              onError={(e) => {
-                (e.currentTarget as HTMLImageElement).src = "/logo-coruja.png";
+              style={{
+                height: "54px",
+                width: "auto",
+                objectFit: "contain",
               }}
             />
           </div>
@@ -794,20 +795,12 @@ export default function AcompanhamentoSemanalPage() {
                     borderTop: "1px dashed #cbd5e1",
                   }}
                 >
-                  <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                    <span
-                      style={{
-                        width: 0,
-                        height: 0,
-                        borderLeft: "8px solid transparent",
-                        borderRight: "8px solid transparent",
-                        borderTop: "14px solid #00a859",
-                        display: "inline-block",
-                      }}
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <img
+                      src="/logo-sicoob.png"
+                      alt="Sicoob"
+                      style={{ width: "92px", height: "26px", objectFit: "contain", display: "block" }}
                     />
-                    <span style={{ fontWeight: 900, fontSize: "14px", color: "#003641", letterSpacing: "-0.02em" }}>
-                      SICOOB
-                    </span>
                   </div>
                   <div
                     style={{
@@ -847,33 +840,12 @@ export default function AcompanhamentoSemanalPage() {
                     borderTop: "1px dashed #cbd5e1",
                   }}
                 >
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                    <span
-                      style={{
-                        width: "18px",
-                        height: "18px",
-                        borderRadius: "50%",
-                        backgroundColor: "#0f172a",
-                        color: "#ffffff",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: "11px",
-                      }}
-                    >
-                      ✦
-                    </span>
-                    <span
-                      style={{
-                        fontWeight: 800,
-                        fontSize: "14.5px",
-                        color: "#0f172a",
-                        fontFamily: "Georgia, serif",
-                        letterSpacing: "0.03em",
-                      }}
-                    >
-                      CLARA
-                    </span>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <img
+                      src="/logo-clara.png"
+                      alt="Clara"
+                      style={{ width: "86px", height: "24px", objectFit: "contain", display: "block" }}
+                    />
                   </div>
                   <div
                     style={{
@@ -913,20 +885,12 @@ export default function AcompanhamentoSemanalPage() {
                     borderTop: "1px dashed #cbd5e1",
                   }}
                 >
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                    <span
-                      style={{
-                        padding: "3px 7px",
-                        borderRadius: "6px",
-                        backgroundColor: "#ec7000",
-                        color: "#ffea00",
-                        fontWeight: 900,
-                        fontSize: "12px",
-                        lineHeight: 1,
-                      }}
-                    >
-                      Itaú
-                    </span>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <img
+                      src="/logo-itau.png"
+                      alt="Itaú"
+                      style={{ width: "30px", height: "30px", objectFit: "contain", display: "block" }}
+                    />
                   </div>
                   <div
                     style={{
@@ -1670,33 +1634,12 @@ export default function AcompanhamentoSemanalPage() {
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "6px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                    <span
-                      style={{
-                        width: "20px",
-                        height: "20px",
-                        borderRadius: "50%",
-                        backgroundColor: "#0f172a",
-                        color: "#ffffff",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: "11px",
-                      }}
-                    >
-                      ✦
-                    </span>
-                    <span
-                      style={{
-                        fontWeight: 800,
-                        fontSize: "16px",
-                        color: "#0f172a",
-                        fontFamily: "Georgia, serif",
-                        letterSpacing: "0.03em",
-                      }}
-                    >
-                      CLARA
-                    </span>
+                  <div style={{ display: "flex", alignItems: "center" }}>
+                    <img
+                      src="/logo-clara.png"
+                      alt="Clara"
+                      style={{ width: "86px", height: "24px", objectFit: "contain", display: "block" }}
+                    />
                   </div>
                   <span style={{ fontSize: "11.5px", fontWeight: 500, color: "#1e293b", textTransform: "uppercase" }}>
                     DESCONTO NA FATURA
