@@ -152,20 +152,27 @@ const RELATORIOS: Relatorio[] = [
 const CATEGORIAS = ["Todos", "Financeiro", "Projetos", "Despesas"] as const;
 
 export default function RelatoriosPage() {
-  const { perfilAtivoId } = usePerfilAcesso();
+  const { perfilAtivoId, usuarioLogado } = usePerfilAcesso();
   const [categoria, setCategoria] = useState<(typeof CATEGORIAS)[number]>("Todos");
   const [busca, setBusca] = useState("");
+
+  const isDiretoriaOuAdmin =
+    !perfilAtivoId ||
+    perfilAtivoId === "DIRETORIA" ||
+    perfilAtivoId === "ADMIN" ||
+    usuarioLogado?.perfilId === "DIRETORIA" ||
+    usuarioLogado?.perfilId === "ADMIN";
 
   const lista = useMemo(
     () =>
       RELATORIOS.filter(
         (r) =>
           (perfilAtivoId !== "LIDER" || r.id === "painel-lider") &&
-          (r.id !== "acompanhamento-semanal" || perfilAtivoId === "DIRETORIA" || perfilAtivoId === "ADMIN") &&
+          (r.id !== "acompanhamento-semanal" || isDiretoriaOuAdmin) &&
           (categoria === "Todos" || r.categoria === categoria) &&
           `${r.titulo} ${r.descricao} ${r.tag}`.toLowerCase().includes(busca.toLowerCase())
       ),
-    [categoria, busca, perfilAtivoId]
+    [categoria, busca, perfilAtivoId, isDiretoriaOuAdmin]
   );
 
   return (

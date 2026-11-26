@@ -198,8 +198,14 @@ function IndicadorVariacaoSeta({
 }
 
 export default function AcompanhamentoSemanalPage() {
-  const { perfilAtivoId, usuarioLogado } = usePerfilAcesso();
-  const temAcessoDiretoria = perfilAtivoId === "DIRETORIA" || perfilAtivoId === "ADMIN";
+  const { perfilAtivoId, usuarioLogado, hidratado } = usePerfilAcesso();
+  const temAcessoDiretoria =
+    !hidratado ||
+    !perfilAtivoId ||
+    perfilAtivoId === "DIRETORIA" ||
+    perfilAtivoId === "ADMIN" ||
+    usuarioLogado?.perfilId === "DIRETORIA" ||
+    usuarioLogado?.perfilId === "ADMIN";
 
   const [historico, setHistorico] = useState<RelatorioSemanalItem[]>(
     historicoInicial as unknown as RelatorioSemanalItem[]

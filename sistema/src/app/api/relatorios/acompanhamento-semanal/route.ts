@@ -91,7 +91,7 @@ function parseDataISO(str: string): Date {
   return hj;
 }
 
-export async function calcularDadosBaseEmTempoReal(dataReferenciaISO: string) {
+async function calcularDadosBaseEmTempoReal(dataReferenciaISO: string) {
   const dataRef = parseDataISO(dataReferenciaISO);
   const anoRef = dataRef.getFullYear();
   const mesNum = dataRef.getMonth() + 1;
