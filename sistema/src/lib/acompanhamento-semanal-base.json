@@ -1,0 +1,208 @@
+[
+  {
+    "id": "sem-2026-11-24",
+    "dataReferencia": "2026-11-24",
+    "mesReferencia": "NOVEMBRO",
+    "anoReferencia": 2026,
+    "criadoEm": "2026-11-24T18:00:00.000Z",
+    "criadoPor": "Leonardo Campos",
+    "posicaoFinanceira": {
+      "total": 1010626.94,
+      "sicoob": {
+        "caixa": 34662.13,
+        "aplicacao": 739032.57,
+        "rentabilidade": "+25,51%"
+      },
+      "clara": {
+        "caixa": 0,
+        "aplicacao": 100000.00,
+        "rentabilidade": "+0,36%"
+      },
+      "itau": {
+        "caixa": -125214.59,
+        "aplicacao": 262146.83,
+        "rentabilidade": "+4,90%"
+      }
+    },
+    "contasAPagar": {
+      "vencidos": 0,
+      "vencemHoje": 67233.75,
+      "aVencer": 15000.00,
+      "pagos": 973542.86,
+      "totalPeriodo": 1055776.61
+    },
+    "contasAReceber": {
+      "vencidos": 213030.00,
+      "vencemHoje": 200.00,
+      "aVencer": 11196.70,
+      "pagos": 502184.65,
+      "totalPeriodo": 725464.21
+    },
+    "cashBack": {
+      "totalAcumulado": 91864.58,
+      "anos": {
+        "2023": 9968.06,
+        "2024": 21831.52,
+        "2025": 34629.13,
+        "2026": 15435.87
+      }
+    },
+    "claraDesconto": {
+      "totalAcumulado": 39483.01,
+      "anos": {
+        "2023": 588.57,
+        "2024": 3909.91,
+        "2025": 22727.38,
+        "2026": 12257.15
+      }
+    },
+    "aReceberEmAtraso": [
+      { "realizado": "AGOSTO", "faturado": "AGOSTO", "projeto": "VIAMONDO | PRODUTIVIDADE OFICINA", "perfil": "LOGÍSTICA", "numeroNota": "0824", "valor": 3379.50, "dias": 85, "vencimento": "01/09/2026" },
+      { "realizado": "SETEMBRO", "faturado": "SETEMBRO", "projeto": "VIAMONDO | PRODUTIVIDADE OFICINA", "perfil": "SÊNIOR", "numeroNota": "286", "valor": 7600.00, "dias": 22, "vencimento": "03/11/2026" },
+      { "realizado": "SETEMBRO", "faturado": "SETEMBRO", "projeto": "IVECO ACADEMY", "perfil": "SÊNIOR", "numeroNota": "284", "valor": 6990.24, "dias": 27, "vencimento": "29/10/2026" },
+      { "realizado": "SETEMBRO", "faturado": "SETEMBRO", "projeto": "NOCARVEL | AUDITORIA CAIXA DAGUA", "perfil": "LOGÍSTICA", "numeroNota": "0846", "valor": 2368.38, "dias": 53, "vencimento": "03/10/2026" },
+      { "realizado": "SETEMBRO", "faturado": "SETEMBRO", "projeto": "IVECO ACADEMY", "perfil": "LOGÍSTICA", "numeroNota": "0853", "valor": 380.08, "dias": 42, "vencimento": "14/10/2026" },
+      { "realizado": "OUTUBRO", "faturado": "OUTUBRO", "projeto": "NNOS ACADEMY", "perfil": "SÊNIOR", "numeroNota": "304", "valor": 325.00, "dias": 39, "vencimento": "17/10/2026" },
+      { "realizado": "OUTUBRO", "faturado": "NOVEMBRO", "projeto": "SERVIÇOS CNH", "perfil": "SÊNIOR", "numeroNota": "330", "valor": 34750.24, "dias": 4, "vencimento": "21/11/2026" },
+      { "realizado": "OUTUBRO", "faturado": "NOVEMBRO", "projeto": "PARTS ACADEMY", "perfil": "SÊNIOR", "numeroNota": "330", "valor": 45724.06, "dias": 4, "vencimento": "21/11/2026" },
+      { "realizado": "OUTUBRO", "faturado": "NOVEMBRO", "projeto": "TREINAMENTO COMERCIAL", "perfil": "SÊNIOR", "numeroNota": "330", "valor": 8230.32, "dias": 4, "vencimento": "21/11/2026" },
+      { "realizado": "OUTUBRO", "faturado": "NOVEMBRO", "projeto": "PROJETO ESPECIAL 01", "perfil": "SÊNIOR", "numeroNota": "330", "valor": 21947.52, "dias": 4, "vencimento": "21/11/2026" },
+      { "realizado": "OUTUBRO", "faturado": "OUTUBRO", "projeto": "IVECO ACADEMY", "perfil": "SÊNIOR", "numeroNota": "312", "valor": 16950.00, "dias": 25, "vencimento": "31/10/2026" },
+      { "realizado": "OUTUBRO", "faturado": "OUTUBRO", "projeto": "IVECO ACADEMY", "perfil": "SÊNIOR", "numeroNota": "313", "valor": 30000.00, "dias": 3, "vencimento": "22/11/2026" },
+      { "realizado": "OUTUBRO", "faturado": "OUTUBRO", "projeto": "NNOS ACADEMY", "perfil": "SÊNIOR", "numeroNota": "307", "valor": 325.00, "dias": 36, "vencimento": "20/10/2026" },
+      { "realizado": "OUTUBRO", "faturado": "OUTUBRO", "projeto": "INSTRUTORES CNH", "perfil": "LOGÍSTICA", "numeroNota": "0849.2", "valor": 2041.09, "dias": 27, "vencimento": "29/10/2026" },
+      { "realizado": "OUTUBRO", "faturado": "OUTUBRO", "projeto": "CONSULTORIA PÓS-VENDAS (POE) PORSCHE", "perfil": "LOGÍSTICA", "numeroNota": "0871", "valor": 3541.00, "dias": 15, "vencimento": "10/11/2026" },
+      { "realizado": "OUTUBRO", "faturado": "OUTUBRO", "projeto": "IVECO ACADEMY", "perfil": "LOGÍSTICA", "numeroNota": "0875", "valor": 16859.87, "dias": 5, "vencimento": "20/11/2026" },
+      { "realizado": "NOVEMBRO", "faturado": "NOVEMBRO", "projeto": "DITRASA | GOVERNANÇA NHCE", "perfil": "SÊNIOR", "numeroNota": "332", "valor": 9000.00, "dias": 19, "vencimento": "06/11/2026" },
+      { "realizado": "NOVEMBRO", "faturado": "NOVEMBRO", "projeto": "INSTRUTORES CNH", "perfil": "LOGÍSTICA", "numeroNota": "0879", "valor": 2617.70, "dias": 1, "vencimento": "24/11/2026" }
+    ],
+    "totalAtraso": 213030.00,
+    "aVencerEmAberto": 767275.01,
+    "totalAReceber": 980305.01,
+    "projetosMes": [
+      { "projeto": "BACKOFFICE CNHI", "valor": 180771.92 },
+      { "projeto": "BACKOFFICE CRM CASE", "valor": 36656.73 },
+      { "projeto": "BACKOFFICE PORSCHE", "valor": 13786.16 },
+      { "projeto": "CNH ADIANTAMENTO (EDUARDO SOUSA)", "valor": 55000.00 },
+      { "projeto": "CONSULTORIA PÓS-VENDAS (POE) PORSCHE", "valor": 46100.00 },
+      { "projeto": "DDN - BUSINESS ASSESSMENT", "valor": 73440.00 },
+      { "projeto": "DEALER STANDARD CONSTRUCION", "valor": 60000.00 },
+      { "projeto": "DITRASA | GOVERNANÇA NHCE", "valor": 11500.00 },
+      { "projeto": "DM - BACK OFFICE", "valor": 28671.60 },
+      { "projeto": "FORTRAC | GESTÃO ORGANIZACIONAL", "valor": 9800.00 },
+      { "projeto": "INSTRUTORES CNH", "valor": 165323.08 },
+      { "projeto": "INSTRUTORES PORSCHE", "valor": 26800.00 },
+      { "projeto": "IVECO ACADEMY", "valor": 5570.29 },
+      { "projeto": "NNOS ACADEMY", "valor": 1470.00 },
+      { "projeto": "PARECIS | GESTÃO ORGANIZACIONAL", "valor": 16000.00 },
+      { "projeto": "PARTS ACADEMY", "valor": 96773.46 },
+      { "projeto": "PROJETO ESPECIAL 01", "valor": 21947.52 },
+      { "projeto": "SERVIÇOS CNH", "valor": 20118.56 },
+      { "projeto": "STELLANTIS | TRAINNING", "valor": 3875.00 },
+      { "projeto": "TAPE RUVICHA", "valor": 52252.67 },
+      { "projeto": "TRATORON | GESTÃO COMERCIAL", "valor": 5075.00 },
+      { "projeto": "TREINAMENTO COMERCIAL", "valor": 22476.38 }
+    ],
+    "totalProjetos": 953408.37
+  },
+  {
+    "id": "sem-2026-11-17",
+    "dataReferencia": "2026-11-17",
+    "mesReferencia": "NOVEMBRO",
+    "anoReferencia": 2026,
+    "criadoEm": "2026-11-17T18:00:00.000Z",
+    "criadoPor": "Leonardo Campos",
+    "posicaoFinanceira": {
+      "total": 1279274.61,
+      "sicoob": {
+        "caixa": 148027.45,
+        "aplicacao": 735100.33,
+        "rentabilidade": "+24,80%"
+      },
+      "clara": {
+        "caixa": 0,
+        "aplicacao": 100000.00,
+        "rentabilidade": "+0,35%"
+      },
+      "itau": {
+        "caixa": 34000.00,
+        "aplicacao": 262146.83,
+        "rentabilidade": "+4,75%"
+      }
+    },
+    "contasAPagar": {
+      "vencidos": 0,
+      "vencemHoje": 48200.00,
+      "aVencer": 310000.00,
+      "pagos": 801994.08,
+      "totalPeriodo": 1160194.08
+    },
+    "contasAReceber": {
+      "vencidos": 97720.18,
+      "vencemHoje": 12450.00,
+      "aVencer": 185964.00,
+      "pagos": 408200.00,
+      "totalPeriodo": 704334.18
+    },
+    "cashBack": {
+      "totalAcumulado": 91864.58,
+      "anos": {
+        "2023": 9968.06,
+        "2024": 21831.52,
+        "2025": 34629.13,
+        "2026": 15435.87
+      }
+    },
+    "claraDesconto": {
+      "totalAcumulado": 39483.01,
+      "anos": {
+        "2023": 588.57,
+        "2024": 3909.91,
+        "2025": 22727.38,
+        "2026": 12257.15
+      }
+    },
+    "aReceberEmAtraso": [
+      { "realizado": "AGOSTO", "faturado": "AGOSTO", "projeto": "VIAMONDO | PRODUTIVIDADE OFICINA", "perfil": "LOGÍSTICA", "numeroNota": "0824", "valor": 3379.50, "dias": 78, "vencimento": "01/09/2026" },
+      { "realizado": "SETEMBRO", "faturado": "SETEMBRO", "projeto": "VIAMONDO | PRODUTIVIDADE OFICINA", "perfil": "SÊNIOR", "numeroNota": "286", "valor": 7600.00, "dias": 15, "vencimento": "03/11/2026" },
+      { "realizado": "SETEMBRO", "faturado": "SETEMBRO", "projeto": "IVECO ACADEMY", "perfil": "SÊNIOR", "numeroNota": "284", "valor": 6990.24, "dias": 20, "vencimento": "29/10/2026" },
+      { "realizado": "SETEMBRO", "faturado": "SETEMBRO", "projeto": "NOCARVEL | AUDITORIA CAIXA DAGUA", "perfil": "LOGÍSTICA", "numeroNota": "0846", "valor": 2368.38, "dias": 46, "vencimento": "03/10/2026" },
+      { "realizado": "SETEMBRO", "faturado": "SETEMBRO", "projeto": "IVECO ACADEMY", "perfil": "LOGÍSTICA", "numeroNota": "0853", "valor": 380.08, "dias": 35, "vencimento": "14/10/2026" },
+      { "realizado": "OUTUBRO", "faturado": "OUTUBRO", "projeto": "NNOS ACADEMY", "perfil": "SÊNIOR", "numeroNota": "304", "valor": 325.00, "dias": 32, "vencimento": "17/10/2026" },
+      { "realizado": "OUTUBRO", "faturado": "OUTUBRO", "projeto": "IVECO ACADEMY", "perfil": "SÊNIOR", "numeroNota": "312", "valor": 16950.00, "dias": 18, "vencimento": "31/10/2026" },
+      { "realizado": "OUTUBRO", "faturado": "OUTUBRO", "projeto": "NNOS ACADEMY", "perfil": "SÊNIOR", "numeroNota": "307", "valor": 325.00, "dias": 29, "vencimento": "20/10/2026" },
+      { "realizado": "OUTUBRO", "faturado": "OUTUBRO", "projeto": "INSTRUTORES CNH", "perfil": "LOGÍSTICA", "numeroNota": "0849.2", "valor": 2041.09, "dias": 20, "vencimento": "29/10/2026" },
+      { "realizado": "OUTUBRO", "faturado": "OUTUBRO", "projeto": "CONSULTORIA PÓS-VENDAS (POE) PORSCHE", "perfil": "LOGÍSTICA", "numeroNota": "0871", "valor": 3541.00, "dias": 8, "vencimento": "10/11/2026" },
+      { "realizado": "NOVEMBRO", "faturado": "NOVEMBRO", "projeto": "DITRASA | GOVERNANÇA NHCE", "perfil": "SÊNIOR", "numeroNota": "332", "valor": 9000.00, "dias": 12, "vencimento": "06/11/2026" },
+      { "realizado": "OUTUBRO", "faturado": "OUTUBRO", "projeto": "PARTS ACADEMY", "perfil": "SÊNIOR", "numeroNota": "308", "valor": 44819.89, "dias": 7, "vencimento": "10/11/2026" }
+    ],
+    "totalAtraso": 97720.18,
+    "aVencerEmAberto": 865420.00,
+    "totalAReceber": 963140.18,
+    "projetosMes": [
+      { "projeto": "BACKOFFICE CNHI", "valor": 180771.92 },
+      { "projeto": "BACKOFFICE CRM CASE", "valor": 36656.73 },
+      { "projeto": "BACKOFFICE PORSCHE", "valor": 13786.16 },
+      { "projeto": "CNH ADIANTAMENTO (EDUARDO SOUSA)", "valor": 55000.00 },
+      { "projeto": "CONSULTORIA PÓS-VENDAS (POE) PORSCHE", "valor": 46100.00 },
+      { "projeto": "DDN - BUSINESS ASSESSMENT", "valor": 73440.00 },
+      { "projeto": "DEALER STANDARD CONSTRUCION", "valor": 60000.00 },
+      { "projeto": "DITRASA | GOVERNANÇA NHCE", "valor": 11500.00 },
+      { "projeto": "DM - BACK OFFICE", "valor": 28671.60 },
+      { "projeto": "FORTRAC | GESTÃO ORGANIZACIONAL", "valor": 9800.00 },
+      { "projeto": "INSTRUTORES CNH", "valor": 155883.39 },
+      { "projeto": "INSTRUTORES PORSCHE", "valor": 26800.00 },
+      { "projeto": "IVECO ACADEMY", "valor": 5570.29 },
+      { "projeto": "NNOS ACADEMY", "valor": 1470.00 },
+      { "projeto": "PARECIS | GESTÃO ORGANIZACIONAL", "valor": 16000.00 },
+      { "projeto": "PARTS ACADEMY", "valor": 96773.46 },
+      { "projeto": "PROJETO ESPECIAL 01", "valor": 21947.52 },
+      { "projeto": "SERVIÇOS CNH", "valor": 20118.56 },
+      { "projeto": "STELLANTIS | TRAINNING", "valor": 3875.00 },
+      { "projeto": "TAPE RUVICHA", "valor": 52252.67 },
+      { "projeto": "TRATORON | GESTÃO COMERCIAL", "valor": 5075.00 },
+      { "projeto": "TREINAMENTO COMERCIAL", "valor": 22476.38 }
+    ],
+    "totalProjetos": 943968.68
+  }
+]

@@ -128,6 +128,25 @@ const RELATORIOS: Relatorio[] = [
       { rotulo: "RECEITA TOTAL", valor: "R$ 10,64M", cor: "#059669" },
     ],
   },
+  {
+    id: "acompanhamento-semanal",
+    titulo: "Acompanhamento Semanal",
+    descricao:
+      "Boletim executivo semanal do mês corrente: Posição Financeira (Sicoob, Clara e Itaú), Contas a Pagar e a Receber, Títulos em Atraso, Cash Back, Desconto Clara e Faturamento por Projeto com histórico comparativo.",
+    icone: "calendar_month",
+    categoria: "Financeiro",
+    tag: "DIRETORIA EXECUTIVA • SEMANAL",
+    cor: "#0083ca",
+    bgIcone: "#e0f2fe",
+    btnTexto: "Acessar Acompanhamento Semanal →",
+    btnGradiente: "linear-gradient(135deg, #0083ca 0%, #004c8c 100%)",
+    href: "/relatorios/acompanhamento-semanal",
+    indicadores: [
+      { rotulo: "POSIÇÃO CAIXA", valor: "R$ 1,01M", cor: "#0f172a" },
+      { rotulo: "TOTAL A RECEBER", valor: "R$ 980,3K", cor: "#0083ca" },
+      { rotulo: "PROJETOS MÊS", valor: "R$ 953,4K", cor: "#059669" },
+    ],
+  },
 ];
 
 const CATEGORIAS = ["Todos", "Financeiro", "Projetos", "Despesas"] as const;
@@ -142,6 +161,7 @@ export default function RelatoriosPage() {
       RELATORIOS.filter(
         (r) =>
           (perfilAtivoId !== "LIDER" || r.id === "painel-lider") &&
+          (r.id !== "acompanhamento-semanal" || perfilAtivoId === "DIRETORIA" || perfilAtivoId === "ADMIN") &&
           (categoria === "Todos" || r.categoria === categoria) &&
           `${r.titulo} ${r.descricao} ${r.tag}`.toLowerCase().includes(busca.toLowerCase())
       ),
