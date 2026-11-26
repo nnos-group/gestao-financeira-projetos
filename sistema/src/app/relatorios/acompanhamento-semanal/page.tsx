@@ -307,6 +307,7 @@ export default function AcompanhamentoSemanalPage() {
   const [modalEdicaoAberto, setModalEdicaoAberto] = useState(false);
   const [modalHistoricoAberto, setModalHistoricoAberto] = useState(false);
   const [salvando, setSalvando] = useState(false);
+  const [baixandoPng, setBaixandoPng] = useState(false);
   const [sincronizandoBase, setSincronizandoBase] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
 
@@ -442,8 +443,12 @@ export default function AcompanhamentoSemanalPage() {
         setHistorico(json.historico);
         setRelatorioSelecionadoId(json.relatorio.id);
         setModalEdicaoAberto(false);
+        const infoEmail =
+          typeof json.emailsDisparados === "number" && json.emailsDisparados > 0
+            ? ` E-mail com resumo executivo enviado para ${json.emailsDisparados} destinatário(s) da Diretoria!`
+            : " Resumo executivo disparado por e-mail!";
         mostrarToast(
-          `Relatório Semanal de ${formatarDataBR(json.relatorio.dataReferencia)} salvo e publicado no histórico!`
+          `Relatório Semanal de ${formatarDataBR(json.relatorio.dataReferencia)} salvo!${infoEmail}`
         );
       } else {
         alert(json?.error || "Erro ao salvar relatório semanal.");
@@ -452,6 +457,768 @@ export default function AcompanhamentoSemanalPage() {
       alert("Erro ao salvar relatório: " + err.message);
     } finally {
       setSalvando(false);
+    }
+  };
+
+  // Geração e Download do Relatório em formato .PNG de Alta Definição (2400 x 1360 px) fiel ao modelo oficial
+  const handleBaixarPngAltaDefinicao = async () => {
+    if (!relatorioAtivo || baixandoPng) return;
+    try {
+      setBaixandoPng(true);
+      const W = 2400;
+      const H = 1360;
+      const canvas = document.createElement("canvas");
+      canvas.width = W;
+      canvas.height = H;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      const fontSans = "'Plus Jakarta Sans', 'Segoe UI', Roboto, Arial, sans-serif";
+
+      const carregarImg = (src: string): Promise<HTMLImageElement | null> =>
+        new Promise((resolve) => {
+          const img = new Image();
+          img.crossOrigin = "anonymous";
+          img.onload = () => resolve(img);
+          img.onerror = () => resolve(null);
+          img.src = src;
+        });
+
+      const [logoBranca, logoSicoob, logoClara, logoItau] = await Promise.all([
+        carregarImg("/logo-horizontal-branca.png"),
+        carregarImg("/logo-sicoob.png"),
+        carregarImg("/logo-clara.png"),
+        carregarImg("/logo-itau.png"),
+      ]);
+
+      const roundRectPath = (x: number, y: number, w: number, h: number, r: number) => {
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.lineTo(x + w - r, y);
+        ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+        ctx.lineTo(x + w, y + h - r);
+        ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+        ctx.lineTo(x + r, y + h);
+        ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+        ctx.lineTo(x, y + r);
+        ctx.quadraticCurveTo(x, y, x + r, y);
+        ctx.closePath();
+      };
+
+      const fillCard = (x: number, y: number, w: number, h: number, r = 24, fill = "#ffffff", border = "#e2e8f0") => {
+        ctx.save();
+        ctx.shadowColor = "rgba(15, 42, 74, 0.05)";
+        ctx.shadowBlur = 16;
+        ctx.shadowOffsetY = 4;
+        roundRectPath(x, y, w, h, r);
+        ctx.fillStyle = fill;
+        ctx.fill();
+        ctx.restore();
+        if (border) {
+          roundRectPath(x, y, w, h, r);
+          ctx.lineWidth = 2;
+          ctx.strokeStyle = border;
+          ctx.stroke();
+        }
+      };
+
+      const drawIndicadorSeta = (
+        cx: number,
+        cy: number,
+        r: number,
+        atual: number,
+        anterior?: number | null,
+        inverter = false,
+        override?: IndicadorInicialOverride
+      ) => {
+        let pct = 0;
+        let ehPositivo = true;
+        if (anterior !== undefined && anterior !== null && anterior !== 0) {
+          const calc = calcularVariacao(atual, anterior);
+          pct = calc.pct;
+          ehPositivo = inverter ? !calc.subiu : calc.subiu;
+        } else if (override) {
+          pct = override.pct;
+          ehPositivo = override.ehPositivo;
+        }
+        const corBorda = ehPositivo ? "#a7dec7" : "#f5b5b8";
+        const corSeta = ehPositivo ? "#9fd8be" : "#f2a6aa";
+
+        ctx.save();
+        if (ehPositivo) {
+          ctx.beginPath();
+          ctx.moveTo(cx, cy - r - 15);
+          ctx.lineTo(cx - 12, cy - r + 2);
+          ctx.lineTo(cx + 12, cy - r + 2);
+          ctx.closePath();
+          ctx.fillStyle = corSeta;
+          ctx.fill();
+        } else {
+          ctx.beginPath();
+          ctx.moveTo(cx, cy + r + 15);
+          ctx.lineTo(cx - 12, cy + r - 2);
+          ctx.lineTo(cx + 12, cy + r - 2);
+          ctx.closePath();
+          ctx.fillStyle = corSeta;
+          ctx.fill();
+        }
+
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fillStyle = "#ffffff";
+        ctx.fill();
+        ctx.lineWidth = 4.5;
+        ctx.strokeStyle = corBorda;
+        ctx.stroke();
+
+        ctx.fillStyle = "#334155";
+        ctx.font = `700 ${Math.round(r * 0.56)}px ${fontSans}`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(`${pct}%`, cx, cy + 1);
+        ctx.restore();
+      };
+
+      // 1. Fundo Geral
+      ctx.fillStyle = "#f3f6f9";
+      ctx.fillRect(0, 0, W, H);
+
+      // 2. Cabeçalho Degradê Azul Oficial
+      const gradHeader = ctx.createLinearGradient(0, 0, W, 0);
+      gradHeader.addColorStop(0, "#0099c8");
+      gradHeader.addColorStop(0.45, "#0973ae");
+      gradHeader.addColorStop(1, "#004c8c");
+      ctx.fillStyle = gradHeader;
+      ctx.fillRect(0, 0, W, 118);
+
+      // Ícone Calendário Turquesa no Header
+      roundRectPath(36, 20, 78, 78, 20);
+      ctx.fillStyle = "#2bb3c0";
+      ctx.fill();
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = "rgba(255,255,255,0.85)";
+      ctx.stroke();
+      // Desenho vetorial do calendário dentro do bloco turquesa
+      roundRectPath(53, 39, 44, 40, 6);
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = "#ffffff";
+      ctx.stroke();
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(53, 48, 44, 3);
+      ctx.fillRect(62, 34, 4, 9);
+      ctx.fillRect(84, 34, 4, 9);
+      for (let gx = 0; gx < 3; gx++) {
+        for (let gy = 0; gy < 2; gy++) {
+          ctx.fillRect(60 + gx * 11, 56 + gy * 10, 6, 5);
+        }
+      }
+
+      // Divisor vertical do Header
+      ctx.fillStyle = "rgba(255,255,255,0.6)";
+      ctx.fillRect(136, 24, 3, 70);
+
+      // Data + Título ACOMPANHAMENTO SEMANAL | MÊS
+      ctx.textAlign = "left";
+      ctx.textBaseline = "top";
+      ctx.fillStyle = "#04233b";
+      ctx.font = `700 28px ${fontSans}`;
+      ctx.fillText(formatarDataBR(relatorioAtivo.dataReferencia), 160, 18);
+
+      ctx.fillStyle = "#ffffff";
+      ctx.font = `800 46px ${fontSans}`;
+      const tituloStr = "ACOMPANHAMENTO SEMANAL";
+      ctx.fillText(tituloStr, 160, 50);
+      const wTitulo = ctx.measureText(tituloStr).width;
+
+      ctx.fillStyle = "rgba(255,255,255,0.8)";
+      ctx.font = `300 42px ${fontSans}`;
+      ctx.fillText("|", 160 + wTitulo + 18, 50);
+
+      ctx.fillStyle = "#05233b";
+      ctx.font = `500 40px ${fontSans}`;
+      ctx.fillText(relatorioAtivo.mesReferencia.toUpperCase(), 160 + wTitulo + 46, 54);
+
+      // Logomarca NNÓS Branca à Direita
+      if (logoBranca) {
+        const lh = 80;
+        const lw = (logoBranca.width / logoBranca.height) * lh;
+        ctx.drawImage(logoBranca, W - lw - 44, 19, lw, lh);
+      }
+
+      // =======================================================================
+      // 3. LINHA 1: POSIÇÃO FINANCEIRA + CONTAS A PAGAR & RECEBER
+      // =======================================================================
+      const row1Y = 140;
+      const row1H = 315;
+      const cardPosX = 36;
+      const cardPosW = 750;
+      fillCard(cardPosX, row1Y, cardPosW, row1H, 24);
+
+      // Ícone Posição Financeira
+      ctx.beginPath();
+      ctx.arc(cardPosX + 46, row1Y + 46, 25, 0, Math.PI * 2);
+      ctx.fillStyle = "#539bb2";
+      ctx.fill();
+      ctx.fillStyle = "#ffffff";
+      ctx.font = `800 22px ${fontSans}`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("$", cardPosX + 46, row1Y + 47);
+
+      ctx.textAlign = "left";
+      ctx.textBaseline = "top";
+      ctx.fillStyle = "#1e293b";
+      ctx.font = `500 24px ${fontSans}`;
+      ctx.fillText("POSIÇÃO FINANCEIRA", cardPosX + 84, row1Y + 22);
+
+      ctx.fillStyle = "#09314b";
+      ctx.font = `800 44px ${fontSans}`;
+      ctx.fillText(fmtNum(relatorioAtivo.posicaoFinanceira.total), cardPosX + 84, row1Y + 52);
+
+      drawIndicadorSeta(
+        cardPosX + cardPosW - 56,
+        row1Y + 56,
+        32,
+        relatorioAtivo.posicaoFinanceira.total,
+        relatorioAnterior?.posicaoFinanceira?.total,
+        false,
+        relatorioAtivo.indicadoresIniciais?.posicaoFinanceira
+      );
+
+      // Cabeçalho CAIXA / APLICAÇÃO
+      ctx.fillStyle = "#0f172a";
+      ctx.font = `800 18px ${fontSans}`;
+      ctx.textAlign = "center";
+      ctx.fillText("CAIXA", cardPosX + 290, row1Y + 118);
+      ctx.fillText("APLICAÇÃO", cardPosX + 495, row1Y + 118);
+
+      const instRows = [
+        { logo: logoSicoob, nome: "SICOOB", dados: relatorioAtivo.posicaoFinanceira.sicoob, w: 126, h: 34 },
+        { logo: logoClara, nome: "CLARA", dados: relatorioAtivo.posicaoFinanceira.clara, w: 116, h: 32 },
+        { logo: logoItau, nome: "ITAÚ", dados: relatorioAtivo.posicaoFinanceira.itau, w: 42, h: 42 },
+      ];
+
+      instRows.forEach((ir, idx) => {
+        const ry = row1Y + 148 + idx * 54;
+        ctx.save();
+        ctx.setLineDash([5, 5]);
+        ctx.beginPath();
+        ctx.moveTo(cardPosX + 26, ry);
+        ctx.lineTo(cardPosX + cardPosW - 26, ry);
+        ctx.strokeStyle = "#cbd5e1";
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.restore();
+
+        const cy = ry + 27;
+        if (ir.logo) {
+          ctx.drawImage(ir.logo, cardPosX + 88 - ir.w / 2, cy - ir.h / 2, ir.w, ir.h);
+        } else {
+          ctx.fillStyle = "#0f172a";
+          ctx.font = `800 18px ${fontSans}`;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(ir.nome, cardPosX + 88, cy);
+        }
+
+        ctx.font = `700 22px ${fontSans}`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = ir.dados.caixa < 0 ? "#d98a8c" : "#67b887";
+        ctx.fillText(fmtNum(ir.dados.caixa), cardPosX + 290, cy);
+
+        ctx.fillStyle = "#67b887";
+        ctx.fillText(fmtNum(ir.dados.aplicacao), cardPosX + 495, cy);
+
+        ctx.font = `600 13px ${fontSans}`;
+        ctx.fillStyle = "#64748b";
+        ctx.fillText("Rentabilidade", cardPosX + 665, cy - 8);
+        ctx.font = `700 15px ${fontSans}`;
+        ctx.fillStyle = "#67b887";
+        ctx.fillText(ir.dados.rentabilidade, cardPosX + 665, cy + 10);
+      });
+
+      // Cards Contas a Pagar & Contas a Receber
+      const rightX = cardPosX + cardPosW + 26;
+      const rightW = W - rightX - 36;
+      const subCardH = (row1H - 20) / 2;
+
+      const drawContasCard = (
+        y: number,
+        titulo: string,
+        dados: RelatorioSemanalItem["contasAPagar"],
+        anteriorTotal?: number | null,
+        inverter = false,
+        override?: IndicadorInicialOverride
+      ) => {
+        fillCard(rightX, y, rightW, subCardH, 24);
+        ctx.beginPath();
+        ctx.arc(rightX + 38, y + 32, 19, 0, Math.PI * 2);
+        ctx.fillStyle = "#53869b";
+        ctx.fill();
+
+        // Barras do ícone
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(rightX + 30, y + 32, 4, 9);
+        ctx.fillRect(rightX + 36, y + 25, 4, 16);
+        ctx.fillRect(rightX + 42, y + 29, 4, 12);
+
+        ctx.textAlign = "left";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = "#1e293b";
+        ctx.font = `500 23px ${fontSans}`;
+        ctx.fillText(titulo, rightX + 68, y + 33);
+        const wTituloContas = ctx.measureText(titulo).width;
+
+        // Indicador ao lado do título (libera espaço horizontal para os 5 cards)
+        drawIndicadorSeta(
+          rightX + 68 + wTituloContas + 34,
+          y + 36,
+          19,
+          dados.totalPeriodo,
+          anteriorTotal,
+          inverter,
+          override
+        );
+
+        const cols = [
+          { label: "VENCIDOS", val: fmtCompactoOuDecimal(dados.vencidos), color: "#ea9999" },
+          { label: "VENCEM HOJE", val: fmtCompactoOuDecimal(dados.vencemHoje), color: "#ea9999" },
+          { label: "A VENCER", val: fmtCompactoOuDecimal(dados.aVencer), color: "#546e7a" },
+          { label: "PAGOS", val: fmtCompactoOuDecimal(dados.pagos), color: "#67b887" },
+          { label: "TOTAL DO PERÍODO", val: fmtNum(dados.totalPeriodo), color: "#546e7a" },
+        ];
+        const startColX = rightX + 24;
+        const gapCol = 16;
+        const colW = (rightW - 48 - gapCol * 4) / 5;
+
+        cols.forEach((c, idx) => {
+          const cx = startColX + idx * (colW + gapCol);
+          const cy = y + 58;
+          roundRectPath(cx, cy, colW, 74, 14);
+          ctx.fillStyle = "#f8fafc";
+          ctx.fill();
+
+          ctx.textAlign = "center";
+          ctx.textBaseline = "top";
+          ctx.fillStyle = "#0f172a";
+          ctx.font = `800 17px ${fontSans}`;
+          ctx.fillText(c.label, cx + colW / 2, cy + 9);
+
+          ctx.fillStyle = c.color;
+          ctx.font = `800 33px ${fontSans}`;
+          ctx.fillText(c.val, cx + colW / 2, cy + 34);
+        });
+      };
+
+      drawContasCard(
+        row1Y,
+        "CONTAS A PAGAR",
+        relatorioAtivo.contasAPagar,
+        relatorioAnterior?.contasAPagar?.totalPeriodo,
+        true,
+        relatorioAtivo.indicadoresIniciais?.contasAPagar
+      );
+
+      drawContasCard(
+        row1Y + subCardH + 20,
+        "CONTAS A RECEBER",
+        relatorioAtivo.contasAReceber,
+        relatorioAnterior?.contasAReceber?.totalPeriodo,
+        false,
+        relatorioAtivo.indicadoresIniciais?.contasAReceber
+      );
+
+      // =======================================================================
+      // 4. LINHA 2: OS 3 QUADROS ALINHADOS NA MESMA LINHA INFERIOR
+      // =======================================================================
+      const row2Y = 475;
+      const cardsBottomY = 1245;
+      const row2H = cardsBottomY - row2Y; // 770px exatos para os 3 quadros
+
+      const col1X = 36;
+      const col1W = 1140;
+      const col2X = col1X + col1W + 24;
+      const col2W = 475;
+      const col3X = col2X + col2W + 24;
+      const col3W = W - col3X - 36; // 665px
+
+      // --- QUADRO 1: A RECEBER EM ATRASO ---
+      fillCard(col1X, row2Y, col1W, row2H, 24);
+      ctx.beginPath();
+      ctx.arc(col1X + 38, row2Y + 36, 20, 0, Math.PI * 2);
+      ctx.fillStyle = "#80c4c8";
+      ctx.fill();
+      ctx.fillStyle = "#ffffff";
+      ctx.font = `800 18px ${fontSans}`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("📅", col1X + 38, row2Y + 36);
+
+      ctx.textAlign = "left";
+      ctx.fillStyle = "#1e293b";
+      ctx.font = `500 24px ${fontSans}`;
+      ctx.fillText("A RECEBER EM ATRASO", col1X + 68, row2Y + 37);
+
+      drawIndicadorSeta(
+        col1X + 376,
+        row2Y + 36,
+        22,
+        relatorioAtivo.totalAtraso,
+        relatorioAnterior?.totalAtraso,
+        true,
+        relatorioAtivo.indicadoresIniciais?.aReceberEmAtraso
+      );
+
+      // Tabela A Receber em Atraso
+      const t1X = col1X + 20;
+      const t1Y = row2Y + 72;
+      const t1W = col1W - 40;
+      const t1HeaderH = 34;
+      const t1FootH = 36;
+      const rowsAtraso = relatorioAtivo.aReceberEmAtraso;
+      const t1BodyH = row2H - 72 - 20 - t1HeaderH - t1FootH;
+      const t1RowH = rowsAtraso.length > 0 ? t1BodyH / rowsAtraso.length : 30;
+
+      // Colunas Atraso
+      const cAtraso = [
+        { label: "REALIZADO", w: 112, align: "center" as const },
+        { label: "FATURADO", w: 112, align: "center" as const },
+        { label: "PROJETO", w: 396, align: "center" as const },
+        { label: "PERFIL", w: 104, align: "center" as const },
+        { label: "Nº NOTA", w: 92, align: "center" as const },
+        { label: "VALOR", w: 118, align: "right" as const },
+        { label: "DIAS", w: 66, align: "center" as const },
+        { label: "VENCIMENTO", w: 100, align: "center" as const },
+      ];
+
+      ctx.fillStyle = "#0a3254";
+      ctx.fillRect(t1X, t1Y, t1W, t1HeaderH);
+
+      let curX = t1X;
+      ctx.fillStyle = "#ffffff";
+      ctx.font = `700 13px ${fontSans}`;
+      ctx.textBaseline = "middle";
+      cAtraso.forEach((col) => {
+        ctx.textAlign = col.align === "right" ? "right" : "center";
+        const tx = col.align === "right" ? curX + col.w - 10 : curX + col.w / 2;
+        ctx.fillText(col.label, tx, t1Y + t1HeaderH / 2);
+        curX += col.w;
+      });
+
+      rowsAtraso.forEach((item, idx) => {
+        const ry = t1Y + t1HeaderH + idx * t1RowH;
+        ctx.fillStyle = idx % 2 === 0 ? "#ffffff" : "#f1f5f9";
+        ctx.fillRect(t1X, ry, t1W, t1RowH);
+
+        ctx.strokeStyle = "#e2e8f0";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(t1X, ry + t1RowH);
+        ctx.lineTo(t1X + t1W, ry + t1RowH);
+        ctx.stroke();
+
+        const vals = [
+          { v: item.realizado, bold: false, color: "#475569" },
+          { v: item.faturado, bold: false, color: "#475569" },
+          { v: item.projeto, bold: true, color: "#334155" },
+          { v: item.perfil, bold: false, color: "#475569" },
+          { v: item.numeroNota, bold: false, color: "#475569" },
+          { v: fmtNum(item.valor), bold: true, color: "#334155" },
+          { v: String(item.dias), bold: true, color: "#c00000" },
+          { v: formatarDataBR(item.vencimento), bold: false, color: "#475569" },
+        ];
+
+        let cx = t1X;
+        vals.forEach((cell, cIdx) => {
+          const col = cAtraso[cIdx];
+          ctx.font = `${cell.bold ? 700 : 500} 13px ${fontSans}`;
+          ctx.fillStyle = cell.color;
+          ctx.textAlign = col.align === "right" ? "right" : "center";
+          const tx = col.align === "right" ? cx + col.w - 10 : cx + col.w / 2;
+          ctx.fillText(cell.v, tx, ry + t1RowH / 2);
+          cx += col.w;
+        });
+      });
+
+      // Rodapé TOTAL A Receber em Atraso
+      const foot1Y = t1Y + t1HeaderH + t1BodyH;
+      ctx.fillStyle = "#0a3254";
+      ctx.fillRect(t1X, foot1Y, t1W, t1FootH);
+      ctx.fillStyle = "#ffffff";
+      ctx.font = `800 15px ${fontSans}`;
+      ctx.textAlign = "right";
+      ctx.fillText("TOTAL", t1X + 800, foot1Y + t1FootH / 2);
+      ctx.fillText(fmtNum(relatorioAtivo.totalAtraso), t1X + 934 - 10, foot1Y + t1FootH / 2);
+      ctx.textAlign = "center";
+      ctx.fillText("-", t1X + 934 + 83, foot1Y + t1FootH / 2);
+
+      // --- QUADRO 2: CASH BACK & CLARA DESCONTO NA FATURA ---
+      fillCard(col2X, row2Y, col2W, row2H, 24);
+
+      const drawGraficoBloco = (
+        by: number,
+        titulo: string,
+        subtitulo: string | null,
+        totalVal: number,
+        anosObj: Record<"2023" | "2024" | "2025" | "2026", number>,
+        maxVal: number,
+        corBarra: string,
+        usarLogoClara: boolean
+      ) => {
+        const bx = col2X + 24;
+        const bw = col2W - 48;
+
+        if (usarLogoClara && logoClara) {
+          ctx.drawImage(logoClara, bx, by + 4, 120, 34);
+          if (subtitulo) {
+            ctx.textAlign = "right";
+            ctx.textBaseline = "middle";
+            ctx.fillStyle = "#1e293b";
+            ctx.font = `500 16px ${fontSans}`;
+            ctx.fillText(subtitulo, bx + bw, by + 22);
+          }
+        } else {
+          ctx.beginPath();
+          ctx.arc(bx + 22, by + 22, 22, 0, Math.PI * 2);
+          ctx.fillStyle = "#7cc6e8";
+          ctx.fill();
+          ctx.fillStyle = "#1d4ed8";
+          ctx.font = `700 20px ${fontSans}`;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText("✈", bx + 22, by + 23);
+
+          ctx.textAlign = "left";
+          ctx.fillStyle = "#1e293b";
+          ctx.font = `500 23px ${fontSans}`;
+          ctx.fillText(titulo, bx + 56, by + 23);
+        }
+
+        ctx.textAlign = "left";
+        ctx.textBaseline = "top";
+        ctx.fillStyle = "#09314b";
+        ctx.font = `800 36px ${fontSans}`;
+        ctx.fillText(fmtNum(totalVal), bx, by + 50);
+
+        // Área do Gráfico
+        const chartY = by + 104;
+        const chartH = 176;
+        const axisW = 72;
+        const plotX = bx + axisW;
+        const plotW = bw - axisW;
+
+        ctx.textAlign = "right";
+        ctx.textBaseline = "middle";
+        ctx.font = `500 12px ${fontSans}`;
+        ctx.fillStyle = "#64748b";
+        const steps = 4;
+        for (let s = 0; s <= steps; s++) {
+          const sy = chartY + (chartH / steps) * s;
+          const vStep = maxVal * (1 - s / steps);
+          ctx.fillText(fmtNum(vStep, 2), plotX - 8, sy);
+          ctx.strokeStyle = s === steps ? "#cbd5e1" : "#f1f5f9";
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(plotX, sy);
+          ctx.lineTo(plotX + plotW, sy);
+          ctx.stroke();
+        }
+
+        const colPlotW = plotW / 4;
+        anosGrafico.forEach((ano, aIdx) => {
+          const val = Number(anosObj[ano]) || 0;
+          const barH = Math.max(4, Math.min(chartH, (val / maxVal) * chartH));
+          const barW = 34;
+          const barX = plotX + aIdx * colPlotW + (colPlotW - barW) / 2;
+          const barY = chartY + chartH - barH;
+          ctx.fillStyle = corBarra;
+          ctx.fillRect(barX, barY, barW, barH);
+        });
+
+        // Tabela da base do gráfico
+        const tbY = chartY + chartH + 8;
+        const tbRowH = 26;
+        ctx.strokeStyle = "#e2e8f0";
+        ctx.lineWidth = 1.2;
+
+        // Header Anos
+        ctx.strokeRect(bx, tbY, axisW, tbRowH);
+        anosGrafico.forEach((ano, aIdx) => {
+          const cx = plotX + aIdx * colPlotW;
+          ctx.strokeRect(cx, tbY, colPlotW, tbRowH);
+          ctx.fillStyle = "#475569";
+          ctx.font = `700 12px ${fontSans}`;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(ano, cx + colPlotW / 2, tbY + tbRowH / 2);
+        });
+
+        // Linha Total
+        const tbY2 = tbY + tbRowH;
+        ctx.strokeRect(bx, tbY2, axisW, tbRowH);
+        ctx.fillStyle = corBarra;
+        ctx.fillRect(bx + 8, tbY2 + 9, 8, 8);
+        ctx.fillStyle = "#475569";
+        ctx.font = `700 12px ${fontSans}`;
+        ctx.textAlign = "left";
+        ctx.fillText("Total", bx + 20, tbY2 + tbRowH / 2);
+
+        anosGrafico.forEach((ano, aIdx) => {
+          const cx = plotX + aIdx * colPlotW;
+          ctx.strokeRect(cx, tbY2, colPlotW, tbRowH);
+          ctx.fillStyle = "#475569";
+          ctx.font = `600 12px ${fontSans}`;
+          ctx.textAlign = "center";
+          ctx.fillText(fmtNum(anosObj[ano]), cx + colPlotW / 2, tbY2 + tbRowH / 2);
+        });
+      };
+
+      drawGraficoBloco(
+        row2Y + 22,
+        "CASH BACK",
+        null,
+        relatorioAtivo.cashBack.totalAcumulado,
+        relatorioAtivo.cashBack.anos,
+        maxCashBack,
+        "#1b84d4",
+        false
+      );
+
+      // Linha divisória tracejada entre Cash Back e Clara
+      ctx.save();
+      ctx.setLineDash([5, 5]);
+      ctx.strokeStyle = "#e2e8f0";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(col2X + 24, row2Y + 388);
+      ctx.lineTo(col2X + col2W - 24, row2Y + 388);
+      ctx.stroke();
+      ctx.restore();
+
+      drawGraficoBloco(
+        row2Y + 408,
+        "CLARA",
+        "DESCONTO NA FATURA",
+        relatorioAtivo.claraDesconto.totalAcumulado,
+        relatorioAtivo.claraDesconto.anos,
+        maxClara,
+        "#0c3c52",
+        true
+      );
+
+      // --- QUADRO 3: PROJETOS | VALORES ---
+      fillCard(col3X, row2Y, col3W, row2H, 24);
+      ctx.beginPath();
+      ctx.arc(col3X + 38, row2Y + 36, 20, 0, Math.PI * 2);
+      ctx.fillStyle = "#80c4c8";
+      ctx.fill();
+      ctx.fillStyle = "#ffffff";
+      ctx.font = `800 17px ${fontSans}`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("📊", col3X + 38, row2Y + 36);
+
+      ctx.textAlign = "left";
+      ctx.fillStyle = "#1e293b";
+      ctx.font = `500 25px ${fontSans}`;
+      ctx.fillText("PROJETOS", col3X + 68, row2Y + 37);
+
+      drawIndicadorSeta(
+        col3X + col3W / 2 + 10,
+        row2Y + 36,
+        24,
+        relatorioAtivo.totalProjetos,
+        relatorioAnterior?.totalProjetos,
+        false,
+        relatorioAtivo.indicadoresIniciais?.projetosMes
+      );
+
+      ctx.textAlign = "right";
+      ctx.fillStyle = "#1e293b";
+      ctx.font = `500 25px ${fontSans}`;
+      ctx.fillText("VALORES", col3X + col3W - 24, row2Y + 37);
+
+      // Lista de Projetos alinhada com a barra TOTAL da esquerda
+      const pX = col3X + 20;
+      const pY = row2Y + 72;
+      const pW = col3W - 40;
+      const pFootH = 36;
+      const projs = relatorioAtivo.projetosMes;
+      const pBodyH = row2H - 72 - 20 - pFootH;
+      const pRowH = projs.length > 0 ? pBodyH / projs.length : 28;
+
+      projs.forEach((p, idx) => {
+        const ry = pY + idx * pRowH;
+        ctx.fillStyle = idx % 2 === 0 ? "#f0f7fa" : "#ffffff";
+        ctx.fillRect(pX, ry, pW, pRowH);
+
+        ctx.font = `500 14px ${fontSans}`;
+        ctx.fillStyle = "#64748b";
+        ctx.textAlign = "left";
+        ctx.textBaseline = "middle";
+        ctx.fillText(p.projeto.toUpperCase(), pX + 12, ry + pRowH / 2);
+
+        ctx.font = `600 14px ${fontSans}`;
+        ctx.fillStyle = "#475569";
+        ctx.textAlign = "right";
+        ctx.fillText(fmtNum(p.valor), pX + pW - 12, ry + pRowH / 2);
+      });
+
+      const foot3Y = pY + pBodyH;
+      ctx.fillStyle = "#0a3254";
+      ctx.fillRect(pX, foot3Y, pW, pFootH);
+      ctx.fillStyle = "#ffffff";
+      ctx.font = `800 16px ${fontSans}`;
+      ctx.textAlign = "left";
+      ctx.fillText("TOTAL", pX + 12, foot3Y + pFootH / 2);
+      ctx.textAlign = "right";
+      ctx.fillText(fmtNum(relatorioAtivo.totalProjetos), pX + pW - 12, foot3Y + pFootH / 2);
+
+      // =======================================================================
+      // 5. RODAPÉ INFERIOR ESQUERDO: TOTAL A RECEBER & A VENCER EM ABERTO
+      // =======================================================================
+      const botY = 1264;
+      const drawBottomKpi = (bx: number, label: string, valor: number) => {
+        ctx.beginPath();
+        ctx.arc(bx + 24, botY + 34, 22, 0, Math.PI * 2);
+        ctx.fillStyle = "#80c4c8";
+        ctx.fill();
+        ctx.fillStyle = "#ffffff";
+        ctx.font = `700 18px ${fontSans}`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("⏱", bx + 24, botY + 34);
+
+        ctx.textAlign = "left";
+        ctx.textBaseline = "top";
+        ctx.fillStyle = "#1e293b";
+        ctx.font = `500 22px ${fontSans}`;
+        ctx.fillText(label, bx + 58, botY + 6);
+
+        ctx.fillStyle = "#0f172a";
+        ctx.font = `800 36px ${fontSans}`;
+        ctx.fillText(fmtNum(valor), bx + 58, botY + 34);
+      };
+
+      drawBottomKpi(44, "TOTAL A RECEBER", relatorioAtivo.totalAReceber);
+      drawBottomKpi(615, "A VENCER EM ABERTO", relatorioAtivo.aVencerEmAberto);
+
+      // Dispara o download do arquivo .PNG
+      const dataFmt = formatarDataBR(relatorioAtivo.dataReferencia).replace(/\//g, "-");
+      const dataUrl = canvas.toDataURL("image/png", 1.0);
+      const link = document.createElement("a");
+      link.download = `Acompanhamento_Semanal_${dataFmt}.png`;
+      link.href = dataUrl;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      mostrarToast(`Imagem PNG de Alta Definição (Acompanhamento_Semanal_${dataFmt}.png) baixada com sucesso!`);
+    } catch (e: any) {
+      console.error("Erro ao gerar PNG HD:", e);
+      alert("Não foi possível gerar o arquivo PNG: " + (e?.message || "erro inesperado"));
+    } finally {
+      setBaixandoPng(false);
     }
   };
 
@@ -605,6 +1372,31 @@ export default function AcompanhamentoSemanalPage() {
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+          <button
+            type="button"
+            onClick={handleBaixarPngAltaDefinicao}
+            disabled={baixandoPng}
+            className="btn-secondary"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: "8px 14px",
+              borderRadius: "10px",
+              fontSize: "12px",
+              fontWeight: 700,
+              cursor: baixandoPng ? "wait" : "pointer",
+              border: "1px solid #0284c7",
+              color: "#0284c7",
+              backgroundColor: "rgba(2, 132, 199, 0.08)",
+            }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: "17px" }}>
+              download
+            </span>
+            <span>{baixandoPng ? "Gerando PNG HD..." : "Baixar PNG (Alta Definição)"}</span>
+          </button>
+
           <button
             type="button"
             onClick={() => setModalHistoricoAberto(true)}
@@ -1056,17 +1848,8 @@ export default function AcompanhamentoSemanalPage() {
                   <span style={{ fontSize: "16.5px", fontWeight: 500, color: "#1e293b", textTransform: "uppercase" }}>
                     CONTAS A PAGAR
                   </span>
-                </div>
-
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "46px repeat(5, 1fr)",
-                    gap: "10px",
-                    alignItems: "center",
-                  }}
-                >
-                  <div style={{ display: "flex", justifyContent: "center" }}>
+                  {/* Indicador reposicionado ao lado do título para liberar espaço aos cards */}
+                  <div style={{ marginLeft: "6px" }}>
                     <IndicadorVariacaoSeta
                       atual={relatorioAtivo.contasAPagar.totalPeriodo}
                       anterior={relatorioAnterior?.contasAPagar?.totalPeriodo}
@@ -1075,6 +1858,16 @@ export default function AcompanhamentoSemanalPage() {
                       tamanho="sm"
                     />
                   </div>
+                </div>
+
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(5, 1fr)",
+                    gap: "10px",
+                    alignItems: "center",
+                  }}
+                >
 
                   {/* Vencidos */}
                   <div
@@ -1085,10 +1878,18 @@ export default function AcompanhamentoSemanalPage() {
                       textAlign: "center",
                     }}
                   >
-                    <div style={{ fontSize: "12px", fontWeight: 800, color: "#0f172a", textTransform: "uppercase" }}>
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: 800,
+                        color: "#0f172a",
+                        textTransform: "uppercase",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
                       VENCIDOS
                     </div>
-                    <div style={{ fontSize: "21px", fontWeight: 800, color: "#ea9999", marginTop: "2px" }}>
+                    <div style={{ fontSize: "24px", whiteSpace: "nowrap", fontWeight: 800, color: "#ea9999", marginTop: "2px" }}>
                       {fmtCompactoOuDecimal(relatorioAtivo.contasAPagar.vencidos)}
                     </div>
                   </div>
@@ -1102,10 +1903,18 @@ export default function AcompanhamentoSemanalPage() {
                       textAlign: "center",
                     }}
                   >
-                    <div style={{ fontSize: "12px", fontWeight: 800, color: "#0f172a", textTransform: "uppercase" }}>
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: 800,
+                        color: "#0f172a",
+                        textTransform: "uppercase",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
                       VENCEM HOJE
                     </div>
-                    <div style={{ fontSize: "21px", fontWeight: 800, color: "#ea9999", marginTop: "2px" }}>
+                    <div style={{ fontSize: "24px", whiteSpace: "nowrap", fontWeight: 800, color: "#ea9999", marginTop: "2px" }}>
                       {fmtCompactoOuDecimal(relatorioAtivo.contasAPagar.vencemHoje)}
                     </div>
                   </div>
@@ -1119,10 +1928,18 @@ export default function AcompanhamentoSemanalPage() {
                       textAlign: "center",
                     }}
                   >
-                    <div style={{ fontSize: "12px", fontWeight: 800, color: "#0f172a", textTransform: "uppercase" }}>
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: 800,
+                        color: "#0f172a",
+                        textTransform: "uppercase",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
                       A VENCER
                     </div>
-                    <div style={{ fontSize: "21px", fontWeight: 800, color: "#546e7a", marginTop: "2px" }}>
+                    <div style={{ fontSize: "24px", whiteSpace: "nowrap", fontWeight: 800, color: "#546e7a", marginTop: "2px" }}>
                       {fmtCompactoOuDecimal(relatorioAtivo.contasAPagar.aVencer)}
                     </div>
                   </div>
@@ -1136,10 +1953,18 @@ export default function AcompanhamentoSemanalPage() {
                       textAlign: "center",
                     }}
                   >
-                    <div style={{ fontSize: "12px", fontWeight: 800, color: "#0f172a", textTransform: "uppercase" }}>
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: 800,
+                        color: "#0f172a",
+                        textTransform: "uppercase",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
                       PAGOS
                     </div>
-                    <div style={{ fontSize: "21px", fontWeight: 800, color: "#67b887", marginTop: "2px" }}>
+                    <div style={{ fontSize: "24px", whiteSpace: "nowrap", fontWeight: 800, color: "#67b887", marginTop: "2px" }}>
                       {fmtCompactoOuDecimal(relatorioAtivo.contasAPagar.pagos)}
                     </div>
                   </div>
@@ -1153,10 +1978,18 @@ export default function AcompanhamentoSemanalPage() {
                       textAlign: "center",
                     }}
                   >
-                    <div style={{ fontSize: "12px", fontWeight: 800, color: "#0f172a", textTransform: "uppercase" }}>
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: 800,
+                        color: "#0f172a",
+                        textTransform: "uppercase",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
                       TOTAL DO PERÍODO
                     </div>
-                    <div style={{ fontSize: "21px", fontWeight: 800, color: "#546e7a", marginTop: "2px" }}>
+                    <div style={{ fontSize: "24px", whiteSpace: "nowrap", fontWeight: 800, color: "#546e7a", marginTop: "2px" }}>
                       {fmtNum(relatorioAtivo.contasAPagar.totalPeriodo)}
                     </div>
                   </div>
@@ -1197,17 +2030,8 @@ export default function AcompanhamentoSemanalPage() {
                   <span style={{ fontSize: "16.5px", fontWeight: 500, color: "#1e293b", textTransform: "uppercase" }}>
                     CONTAS A RECEBER
                   </span>
-                </div>
-
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "46px repeat(5, 1fr)",
-                    gap: "10px",
-                    alignItems: "center",
-                  }}
-                >
-                  <div style={{ display: "flex", justifyContent: "center" }}>
+                  {/* Indicador reposicionado ao lado do título para liberar espaço aos cards */}
+                  <div style={{ marginLeft: "6px" }}>
                     <IndicadorVariacaoSeta
                       atual={relatorioAtivo.contasAReceber.totalPeriodo}
                       anterior={relatorioAnterior?.contasAReceber?.totalPeriodo}
@@ -1215,6 +2039,16 @@ export default function AcompanhamentoSemanalPage() {
                       tamanho="sm"
                     />
                   </div>
+                </div>
+
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(5, 1fr)",
+                    gap: "10px",
+                    alignItems: "center",
+                  }}
+                >
 
                   {/* Vencidos */}
                   <div
@@ -1225,10 +2059,18 @@ export default function AcompanhamentoSemanalPage() {
                       textAlign: "center",
                     }}
                   >
-                    <div style={{ fontSize: "12px", fontWeight: 800, color: "#0f172a", textTransform: "uppercase" }}>
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: 800,
+                        color: "#0f172a",
+                        textTransform: "uppercase",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
                       VENCIDOS
                     </div>
-                    <div style={{ fontSize: "21px", fontWeight: 800, color: "#ea9999", marginTop: "2px" }}>
+                    <div style={{ fontSize: "24px", whiteSpace: "nowrap", fontWeight: 800, color: "#ea9999", marginTop: "2px" }}>
                       {fmtCompactoOuDecimal(relatorioAtivo.contasAReceber.vencidos)}
                     </div>
                   </div>
@@ -1242,10 +2084,18 @@ export default function AcompanhamentoSemanalPage() {
                       textAlign: "center",
                     }}
                   >
-                    <div style={{ fontSize: "12px", fontWeight: 800, color: "#0f172a", textTransform: "uppercase" }}>
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: 800,
+                        color: "#0f172a",
+                        textTransform: "uppercase",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
                       VENCEM HOJE
                     </div>
-                    <div style={{ fontSize: "21px", fontWeight: 800, color: "#ea9999", marginTop: "2px" }}>
+                    <div style={{ fontSize: "24px", whiteSpace: "nowrap", fontWeight: 800, color: "#ea9999", marginTop: "2px" }}>
                       {fmtCompactoOuDecimal(relatorioAtivo.contasAReceber.vencemHoje)}
                     </div>
                   </div>
@@ -1259,10 +2109,18 @@ export default function AcompanhamentoSemanalPage() {
                       textAlign: "center",
                     }}
                   >
-                    <div style={{ fontSize: "12px", fontWeight: 800, color: "#0f172a", textTransform: "uppercase" }}>
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: 800,
+                        color: "#0f172a",
+                        textTransform: "uppercase",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
                       A VENCER
                     </div>
-                    <div style={{ fontSize: "21px", fontWeight: 800, color: "#546e7a", marginTop: "2px" }}>
+                    <div style={{ fontSize: "24px", whiteSpace: "nowrap", fontWeight: 800, color: "#546e7a", marginTop: "2px" }}>
                       {fmtCompactoOuDecimal(relatorioAtivo.contasAReceber.aVencer)}
                     </div>
                   </div>
@@ -1276,10 +2134,18 @@ export default function AcompanhamentoSemanalPage() {
                       textAlign: "center",
                     }}
                   >
-                    <div style={{ fontSize: "12px", fontWeight: 800, color: "#0f172a", textTransform: "uppercase" }}>
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: 800,
+                        color: "#0f172a",
+                        textTransform: "uppercase",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
                       PAGOS
                     </div>
-                    <div style={{ fontSize: "21px", fontWeight: 800, color: "#67b887", marginTop: "2px" }}>
+                    <div style={{ fontSize: "24px", whiteSpace: "nowrap", fontWeight: 800, color: "#67b887", marginTop: "2px" }}>
                       {fmtCompactoOuDecimal(relatorioAtivo.contasAReceber.pagos)}
                     </div>
                   </div>
@@ -1293,10 +2159,18 @@ export default function AcompanhamentoSemanalPage() {
                       textAlign: "center",
                     }}
                   >
-                    <div style={{ fontSize: "12px", fontWeight: 800, color: "#0f172a", textTransform: "uppercase" }}>
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: 800,
+                        color: "#0f172a",
+                        textTransform: "uppercase",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
                       TOTAL DO PERÍODO
                     </div>
-                    <div style={{ fontSize: "21px", fontWeight: 800, color: "#546e7a", marginTop: "2px" }}>
+                    <div style={{ fontSize: "24px", whiteSpace: "nowrap", fontWeight: 800, color: "#546e7a", marginTop: "2px" }}>
                       {fmtNum(relatorioAtivo.contasAReceber.totalPeriodo)}
                     </div>
                   </div>
@@ -1306,7 +2180,8 @@ export default function AcompanhamentoSemanalPage() {
           </div>
 
           {/* =================================================================
-              LINHA 2: A RECEBER EM ATRASO + CASH BACK / CLARA + PROJETOS | VALORES
+              LINHA 2: OS 3 QUADROS BRANCOS ALINHADOS NA MESMA LINHA INFERIOR
+              (A RECEBER EM ATRASO + CASH BACK / CLARA + PROJETOS | VALORES)
              ================================================================= */}
           <div
             style={{
@@ -1316,251 +2191,191 @@ export default function AcompanhamentoSemanalPage() {
               alignItems: "stretch",
             }}
           >
-            {/* COLUNA 1: A RECEBER EM ATRASO + TOTAL A RECEBER + A VENCER EM ABERTO (Via Base de Dados) */}
-            <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", gap: "14px" }}>
-              <div
-                style={{
-                  backgroundColor: "#ffffff",
-                  borderRadius: "16px",
-                  padding: "14px 16px",
-                  boxShadow: "0 2px 10px rgba(15, 42, 74, 0.04)",
-                  border: "1px solid #e2e8f0",
-                  flex: 1,
-                  display: "flex",
-                  flexDirection: "column",
-                }}
-              >
-                {/* Cabeçalho com Título + Indicador Posicionado Conforme Seta do Print 1 */}
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "12px",
-                    marginBottom: "8px",
-                  }}
-                >
-                  <div
-                    style={{
-                      width: "32px",
-                      height: "32px",
-                      borderRadius: "50%",
-                      backgroundColor: "#80c4c8",
-                      color: "#ffffff",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
-                      date_range
-                    </span>
-                  </div>
-                  <span style={{ fontSize: "17px", fontWeight: 500, color: "#1e293b", textTransform: "uppercase" }}>
-                    A RECEBER EM ATRASO
-                  </span>
-                  <div style={{ marginLeft: "4px" }}>
-                    <IndicadorVariacaoSeta
-                      atual={relatorioAtivo.totalAtraso}
-                      anterior={relatorioAnterior?.totalAtraso}
-                      inverterSemantica={true}
-                      overrideSemAnterior={relatorioAtivo.indicadoresIniciais?.aReceberEmAtraso}
-                      tamanho="sm"
-                    />
-                  </div>
-                </div>
-
-                {/* Tabela A Receber em Atraso Ocupando 100% da Largura sem Quebra de Linha nos Projetos */}
-                <div style={{ width: "100%", overflowX: "auto", borderRadius: "6px", border: "1px solid #cbd5e1" }}>
-                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "10px" }}>
-                    <thead>
-                      <tr
-                        style={{
-                          backgroundColor: "#0a3254",
-                          color: "#ffffff",
-                          textTransform: "uppercase",
-                          fontWeight: 700,
-                          fontSize: "9.5px",
-                          letterSpacing: "0.02em",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        <th style={{ padding: "6px 6px", textAlign: "center" }}>REALIZADO</th>
-                        <th style={{ padding: "6px 6px", textAlign: "center" }}>FATURADO</th>
-                        <th style={{ padding: "6px 8px", textAlign: "center" }}>PROJETO</th>
-                        <th style={{ padding: "6px 6px", textAlign: "center" }}>PERFIL</th>
-                        <th style={{ padding: "6px 6px", textAlign: "center", whiteSpace: "nowrap" }}>Nº NOTA</th>
-                        <th style={{ padding: "6px 8px", textAlign: "right" }}>VALOR</th>
-                        <th style={{ padding: "6px 6px", textAlign: "center" }}>DIAS</th>
-                        <th style={{ padding: "6px 8px", textAlign: "center" }}>VENCIMENTO</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {relatorioAtivo.aReceberEmAtraso.map((item, idx) => (
-                        <tr
-                          key={`${item.numeroNota}-${item.projeto}-${idx}`}
-                          style={{
-                            backgroundColor: idx % 2 === 0 ? "#ffffff" : "#f1f5f9",
-                            borderBottom: "1px solid #e2e8f0",
-                            color: "#475569",
-                          }}
-                        >
-                          <td style={{ padding: "4.5px 6px", textAlign: "center", whiteSpace: "nowrap" }}>
-                            {item.realizado}
-                          </td>
-                          <td style={{ padding: "4.5px 6px", textAlign: "center", whiteSpace: "nowrap" }}>
-                            {item.faturado}
-                          </td>
-                          <td
-                            style={{
-                              padding: "4.5px 8px",
-                              textAlign: "center",
-                              fontWeight: 600,
-                              color: "#334155",
-                              fontSize: "9.2px",
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            {item.projeto}
-                          </td>
-                          <td style={{ padding: "4.5px 6px", textAlign: "center", whiteSpace: "nowrap" }}>
-                            {item.perfil}
-                          </td>
-                          <td style={{ padding: "4.5px 6px", textAlign: "center", whiteSpace: "nowrap" }}>
-                            {item.numeroNota}
-                          </td>
-                          <td
-                            style={{
-                              padding: "4.5px 8px",
-                              textAlign: "right",
-                              fontWeight: 600,
-                              color: "#334155",
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            {fmtNum(item.valor)}
-                          </td>
-                          <td
-                            style={{
-                              padding: "4.5px 6px",
-                              textAlign: "center",
-                              fontWeight: 800,
-                              color: "#c00000",
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            {item.dias}
-                          </td>
-                          <td style={{ padding: "4.5px 8px", textAlign: "center", whiteSpace: "nowrap" }}>
-                            {formatarDataBR(item.vencimento)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                    <tfoot>
-                      <tr
-                        style={{
-                          backgroundColor: "#0a3254",
-                          color: "#ffffff",
-                          fontWeight: 800,
-                          fontSize: "10.5px",
-                        }}
-                      >
-                        <td colSpan={5} style={{ padding: "6px 10px", textAlign: "right" }}>
-                          TOTAL
-                        </td>
-                        <td style={{ padding: "6px 8px", textAlign: "right", whiteSpace: "nowrap" }}>
-                          {fmtNum(relatorioAtivo.totalAtraso)}
-                        </td>
-                        <td colSpan={2} style={{ padding: "6px 8px", textAlign: "center" }}>
-                          -
-                        </td>
-                      </tr>
-                    </tfoot>
-                  </table>
-                </div>
-              </div>
-
-              {/* RODAPÉ DA COLUNA 1: TOTAL A RECEBER & A VENCER EM ABERTO (Via Base de Dados) */}
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: "16px",
-                  padding: "4px 8px",
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
-                  <div
-                    style={{
-                      width: "32px",
-                      height: "32px",
-                      borderRadius: "50%",
-                      backgroundColor: "#80c4c8",
-                      color: "#ffffff",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      flexShrink: 0,
-                      marginTop: "2px",
-                    }}
-                  >
-                    <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
-                      date_range
-                    </span>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: "16px", fontWeight: 500, color: "#1e293b", textTransform: "uppercase" }}>
-                      TOTAL A RECEBER
-                    </div>
-                    <div style={{ fontSize: "24px", fontWeight: 800, color: "#0f172a", lineHeight: 1.15 }}>
-                      {fmtNum(relatorioAtivo.totalAReceber)}
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
-                  <div
-                    style={{
-                      width: "32px",
-                      height: "32px",
-                      borderRadius: "50%",
-                      backgroundColor: "#80c4c8",
-                      color: "#ffffff",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      flexShrink: 0,
-                      marginTop: "2px",
-                    }}
-                  >
-                    <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
-                      schedule
-                    </span>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: "16px", fontWeight: 500, color: "#1e293b", textTransform: "uppercase" }}>
-                      A VENCER EM ABERTO
-                    </div>
-                    <div style={{ fontSize: "24px", fontWeight: 800, color: "#0f172a", lineHeight: 1.15 }}>
-                      {fmtNum(relatorioAtivo.aVencerEmAberto)}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* COLUNA 2: CASH BACK & CLARA DESCONTO NA FATURA (Posicionado logo abaixo conforme Print 1) */}
+            {/* QUADRO 1: A RECEBER EM ATRASO (Alinhado na base com Cash Back e Projetos) */}
             <div
               style={{
                 backgroundColor: "#ffffff",
                 borderRadius: "16px",
-                padding: "16px 16px",
+                padding: "14px 16px",
                 boxShadow: "0 2px 10px rgba(15, 42, 74, 0.04)",
                 border: "1px solid #e2e8f0",
                 display: "flex",
                 flexDirection: "column",
-                justifyContent: "flex-start",
-                gap: "18px",
+                justifyContent: "space-between",
+              }}
+            >
+              {/* Cabeçalho com Título + Indicador Posicionado Conforme Seta do Print 1 */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                  marginBottom: "8px",
+                }}
+              >
+                <div
+                  style={{
+                    width: "32px",
+                    height: "32px",
+                    borderRadius: "50%",
+                    backgroundColor: "#80c4c8",
+                    color: "#ffffff",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
+                    date_range
+                  </span>
+                </div>
+                <span style={{ fontSize: "17px", fontWeight: 500, color: "#1e293b", textTransform: "uppercase" }}>
+                  A RECEBER EM ATRASO
+                </span>
+                <div style={{ marginLeft: "4px" }}>
+                  <IndicadorVariacaoSeta
+                    atual={relatorioAtivo.totalAtraso}
+                    anterior={relatorioAnterior?.totalAtraso}
+                    inverterSemantica={true}
+                    overrideSemAnterior={relatorioAtivo.indicadoresIniciais?.aReceberEmAtraso}
+                    tamanho="sm"
+                  />
+                </div>
+              </div>
+
+              {/* Tabela A Receber em Atraso Ocupando 100% da Altura Restante do Card */}
+              <div
+                style={{
+                  width: "100%",
+                  flex: 1,
+                  display: "flex",
+                  flexDirection: "column",
+                  overflowX: "auto",
+                  borderRadius: "6px",
+                  border: "1px solid #cbd5e1",
+                }}
+              >
+                <table style={{ width: "100%", height: "100%", borderCollapse: "collapse", fontSize: "10px" }}>
+                  <thead>
+                    <tr
+                      style={{
+                        backgroundColor: "#0a3254",
+                        color: "#ffffff",
+                        textTransform: "uppercase",
+                        fontWeight: 700,
+                        fontSize: "9.5px",
+                        letterSpacing: "0.02em",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      <th style={{ padding: "6px 6px", textAlign: "center" }}>REALIZADO</th>
+                      <th style={{ padding: "6px 6px", textAlign: "center" }}>FATURADO</th>
+                      <th style={{ padding: "6px 8px", textAlign: "center" }}>PROJETO</th>
+                      <th style={{ padding: "6px 6px", textAlign: "center" }}>PERFIL</th>
+                      <th style={{ padding: "6px 6px", textAlign: "center", whiteSpace: "nowrap" }}>Nº NOTA</th>
+                      <th style={{ padding: "6px 8px", textAlign: "right" }}>VALOR</th>
+                      <th style={{ padding: "6px 6px", textAlign: "center" }}>DIAS</th>
+                      <th style={{ padding: "6px 8px", textAlign: "center" }}>VENCIMENTO</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {relatorioAtivo.aReceberEmAtraso.map((item, idx) => (
+                      <tr
+                        key={`${item.numeroNota}-${item.projeto}-${idx}`}
+                        style={{
+                          backgroundColor: idx % 2 === 0 ? "#ffffff" : "#f1f5f9",
+                          borderBottom: "1px solid #e2e8f0",
+                          color: "#475569",
+                        }}
+                      >
+                        <td style={{ padding: "4px 6px", textAlign: "center", whiteSpace: "nowrap" }}>
+                          {item.realizado}
+                        </td>
+                        <td style={{ padding: "4px 6px", textAlign: "center", whiteSpace: "nowrap" }}>
+                          {item.faturado}
+                        </td>
+                        <td
+                          style={{
+                            padding: "4px 8px",
+                            textAlign: "center",
+                            fontWeight: 600,
+                            color: "#334155",
+                            fontSize: "9.2px",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {item.projeto}
+                        </td>
+                        <td style={{ padding: "4px 6px", textAlign: "center", whiteSpace: "nowrap" }}>
+                          {item.perfil}
+                        </td>
+                        <td style={{ padding: "4px 6px", textAlign: "center", whiteSpace: "nowrap" }}>
+                          {item.numeroNota}
+                        </td>
+                        <td
+                          style={{
+                            padding: "4px 8px",
+                            textAlign: "right",
+                            fontWeight: 600,
+                            color: "#334155",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {fmtNum(item.valor)}
+                        </td>
+                        <td
+                          style={{
+                            padding: "4px 6px",
+                            textAlign: "center",
+                            fontWeight: 800,
+                            color: "#c00000",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {item.dias}
+                        </td>
+                        <td style={{ padding: "4px 8px", textAlign: "center", whiteSpace: "nowrap" }}>
+                          {formatarDataBR(item.vencimento)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr
+                      style={{
+                        backgroundColor: "#0a3254",
+                        color: "#ffffff",
+                        fontWeight: 800,
+                        fontSize: "10.5px",
+                      }}
+                    >
+                      <td colSpan={5} style={{ padding: "6px 10px", textAlign: "right" }}>
+                        TOTAL
+                      </td>
+                      <td style={{ padding: "6px 8px", textAlign: "right", whiteSpace: "nowrap" }}>
+                        {fmtNum(relatorioAtivo.totalAtraso)}
+                      </td>
+                      <td colSpan={2} style={{ padding: "6px 8px", textAlign: "center" }}>
+                        -
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+
+            {/* QUADRO 2: CASH BACK & CLARA DESCONTO NA FATURA (Alinhado na base com A Receber e Projetos) */}
+            <div
+              style={{
+                backgroundColor: "#ffffff",
+                borderRadius: "16px",
+                padding: "14px 16px",
+                boxShadow: "0 2px 10px rgba(15, 42, 74, 0.04)",
+                border: "1px solid #e2e8f0",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+                gap: "14px",
               }}
             >
               {/* BLOCO SUPERIOR: CASH BACK */}
@@ -1956,9 +2771,18 @@ export default function AcompanhamentoSemanalPage() {
                 </span>
               </div>
 
-              {/* Lista de Projetos do Mês Corrente */}
-              <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "10.5px" }}>
+              {/* Lista de Projetos do Mês Corrente Alinhada na Base com A Receber em Atraso */}
+              <div
+                style={{
+                  flex: 1,
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
+                  borderRadius: "6px",
+                  overflow: "hidden",
+                }}
+              >
+                <table style={{ width: "100%", height: "100%", borderCollapse: "collapse", fontSize: "9.8px" }}>
                   <tbody>
                     {relatorioAtivo.projetosMes.map((p, idx) => (
                       <tr
@@ -1969,7 +2793,7 @@ export default function AcompanhamentoSemanalPage() {
                       >
                         <td
                           style={{
-                            padding: "4px 8px",
+                            padding: "2.8px 8px",
                             color: "#64748b",
                             fontWeight: 500,
                             textTransform: "uppercase",
@@ -1980,7 +2804,7 @@ export default function AcompanhamentoSemanalPage() {
                         </td>
                         <td
                           style={{
-                            padding: "4px 8px",
+                            padding: "2.8px 8px",
                             textAlign: "right",
                             color: "#475569",
                             fontWeight: 600,
@@ -1998,7 +2822,7 @@ export default function AcompanhamentoSemanalPage() {
                         backgroundColor: "#0a3254",
                         color: "#ffffff",
                         fontWeight: 800,
-                        fontSize: "11.5px",
+                        fontSize: "10.5px",
                       }}
                     >
                       <td style={{ padding: "6px 10px" }}>TOTAL</td>
@@ -2010,6 +2834,88 @@ export default function AcompanhamentoSemanalPage() {
                 </table>
               </div>
             </div>
+          </div>
+
+          {/* =================================================================
+              LINHA 3 (ABAIXO DO QUADRO A RECEBER EM ATRASO):
+              TOTAL A RECEBER & A VENCER EM ABERTO (Via Base de Dados)
+             ================================================================= */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "minmax(520px, 1.95fr) minmax(235px, 0.82fr) minmax(290px, 1.12fr)",
+              gap: "18px",
+              alignItems: "center",
+            }}
+          >
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: "16px",
+                padding: "2px 8px",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                <div
+                  style={{
+                    width: "32px",
+                    height: "32px",
+                    borderRadius: "50%",
+                    backgroundColor: "#80c4c8",
+                    color: "#ffffff",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                    marginTop: "2px",
+                  }}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
+                    date_range
+                  </span>
+                </div>
+                <div>
+                  <div style={{ fontSize: "16px", fontWeight: 500, color: "#1e293b", textTransform: "uppercase" }}>
+                    TOTAL A RECEBER
+                  </div>
+                  <div style={{ fontSize: "24px", fontWeight: 800, color: "#0f172a", lineHeight: 1.15 }}>
+                    {fmtNum(relatorioAtivo.totalAReceber)}
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                <div
+                  style={{
+                    width: "32px",
+                    height: "32px",
+                    borderRadius: "50%",
+                    backgroundColor: "#80c4c8",
+                    color: "#ffffff",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                    marginTop: "2px",
+                  }}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
+                    schedule
+                  </span>
+                </div>
+                <div>
+                  <div style={{ fontSize: "16px", fontWeight: 500, color: "#1e293b", textTransform: "uppercase" }}>
+                    A VENCER EM ABERTO
+                  </div>
+                  <div style={{ fontSize: "24px", fontWeight: 800, color: "#0f172a", lineHeight: 1.15 }}>
+                    {fmtNum(relatorioAtivo.aVencerEmAberto)}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div />
+            <div />
           </div>
         </div>
       </div>
@@ -2038,18 +2944,19 @@ export default function AcompanhamentoSemanalPage() {
             onClick={(e) => e.stopPropagation()}
             style={{
               width: "100%",
-              maxWidth: "860px",
+              maxWidth: "1120px",
               backgroundColor: "var(--surface-container-lowest, #ffffff)",
               borderRadius: "18px",
               border: "1px solid var(--border, #e2e8f0)",
               overflow: "hidden",
               boxShadow: "0 24px 60px rgba(0, 0, 0, 0.3)",
+              fontFamily: "var(--font-jakarta, 'Plus Jakarta Sans', sans-serif)",
             }}
           >
+            {/* Header sem classe .modal-header h3 global para garantir texto 100% branco legível */}
             <div
-              className="modal-header"
               style={{
-                padding: "16px 22px",
+                padding: "16px 24px",
                 backgroundColor: "#0a3254",
                 color: "#ffffff",
                 display: "flex",
@@ -2058,12 +2965,20 @@ export default function AcompanhamentoSemanalPage() {
               }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <span className="material-symbols-outlined" style={{ color: "#38bdf8" }}>
+                <span className="material-symbols-outlined" style={{ color: "#38bdf8", fontSize: "22px" }}>
                   history
                 </span>
-                <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 800, color: "#ffffff" }}>
+                <div
+                  style={{
+                    margin: 0,
+                    fontSize: "16.5px",
+                    fontWeight: 800,
+                    color: "#ffffff",
+                    letterSpacing: "-0.01em",
+                  }}
+                >
                   Histórico de Relatórios de Acompanhamento Semanal Enviados
-                </h3>
+                </div>
               </div>
               <button
                 type="button"
@@ -2080,8 +2995,8 @@ export default function AcompanhamentoSemanalPage() {
               </button>
             </div>
 
-            <div style={{ padding: "20px 22px", maxHeight: "70vh", overflowY: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12.5px" }}>
+            <div style={{ padding: "20px 24px", maxHeight: "75vh", overflowY: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
                 <thead>
                   <tr
                     style={{
@@ -2091,15 +3006,18 @@ export default function AcompanhamentoSemanalPage() {
                       fontSize: "11px",
                       textTransform: "uppercase",
                       color: "var(--on-surface-variant)",
+                      whiteSpace: "nowrap",
                     }}
                   >
-                    <th style={{ padding: "10px 12px" }}>Data do Relatório</th>
-                    <th style={{ padding: "10px 12px" }}>Mês Ref.</th>
-                    <th style={{ padding: "10px 12px", textAlign: "right" }}>Posição Financeira</th>
-                    <th style={{ padding: "10px 12px", textAlign: "right" }}>Contas a Pagar</th>
-                    <th style={{ padding: "10px 12px", textAlign: "right" }}>Total a Receber</th>
-                    <th style={{ padding: "10px 12px", textAlign: "right" }}>Projetos (Mês)</th>
-                    <th style={{ padding: "10px 12px", textAlign: "center" }}>Ações</th>
+                    <th style={{ padding: "11px 14px", whiteSpace: "nowrap" }}>Data do Relatório</th>
+                    <th style={{ padding: "11px 14px", whiteSpace: "nowrap" }}>Mês Ref.</th>
+                    <th style={{ padding: "11px 14px", textAlign: "right", whiteSpace: "nowrap" }}>
+                      Posição Financeira
+                    </th>
+                    <th style={{ padding: "11px 14px", textAlign: "right", whiteSpace: "nowrap" }}>Contas a Pagar</th>
+                    <th style={{ padding: "11px 14px", textAlign: "right", whiteSpace: "nowrap" }}>Total a Receber</th>
+                    <th style={{ padding: "11px 14px", textAlign: "right", whiteSpace: "nowrap" }}>Projetos (Mês)</th>
+                    <th style={{ padding: "11px 14px", textAlign: "center", whiteSpace: "nowrap" }}>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -2111,43 +3029,62 @@ export default function AcompanhamentoSemanalPage() {
                         style={{
                           borderBottom: "1px solid var(--border, #f1f5f9)",
                           backgroundColor: isAtual ? "rgba(2, 132, 199, 0.08)" : "transparent",
+                          whiteSpace: "nowrap",
                         }}
                       >
-                        <td style={{ padding: "12px", fontWeight: 800 }}>
-                          {formatarDataBR(item.dataReferencia)}
-                          {idx === 0 && (
-                            <span
-                              style={{
-                                marginLeft: "8px",
-                                padding: "2px 7px",
-                                borderRadius: "999px",
-                                fontSize: "10px",
-                                backgroundColor: "#dcfce7",
-                                color: "#15803d",
-                                fontWeight: 800,
-                              }}
-                            >
-                              Último Enviado
-                            </span>
-                          )}
+                        <td style={{ padding: "13px 14px", fontWeight: 800, whiteSpace: "nowrap" }}>
+                          <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", whiteSpace: "nowrap" }}>
+                            <span>{formatarDataBR(item.dataReferencia)}</span>
+                            {idx === 0 && (
+                              <span
+                                style={{
+                                  padding: "2px 9px",
+                                  borderRadius: "999px",
+                                  fontSize: "10.5px",
+                                  backgroundColor: "#dcfce7",
+                                  color: "#15803d",
+                                  fontWeight: 800,
+                                  whiteSpace: "nowrap",
+                                }}
+                              >
+                                Último Enviado
+                              </span>
+                            )}
+                          </div>
                         </td>
-                        <td style={{ padding: "12px", fontWeight: 600 }}>
+                        <td style={{ padding: "13px 14px", fontWeight: 600, whiteSpace: "nowrap" }}>
                           {item.mesReferencia}/{item.anoReferencia}
                         </td>
-                        <td style={{ padding: "12px", textAlign: "right", fontWeight: 700 }}>
+                        <td style={{ padding: "13px 14px", textAlign: "right", fontWeight: 700, whiteSpace: "nowrap" }}>
                           R$ {fmtNum(item.posicaoFinanceira.total)}
                         </td>
-                        <td style={{ padding: "12px", textAlign: "right", fontWeight: 600 }}>
+                        <td style={{ padding: "13px 14px", textAlign: "right", fontWeight: 600, whiteSpace: "nowrap" }}>
                           R$ {fmtNum(item.contasAPagar.totalPeriodo)}
                         </td>
-                        <td style={{ padding: "12px", textAlign: "right", fontWeight: 700, color: "#0284c7" }}>
+                        <td
+                          style={{
+                            padding: "13px 14px",
+                            textAlign: "right",
+                            fontWeight: 700,
+                            color: "#0284c7",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
                           R$ {fmtNum(item.totalAReceber)}
                         </td>
-                        <td style={{ padding: "12px", textAlign: "right", fontWeight: 700, color: "#059669" }}>
+                        <td
+                          style={{
+                            padding: "13px 14px",
+                            textAlign: "right",
+                            fontWeight: 700,
+                            color: "#059669",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
                           R$ {fmtNum(item.totalProjetos)}
                         </td>
-                        <td style={{ padding: "12px", textAlign: "center" }}>
-                          <div style={{ display: "inline-flex", gap: "8px" }}>
+                        <td style={{ padding: "13px 14px", textAlign: "center", whiteSpace: "nowrap" }}>
+                          <div style={{ display: "inline-flex", gap: "8px", whiteSpace: "nowrap" }}>
                             <button
                               type="button"
                               onClick={() => {
@@ -2155,17 +3092,18 @@ export default function AcompanhamentoSemanalPage() {
                                 setModalHistoricoAberto(false);
                               }}
                               style={{
-                                padding: "5px 10px",
-                                borderRadius: "6px",
+                                padding: "6px 12px",
+                                borderRadius: "7px",
                                 border: "1px solid #0284c7",
                                 backgroundColor: isAtual ? "#0284c7" : "transparent",
                                 color: isAtual ? "#ffffff" : "#0284c7",
-                                fontSize: "11px",
+                                fontSize: "11.5px",
                                 fontWeight: 700,
                                 cursor: "pointer",
+                                whiteSpace: "nowrap",
                               }}
                             >
-                              {isAtual ? "Em Exibição" : "Carregar Relatório"}
+                              {isAtual ? "Em Exibição" : "Visualizar"}
                             </button>
                             {podeEditarRelatorio && historico.length > 1 && (
                               <button
@@ -2173,13 +3111,15 @@ export default function AcompanhamentoSemanalPage() {
                                 onClick={() => handleExcluirRelatorio(item.id, item.dataReferencia)}
                                 title="Excluir este envio do histórico"
                                 style={{
-                                  padding: "5px 8px",
-                                  borderRadius: "6px",
+                                  padding: "6px 10px",
+                                  borderRadius: "7px",
                                   border: "1px solid #fecaca",
                                   backgroundColor: "transparent",
                                   color: "#dc2626",
-                                  fontSize: "11px",
+                                  fontSize: "11.5px",
+                                  fontWeight: 600,
                                   cursor: "pointer",
+                                  whiteSpace: "nowrap",
                                 }}
                               >
                                 Excluir
@@ -2233,9 +3173,8 @@ export default function AcompanhamentoSemanalPage() {
               fontFamily: "var(--font-jakarta, 'Plus Jakarta Sans', sans-serif)",
             }}
           >
-            {/* Header do Modal (Print 2: Fonte Branca Nítida) */}
+            {/* Header do Modal (Fonte 100% Branca Nítida sem override de .modal-header h3) */}
             <div
-              className="modal-header"
               style={{
                 padding: "16px 24px",
                 backgroundColor: "#0a3254",
@@ -2250,9 +3189,9 @@ export default function AcompanhamentoSemanalPage() {
                   edit_document
                 </span>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: "16.5px", fontWeight: 800, color: "#ffffff" }}>
+                  <div style={{ margin: 0, fontSize: "16.5px", fontWeight: 800, color: "#ffffff" }}>
                     Configurar &amp; Publicar Relatório de Acompanhamento Semanal
-                  </h3>
+                  </div>
                   <span style={{ fontSize: "12px", color: "#e0f2fe", fontWeight: 500 }}>
                     Preenchimento manual de Posição Financeira, Contas a Pagar/Receber, Cash Back e Clara + Dados
                     automáticos da Base

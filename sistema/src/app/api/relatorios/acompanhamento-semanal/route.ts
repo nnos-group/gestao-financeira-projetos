@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import { supabaseAdmin } from "@/lib/supabase-server";
+import { dispararEmail } from "@/lib/email-service";
+import { lerUsuariosAsync } from "@/lib/usuarios-service";
+import { formatarDataBR } from "@/lib/date-utils";
 import historicoBase from "@/lib/acompanhamento-semanal-base.json";
 
 const DATA_FILE = path.join(process.cwd(), "src/lib/acompanhamento-semanal-base.json");
@@ -22,6 +25,11 @@ const MESES_NOMES = [
   "NOVEMBRO",
   "DEZEMBRO",
 ];
+
+function fmtMoeda(v: number | undefined | null): string {
+  const n = Number(v) || 0;
+  return n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
 
 function lerHistoricoLocal(): any[] {
   try {
@@ -98,7 +106,6 @@ async function calcularDadosBaseEmTempoReal(dataReferenciaISO: string) {
   const mesNome = MESES_NOMES[mesNum - 1] || "NOVEMBRO";
   const competenciaMes = `${anoRef}-${String(mesNum).padStart(2, "0")}-01`;
 
-  // 1. Ler base de Faturamento para A Receber em Atraso, A Vencer em Aberto e Total a Receber
   let faturas: any[] = [];
   try {
     if (fs.existsSync(FATURAMENTO_FILE)) {
@@ -149,7 +156,6 @@ async function calcularDadosBaseEmTempoReal(dataReferenciaISO: string) {
     }
   }
 
-  // 2. Ler Projetos do Mês Corrente na tabela lancamentos do Supabase
   const mapaProjetos = new Map<string, number>();
   try {
     const db = supabaseAdmin();
@@ -196,6 +202,122 @@ async function calcularDadosBaseEmTempoReal(dataReferenciaISO: string) {
   };
 }
 
+function construirHtmlEmailExecutivo(rel: any, relAnterior: any | null, destinatarioNome: string, destinatarioLogin: string) {
+  const dataBR = formatarDataBR(rel.dataReferencia);
+  const urlBase = process.env.NEXT_PUBLIC_APP_URL || "https://gestao.nnos.com.br";
+  const urlLogin = `${urlBase}/login`;
+  const urlRelatorio = `${urlBase}/relatorios/acompanhamento-semanal`;
+
+  const calcVarStr = (atual: number, ant?: number | null, inverter = false) => {
+    if (!ant || ant === 0) return "";
+    const diff = atual - ant;
+    const pct = Math.round((Math.abs(diff) / Math.abs(ant)) * 100);
+    const subiu = diff >= 0;
+    const bom = inverter ? !subiu : subiu;
+    const cor = bom ? "#059669" : "#e11d48";
+    const bg = bom ? "#ecfdf5" : "#fff1f2";
+    const seta = subiu ? "▲" : "▼";
+    return `<span style="display:inline-block;margin-left:6px;padding:2px 7px;border-radius:999px;font-size:11px;font-weight:700;background-color:${bg};color:${cor};">${seta} ${pct}% vs. anterior</span>`;
+  };
+
+  return `
+  <div style="background-color:#f1f5f9;padding:28px 16px;">
+    <div style="max-width:680px;margin:0 auto;background-color:#ffffff;border-radius:18px;overflow:hidden;border:1px solid #e2e8f0;box-shadow:0 10px 30px rgba(15,42,74,0.08);">
+      <!-- Banner Superior -->
+      <div style="background:linear-gradient(90deg,#0099c8 0%,#0973ae 45%,#004c8c 100%);padding:24px 28px;color:#ffffff;">
+        <div style="font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:#bae6fd;margin-bottom:4px;">
+          DIRETORIA EXECUTIVA • BOLETIM FINANCEIRO
+        </div>
+        <h1 style="margin:0;font-size:22px;font-weight:800;color:#ffffff;letter-spacing:-0.01em;">
+          Acompanhamento Semanal | ${rel.mesReferencia}/${rel.anoReferencia}
+        </h1>
+        <div style="margin-top:6px;font-size:13px;color:#e0f2fe;font-weight:600;">
+          Posição fechada em <strong>${dataBR}</strong> • Publicado por ${rel.criadoPor || "Controladoria & Finanças"}
+        </div>
+      </div>
+
+      <!-- Corpo -->
+      <div style="padding:26px 28px;color:#1e293b;">
+        <p style="margin:0 0 14px 0;font-size:14.5px;line-height:1.6;">
+          Olá, <strong>${destinatarioNome}</strong>,
+        </p>
+        <p style="margin:0 0 20px 0;font-size:14px;line-height:1.65;color:#334155;">
+          O novo relatório de <strong>Acompanhamento Semanal (${dataBR})</strong> referente ao mês de <strong>${rel.mesReferencia}</strong> já está disponível para consulta na Central de Relatórios do Portal Corporativo NNÓS. Confira abaixo o resumo executivo dos principais indicadores financeiros e operacionais:
+        </p>
+
+        <!-- Resumo Executivo em Cards -->
+        <table style="width:100%;border-collapse:separate;border-spacing:0 10px;">
+          <tr>
+            <td style="padding:14px 16px;background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;">
+              <div style="font-size:11px;font-weight:800;color:#0284c7;text-transform:uppercase;letter-spacing:0.04em;">
+                1. Posição Financeira Consolidada (Caixa + Aplicações)
+              </div>
+              <div style="font-size:22px;font-weight:800;color:#0f172a;margin-top:4px;">
+                R$ ${fmtMoeda(rel.posicaoFinanceira?.total)}
+                ${calcVarStr(rel.posicaoFinanceira?.total, relAnterior?.posicaoFinanceira?.total)}
+              </div>
+              <div style="font-size:12px;color:#475569;margin-top:6px;line-height:1.5;">
+                • <strong>Sicoob:</strong> Caixa R$ ${fmtMoeda(rel.posicaoFinanceira?.sicoob?.caixa)} | Aplicação R$ ${fmtMoeda(rel.posicaoFinanceira?.sicoob?.aplicacao)} (${rel.posicaoFinanceira?.sicoob?.rentabilidade})<br/>
+                • <strong>Clara:</strong> Caixa R$ ${fmtMoeda(rel.posicaoFinanceira?.clara?.caixa)} | Aplicação R$ ${fmtMoeda(rel.posicaoFinanceira?.clara?.aplicacao)} (${rel.posicaoFinanceira?.clara?.rentabilidade})<br/>
+                • <strong>Itaú:</strong> Caixa R$ ${fmtMoeda(rel.posicaoFinanceira?.itau?.caixa)} | Aplicação R$ ${fmtMoeda(rel.posicaoFinanceira?.itau?.aplicacao)} (${rel.posicaoFinanceira?.itau?.rentabilidade})
+              </div>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:14px 16px;background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;">
+              <div style="font-size:11px;font-weight:800;color:#0284c7;text-transform:uppercase;letter-spacing:0.04em;">
+                2. Fluxo do Período: Contas a Pagar &amp; Contas a Receber
+              </div>
+              <div style="font-size:13px;color:#1e293b;margin-top:6px;line-height:1.6;">
+                • <strong>Contas a Pagar (Total):</strong> R$ ${fmtMoeda(rel.contasAPagar?.totalPeriodo)} ${calcVarStr(rel.contasAPagar?.totalPeriodo, relAnterior?.contasAPagar?.totalPeriodo, true)}<br/>
+                <span style="font-size:12px;color:#64748b;">Pagos: R$ ${fmtMoeda(rel.contasAPagar?.pagos)} | Vencem Hoje: R$ ${fmtMoeda(rel.contasAPagar?.vencemHoje)} | A Vencer: R$ ${fmtMoeda(rel.contasAPagar?.aVencer)}</span><br/>
+                • <strong>Contas a Receber (Total):</strong> R$ ${fmtMoeda(rel.contasAReceber?.totalPeriodo)} ${calcVarStr(rel.contasAReceber?.totalPeriodo, relAnterior?.contasAReceber?.totalPeriodo)}<br/>
+                <span style="font-size:12px;color:#64748b;">Pagos: R$ ${fmtMoeda(rel.contasAReceber?.pagos)} | Vencidos: R$ ${fmtMoeda(rel.contasAReceber?.vencidos)} | A Vencer: R$ ${fmtMoeda(rel.contasAReceber?.aVencer)}</span>
+              </div>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:14px 16px;background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;">
+              <div style="font-size:11px;font-weight:800;color:#0284c7;text-transform:uppercase;letter-spacing:0.04em;">
+                3. Recebíveis &amp; Faturamento de Projetos (${rel.mesReferencia})
+              </div>
+              <div style="font-size:13px;color:#1e293b;margin-top:6px;line-height:1.6;">
+                • <strong>Total a Receber:</strong> R$ ${fmtMoeda(rel.totalAReceber)} (A Vencer em Aberto: <strong>R$ ${fmtMoeda(rel.aVencerEmAberto)}</strong>)<br/>
+                • <strong>A Receber em Atraso:</strong> <span style="color:#dc2626;font-weight:700;">R$ ${fmtMoeda(rel.totalAtraso)}</span> (${(rel.aReceberEmAtraso || []).length} títulos) ${calcVarStr(rel.totalAtraso, relAnterior?.totalAtraso, true)}<br/>
+                • <strong>Faturamento de Projetos (${rel.mesReferencia}):</strong> <span style="color:#059669;font-weight:800;">R$ ${fmtMoeda(rel.totalProjetos)}</span> (${(rel.projetosMes || []).length} projetos) ${calcVarStr(rel.totalProjetos, relAnterior?.totalProjetos)}<br/>
+                • <strong>Cash Back &amp; Benefícios:</strong> Cash Back R$ ${fmtMoeda(rel.cashBack?.totalAcumulado)} | Clara Desconto R$ ${fmtMoeda(rel.claraDesconto?.totalAcumulado)}
+              </div>
+            </td>
+          </tr>
+        </table>
+
+        <!-- Box de Acesso mediante Login e Senha -->
+        <div style="margin-top:18px;padding:18px 20px;background-color:#f0f9ff;border:1px solid #bae6fd;border-radius:14px;text-align:center;">
+          <div style="font-size:12px;font-weight:800;color:#0369a1;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">
+            🔒 ACESSO SEGURO AO PAINEL EXECUTIVO
+          </div>
+          <p style="margin:0 0 14px 0;font-size:13px;color:#334155;line-height:1.55;">
+            Para visualizar o painel gráfico completo, consultar o histórico comparativo ou baixar a versão em alta definição (<strong>.PNG</strong>), acesse o sistema utilizando seu <strong>usuário (${destinatarioLogin}) e senha corporativa</strong>:
+          </p>
+          <a href="${urlLogin}" style="display:inline-block;padding:12px 26px;background:linear-gradient(135deg,#0083ca 0%,#004c8c 100%);color:#ffffff;font-size:13.5px;font-weight:800;text-decoration:none;border-radius:10px;">
+            Acessar Acompanhamento Semanal no Portal →
+          </a>
+          <div style="margin-top:10px;font-size:11.5px;color:#64748b;">
+            Link direto após login: <a href="${urlRelatorio}" style="color:#0284c7;text-decoration:underline;">${urlRelatorio}</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rodapé -->
+      <div style="padding:14px 28px;background-color:#f8fafc;border-top:1px solid #e2e8f0;font-size:11.5px;color:#64748b;text-align:center;">
+        NNÓS Consultoria &amp; Treinamento • Sistema de Gestão Financeira &amp; Projetos
+      </div>
+    </div>
+  </div>`;
+}
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -232,8 +354,7 @@ export async function POST(request: Request) {
     const anoReferencia = Number(body.anoReferencia) || dt.getFullYear();
     const id = String(body.id || `sem-${dataReferencia}`);
 
-    // Se o usuário pediu para recalcular os blocos de base de dados no momento do salvamento, ou enviou no payload
-    let dadosBase = body.usarDadosBaseTempoReal
+    const dadosBase = body.usarDadosBaseTempoReal
       ? await calcularDadosBaseEmTempoReal(dataReferencia)
       : null;
 
@@ -293,7 +414,7 @@ export async function POST(request: Request) {
       mesReferencia,
       anoReferencia,
       criadoEm: new Date().toISOString(),
-      criadoPor: String(body.criadoPor || "Diretoria Executiva"),
+      criadoPor: String(body.criadoPor || "Leonardo Campos"),
       posicaoFinanceira: {
         total: totalPosicaoCalculado,
         sicoob: {
@@ -365,10 +486,46 @@ export async function POST(request: Request) {
       console.warn("Aviso ao salvar histórico no Supabase:", e);
     }
 
+    // Identificar o relatório anterior ao recém-salvo para compor as variações no resumo executivo do e-mail
+    const idxNovo = atualizado.findIndex((r) => r.id === novoRelatorio.id);
+    const relAnterior = idxNovo >= 0 && idxNovo + 1 < atualizado.length ? atualizado[idxNovo + 1] : null;
+
+    // Disparo automático de e-mail executivo para a Diretoria Executiva e Admin
+    const resultadosEmail: { destinatario: string; sucesso: boolean; modo?: string }[] = [];
+    try {
+      const todosUsuarios: any[] = await lerUsuariosAsync();
+      const destinatariosDiretoria = todosUsuarios.filter(
+        (u: any) =>
+          String(u?.status || "ATIVO").toUpperCase() === "ATIVO" &&
+          u.email &&
+          (u.perfilId === "DIRETORIA" || u.perfilId === "ADMIN")
+      );
+
+      const dataBR = formatarDataBR(novoRelatorio.dataReferencia);
+      const assunto = `📊 Acompanhamento Semanal NNÓS (${dataBR} • ${novoRelatorio.mesReferencia}) | Resumo Executivo`;
+
+      for (const dest of destinatariosDiretoria) {
+        const html = construirHtmlEmailExecutivo(novoRelatorio, relAnterior, dest.nome, dest.login);
+        const resEmail = await dispararEmail({
+          para: dest.email,
+          assunto,
+          html,
+        });
+        resultadosEmail.push({
+          destinatario: dest.email,
+          sucesso: resEmail.sucesso,
+          modo: resEmail.modo,
+        });
+      }
+    } catch (e) {
+      console.warn("Aviso ao disparar e-mails do Acompanhamento Semanal:", e);
+    }
+
     return NextResponse.json({
       success: true,
       relatorio: novoRelatorio,
       historico: atualizado,
+      emailsDisparados: resultadosEmail,
     });
   } catch (err: any) {
     return NextResponse.json({ error: err.message || "Erro ao salvar relatório semanal" }, { status: 500 });
