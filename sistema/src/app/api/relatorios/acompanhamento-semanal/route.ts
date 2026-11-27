@@ -4,7 +4,7 @@ import path from "path";
 import { supabaseAdmin } from "@/lib/supabase-server";
 import { dispararEmail } from "@/lib/email-service";
 import { lerUsuariosAsync } from "@/lib/usuarios-service";
-import { formatarDataBR } from "@/lib/date-utils";
+import { formatarDataBR, formatarDataHoraBR } from "@/lib/date-utils";
 import historicoBase from "@/lib/acompanhamento-semanal-base.json";
 
 const DATA_FILE = path.join(process.cwd(), "src/lib/acompanhamento-semanal-base.json");
@@ -204,115 +204,313 @@ async function calcularDadosBaseEmTempoReal(dataReferenciaISO: string) {
 
 function construirHtmlEmailExecutivo(rel: any, relAnterior: any | null, destinatarioNome: string, destinatarioLogin: string) {
   const dataBR = formatarDataBR(rel.dataReferencia);
+  const dataHoraGeracaoBR = formatarDataHoraBR(rel.criadoEm || new Date().toISOString());
   const urlBase = process.env.NEXT_PUBLIC_APP_URL || "https://gestao.nnos.com.br";
   const urlRelatorio = `${urlBase}/relatorios/acompanhamento-semanal`;
   const urlLogin = `${urlBase}/login?redirect=${encodeURIComponent("/relatorios/acompanhamento-semanal")}`;
+  const urlLogoBranca = `${urlBase}/logo-horizontal-branca.png`;
 
-  const calcVarStr = (atual: number, ant?: number | null, inverter = false) => {
+  const calcVarBadge = (atual: number, ant?: number | null, inverter = false, pill = false) => {
     if (!ant || ant === 0) return "";
     const diff = atual - ant;
     const pct = Math.round((Math.abs(diff) / Math.abs(ant)) * 100);
     const subiu = diff >= 0;
     const bom = inverter ? !subiu : subiu;
-    const cor = bom ? "#059669" : "#e11d48";
+    const cor = bom ? "#15803d" : "#be123c";
     const bg = bom ? "#ecfdf5" : "#fff1f2";
+    const borda = bom ? "#a7f3d0" : "#fecdd3";
     const seta = subiu ? "▲" : "▼";
-    return `<span style="display:inline-block;margin-left:6px;padding:2px 7px;border-radius:999px;font-size:11px;font-weight:700;background-color:${bg};color:${cor};">${seta} ${pct}% vs. anterior</span>`;
+    const radius = pill ? "999px" : "6px";
+    return `<span style="display:inline-block;padding:3px 10px;border-radius:${radius};font-size:11px;font-weight:700;background-color:${bg};color:${cor};border:1px solid ${borda};white-space:nowrap;">${seta} ${pct}% vs. anterior</span>`;
   };
 
+  const sicoobCaixa = Number(rel.posicaoFinanceira?.sicoob?.caixa) || 0;
+  const claraCaixa = Number(rel.posicaoFinanceira?.clara?.caixa) || 0;
+  const itauCaixa = Number(rel.posicaoFinanceira?.itau?.caixa) || 0;
+
+  const idSeguranca = `NNOS-FIN-${rel.anoReferencia || 2026}${String(rel.dataReferencia || "").slice(5, 7) || "11"}-${String(Math.abs(Math.round(Number(rel.posicaoFinanceira?.total) || 884))).slice(-3).padStart(3, "0")}`;
+
   return `
-  <div style="background-color:#f1f5f9;padding:28px 16px;">
-    <div style="max-width:680px;margin:0 auto;background-color:#ffffff;border-radius:18px;overflow:hidden;border:1px solid #e2e8f0;box-shadow:0 10px 30px rgba(15,42,74,0.08);">
-      <!-- Banner Superior -->
-      <div style="background:linear-gradient(90deg,#0099c8 0%,#0973ae 45%,#004c8c 100%);padding:24px 28px;color:#ffffff;">
-        <div style="font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:#bae6fd;margin-bottom:4px;">
-          DIRETORIA EXECUTIVA • BOLETIM FINANCEIRO
-        </div>
-        <h1 style="margin:0;font-size:22px;font-weight:800;color:#ffffff;letter-spacing:-0.01em;">
-          Acompanhamento Semanal | ${rel.mesReferencia}/${rel.anoReferencia}
-        </h1>
-        <div style="margin-top:6px;font-size:13px;color:#e0f2fe;font-weight:600;">
-          Posição fechada em <strong>${dataBR}</strong> • Publicado por ${rel.criadoPor || "Controladoria & Finanças"}
-        </div>
-      </div>
+  <div style="background-color:#eef4f8;padding:24px 12px;font-family:'Plus Jakarta Sans','Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#334155;">
+    <div style="max-width:760px;margin:0 auto;background-color:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #e2e8f0;box-shadow:0 12px 32px rgba(15,42,74,0.08);">
+      <div style="padding:24px 28px;background-color:#ffffff;">
 
-      <!-- Corpo -->
-      <div style="padding:26px 28px;color:#1e293b;">
-        <p style="margin:0 0 14px 0;font-size:14.5px;line-height:1.6;">
-          Olá, <strong>${destinatarioNome}</strong>,
-        </p>
-        <p style="margin:0 0 20px 0;font-size:14px;line-height:1.65;color:#334155;">
-          O novo relatório de <strong>Acompanhamento Semanal (${dataBR})</strong> referente ao mês de <strong>${rel.mesReferencia}</strong> já está disponível para consulta na Central de Relatórios do Portal Corporativo NNÓS. Confira abaixo o resumo executivo dos principais indicadores financeiros e operacionais:
-        </p>
-
-        <!-- Resumo Executivo em Cards -->
-        <table style="width:100%;border-collapse:separate;border-spacing:0 10px;">
+        <!-- Corporate Branded Banner (Background sólido #005a87 + fallback gradient para máxima legibilidade em Gmail/Outlook) -->
+        <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background-color:#005a87;background-image:linear-gradient(90deg,#00527c 0%,#005a87 55%,#013f61 100%);border-radius:12px;margin-bottom:22px;border:1px solid #004366;">
           <tr>
-            <td style="padding:14px 16px;background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;">
-              <div style="font-size:11px;font-weight:800;color:#0284c7;text-transform:uppercase;letter-spacing:0.04em;">
-                1. Posição Financeira Consolidada (Caixa + Aplicações)
-              </div>
-              <div style="font-size:22px;font-weight:800;color:#0f172a;margin-top:4px;">
-                R$ ${fmtMoeda(rel.posicaoFinanceira?.total)}
-                ${calcVarStr(rel.posicaoFinanceira?.total, relAnterior?.posicaoFinanceira?.total)}
-              </div>
-              <div style="font-size:12px;color:#475569;margin-top:6px;line-height:1.5;">
-                • <strong>Sicoob:</strong> Caixa R$ ${fmtMoeda(rel.posicaoFinanceira?.sicoob?.caixa)} | Aplicação R$ ${fmtMoeda(rel.posicaoFinanceira?.sicoob?.aplicacao)} (${rel.posicaoFinanceira?.sicoob?.rentabilidade})<br/>
-                • <strong>Clara:</strong> Caixa R$ ${fmtMoeda(rel.posicaoFinanceira?.clara?.caixa)} | Aplicação R$ ${fmtMoeda(rel.posicaoFinanceira?.clara?.aplicacao)} (${rel.posicaoFinanceira?.clara?.rentabilidade})<br/>
-                • <strong>Itaú:</strong> Caixa R$ ${fmtMoeda(rel.posicaoFinanceira?.itau?.caixa)} | Aplicação R$ ${fmtMoeda(rel.posicaoFinanceira?.itau?.aplicacao)} (${rel.posicaoFinanceira?.itau?.rentabilidade})
-              </div>
-            </td>
-          </tr>
-
-          <tr>
-            <td style="padding:14px 16px;background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;">
-              <div style="font-size:11px;font-weight:800;color:#0284c7;text-transform:uppercase;letter-spacing:0.04em;">
-                2. Fluxo do Período: Contas a Pagar &amp; Contas a Receber
-              </div>
-              <div style="font-size:13px;color:#1e293b;margin-top:6px;line-height:1.6;">
-                • <strong>Contas a Pagar (Total):</strong> R$ ${fmtMoeda(rel.contasAPagar?.totalPeriodo)} ${calcVarStr(rel.contasAPagar?.totalPeriodo, relAnterior?.contasAPagar?.totalPeriodo, true)}<br/>
-                <span style="font-size:12px;color:#64748b;">Pagos: R$ ${fmtMoeda(rel.contasAPagar?.pagos)} | Vencem Hoje: R$ ${fmtMoeda(rel.contasAPagar?.vencemHoje)} | A Vencer: R$ ${fmtMoeda(rel.contasAPagar?.aVencer)}</span><br/>
-                • <strong>Contas a Receber (Total):</strong> R$ ${fmtMoeda(rel.contasAReceber?.totalPeriodo)} ${calcVarStr(rel.contasAReceber?.totalPeriodo, relAnterior?.contasAReceber?.totalPeriodo)}<br/>
-                <span style="font-size:12px;color:#64748b;">Pagos: R$ ${fmtMoeda(rel.contasAReceber?.pagos)} | Vencidos: R$ ${fmtMoeda(rel.contasAReceber?.vencidos)} | A Vencer: R$ ${fmtMoeda(rel.contasAReceber?.aVencer)}</span>
-              </div>
-            </td>
-          </tr>
-
-          <tr>
-            <td style="padding:14px 16px;background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;">
-              <div style="font-size:11px;font-weight:800;color:#0284c7;text-transform:uppercase;letter-spacing:0.04em;">
-                3. Recebíveis &amp; Faturamento de Projetos (${rel.mesReferencia})
-              </div>
-              <div style="font-size:13px;color:#1e293b;margin-top:6px;line-height:1.6;">
-                • <strong>Total a Receber:</strong> R$ ${fmtMoeda(rel.totalAReceber)} (A Vencer em Aberto: <strong>R$ ${fmtMoeda(rel.aVencerEmAberto)}</strong>)<br/>
-                • <strong>A Receber em Atraso:</strong> <span style="color:#dc2626;font-weight:700;">R$ ${fmtMoeda(rel.totalAtraso)}</span> (${(rel.aReceberEmAtraso || []).length} títulos) ${calcVarStr(rel.totalAtraso, relAnterior?.totalAtraso, true)}<br/>
-                • <strong>Faturamento de Projetos (${rel.mesReferencia}):</strong> <span style="color:#059669;font-weight:800;">R$ ${fmtMoeda(rel.totalProjetos)}</span> (${(rel.projetosMes || []).length} projetos) ${calcVarStr(rel.totalProjetos, relAnterior?.totalProjetos)}<br/>
-                • <strong>Cash Back &amp; Benefícios:</strong> Cash Back R$ ${fmtMoeda(rel.cashBack?.totalAcumulado)} | Clara Desconto R$ ${fmtMoeda(rel.claraDesconto?.totalAcumulado)}
-              </div>
+            <td style="padding:20px 22px;color:#ffffff;">
+              <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+                <tr>
+                  <td style="vertical-align:middle;">
+                    <table cellpadding="0" cellspacing="0" role="presentation">
+                      <tr>
+                        <td style="width:46px;height:46px;background-color:#0b6e99;border:1px solid #38bdf8;border-radius:10px;text-align:center;vertical-align:middle;font-size:22px;color:#e0f2fe;">
+                          📅
+                        </td>
+                        <td style="padding-left:14px;vertical-align:middle;">
+                          <div style="font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#bae6fd;line-height:1.2;">
+                            ${dataBR}
+                          </div>
+                          <div style="font-size:21px;font-weight:800;color:#ffffff;letter-spacing:-0.01em;line-height:1.25;margin-top:2px;">
+                            ACOMPANHAMENTO SEMANAL <span style="font-weight:400;color:#7dd3fc;margin:0 4px;">|</span> ${rel.mesReferencia}
+                          </div>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                  <td align="right" style="vertical-align:middle;border-left:1px solid rgba(255,255,255,0.22);padding-left:18px;width:170px;">
+                    <img src="${urlLogoBranca}" alt="NNÓS" width="135" style="display:block;max-width:135px;height:auto;border:0;color:#ffffff;font-size:20px;font-weight:800;" />
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
         </table>
 
-        <!-- Box de Acesso mediante Login e Senha -->
-        <div style="margin-top:18px;padding:18px 20px;background-color:#f0f9ff;border:1px solid #bae6fd;border-radius:14px;text-align:center;">
-          <div style="font-size:12px;font-weight:800;color:#0369a1;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">
-            🔒 ACESSO SEGURO AO PAINEL EXECUTIVO
+        <!-- Dispatch Metadata & Intro -->
+        <div style="margin-bottom:22px;padding-bottom:16px;border-bottom:1px solid #f1f5f9;">
+          <div style="font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.07em;color:#0369a1;">
+            DIRETORIA EXECUTIVA <span style="color:#cbd5e1;margin:0 6px;">•</span> BOLETIM FINANCEIRO
           </div>
-          <p style="margin:0 0 14px 0;font-size:13px;color:#334155;line-height:1.55;">
-            Para visualizar o painel gráfico completo, consultar o histórico comparativo ou baixar a versão em alta definição (<strong>.PNG</strong>), acesse o sistema utilizando seu <strong>usuário (${destinatarioLogin}) e senha corporativa</strong>:
-          </p>
-          <a href="${urlLogin}" style="display:inline-block;padding:12px 26px;background:linear-gradient(135deg,#0083ca 0%,#004c8c 100%);color:#ffffff;font-size:13.5px;font-weight:800;text-decoration:none;border-radius:10px;">
-            Acessar Acompanhamento Semanal no Portal →
-          </a>
-          <div style="margin-top:10px;font-size:11.5px;color:#64748b;">
-            Link direto após login: <a href="${urlRelatorio}" style="color:#0284c7;text-decoration:underline;">${urlRelatorio}</a>
+          <div style="font-size:12px;color:#475569;margin-top:4px;">
+            Posição fechada em <strong style="color:#1e293b;">${dataBR}</strong> • Publicado por <strong style="color:#1e293b;">${rel.criadoPor || "Leonardo Campos"}</strong>
+          </div>
+          <div style="margin-top:16px;font-size:14px;line-height:1.65;color:#334155;">
+            <p style="margin:0 0 8px 0;">Olá, <strong style="color:#0f172a;">${destinatarioNome}</strong>,</p>
+            <p style="margin:0;">
+              O novo relatório de <strong style="color:#0f172a;">Acompanhamento Semanal (${dataBR})</strong> referente ao mês de <strong style="color:#0f172a;">${rel.mesReferencia}</strong> já está disponível para consulta na Central de Relatórios do Portal Corporativo NNÓS. Confira abaixo o resumo executivo dos principais indicadores financeiros e operacionais:
+            </p>
           </div>
         </div>
-      </div>
 
-      <!-- Rodapé -->
-      <div style="padding:14px 28px;background-color:#f8fafc;border-top:1px solid #e2e8f0;font-size:11.5px;color:#64748b;text-align:center;">
-        NNÓS Consultoria &amp; Treinamento • Sistema de Gestão Financeira &amp; Projetos
+        <!-- Bloco 1: Posição Financeira Consolidada -->
+        <div style="background-color:#ffffff;border:1px solid #e0f2fe;border-radius:12px;padding:18px 20px;margin-bottom:18px;">
+          <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin-bottom:10px;">
+            <tr>
+              <td style="font-size:13px;font-weight:800;color:#075985;text-transform:uppercase;letter-spacing:0.04em;">
+                1. POSIÇÃO FINANCEIRA CONSOLIDADA (CAIXA + APLICAÇÕES)
+              </td>
+              <td align="right">
+                ${calcVarBadge(rel.posicaoFinanceira?.total, relAnterior?.posicaoFinanceira?.total, false, true)}
+              </td>
+            </tr>
+          </table>
+
+          <div style="font-size:32px;font-weight:800;color:#005a87;letter-spacing:-0.02em;margin-bottom:14px;">
+            R$ ${fmtMoeda(rel.posicaoFinanceira?.total)}
+          </div>
+
+          <div style="border:1px solid #f1f5f9;border-radius:10px;overflow:hidden;background-color:#fbfdfd;">
+            <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;font-size:13px;">
+              <thead>
+                <tr style="background-color:#f8fafc;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:11px;font-weight:700;text-transform:uppercase;">
+                  <th align="left" style="padding:10px 12px;">Instituição</th>
+                  <th align="right" style="padding:10px 12px;">Caixa</th>
+                  <th align="right" style="padding:10px 12px;">Aplicação</th>
+                  <th align="right" style="padding:10px 12px;">Rentabilidade</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style="border-bottom:1px solid #f1f5f9;">
+                  <td style="padding:10px 12px;font-weight:800;color:#1e293b;">
+                    <span style="display:inline-block;width:18px;height:18px;line-height:18px;text-align:center;border-radius:4px;background-color:#00363a;color:#00ae9d;font-size:10px;margin-right:6px;vertical-align:middle;">◆</span>
+                    <span style="vertical-align:middle;">SICOOB</span>
+                  </td>
+                  <td align="right" style="padding:10px 12px;font-weight:600;color:${sicoobCaixa < 0 ? "#e11d48" : "#334155"};">${fmtMoeda(sicoobCaixa)}</td>
+                  <td align="right" style="padding:10px 12px;font-weight:600;color:#334155;">${fmtMoeda(rel.posicaoFinanceira?.sicoob?.aplicacao)}</td>
+                  <td align="right" style="padding:10px 12px;font-weight:700;color:#059669;background-color:#f0fdf4;">${rel.posicaoFinanceira?.sicoob?.rentabilidade || "+0,00%"}</td>
+                </tr>
+                <tr style="border-bottom:1px solid #f1f5f9;">
+                  <td style="padding:10px 12px;font-weight:800;color:#1e293b;">
+                    <span style="display:inline-block;width:18px;height:18px;line-height:18px;text-align:center;border-radius:999px;background-color:#0f172a;color:#ffffff;font-size:10px;margin-right:6px;vertical-align:middle;">✦</span>
+                    <span style="vertical-align:middle;">CLARA</span>
+                  </td>
+                  <td align="right" style="padding:10px 12px;font-weight:600;color:${claraCaixa < 0 ? "#e11d48" : "#334155"};">${fmtMoeda(claraCaixa)}</td>
+                  <td align="right" style="padding:10px 12px;font-weight:600;color:#334155;">${fmtMoeda(rel.posicaoFinanceira?.clara?.aplicacao)}</td>
+                  <td align="right" style="padding:10px 12px;font-weight:700;color:#059669;background-color:#f0fdf4;">${rel.posicaoFinanceira?.clara?.rentabilidade || "+0,00%"}</td>
+                </tr>
+                <tr>
+                  <td style="padding:10px 12px;font-weight:800;color:#1e293b;">
+                    <span style="display:inline-block;padding:1px 4px;border-radius:4px;background-color:#ec7000;color:#ffffff;font-size:9px;font-weight:800;margin-right:6px;vertical-align:middle;">itaú</span>
+                    <span style="vertical-align:middle;">ITAÚ</span>
+                  </td>
+                  <td align="right" style="padding:10px 12px;font-weight:600;color:${itauCaixa < 0 ? "#e11d48" : "#334155"};">${fmtMoeda(itauCaixa)}</td>
+                  <td align="right" style="padding:10px 12px;font-weight:600;color:#334155;">${fmtMoeda(rel.posicaoFinanceira?.itau?.aplicacao)}</td>
+                  <td align="right" style="padding:10px 12px;font-weight:700;color:#059669;background-color:#f0fdf4;">${rel.posicaoFinanceira?.itau?.rentabilidade || "+0,00%"}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Bloco 2: Fluxo do Período: Contas a Pagar & Contas a Receber -->
+        <div style="background-color:#ffffff;border:1px solid #e0f2fe;border-radius:12px;padding:18px 20px;margin-bottom:18px;">
+          <div style="font-size:13px;font-weight:800;color:#075985;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:12px;">
+            2. FLUXO DO PERÍODO: CONTAS A PAGAR &amp; CONTAS A RECEBER
+          </div>
+
+          <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+            <tr>
+              <!-- Sub-Card: Contas a Pagar -->
+              <td width="49%" valign="top" style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;">
+                <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin-bottom:8px;">
+                  <tr>
+                    <td style="font-size:12.5px;font-weight:700;color:#1e293b;">
+                      <span style="display:inline-block;width:8px;height:8px;border-radius:999px;background-color:#f43f5e;margin-right:5px;vertical-align:middle;"></span>
+                      Contas a Pagar (Total)
+                    </td>
+                    <td align="right">
+                      ${calcVarBadge(rel.contasAPagar?.totalPeriodo, relAnterior?.contasAPagar?.totalPeriodo, true)}
+                    </td>
+                  </tr>
+                </table>
+                <div style="font-size:20px;font-weight:800;color:#0f172a;margin-bottom:10px;">
+                  R$ ${fmtMoeda(rel.contasAPagar?.totalPeriodo)}
+                </div>
+                <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-top:1px solid #e2e8f0;padding-top:8px;font-size:12px;">
+                  <tr>
+                    <td width="50%" style="padding:4px 0;">
+                      <div style="font-size:11px;color:#64748b;">Vencidos:</div>
+                      <div style="font-weight:700;color:#334155;">R$ ${fmtMoeda(rel.contasAPagar?.vencidos)}</div>
+                    </td>
+                    <td width="50%" style="padding:4px 0;">
+                      <div style="font-size:11px;color:#64748b;">Vencem Hoje:</div>
+                      <div style="font-weight:700;color:#e11d48;">R$ ${fmtMoeda(rel.contasAPagar?.vencemHoje)}</div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td width="50%" style="padding:4px 0;">
+                      <div style="font-size:11px;color:#64748b;">A Vencer:</div>
+                      <div style="font-weight:700;color:#334155;">R$ ${fmtMoeda(rel.contasAPagar?.aVencer)}</div>
+                    </td>
+                    <td width="50%" style="padding:4px 0;">
+                      <div style="font-size:11px;color:#64748b;">Pagos:</div>
+                      <div style="font-weight:700;color:#047857;">R$ ${fmtMoeda(rel.contasAPagar?.pagos)}</div>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+
+              <td width="2%">&nbsp;</td>
+
+              <!-- Sub-Card: Contas a Receber -->
+              <td width="49%" valign="top" style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;">
+                <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin-bottom:8px;">
+                  <tr>
+                    <td style="font-size:12.5px;font-weight:700;color:#1e293b;">
+                      <span style="display:inline-block;width:8px;height:8px;border-radius:999px;background-color:#10b981;margin-right:5px;vertical-align:middle;"></span>
+                      Contas a Receber (Total)
+                    </td>
+                    <td align="right">
+                      ${calcVarBadge(rel.contasAReceber?.totalPeriodo, relAnterior?.contasAReceber?.totalPeriodo, false)}
+                    </td>
+                  </tr>
+                </table>
+                <div style="font-size:20px;font-weight:800;color:#0f172a;margin-bottom:10px;">
+                  R$ ${fmtMoeda(rel.contasAReceber?.totalPeriodo)}
+                </div>
+                <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-top:1px solid #e2e8f0;padding-top:8px;font-size:12px;">
+                  <tr>
+                    <td width="50%" style="padding:4px 0;">
+                      <div style="font-size:11px;color:#64748b;">Vencidos:</div>
+                      <div style="font-weight:700;color:#e11d48;">R$ ${fmtMoeda(rel.contasAReceber?.vencidos)}</div>
+                    </td>
+                    <td width="50%" style="padding:4px 0;">
+                      <div style="font-size:11px;color:#64748b;">Vencem Hoje:</div>
+                      <div style="font-weight:700;color:#334155;">R$ ${fmtMoeda(rel.contasAReceber?.vencemHoje)}</div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td width="50%" style="padding:4px 0;">
+                      <div style="font-size:11px;color:#64748b;">A Vencer:</div>
+                      <div style="font-weight:700;color:#334155;">R$ ${fmtMoeda(rel.contasAReceber?.aVencer)}</div>
+                    </td>
+                    <td width="50%" style="padding:4px 0;">
+                      <div style="font-size:11px;color:#64748b;">Pagos:</div>
+                      <div style="font-weight:700;color:#047857;">R$ ${fmtMoeda(rel.contasAReceber?.pagos)}</div>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </div>
+
+        <!-- Bloco 3: Recebíveis & Faturamento de Projetos -->
+        <div style="background-color:#ffffff;border:1px solid #e0f2fe;border-radius:12px;padding:18px 20px;margin-bottom:22px;">
+          <div style="font-size:13px;font-weight:800;color:#075985;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:12px;">
+            3. RECEBÍVEIS &amp; FATURAMENTO DE PROJETOS (${rel.mesReferencia})
+          </div>
+
+          <div style="background-color:#f0f9ff;border:1px solid #e0f2fe;border-radius:10px;padding:12px 14px;font-size:13px;color:#334155;">
+            <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+              <tr>
+                <td style="padding:6px 0;">
+                  • <strong style="color:#0f172a;">Total a Receber:</strong> R$ ${fmtMoeda(rel.totalAReceber)}
+                </td>
+                <td align="right" style="padding:6px 0;font-size:12px;color:#475569;">
+                  (A Vencer em Aberto: <strong style="color:#0f172a;">R$ ${fmtMoeda(rel.aVencerEmAberto)}</strong>)
+                </td>
+              </tr>
+              <tr>
+                <td style="padding:8px 0;border-top:1px solid #e0f2fe;">
+                  • <strong style="color:#0f172a;">A Receber em Atraso:</strong> <span style="color:#e11d48;font-weight:800;">R$ ${fmtMoeda(rel.totalAtraso)}</span> (${(rel.aReceberEmAtraso || []).length} títulos)
+                </td>
+                <td align="right" style="padding:8px 0;border-top:1px solid #e0f2fe;">
+                  ${calcVarBadge(rel.totalAtraso, relAnterior?.totalAtraso, true)}
+                </td>
+              </tr>
+              <tr>
+                <td style="padding:8px 0;border-top:1px solid #e0f2fe;">
+                  • <strong style="color:#0f172a;">Faturamento de Projetos (${rel.mesReferencia}):</strong> <span style="color:#047857;font-weight:800;">R$ ${fmtMoeda(rel.totalProjetos)}</span> (${(rel.projetosMes || []).length} projetos)
+                </td>
+                <td align="right" style="padding:8px 0;border-top:1px solid #e0f2fe;">
+                  ${calcVarBadge(rel.totalProjetos, relAnterior?.totalProjetos, false)}
+                </td>
+              </tr>
+              <tr>
+                <td colspan="2" style="padding:8px 0 4px 0;border-top:1px solid #e0f2fe;">
+                  • <strong style="color:#0f172a;">Cash Back &amp; Benefícios:</strong> Cash Back <strong style="color:#0f172a;">R$ ${fmtMoeda(rel.cashBack?.totalAcumulado)}</strong> | Clara Desconto na Fatura <strong style="color:#0f172a;">R$ ${fmtMoeda(rel.claraDesconto?.totalAcumulado)}</strong>
+                </td>
+              </tr>
+            </table>
+          </div>
+        </div>
+
+        <!-- Bloco de Autenticação e Acesso Seguro ao Portal NNÓS -->
+        <div style="background-color:#f0f9ff;border:1px solid #bae6fd;border-radius:12px;padding:22px 20px;text-align:center;">
+          <div style="font-size:13px;font-weight:800;color:#075985;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px;">
+            🔒 ACESSO SEGURO AO PAINEL EXECUTIVO
+          </div>
+          <p style="margin:0 auto 16px auto;max-width:560px;font-size:13px;color:#475569;line-height:1.6;">
+            Para visualizar o painel gráfico completo, consultar o histórico comparativo ou baixar a versão em alta definição (<strong>.PNG</strong>), acesse o sistema utilizando seu <strong style="color:#0f172a;">usuário (${destinatarioLogin})</strong> e <strong style="color:#0f172a;">senha corporativa</strong>:
+          </p>
+          <div style="margin:14px 0;">
+            <a href="${urlLogin}" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:13px 26px;background-color:#005a87;color:#ffffff;font-size:13.5px;font-weight:700;text-decoration:none;border-radius:8px;">
+              Acessar Acompanhamento Semanal no Portal &nbsp;→
+            </a>
+          </div>
+          <p style="margin:12px 0 0 0;font-size:11.5px;color:#475569;">
+            Link direto após login:
+            <a href="${urlRelatorio}" target="_blank" rel="noopener noreferrer" style="color:#0369a1;text-decoration:underline;font-family:monospace;">
+              ${urlRelatorio}
+            </a>
+          </p>
+        </div>
+
+        <!-- Rodapé Corporativo -->
+        <div style="margin-top:26px;padding-top:18px;border-top:1px solid #f1f5f9;text-align:center;color:#475569;">
+          <div style="font-size:12px;font-weight:600;color:#475569;margin-bottom:4px;">
+            NNÓS Gestão Empresarial • Transformando Estratégias em Realidade
+          </div>
+          <div style="font-size:11px;color:#64748b;margin-bottom:4px;">
+            Este é um comunicado financeiro confidencial e destinado exclusivamente ao corpo diretivo.
+          </div>
+          <div style="font-size:10.5px;color:#94a3b8;">
+            Gerado automaticamente em ${dataHoraGeracaoBR} • ID de Segurança: ${idSeguranca}
+          </div>
+        </div>
+
       </div>
     </div>
   </div>`;

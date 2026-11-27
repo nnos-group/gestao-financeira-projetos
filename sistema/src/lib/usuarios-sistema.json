@@ -32,6 +32,21 @@
     "criadoEm": "2026-01-10T08:00:00-03:00"
   },
   {
+    "id": "usr-pedro-lage",
+    "login": "pedro.lage",
+    "nome": "Pedro Lage",
+    "email": "pedro.lage@nnos.com.br",
+    "cargo": "Sócio Diretor de Operações",
+    "perfilId": "DIRETORIA",
+    "liderVinculado": "TODOS",
+    "senha": "scrypt$e77938041f288ffa961c49a305c3be6f$bc5925c19c388dded84eac96dcc055d0b56680a78fba7e5b22ca66fdc08849a2af27024b92c8727e76664db7060ad2c6a1f7b610d384690fcccbdfe771ed5c98",
+    "mfaAtivo": false,
+    "mfaSecret": "PEDROLAGE2026NNOS",
+    "status": "ATIVO",
+    "fotoUrl": "",
+    "criadoEm": "2026-11-27T12:00:00-03:00"
+  },
+  {
     "id": "usr-pedro-colares",
     "login": "pedro.colares",
     "nome": "Pedro Colares",
