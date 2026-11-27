@@ -306,17 +306,7 @@ export default function AcompanhamentoSemanalPage() {
   );
   const [modalEdicaoAberto, setModalEdicaoAberto] = useState(false);
   const [modalHistoricoAberto, setModalHistoricoAberto] = useState(false);
-  const [modalPreviewEmail, setModalPreviewEmail] = useState<{
-    aberto: boolean;
-    assunto: string;
-    destinatario: string;
-    html: string;
-    modo?: string;
-    sucesso?: boolean;
-    mensagem?: string;
-  } | null>(null);
   const [salvando, setSalvando] = useState(false);
-  const [testandoEmail, setTestandoEmail] = useState(false);
   const [baixandoPng, setBaixandoPng] = useState(false);
   const [sincronizandoBase, setSincronizandoBase] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
@@ -467,47 +457,6 @@ export default function AcompanhamentoSemanalPage() {
       alert("Erro ao salvar relatório: " + err.message);
     } finally {
       setSalvando(false);
-    }
-  };
-
-  const handleTestarEmailIndividual = async () => {
-    if (!relatorioAtivo || testandoEmail) return;
-    try {
-      setTestandoEmail(true);
-      const emailAlvo = usuarioLogado?.email || "leonardo.campos@nnos.com.br";
-      const nomeAlvo = usuarioLogado?.nome || "Leonardo Campos";
-      const loginAlvo = usuarioLogado?.login || "leonardo.campos";
-
-      const res = await fetch("/api/relatorios/acompanhamento-semanal", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          acao: "testar_email_individual",
-          relatorioId: relatorioAtivo.id,
-          emailDestinatario: emailAlvo,
-          nomeDestinatario: nomeAlvo,
-          loginDestinatario: loginAlvo,
-        }),
-      });
-      const json = await res.json();
-      if (json?.success) {
-        setModalPreviewEmail({
-          aberto: true,
-          assunto: json.assunto,
-          destinatario: json.destinatario,
-          html: json.htmlPreview,
-          modo: json.resultado?.modo,
-          sucesso: json.resultado?.sucesso,
-          mensagem: json.resultado?.mensagem,
-        });
-        mostrarToast(`Teste de E-mail Executivo gerado para ${emailAlvo}!`);
-      } else {
-        alert(json?.error || "Erro ao disparar e-mail de teste.");
-      }
-    } catch (err: any) {
-      alert("Erro ao testar e-mail: " + err.message);
-    } finally {
-      setTestandoEmail(false);
     }
   };
 
@@ -1475,29 +1424,6 @@ export default function AcompanhamentoSemanalPage() {
 
           {podeEditarRelatorio && (
             <>
-              <button
-                type="button"
-                onClick={handleTestarEmailIndividual}
-                disabled={testandoEmail}
-                className="btn-secondary"
-                title="Envia um e-mail de teste apenas para o seu usuário e exibe a prévia do Resumo Executivo"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  padding: "8px 12px",
-                  borderRadius: "10px",
-                  fontSize: "12px",
-                  fontWeight: 700,
-                  cursor: testandoEmail ? "wait" : "pointer",
-                }}
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: "17px", color: "#0284c7" }}>
-                  forward_to_inbox
-                </span>
-                <span>{testandoEmail ? "Enviando..." : "Testar E-mail"}</span>
-              </button>
-
               <button
                 type="button"
                 onClick={abrirModalEditarAtual}
@@ -3958,151 +3884,6 @@ export default function AcompanhamentoSemanalPage() {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* =====================================================================
-          MODAL 3: PRÉVIA & VALIDAÇÃO DO E-MAIL DE RESUMO EXECUTIVO PERSONALIZADO
-         ===================================================================== */}
-      {modalPreviewEmail?.aberto && (
-        <div
-          className="modal-backdrop"
-          onClick={() => setModalPreviewEmail(null)}
-          style={{
-            position: "fixed",
-            inset: 0,
-            backgroundColor: "rgba(9, 21, 38, 0.65)",
-            backdropFilter: "blur(4px)",
-            zIndex: 9500,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "16px",
-          }}
-        >
-          <div
-            className="modal-container"
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              width: "100%",
-              maxWidth: "780px",
-              maxHeight: "92vh",
-              backgroundColor: "var(--surface-container-lowest, #ffffff)",
-              borderRadius: "18px",
-              border: "1px solid var(--border, #e2e8f0)",
-              display: "flex",
-              flexDirection: "column",
-              overflow: "hidden",
-              boxShadow: "0 24px 60px rgba(0, 0, 0, 0.35)",
-              fontFamily: "var(--font-jakarta, 'Plus Jakarta Sans', sans-serif)",
-            }}
-          >
-            <div
-              style={{
-                padding: "16px 24px",
-                backgroundColor: "#0a3254",
-                color: "#ffffff",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <span className="material-symbols-outlined" style={{ color: "#38bdf8", fontSize: "22px" }}>
-                  mark_email_read
-                </span>
-                <div>
-                  <div style={{ margin: 0, fontSize: "16px", fontWeight: 800, color: "#ffffff" }}>
-                    Prévia &amp; Disparo do E-mail Executivo Personalizado
-                  </div>
-                  <div style={{ fontSize: "12px", color: "#bae6fd", fontWeight: 500 }}>
-                    Para: <strong>{modalPreviewEmail.destinatario}</strong> • Assunto: {modalPreviewEmail.assunto}
-                  </div>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setModalPreviewEmail(null)}
-                style={{
-                  background: "none",
-                  border: "none",
-                  color: "#ffffff",
-                  cursor: "pointer",
-                  display: "flex",
-                }}
-              >
-                <span className="material-symbols-outlined">close</span>
-              </button>
-            </div>
-
-            <div style={{ padding: "16px 20px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "12px" }}>
-              <div
-                style={{
-                  padding: "10px 14px",
-                  borderRadius: "10px",
-                  backgroundColor: modalPreviewEmail.sucesso ? "#ecfdf5" : "#fff7ed",
-                  border: modalPreviewEmail.sucesso ? "1px solid #a7f3d0" : "1px solid #fed7aa",
-                  color: modalPreviewEmail.sucesso ? "#065f46" : "#9a3412",
-                  fontSize: "12.5px",
-                  fontWeight: 600,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: "12px",
-                  flexWrap: "wrap",
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
-                    {modalPreviewEmail.sucesso ? "check_circle" : "info"}
-                  </span>
-                  <span>
-                    {modalPreviewEmail.sucesso
-                      ? `E-mail disparado para ${modalPreviewEmail.destinatario} (modo: ${modalPreviewEmail.modo?.toUpperCase() || "SMTP"})!`
-                      : `Prévia gerada para ${modalPreviewEmail.destinatario}. Status SMTP: ${modalPreviewEmail.mensagem || "Verifique credenciais de aplicativo do Office 365 / Resend"}`}
-                  </span>
-                </div>
-              </div>
-
-              {/* Renderização fiel do HTML enviado por e-mail */}
-              <div
-                style={{
-                  borderRadius: "12px",
-                  border: "1px solid #cbd5e1",
-                  overflow: "hidden",
-                  backgroundColor: "#f1f5f9",
-                }}
-                dangerouslySetInnerHTML={{ __html: modalPreviewEmail.html }}
-              />
-            </div>
-
-            <div
-              style={{
-                padding: "12px 20px",
-                borderTop: "1px solid var(--border, #e2e8f0)",
-                display: "flex",
-                justifyContent: "flex-end",
-                gap: "10px",
-              }}
-            >
-              <button
-                type="button"
-                onClick={() => setModalPreviewEmail(null)}
-                className="btn-primary"
-                style={{
-                  padding: "8px 20px",
-                  borderRadius: "10px",
-                  fontWeight: 800,
-                  cursor: "pointer",
-                  background: "#0a3254",
-                  color: "#ffffff",
-                  border: "none",
-                }}
-              >
-                Fechar Prévia
-              </button>
-            </div>
           </div>
         </div>
       )}
