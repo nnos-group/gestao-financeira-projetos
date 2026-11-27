@@ -47,24 +47,35 @@ export function calcularDiasSemUtilizacao(
   creditoUtilizado: "SIM" | "NÃO",
   dataInicial?: string,
   dataFinal?: string
-): { texto: string; dias: number | null; alertaExpiracao: boolean } {
+): {
+  texto: string;
+  dias: number | null;
+  alertaExpiracao: boolean;
+  expirado: boolean;
+} {
   if (creditoUtilizado === "SIM") {
-    return { texto: "CONCLUÍDO", dias: null, alertaExpiracao: false };
+    return { texto: "CONCLUÍDO", dias: null, alertaExpiracao: false, expirado: false };
   }
   const refStr = (dataFinal || dataInicial || "").trim();
   if (!refStr || !/^\d{4}-\d{2}-\d{2}/.test(refStr)) {
-    return { texto: "EM ABERTO", dias: null, alertaExpiracao: false };
+    return { texto: "EM ABERTO", dias: null, alertaExpiracao: false, expirado: false };
   }
   const [y, m, d] = refStr.slice(0, 10).split("-").map(Number);
   const dataRef = Date.UTC(y, m - 1, d);
   const agora = new Date();
   const hojeUTC = Date.UTC(agora.getFullYear(), agora.getMonth(), agora.getDate());
   const diffDias = Math.max(0, Math.floor((hojeUTC - dataRef) / 86400000));
+  const expirado = diffDias > 365;
   return {
     texto: `${diffDias} DIAS`,
     dias: diffDias,
     alertaExpiracao: diffDias >= 300,
+    expirado,
   };
+}
+
+export function isCreditoExpirado(item: Pick<CreditoLogistica, "creditoUtilizado" | "dataInicial" | "dataFinal">): boolean {
+  return calcularDiasSemUtilizacao(item.creditoUtilizado, item.dataInicial, item.dataFinal).expirado;
 }
 
 export default function ControleCreditosTab({
@@ -183,10 +194,10 @@ export default function ControleCreditosTab({
     });
   }, [creditos, isVisaoLider, pertenceAoLiderAtivo]);
 
-  // Informa o resumo de créditos disponíveis para o badge da aba superior
+  // Informa o resumo de créditos disponíveis (apenas não utilizados e dentro da validade de 1 ano) para o badge da aba superior
   useEffect(() => {
     if (!onResumoChange) return;
-    const disponiveis = creditosEscopo.filter((c) => c.creditoUtilizado === "NÃO");
+    const disponiveis = creditosEscopo.filter((c) => c.creditoUtilizado === "NÃO" && !isCreditoExpirado(c));
     const saldoDisponivel = disponiveis.reduce((acc, c) => acc + (Number(c.credito) || 0), 0);
     onResumoChange({
       qtdDisponiveis: disponiveis.length,
@@ -278,32 +289,42 @@ export default function ControleCreditosTab({
     });
   }, [creditosEscopo, filtroCia, filtroProjeto, filtroLider, isVisaoLider, busca, obterLiderDoProjeto]);
 
-  // Lista final filtrada pelo Status selecionado (padrão: "NÃO" = Disponível para Uso)
+  // Lista final filtrada pelo Status selecionado (padrão: "NÃO" = Não utilizados, incluindo válidos e expirados; ou filtro específico)
   const creditosFiltrados = useMemo(() => {
     if (filtroStatus === "TODOS") return creditosBaseKpi;
+    if (filtroStatus === "DISPONIVEL_VALIDO") {
+      return creditosBaseKpi.filter((c) => c.creditoUtilizado === "NÃO" && !isCreditoExpirado(c));
+    }
+    if (filtroStatus === "EXPIRADO") {
+      return creditosBaseKpi.filter((c) => c.creditoUtilizado === "NÃO" && isCreditoExpirado(c));
+    }
     return creditosBaseKpi.filter((c) => c.creditoUtilizado === filtroStatus);
   }, [creditosBaseKpi, filtroStatus]);
 
-  // KPIs calculados sobre a base filtrada (mantendo os totais de Disponíveis, Utilizados e Geral sempre visíveis)
+  // KPIs calculados sobre a base filtrada (separando Saldo Disponível válido <= 365 dias dos Créditos Expirados > 365 dias)
   const kpis = useMemo(() => {
     const totalRegistros = creditosBaseKpi.length;
-    const disponiveis = creditosBaseKpi.filter((c) => c.creditoUtilizado === "NÃO");
+    const disponiveisValidos = creditosBaseKpi.filter((c) => c.creditoUtilizado === "NÃO" && !isCreditoExpirado(c));
+    const expirados = creditosBaseKpi.filter((c) => c.creditoUtilizado === "NÃO" && isCreditoExpirado(c));
     const utilizados = creditosBaseKpi.filter((c) => c.creditoUtilizado === "SIM");
 
     const valorOriginalTotal = creditosBaseKpi.reduce((acc, c) => acc + (Number(c.valor) || 0), 0);
     const multaTotal = creditosBaseKpi.reduce((acc, c) => acc + (Number(c.multaTaxa) || 0), 0);
     const creditoTotal = creditosBaseKpi.reduce((acc, c) => acc + (Number(c.credito) || 0), 0);
-    const saldoDisponivel = disponiveis.reduce((acc, c) => acc + (Number(c.credito) || 0), 0);
+    const saldoDisponivel = disponiveisValidos.reduce((acc, c) => acc + (Number(c.credito) || 0), 0);
+    const saldoExpirado = expirados.reduce((acc, c) => acc + (Number(c.credito) || 0), 0);
     const saldoUtilizado = utilizados.reduce((acc, c) => acc + (Number(c.credito) || 0), 0);
 
     return {
       totalRegistros,
-      qtdDisponiveis: disponiveis.length,
+      qtdDisponiveis: disponiveisValidos.length,
+      qtdExpirados: expirados.length,
       qtdUtilizados: utilizados.length,
       valorOriginalTotal,
       multaTotal,
       creditoTotal,
       saldoDisponivel,
+      saldoExpirado,
       saldoUtilizado,
     };
   }, [creditosBaseKpi]);
@@ -334,6 +355,11 @@ export default function ControleCreditosTab({
   };
 
   const abrirModalEditar = (item: CreditoLogistica, preMarcarUtilizado = false) => {
+    const expirado = isCreditoExpirado(item);
+    if (preMarcarUtilizado && expirado) {
+      showToast("Este crédito possui mais de 1 ano (365 dias) e está expirado / indisponível para uso.");
+      return;
+    }
     setEditandoId(item.id);
     setFormProjeto(item.projeto || "");
     setFormDataInicial(item.dataInicial || "");
@@ -343,7 +369,7 @@ export default function ControleCreditosTab({
     setFormValor(item.valor ? String(item.valor) : "");
     setFormMultaTaxa(item.multaTaxa ? String(item.multaTaxa) : "0");
     setFormNotaDebito(item.notaDebito || "");
-    setFormCreditoUtilizado(preMarcarUtilizado ? "SIM" : item.creditoUtilizado);
+    setFormCreditoUtilizado(preMarcarUtilizado && !expirado ? "SIM" : item.creditoUtilizado);
     setFormProjetoUtilizado(
       item.projetoUtilizado || (preMarcarUtilizado ? item.projeto : "")
     );
@@ -568,13 +594,13 @@ export default function ControleCreditosTab({
           gap: "14px",
         }}
       >
-        {/* 1. Saldo Disponível para Uso (NÃO utilizados) */}
+        {/* 1. Saldo Disponível para Uso (Válidos <= 1 ano) */}
         <div
-          onClick={() => setFiltroStatus(filtroStatus === "NÃO" ? "TODOS" : "NÃO")}
+          onClick={() => setFiltroStatus(filtroStatus === "DISPONIVEL_VALIDO" ? "NÃO" : "DISPONIVEL_VALIDO")}
           style={{
             background: "var(--surface)",
             border:
-              filtroStatus === "NÃO"
+              filtroStatus === "NÃO" || filtroStatus === "DISPONIVEL_VALIDO"
                 ? "2px solid #d97706"
                 : "1px solid var(--border)",
             borderRadius: "12px",
@@ -603,7 +629,8 @@ export default function ControleCreditosTab({
             {brl(kpis.saldoDisponivel)}
           </div>
           <span style={{ fontSize: "11px", color: "var(--on-surface-variant)" }}>
-            {kpis.qtdDisponiveis} crédito(s) aguardando utilização (NÃO)
+            {kpis.qtdDisponiveis} disponível(is) p/ uso (&le; 1 ano)
+            {kpis.qtdExpirados > 0 ? ` • ${kpis.qtdExpirados} expirado(s) (${brl(kpis.saldoExpirado)})` : ""}
           </span>
         </div>
 
@@ -802,11 +829,13 @@ export default function ControleCreditosTab({
           onChange={(val) => setFiltroStatus(String(val))}
           options={[
             { value: "TODOS", label: "Crédito Utilizado: Todos" },
-            { value: "NÃO", label: "Disponíveis para Uso (NÃO)" },
+            { value: "NÃO", label: "Não Utilizados (Disponíveis + Expirados)" },
+            { value: "DISPONIVEL_VALIDO", label: "Somente Disponíveis para Uso (<= 1 ano)" },
+            { value: "EXPIRADO", label: "Expirados / Indisponíveis (> 1 ano)" },
             { value: "SIM", label: "Já Utilizados / Concluídos (SIM)" },
           ]}
           icon="filter_alt"
-          minWidth="230px"
+          minWidth="245px"
         />
 
         <ModernDropdown
@@ -1032,8 +1061,12 @@ export default function ControleCreditosTab({
                           fontWeight: 800,
                           color:
                             item.creditoUtilizado === "NÃO"
-                              ? "#d97706"
+                              ? infoDias.expirado
+                                ? "#94a3b8"
+                                : "#d97706"
                               : "var(--primary, #0f2a4a)",
+                          textDecoration:
+                            item.creditoUtilizado === "NÃO" && infoDias.expirado ? "line-through" : "none",
                           whiteSpace: "nowrap",
                         }}
                       >
@@ -1067,7 +1100,7 @@ export default function ControleCreditosTab({
                         )}
                       </td>
 
-                      {/* 9. CRÉDITO UTILIZADO (SIM / NÃO) */}
+                      {/* 9. CRÉDITO UTILIZADO (SIM / NÃO / EXPIRADO) */}
                       <td style={{ padding: "12px 10px", textAlign: "center", verticalAlign: "middle" }}>
                         {item.creditoUtilizado === "SIM" ? (
                           <span
@@ -1087,6 +1120,27 @@ export default function ControleCreditosTab({
                               check_circle
                             </span>
                             SIM
+                          </span>
+                        ) : infoDias.expirado ? (
+                          <span
+                            title="Crédito expirado após 1 ano (365 dias) sem utilização"
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "4px",
+                              padding: "4px 10px",
+                              borderRadius: "999px",
+                              fontSize: "11px",
+                              fontWeight: 800,
+                              backgroundColor: "#fee2e2",
+                              color: "#b91c1c",
+                              border: "1px solid #fecaca",
+                            }}
+                          >
+                            <span className="material-symbols-outlined" style={{ fontSize: "13px" }}>
+                              event_busy
+                            </span>
+                            EXPIRADO
                           </span>
                         ) : (
                           <span
@@ -1133,18 +1187,28 @@ export default function ControleCreditosTab({
                               borderRadius: "6px",
                               fontSize: "11px",
                               fontWeight: 800,
-                              backgroundColor: infoDias.alertaExpiracao ? "#fee2e2" : "#f1f5f9",
-                              color: infoDias.alertaExpiracao ? "#b91c1c" : "#334155",
+                              backgroundColor: infoDias.expirado
+                                ? "#fee2e2"
+                                : infoDias.alertaExpiracao
+                                ? "#fef3c7"
+                                : "#f1f5f9",
+                              color: infoDias.expirado
+                                ? "#b91c1c"
+                                : infoDias.alertaExpiracao
+                                ? "#b45309"
+                                : "#334155",
                             }}
                             title={
-                              infoDias.alertaExpiracao
-                                ? "Atenção: crédito com mais de 300 dias sem utilização"
+                              infoDias.expirado
+                                ? "Expirado: mais de 1 ano (365 dias) sem utilização — indisponível para uso"
+                                : infoDias.alertaExpiracao
+                                ? "Atenção: crédito próximo de completar 1 ano (mais de 300 dias sem utilização)"
                                 : "Dias corridos desde a data da viagem original"
                             }
                           >
-                            {infoDias.alertaExpiracao && (
+                            {(infoDias.expirado || infoDias.alertaExpiracao) && (
                               <span className="material-symbols-outlined" style={{ fontSize: "13px" }}>
-                                warning
+                                {infoDias.expirado ? "block" : "warning"}
                               </span>
                             )}
                             {infoDias.texto}
@@ -1165,6 +1229,22 @@ export default function ControleCreditosTab({
                               </span>
                             )}
                           </div>
+                        ) : infoDias.expirado ? (
+                          <span
+                            style={{
+                              fontSize: "11.5px",
+                              fontWeight: 700,
+                              color: "#b91c1c",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "4px",
+                            }}
+                          >
+                            <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>
+                              cancel
+                            </span>
+                            Expirado • Indisponível para uso
+                          </span>
                         ) : (
                           <span style={{ fontSize: "11.5px", color: "var(--on-surface-variant)" }}>
                             Disponível para abatimento
@@ -1188,7 +1268,7 @@ export default function ControleCreditosTab({
                       {podeAlimentar && (
                         <td style={{ padding: "12px 14px", textAlign: "center", whiteSpace: "nowrap" }}>
                           <div style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
-                            {item.creditoUtilizado === "NÃO" && (
+                            {item.creditoUtilizado === "NÃO" && !infoDias.expirado && (
                               <button
                                 type="button"
                                 onClick={() => abrirModalEditar(item, true)}
@@ -1211,6 +1291,31 @@ export default function ControleCreditosTab({
                                   redeem
                                 </span>
                                 Usar Crédito
+                              </button>
+                            )}
+                            {item.creditoUtilizado === "NÃO" && infoDias.expirado && (
+                              <button
+                                type="button"
+                                disabled
+                                title="Crédito expirado após o período de 1 ano (365 dias) e indisponível para uso"
+                                style={{
+                                  padding: "5px 10px",
+                                  borderRadius: "6px",
+                                  border: "1px solid #cbd5e1",
+                                  backgroundColor: "#f1f5f9",
+                                  color: "#94a3b8",
+                                  fontSize: "11px",
+                                  fontWeight: 700,
+                                  cursor: "not-allowed",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "4px",
+                                }}
+                              >
+                                <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>
+                                  block
+                                </span>
+                                Indisponível
                               </button>
                             )}
                             <button
@@ -1465,78 +1570,127 @@ export default function ControleCreditosTab({
                   </div>
                 </div>
 
-                {/* Status de Utilização do Crédito */}
-                <div
-                  style={{
-                    background:
-                      formCreditoUtilizado === "SIM"
-                        ? "rgba(5, 150, 105, 0.06)"
-                        : "rgba(217, 119, 6, 0.06)",
-                    border:
-                      formCreditoUtilizado === "SIM"
-                        ? "1px solid rgba(5, 150, 105, 0.25)"
-                        : "1px solid rgba(217, 119, 6, 0.25)",
-                    padding: "14px",
-                    borderRadius: "10px",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "12px",
-                  }}
-                >
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1.4fr", gap: "12px", alignItems: "end" }}>
-                    <div className="form-field">
-                      <label>Crédito Utilizado? *</label>
-                      <ModernDropdown
-                        value={formCreditoUtilizado}
-                        onChange={(val) => setFormCreditoUtilizado(val as "SIM" | "NÃO")}
-                        options={[
-                          { value: "NÃO", label: "NÃO (Disponível em Aberto)" },
-                          { value: "SIM", label: "SIM (Concluído / Reaproveitado)" },
-                        ]}
-                        icon="check_circle"
-                        style={{ width: "100%" }}
-                        buttonStyle={{ height: "37px" }}
-                      />
-                    </div>
+                  {/* Status de Utilização do Crédito */}
+                  {(() => {
+                    const infoFormDias = calcularDiasSemUtilizacao(
+                      "NÃO",
+                      formDataInicial,
+                      formDataFinal
+                    );
+                    const bloqueadoPorExpiracao = infoFormDias.expirado && formCreditoUtilizado === "NÃO";
+                    return (
+                      <div
+                        style={{
+                          background:
+                            formCreditoUtilizado === "SIM"
+                              ? "rgba(5, 150, 105, 0.06)"
+                              : bloqueadoPorExpiracao
+                              ? "rgba(220, 38, 38, 0.06)"
+                              : "rgba(217, 119, 6, 0.06)",
+                          border:
+                            formCreditoUtilizado === "SIM"
+                              ? "1px solid rgba(5, 150, 105, 0.25)"
+                              : bloqueadoPorExpiracao
+                              ? "1px solid rgba(220, 38, 38, 0.3)"
+                              : "1px solid rgba(217, 119, 6, 0.25)",
+                          padding: "14px",
+                          borderRadius: "10px",
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "12px",
+                        }}
+                      >
+                        {bloqueadoPorExpiracao && (
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "8px",
+                              fontSize: "12px",
+                              fontWeight: 700,
+                              color: "#b91c1c",
+                              backgroundColor: "#fee2e2",
+                              padding: "8px 12px",
+                              borderRadius: "8px",
+                              border: "1px solid #fecaca",
+                            }}
+                          >
+                            <span className="material-symbols-outlined" style={{ fontSize: "17px" }}>
+                              event_busy
+                            </span>
+                            <span>
+                              Crédito expirado ({infoFormDias.texto} sem utilização &gt; 1 ano). Indisponível para reaproveitamento.
+                            </span>
+                          </div>
+                        )}
 
-                    {formCreditoUtilizado === "SIM" && (
-                      <div className="form-field">
-                        <label>Crédito Utilizado no Projeto</label>
-                        <ModernDropdown
-                          value={formProjetoUtilizado}
-                          onChange={(val) => setFormProjetoUtilizado(String(val))}
-                          options={opcoesFormProjeto}
-                          icon="folder_special"
-                          searchable
-                          searchPlaceholder="Projeto onde foi utilizado..."
-                          style={{ width: "100%" }}
-                          buttonStyle={{ height: "37px" }}
-                        />
-                      </div>
-                    )}
-                  </div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1.4fr", gap: "12px", alignItems: "end" }}>
+                          <div className="form-field">
+                            <label>Crédito Utilizado? *</label>
+                            <ModernDropdown
+                              value={formCreditoUtilizado}
+                              disabled={bloqueadoPorExpiracao}
+                              onChange={(val) => {
+                                if (val === "SIM" && infoFormDias.expirado) {
+                                  showToast("Crédito com mais de 1 ano (365 dias) está expirado e indisponível para uso.");
+                                  return;
+                                }
+                                setFormCreditoUtilizado(val as "SIM" | "NÃO");
+                              }}
+                              options={
+                                bloqueadoPorExpiracao
+                                  ? [{ value: "NÃO", label: "EXPIRADO (Indisponível para uso > 1 ano)" }]
+                                  : [
+                                      { value: "NÃO", label: "NÃO (Disponível em Aberto)" },
+                                      { value: "SIM", label: "SIM (Concluído / Reaproveitado)" },
+                                    ]
+                              }
+                              icon={bloqueadoPorExpiracao ? "event_busy" : "check_circle"}
+                              style={{ width: "100%" }}
+                              buttonStyle={{ height: "37px" }}
+                            />
+                          </div>
 
-                  {formCreditoUtilizado === "SIM" && (
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-                      <div className="form-field">
-                        <label>Data Inicial (Viagem de Utilização)</label>
-                        <input
-                          type="date"
-                          value={formDataInicialUso}
-                          onChange={(e) => setFormDataInicialUso(e.target.value)}
-                        />
+                          {formCreditoUtilizado === "SIM" && (
+                            <div className="form-field">
+                              <label>Crédito Utilizado no Projeto</label>
+                              <ModernDropdown
+                                value={formProjetoUtilizado}
+                                onChange={(val) => setFormProjetoUtilizado(String(val))}
+                                options={opcoesFormProjeto}
+                                icon="folder_special"
+                                searchable
+                                searchPlaceholder="Projeto onde foi utilizado..."
+                                style={{ width: "100%" }}
+                                buttonStyle={{ height: "37px" }}
+                              />
+                            </div>
+                          )}
+                        </div>
+
+                        {formCreditoUtilizado === "SIM" && (
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                            <div className="form-field">
+                              <label>Data Inicial (Viagem de Utilização)</label>
+                              <input
+                                type="date"
+                                value={formDataInicialUso}
+                                onChange={(e) => setFormDataInicialUso(e.target.value)}
+                              />
+                            </div>
+                            <div className="form-field">
+                              <label>Data Final (Viagem de Utilização)</label>
+                              <input
+                                type="date"
+                                value={formDataFinalUso}
+                                onChange={(e) => setFormDataFinalUso(e.target.value)}
+                              />
+                            </div>
+                          </div>
+                        )}
                       </div>
-                      <div className="form-field">
-                        <label>Data Final (Viagem de Utilização)</label>
-                        <input
-                          type="date"
-                          value={formDataFinalUso}
-                          onChange={(e) => setFormDataFinalUso(e.target.value)}
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
+                    );
+                  })()}
 
                 {/* Observações */}
                 <div className="form-field">
