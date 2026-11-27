@@ -484,6 +484,34 @@ export default function AcompanhamentoSemanalPage() {
           img.src = src;
         });
 
+      // Garante que a fonte de ícones Material Symbols (mesma do sistema) esteja carregada antes de desenhar
+      try {
+        await (document as any).fonts?.load?.(`48px 'Material Symbols Outlined'`, "calendar_month");
+      } catch {}
+
+      // Desenha um ícone Material Symbols (idêntico ao exibido no sistema) centralizado em (cx, cy)
+      const drawIcone = (nome: string, cx: number, cy: number, size: number, cor = "#ffffff") => {
+        ctx.save();
+        ctx.fillStyle = cor;
+        ctx.font = `normal 400 ${size}px 'Material Symbols Outlined'`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(nome, cx, cy);
+        ctx.restore();
+      };
+
+      // Desenha logomarca preservando a proporção original (equivalente ao objectFit: contain do sistema)
+      const drawImgContain = (img: HTMLImageElement, cx: number, cy: number, maxW: number, maxH: number) => {
+        const ratio = img.width / img.height;
+        let w = maxW;
+        let h = w / ratio;
+        if (h > maxH) {
+          h = maxH;
+          w = h * ratio;
+        }
+        ctx.drawImage(img, cx - w / 2, cy - h / 2, w, h);
+      };
+
       const [logoBranca, logoSicoob, logoClara, logoItau] = await Promise.all([
         carregarImg("/logo-horizontal-branca.png"),
         carregarImg("/logo-sicoob.png"),
@@ -598,20 +626,8 @@ export default function AcompanhamentoSemanalPage() {
       ctx.lineWidth = 3;
       ctx.strokeStyle = "rgba(255,255,255,0.85)";
       ctx.stroke();
-      // Desenho vetorial do calendário dentro do bloco turquesa
-      roundRectPath(53, 39, 44, 40, 6);
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = "#ffffff";
-      ctx.stroke();
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(53, 48, 44, 3);
-      ctx.fillRect(62, 34, 4, 9);
-      ctx.fillRect(84, 34, 4, 9);
-      for (let gx = 0; gx < 3; gx++) {
-        for (let gy = 0; gy < 2; gy++) {
-          ctx.fillRect(60 + gx * 11, 56 + gy * 10, 6, 5);
-        }
-      }
+      // Ícone calendar_month (mesmo do sistema) dentro do bloco turquesa
+      drawIcone("calendar_month", 75, 59, 50, "#ffffff");
 
       // Divisor vertical do Header
       ctx.fillStyle = "rgba(255,255,255,0.6)";
@@ -659,11 +675,7 @@ export default function AcompanhamentoSemanalPage() {
       ctx.arc(cardPosX + 46, row1Y + 46, 25, 0, Math.PI * 2);
       ctx.fillStyle = "#539bb2";
       ctx.fill();
-      ctx.fillStyle = "#ffffff";
-      ctx.font = `800 22px ${fontSans}`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText("$", cardPosX + 46, row1Y + 47);
+      drawIcone("account_balance", cardPosX + 46, row1Y + 46, 29, "#ffffff");
 
       ctx.textAlign = "left";
       ctx.textBaseline = "top";
@@ -693,9 +705,9 @@ export default function AcompanhamentoSemanalPage() {
       ctx.fillText("APLICAÇÃO", cardPosX + 495, row1Y + 118);
 
       const instRows = [
-        { logo: logoSicoob, nome: "SICOOB", dados: relatorioAtivo.posicaoFinanceira.sicoob, w: 126, h: 34 },
-        { logo: logoClara, nome: "CLARA", dados: relatorioAtivo.posicaoFinanceira.clara, w: 116, h: 32 },
-        { logo: logoItau, nome: "ITAÚ", dados: relatorioAtivo.posicaoFinanceira.itau, w: 42, h: 42 },
+        { logo: logoSicoob, nome: "SICOOB", dados: relatorioAtivo.posicaoFinanceira.sicoob, w: 134, h: 38 },
+        { logo: logoClara, nome: "CLARA", dados: relatorioAtivo.posicaoFinanceira.clara, w: 125, h: 35 },
+        { logo: logoItau, nome: "ITAÚ", dados: relatorioAtivo.posicaoFinanceira.itau, w: 44, h: 44 },
       ];
 
       instRows.forEach((ir, idx) => {
@@ -712,7 +724,7 @@ export default function AcompanhamentoSemanalPage() {
 
         const cy = ry + 27;
         if (ir.logo) {
-          ctx.drawImage(ir.logo, cardPosX + 88 - ir.w / 2, cy - ir.h / 2, ir.w, ir.h);
+          drawImgContain(ir.logo, cardPosX + 88, cy, ir.w, ir.h);
         } else {
           ctx.fillStyle = "#0f172a";
           ctx.font = `800 18px ${fontSans}`;
@@ -757,11 +769,7 @@ export default function AcompanhamentoSemanalPage() {
         ctx.fillStyle = "#53869b";
         ctx.fill();
 
-        // Barras do ícone
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(rightX + 30, y + 32, 4, 9);
-        ctx.fillRect(rightX + 36, y + 25, 4, 16);
-        ctx.fillRect(rightX + 42, y + 29, 4, 12);
+        drawIcone("bar_chart", rightX + 38, y + 32, 25, "#ffffff");
 
         ctx.textAlign = "left";
         ctx.textBaseline = "middle";
@@ -849,11 +857,8 @@ export default function AcompanhamentoSemanalPage() {
       ctx.arc(col1X + 38, row2Y + 36, 20, 0, Math.PI * 2);
       ctx.fillStyle = "#80c4c8";
       ctx.fill();
-      ctx.fillStyle = "#ffffff";
-      ctx.font = `800 18px ${fontSans}`;
-      ctx.textAlign = "center";
+      drawIcone("date_range", col1X + 38, row2Y + 36, 26, "#ffffff");
       ctx.textBaseline = "middle";
-      ctx.fillText("📅", col1X + 38, row2Y + 36);
 
       ctx.textAlign = "left";
       ctx.fillStyle = "#1e293b";
@@ -970,7 +975,7 @@ export default function AcompanhamentoSemanalPage() {
         const bw = col2W - 48;
 
         if (usarLogoClara && logoClara) {
-          ctx.drawImage(logoClara, bx, by + 4, 120, 34);
+          drawImgContain(logoClara, bx + 62, by + 21, 125, 35);
           if (subtitulo) {
             ctx.textAlign = "right";
             ctx.textBaseline = "middle";
@@ -979,15 +984,16 @@ export default function AcompanhamentoSemanalPage() {
             ctx.fillText(subtitulo, bx + bw, by + 22);
           }
         } else {
+          // Círculo com degradê verde-azul e ícone flight_takeoff (igual ao sistema)
+          const gradCb = ctx.createLinearGradient(bx, by, bx + 44, by + 44);
+          gradCb.addColorStop(0, "#c2f0c2");
+          gradCb.addColorStop(1, "#68b8e8");
           ctx.beginPath();
           ctx.arc(bx + 22, by + 22, 22, 0, Math.PI * 2);
-          ctx.fillStyle = "#7cc6e8";
+          ctx.fillStyle = gradCb;
           ctx.fill();
-          ctx.fillStyle = "#1d4ed8";
-          ctx.font = `700 20px ${fontSans}`;
-          ctx.textAlign = "center";
+          drawIcone("flight_takeoff", bx + 22, by + 22, 29, "#1d4ed8");
           ctx.textBaseline = "middle";
-          ctx.fillText("✈", bx + 22, by + 23);
 
           ctx.textAlign = "left";
           ctx.fillStyle = "#1e293b";
@@ -1113,11 +1119,8 @@ export default function AcompanhamentoSemanalPage() {
       ctx.arc(col3X + 38, row2Y + 36, 20, 0, Math.PI * 2);
       ctx.fillStyle = "#80c4c8";
       ctx.fill();
-      ctx.fillStyle = "#ffffff";
-      ctx.font = `800 17px ${fontSans}`;
-      ctx.textAlign = "center";
+      drawIcone("analytics", col3X + 38, row2Y + 36, 27, "#ffffff");
       ctx.textBaseline = "middle";
-      ctx.fillText("📊", col3X + 38, row2Y + 36);
 
       ctx.textAlign = "left";
       ctx.fillStyle = "#1e293b";
@@ -1179,16 +1182,12 @@ export default function AcompanhamentoSemanalPage() {
       // 5. RODAPÉ INFERIOR ESQUERDO: TOTAL A RECEBER & A VENCER EM ABERTO
       // =======================================================================
       const botY = 1264;
-      const drawBottomKpi = (bx: number, label: string, valor: number) => {
+      const drawBottomKpi = (bx: number, label: string, valor: number, icone: string) => {
         ctx.beginPath();
         ctx.arc(bx + 24, botY + 34, 22, 0, Math.PI * 2);
         ctx.fillStyle = "#80c4c8";
         ctx.fill();
-        ctx.fillStyle = "#ffffff";
-        ctx.font = `700 18px ${fontSans}`;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText("⏱", bx + 24, botY + 34);
+        drawIcone(icone, bx + 24, botY + 34, 27, "#ffffff");
 
         ctx.textAlign = "left";
         ctx.textBaseline = "top";
@@ -1201,8 +1200,8 @@ export default function AcompanhamentoSemanalPage() {
         ctx.fillText(fmtNum(valor), bx + 58, botY + 34);
       };
 
-      drawBottomKpi(44, "TOTAL A RECEBER", relatorioAtivo.totalAReceber);
-      drawBottomKpi(615, "A VENCER EM ABERTO", relatorioAtivo.aVencerEmAberto);
+      drawBottomKpi(44, "TOTAL A RECEBER", relatorioAtivo.totalAReceber, "date_range");
+      drawBottomKpi(615, "A VENCER EM ABERTO", relatorioAtivo.aVencerEmAberto, "schedule");
 
       // Dispara o download do arquivo .PNG
       const dataFmt = formatarDataBR(relatorioAtivo.dataReferencia).replace(/\//g, "-");
@@ -1319,16 +1318,18 @@ export default function AcompanhamentoSemanalPage() {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          flexWrap: "wrap",
-          gap: "12px",
-          padding: "12px 16px",
+          flexWrap: "nowrap",
+          whiteSpace: "nowrap",
+          overflowX: "auto",
+          gap: "10px",
+          padding: "10px 14px",
           borderRadius: "14px",
           background: "var(--surface-container-lowest, #ffffff)",
           border: "1px solid var(--border, #e2e8f0)",
           boxShadow: "0 2px 8px rgba(15, 42, 74, 0.04)",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "nowrap", flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
             <span className="material-symbols-outlined" style={{ fontSize: "18px", color: "#0284c7" }}>
               history
@@ -1342,7 +1343,7 @@ export default function AcompanhamentoSemanalPage() {
                 letterSpacing: "0.03em",
               }}
             >
-              Relatório Exibido:
+              Relatório:
             </span>
           </div>
 
@@ -1351,11 +1352,12 @@ export default function AcompanhamentoSemanalPage() {
             onChange={(val) => setRelatorioSelecionadoId(String(val))}
             options={opcoesHistoricoDropdown}
             icon="event_note"
-            minWidth="290px"
+            minWidth="270px"
           />
 
           {relatorioAnterior && (
             <span
+              title="As setas dos indicadores comparam com este relatório anterior"
               style={{
                 fontSize: "11.5px",
                 color: "var(--on-surface-variant)",
@@ -1366,12 +1368,12 @@ export default function AcompanhamentoSemanalPage() {
                 fontWeight: 600,
               }}
             >
-              Comparando setas com: <strong>{formatarDataBR(relatorioAnterior.dataReferencia)}</strong>
+              Comparando com: <strong>{formatarDataBR(relatorioAnterior.dataReferencia)}</strong>
             </span>
           )}
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "nowrap", flexShrink: 0 }}>
           <button
             type="button"
             onClick={handleBaixarPngAltaDefinicao}
@@ -1394,7 +1396,7 @@ export default function AcompanhamentoSemanalPage() {
             <span className="material-symbols-outlined" style={{ fontSize: "17px" }}>
               download
             </span>
-            <span>{baixandoPng ? "Gerando PNG HD..." : "Baixar PNG (Alta Definição)"}</span>
+            <span>{baixandoPng ? "Gerando PNG..." : "Baixar PNG"}</span>
           </button>
 
           <button
@@ -1413,7 +1415,7 @@ export default function AcompanhamentoSemanalPage() {
             }}
           >
             <span className="material-symbols-outlined" style={{ fontSize: "17px" }}>
-              folder_clock
+              folder_open
             </span>
             <span>Histórico de Envios ({historico.length})</span>
           </button>
