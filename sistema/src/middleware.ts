@@ -81,7 +81,12 @@ export async function middleware(req: NextRequest) {
       return res;
     }
 
-    const res = NextResponse.redirect(new URL("/login", req.url));
+    const loginUrl = new URL("/login", req.url);
+    if (pathname && pathname !== "/" && !pathname.startsWith("/login")) {
+      const destinoCompleto = `${pathname}${req.nextUrl.search || ""}`;
+      loginUrl.searchParams.set("redirect", destinoCompleto);
+    }
+    const res = NextResponse.redirect(loginUrl);
     if (tokenBruto) {
       res.cookies.set(COOKIE_SESSION_NAME, "", {
         httpOnly: true,
@@ -97,6 +102,15 @@ export async function middleware(req: NextRequest) {
   const rotaPadrao = obterRotaPadraoPerfil(sessao.perfilId);
 
   if (pathname === "/" || pathname === "/login" || pathname.startsWith("/login/")) {
+    const redirectParam = (req.nextUrl.searchParams.get("redirect") || req.nextUrl.searchParams.get("next") || "").trim();
+    if (
+      redirectParam &&
+      redirectParam.startsWith("/") &&
+      !redirectParam.startsWith("//") &&
+      !redirectParam.startsWith("/login")
+    ) {
+      return NextResponse.redirect(new URL(redirectParam, req.url));
+    }
     return NextResponse.redirect(new URL(rotaPadrao, req.url));
   }
 

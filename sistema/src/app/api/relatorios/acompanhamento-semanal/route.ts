@@ -205,8 +205,8 @@ async function calcularDadosBaseEmTempoReal(dataReferenciaISO: string) {
 function construirHtmlEmailExecutivo(rel: any, relAnterior: any | null, destinatarioNome: string, destinatarioLogin: string) {
   const dataBR = formatarDataBR(rel.dataReferencia);
   const urlBase = process.env.NEXT_PUBLIC_APP_URL || "https://gestao.nnos.com.br";
-  const urlLogin = `${urlBase}/login`;
   const urlRelatorio = `${urlBase}/relatorios/acompanhamento-semanal`;
+  const urlLogin = `${urlBase}/login?redirect=${encodeURIComponent("/relatorios/acompanhamento-semanal")}`;
 
   const calcVarStr = (atual: number, ant?: number | null, inverter = false) => {
     if (!ant || ant === 0) return "";

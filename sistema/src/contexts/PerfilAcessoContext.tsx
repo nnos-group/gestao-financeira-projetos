@@ -355,7 +355,12 @@ export function PerfilAcessoProvider({ children }: { children: React.ReactNode }
             window.dispatchEvent(new CustomEvent("nnos-user-updated"));
           } catch {}
           if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
-            window.location.replace("/login");
+            const caminhoAtual = `${window.location.pathname}${window.location.search || ""}`;
+            const destinoLogin =
+              caminhoAtual && caminhoAtual !== "/"
+                ? `/login?redirect=${encodeURIComponent(caminhoAtual)}`
+                : "/login";
+            window.location.replace(destinoLogin);
           }
           return;
         }
@@ -395,7 +400,12 @@ export function PerfilAcessoProvider({ children }: { children: React.ReactNode }
         setUsuarioLogado(null);
         setPerfilAtivoId("");
         if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
-          window.location.replace("/login");
+          const caminhoAtual = `${window.location.pathname}${window.location.search || ""}`;
+          const destinoLogin =
+            caminhoAtual && caminhoAtual !== "/"
+              ? `/login?redirect=${encodeURIComponent(caminhoAtual)}`
+              : "/login";
+          window.location.replace(destinoLogin);
         }
       } finally {
         if (ativo) setHidratado(true);

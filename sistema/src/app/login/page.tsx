@@ -81,8 +81,24 @@ export default function LoginPage() {
       setLiderSimulado(userObj.nome);
     }
 
-    ativarPerfil(perfilId, true);
-    window.location.href = rotaDestino;
+    // Se o usuário veio de um link direto (ex.: ?redirect=/relatorios/acompanhamento-semanal),
+    // preserva o redirecionamento pós-login para a tela solicitada
+    let redirectParam = "";
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const rawRedirect = (params.get("redirect") || params.get("next") || "").trim();
+      if (
+        rawRedirect.startsWith("/") &&
+        !rawRedirect.startsWith("//") &&
+        !rawRedirect.startsWith("/login")
+      ) {
+        redirectParam = rawRedirect;
+      }
+    } catch {}
+
+    const destinoFinal = redirectParam || rotaDestino;
+    ativarPerfil(perfilId, false);
+    window.location.href = destinoFinal;
   };
 
   const handleLogin = async (e: React.FormEvent) => {
