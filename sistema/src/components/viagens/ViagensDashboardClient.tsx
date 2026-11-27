@@ -44,6 +44,7 @@ export default function ViagensDashboardClient({
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [cardsExpandidos, setCardsExpandidos] = useState<Set<string>>(new Set());
   const [abaAtiva, setAbaAtiva] = useState<"ESTEIRA" | "CREDITOS">("ESTEIRA");
+  const [creditosResetKey, setCreditosResetKey] = useState<number>(0);
   const [resumoCreditos, setResumoCreditos] = useState<{ qtdDisponiveis: number; saldoDisponivel: number }>({
     qtdDisponiveis: 0,
     saldoDisponivel: 0,
@@ -526,7 +527,10 @@ export default function ViagensDashboardClient({
 
           <button
             type="button"
-            onClick={() => setAbaAtiva("CREDITOS")}
+            onClick={() => {
+              setAbaAtiva("CREDITOS");
+              setCreditosResetKey((k) => k + 1);
+            }}
             style={{
               display: "inline-flex",
               alignItems: "center",
@@ -579,6 +583,7 @@ export default function ViagensDashboardClient({
             perfilAtivo={perfilAtivo}
             showToast={showToast}
             onResumoChange={setResumoCreditos}
+            resetFiltroTrigger={creditosResetKey}
           />
         </div>
 

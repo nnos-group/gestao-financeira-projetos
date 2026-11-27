@@ -31,6 +31,7 @@ interface ControleCreditosTabProps {
   perfilAtivo: ViagensPerfil;
   showToast: (msg: string) => void;
   onResumoChange?: (resumo: { qtdDisponiveis: number; saldoDisponivel: number }) => void;
+  resetFiltroTrigger?: number;
 }
 
 function normalizarTexto(str?: string | null): string {
@@ -82,6 +83,7 @@ export default function ControleCreditosTab({
   perfilAtivo,
   showToast,
   onResumoChange,
+  resetFiltroTrigger,
 }: ControleCreditosTabProps) {
   const { perfilAtivoId, pertenceAoLiderAtivo, liderSimulado, listaLideres } = usePerfilAcesso();
 
@@ -90,12 +92,19 @@ export default function ControleCreditosTab({
   const [consultoresBase, setConsultoresBase] = useState<string[]>([]);
   const [carregando, setCarregando] = useState(true);
 
-  // Filtros (fixado por padrão em "NÃO" = Disponível para Uso)
+  // Filtros (fixado por padrão em "DISPONIVEL_VALIDO" = Somente Créditos Disponíveis para Uso <= 1 ano)
   const [busca, setBusca] = useState("");
   const [filtroProjeto, setFiltroProjeto] = useState<string>("TODOS");
-  const [filtroStatus, setFiltroStatus] = useState<string>("NÃO");
+  const [filtroStatus, setFiltroStatus] = useState<string>("DISPONIVEL_VALIDO");
   const [filtroCia, setFiltroCia] = useState<string>("TODAS");
   const [filtroLider, setFiltroLider] = useState<string>("TODOS");
+
+  // Sempre que o usuário clicar no botão "Logística · Controle de Crédito", garante que o filtro inicie em Disponíveis para Uso
+  useEffect(() => {
+    if (resetFiltroTrigger !== undefined) {
+      setFiltroStatus("DISPONIVEL_VALIDO");
+    }
+  }, [resetFiltroTrigger]);
 
   // Modal de Criação / Edição / Baixa
   const [modalAberto, setModalAberto] = useState(false);
@@ -596,11 +605,11 @@ export default function ControleCreditosTab({
       >
         {/* 1. Saldo Disponível para Uso (Válidos <= 1 ano) */}
         <div
-          onClick={() => setFiltroStatus(filtroStatus === "DISPONIVEL_VALIDO" ? "NÃO" : "DISPONIVEL_VALIDO")}
+          onClick={() => setFiltroStatus(filtroStatus === "DISPONIVEL_VALIDO" ? "TODOS" : "DISPONIVEL_VALIDO")}
           style={{
             background: "var(--surface)",
             border:
-              filtroStatus === "NÃO" || filtroStatus === "DISPONIVEL_VALIDO"
+              filtroStatus === "DISPONIVEL_VALIDO"
                 ? "2px solid #d97706"
                 : "1px solid var(--border)",
             borderRadius: "12px",
@@ -828,11 +837,11 @@ export default function ControleCreditosTab({
           value={filtroStatus}
           onChange={(val) => setFiltroStatus(String(val))}
           options={[
-            { value: "TODOS", label: "Crédito Utilizado: Todos" },
-            { value: "NÃO", label: "Não Utilizados (Disponíveis + Expirados)" },
-            { value: "DISPONIVEL_VALIDO", label: "Somente Disponíveis para Uso (<= 1 ano)" },
+            { value: "DISPONIVEL_VALIDO", label: "Disponíveis para Uso (<= 1 ano)" },
             { value: "EXPIRADO", label: "Expirados / Indisponíveis (> 1 ano)" },
+            { value: "NÃO", label: "Não Utilizados (Disponíveis + Expirados)" },
             { value: "SIM", label: "Já Utilizados / Concluídos (SIM)" },
+            { value: "TODOS", label: "Crédito Utilizado: Todos" },
           ]}
           icon="filter_alt"
           minWidth="245px"
