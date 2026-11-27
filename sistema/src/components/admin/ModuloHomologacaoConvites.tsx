@@ -9,6 +9,8 @@ interface Props {
   onToast: (msg: string) => void;
 }
 
+export type TipoConvitePlataforma = "BOAS_VINDAS" | "HOMOLOGACAO";
+
 export interface RegistroHomologacao {
   usuarioId: string;
   login: string;
@@ -19,19 +21,35 @@ export interface RegistroHomologacao {
   senhaInicial: string;
   status: "PENDENTE" | "CONVITE_ENVIADO" | "EM_VALIDACAO" | "HOMOLOGADO";
   conviteEnviadoEm: string | null;
+  boasVindasStatus?: "PENDENTE" | "BOAS_VINDAS_ENVIADO" | "ACESSO_ATIVO";
+  boasVindasEnviadoEm?: string | null;
   ultimoAcessoEm: string | null;
   apontamentos: string;
 }
 
 const URL_OFICIAL_LOGIN = "https://gestao.nnos.com.br/login";
 
-const OPCOES_FILTRO_STATUS = [
+const OPCOES_FILTRO_STATUS_BOAS_VINDAS = [
+  { value: "TODOS", label: "Status: Todos os Usuários" },
+  { value: "PENDENTE", label: "Status: Pendentes de Boas-Vindas" },
+  { value: "BOAS_VINDAS_ENVIADO", label: "Status: Boas-Vindas Enviado" },
+  { value: "ACESSO_ATIVO", label: "Status: Acesso Ativo (Em Uso)" },
+];
+
+const OPCOES_FILTRO_STATUS_HOMOLOGACAO = [
   { value: "TODOS", label: "Status: Todos os Status" },
   { value: "PENDENTE", label: "Status: Pendentes de Envio" },
   { value: "CONVITE_ENVIADO", label: "Status: Convites Enviados" },
   { value: "EM_VALIDACAO", label: "Status: Em Validação" },
   { value: "HOMOLOGADO", label: "Status: Homologados" },
 ];
+
+function obterSenhaLegivel(user: any): string {
+  const padrao = ehPerfilAgencia(user) ? "viagem2026" : "nnos2026";
+  const s = String(user?.senha || "").trim();
+  if (!s || s.startsWith("scrypt$") || s.length > 40) return padrao;
+  return s;
+}
 
 const OPCOES_FILTRO_GRUPO = [
   { value: "LIDERES_E_AGENCIA", label: "Grupo Prioritário: Líderes + Agência Fátima" },
@@ -94,7 +112,16 @@ function ehPerfilConsultor(user: any): boolean {
   );
 }
 
-function obterAssuntoConvite(user: any): string {
+function obterAssuntoConvite(user: any, modo: TipoConvitePlataforma = "BOAS_VINDAS"): string {
+  if (modo === "BOAS_VINDAS") {
+    if (ehPerfilAgencia(user)) {
+      return "✈️ Bem-vindos ao Módulo de Viagens & Logística NNÓS | Acesso Oficial Liberado";
+    }
+    if (ehPerfilConsultor(user)) {
+      return "🎓 Bem-vindo(a) ao Portal do Consultor NNÓS | Suas Credenciais Oficiais de Acesso";
+    }
+    return "🚀 Bem-vindo(a) ao Sistema NNÓS Gestão Financeira & Projetos | Suas Credenciais Oficiais de Acesso";
+  }
   if (ehPerfilAgencia(user)) {
     return "✈️ Novo Módulo de Viagens & Logística NNÓS | Acesso para Homologação e Testes Operacionais";
   }
@@ -107,7 +134,19 @@ function obterAssuntoConvite(user: any): string {
 export default function ModuloHomologacaoConvites({ perfis, onToast }: Props) {
   const [usuarios, setUsuarios] = useState<any[]>([]);
   const [carregando, setCarregando] = useState(false);
-  const [homologacoes, setHomologacoes] = useState<Record<string, { status: string; conviteEnviadoEm: string | null; apontamentos: string }>>({});
+  const [modoConvite, setModoConvite] = useState<TipoConvitePlataforma>("BOAS_VINDAS");
+  const [homologacoes, setHomologacoes] = useState<
+    Record<
+      string,
+      {
+        status: string;
+        conviteEnviadoEm: string | null;
+        boasVindasStatus?: string;
+        boasVindasEnviadoEm?: string | null;
+        apontamentos: string;
+      }
+    >
+  >({});
 
   // Filtros
   const [busca, setBusca] = useState("");
@@ -143,12 +182,28 @@ export default function ModuloHomologacaoConvites({ perfis, onToast }: Props) {
 
   useEffect(() => {
     carregarDados();
+    let localData: Record<string, any> = {};
     try {
       const salvo = localStorage.getItem("nnos_homologacao_controles_v1");
       if (salvo) {
-        setHomologacoes(JSON.parse(salvo));
+        localData = JSON.parse(salvo);
+        setHomologacoes(localData);
       }
     } catch {}
+
+    // Sincroniza controles com o Supabase para não perder o histórico entre computadores
+    fetch("/api/admin/homologacao/enviar-email")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((res) => {
+        if (res?.sucesso && res.controles && typeof res.controles === "object") {
+          const mesclado = { ...localData, ...res.controles };
+          setHomologacoes(mesclado);
+          try {
+            localStorage.setItem("nnos_homologacao_controles_v1", JSON.stringify(mesclado));
+          } catch {}
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const salvarHomologacoes = (novosDados: Record<string, any>) => {
@@ -156,23 +211,56 @@ export default function ModuloHomologacaoConvites({ perfis, onToast }: Props) {
     try {
       localStorage.setItem("nnos_homologacao_controles_v1", JSON.stringify(novosDados));
     } catch {}
+    fetch("/api/admin/homologacao/enviar-email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ acao: "SALVAR_CONTROLES", controles: novosDados }),
+    }).catch(() => {});
   };
 
-  // Alterar Status de Homologação
+  const obterStatusBoasVindasEfetivo = (user: any): "PENDENTE" | "BOAS_VINDAS_ENVIADO" | "ACESSO_ATIVO" => {
+    const reg = homologacoes[user.id];
+    if (reg?.boasVindasStatus === "ACESSO_ATIVO") return "ACESSO_ATIVO";
+    if (reg?.boasVindasStatus === "BOAS_VINDAS_ENVIADO") {
+      return user.ultimoAcesso ? "ACESSO_ATIVO" : "BOAS_VINDAS_ENVIADO";
+    }
+    if (reg?.boasVindasStatus === "PENDENTE") return "PENDENTE";
+    if (user.ultimoAcesso) return "ACESSO_ATIVO";
+    return "PENDENTE";
+  };
+
+  // Alterar Status (Boas-Vindas ou Homologação)
   const handleAtualizarStatus = async (
     user: any,
-    novoStatus: "PENDENTE" | "CONVITE_ENVIADO" | "EM_VALIDACAO" | "HOMOLOGADO"
+    novoStatus: string
   ) => {
     const agoraStr = formatarDataHoraBR(new Date().toISOString());
-    const atual = homologacoes[user.id] || { status: "PENDENTE", conviteEnviadoEm: null, apontamentos: "" };
+    const atual = homologacoes[user.id] || {
+      status: "PENDENTE",
+      conviteEnviadoEm: null,
+      boasVindasStatus: "PENDENTE",
+      boasVindasEnviadoEm: null,
+      apontamentos: "",
+    };
 
     const atualizado = {
       ...homologacoes,
-      [user.id]: {
-        ...atual,
-        status: novoStatus,
-        conviteEnviadoEm: novoStatus === "CONVITE_ENVIADO" ? agoraStr : atual.conviteEnviadoEm,
-      },
+      [user.id]:
+        modoConvite === "BOAS_VINDAS"
+          ? {
+              ...atual,
+              boasVindasStatus: novoStatus,
+              boasVindasEnviadoEm:
+                novoStatus === "BOAS_VINDAS_ENVIADO"
+                  ? agoraStr
+                  : atual.boasVindasEnviadoEm,
+            }
+          : {
+              ...atual,
+              status: novoStatus,
+              conviteEnviadoEm:
+                novoStatus === "CONVITE_ENVIADO" ? agoraStr : atual.conviteEnviadoEm,
+            },
     };
 
     salvarHomologacoes(atualizado);
@@ -186,10 +274,22 @@ export default function ModuloHomologacaoConvites({ perfis, onToast }: Props) {
           usuarioNome: user.nome,
           usuarioEmail: user.email,
           perfilId: user.perfilId,
-          evento: novoStatus === "CONVITE_ENVIADO" ? "CONVITE_HOMOLOGACAO" : `STATUS_${novoStatus}`,
-          metodo: "Módulo Homologação & Convites",
+          evento:
+            modoConvite === "BOAS_VINDAS"
+              ? novoStatus === "BOAS_VINDAS_ENVIADO"
+                ? "CONVITE_BOAS_VINDAS_OFICIAL"
+                : `BOAS_VINDAS_${novoStatus}`
+              : novoStatus === "CONVITE_ENVIADO"
+              ? "CONVITE_HOMOLOGACAO"
+              : `STATUS_${novoStatus}`,
+          metodo:
+            modoConvite === "BOAS_VINDAS"
+              ? "Central de Convites & Boas-Vindas (Produção)"
+              : "Módulo Homologação & Convites",
           status: "SUCESSO",
-          detalhes: `Status de homologação alterado para ${novoStatus} por Leonardo Campos.`,
+          detalhes: `Status de ${
+            modoConvite === "BOAS_VINDAS" ? "Boas-Vindas Oficial" : "Homologação"
+          } alterado para ${novoStatus} por Leonardo Campos.`,
         }),
       });
     } catch (e) {
@@ -199,38 +299,45 @@ export default function ModuloHomologacaoConvites({ perfis, onToast }: Props) {
     onToast(`Status de ${user.nome} atualizado para ${novoStatus}!`);
   };
 
-  const montarPayloadEmailHomologacao = (user: any) => ({
+  const montarPayloadEmailHomologacao = (user: any, tipo: TipoConvitePlataforma = modoConvite) => ({
     usuarioNome: user.nome,
     usuarioEmail: user.email,
     usuarioLogin: user.login,
     usuarioCargo: user.cargo,
-    usuarioSenha: user.senha || (ehPerfilAgencia(user) ? "viagem2026" : "nnos2026"),
+    usuarioSenha: obterSenhaLegivel(user),
     perfilId: user.perfilId,
     perfilNome: perfis.find((p) => p.id === user.perfilId)?.nome || user.perfilId,
-    assuntoPersonalizado: obterAssuntoConvite(user),
-    corpoTextoPersonalizado: gerarTextoEmailPuro(user),
+    assuntoPersonalizado: obterAssuntoConvite(user, tipo),
+    corpoTextoPersonalizado: gerarTextoEmailPuro(user, tipo),
+    tipoConvite: tipo,
+    mfaAtivo: Boolean(user.mfaAtivo),
   });
 
   // Registrar e Disparar Envio de E-mail Individual
   const handleRegistrarDisparo = async (user: any) => {
-    await handleAtualizarStatus(user, "CONVITE_ENVIADO");
+    const statusAlvo = modoConvite === "BOAS_VINDAS" ? "BOAS_VINDAS_ENVIADO" : "CONVITE_ENVIADO";
+    await handleAtualizarStatus(user, statusAlvo);
 
     try {
       const res = await fetch("/api/admin/homologacao/enviar-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(montarPayloadEmailHomologacao(user)),
+        body: JSON.stringify(montarPayloadEmailHomologacao(user, modoConvite)),
       });
 
       const data = await res.json();
       if (data.sucesso && (data.modo === "smtp" || data.modo === "resend")) {
-        onToast(`✉️ E-mail oficial entregue com sucesso para ${user.email}!`);
+        onToast(
+          `✉️ E-mail oficial de ${
+            modoConvite === "BOAS_VINDAS" ? "Boas-Vindas" : "Homologação"
+          } entregue com sucesso para ${user.email}!`
+        );
       } else if (data.sucesso === false) {
         onToast(`⚠️ Falha no envio para ${user.email}: ${data.mensagem || data.erro || "Verifique o provedor de e-mail"}`);
       } else if (data.modo === "simulado") {
         onToast(`Convite registrado para ${user.nome}! (Modo Simulado: SMTP pendente de configuração)`);
       } else {
-        onToast(`Convite de homologação registrado para ${user.nome}!`);
+        onToast(`Convite registrado para ${user.nome}!`);
       }
     } catch (e: any) {
       onToast(`Erro ao disparar e-mail: ${e.message}`);
@@ -251,17 +358,32 @@ export default function ModuloHomologacaoConvites({ perfis, onToast }: Props) {
       const user = usuarios.find((u) => u.id === userId);
       if (!user) continue;
 
-      novoMapa[userId] = {
-        ...(novoMapa[userId] || { status: "PENDENTE", conviteEnviadoEm: null, apontamentos: "" }),
-        status: "CONVITE_ENVIADO",
-        conviteEnviadoEm: agoraStr,
+      const atual = novoMapa[userId] || {
+        status: "PENDENTE",
+        conviteEnviadoEm: null,
+        boasVindasStatus: "PENDENTE",
+        boasVindasEnviadoEm: null,
+        apontamentos: "",
       };
+
+      novoMapa[userId] =
+        modoConvite === "BOAS_VINDAS"
+          ? {
+              ...atual,
+              boasVindasStatus: "BOAS_VINDAS_ENVIADO",
+              boasVindasEnviadoEm: agoraStr,
+            }
+          : {
+              ...atual,
+              status: "CONVITE_ENVIADO",
+              conviteEnviadoEm: agoraStr,
+            };
 
       try {
         await fetch("/api/admin/homologacao/enviar-email", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(montarPayloadEmailHomologacao(user)),
+          body: JSON.stringify(montarPayloadEmailHomologacao(user, modoConvite)),
         });
 
         await fetch("/api/admin/logs-acesso", {
@@ -272,17 +394,29 @@ export default function ModuloHomologacaoConvites({ perfis, onToast }: Props) {
             usuarioNome: user.nome,
             usuarioEmail: user.email,
             perfilId: user.perfilId,
-            evento: "CONVITE_HOMOLOGACAO_EM_MASSA",
-            metodo: "Módulo Homologação & Convites (Disparo em Massa)",
+            evento:
+              modoConvite === "BOAS_VINDAS"
+                ? "CONVITE_BOAS_VINDAS_EM_MASSA"
+                : "CONVITE_HOMOLOGACAO_EM_MASSA",
+            metodo:
+              modoConvite === "BOAS_VINDAS"
+                ? "Central de Convites & Boas-Vindas (Disparo em Massa)"
+                : "Módulo Homologação & Convites (Disparo em Massa)",
             status: "SUCESSO",
-            detalhes: `Convite de homologação disparado em lote por Leonardo Campos.`,
+            detalhes: `E-mail de ${
+              modoConvite === "BOAS_VINDAS" ? "Boas-Vindas Oficial" : "Homologação"
+            } disparado em lote por Leonardo Campos.`,
           }),
         });
       } catch {}
     }
 
     salvarHomologacoes(novoMapa);
-    onToast(`🚀 ${selecionados.length} convite(s) disparado(s) e registrados no log com sucesso!`);
+    onToast(
+      `🚀 ${selecionados.length} e-mail(s) de ${
+        modoConvite === "BOAS_VINDAS" ? "Boas-Vindas Oficial" : "Homologação"
+      } disparado(s) e registrados com sucesso!`
+    );
     setSelecionados([]);
   };
 
@@ -296,8 +430,11 @@ export default function ModuloHomologacaoConvites({ perfis, onToast }: Props) {
         return false;
       }
 
-      // 2. Filtro por Status de Homologação
-      const statusUser = homologacoes[u.id]?.status || "PENDENTE";
+      // 2. Filtro por Status (conforme o modo ativo)
+      const statusUser =
+        modoConvite === "BOAS_VINDAS"
+          ? obterStatusBoasVindasEfetivo(u)
+          : homologacoes[u.id]?.status || "PENDENTE";
       if (filtroStatus !== "TODOS" && statusUser !== filtroStatus) {
         return false;
       }
@@ -312,7 +449,7 @@ export default function ModuloHomologacaoConvites({ perfis, onToast }: Props) {
         u.cargo?.toLowerCase().includes(b)
       );
     });
-  }, [usuarios, filtroGrupo, filtroStatus, busca, homologacoes]);
+  }, [usuarios, filtroGrupo, filtroStatus, busca, homologacoes, modoConvite]);
 
   // Contadores do Painel
   const contadores = useMemo(() => {
@@ -323,15 +460,22 @@ export default function ModuloHomologacaoConvites({ perfis, onToast }: Props) {
     let homologados = 0;
 
     usuarios.forEach((u) => {
-      const st = homologacoes[u.id]?.status || "PENDENTE";
-      if (st === "PENDENTE") pendentes++;
-      else if (st === "CONVITE_ENVIADO") enviados++;
-      else if (st === "EM_VALIDACAO") emValidacao++;
-      else if (st === "HOMOLOGADO") homologados++;
+      if (modoConvite === "BOAS_VINDAS") {
+        const st = obterStatusBoasVindasEfetivo(u);
+        if (st === "PENDENTE") pendentes++;
+        else if (st === "BOAS_VINDAS_ENVIADO") enviados++;
+        else if (st === "ACESSO_ATIVO") homologados++;
+      } else {
+        const st = homologacoes[u.id]?.status || "PENDENTE";
+        if (st === "PENDENTE") pendentes++;
+        else if (st === "CONVITE_ENVIADO") enviados++;
+        else if (st === "EM_VALIDACAO") emValidacao++;
+        else if (st === "HOMOLOGADO") homologados++;
+      }
     });
 
     return { total, pendentes, enviados, emValidacao, homologados };
-  }, [usuarios, homologacoes]);
+  }, [usuarios, homologacoes, modoConvite]);
 
   // Paginação dos dados
   const totalPaginas = Math.max(1, Math.ceil(usuariosFiltrados.length / itensPorPagina));
@@ -369,11 +513,13 @@ export default function ModuloHomologacaoConvites({ perfis, onToast }: Props) {
   };
 
   // Gerador de Texto Completo do E-mail
-  const gerarTextoEmailPuro = (user: any) => {
+  const gerarTextoEmailPuro = (user: any, modo: TipoConvitePlataforma = modoConvite) => {
     const ehAgencia = ehPerfilAgencia(user);
     const ehConsultor = ehPerfilConsultor(user);
+    const ehBoasVindas = modo === "BOAS_VINDAS";
     const linkAcesso = URL_OFICIAL_LOGIN;
-    const assuntoTexto = obterAssuntoConvite(user);
+    const assuntoTexto = obterAssuntoConvite(user, modo);
+    const senhaLegivel = obterSenhaLegivel(user);
 
     const blocoDuvidasTexto = `--------------------------------------------------
 🦉 DÚVIDAS? UTILIZE O GUIA E O AGENTE DE IA:
@@ -381,6 +527,27 @@ export default function ModuloHomologacaoConvites({ perfis, onToast }: Props) {
 No topo direito (ou no botão flutuante com o ícone da coruja), clique em "Ajuda & IA":
 - Na aba Guia de Processos, você encontra o passo a passo e o macrofluxo das 7 etapas da NNÓS.
 - Na aba Agente de IA NNÓS, faça perguntas com suas próprias palavras para tirar dúvidas sobre regras corporativas.`;
+
+    const blocoSegurancaBoasVindasTexto = `--------------------------------------------------
+🔒 SEGURANÇA DA CONTA & BOAS PRÁTICAS DE ACESSO:
+--------------------------------------------------
+- Suas credenciais são pessoais e intransferíveis, garantindo a rastreabilidade das operações no sistema.
+- ${
+      user.mfaAtivo
+        ? "Sua conta possui Autenticação em 2 Fatores (Google Authenticator - 2FA) ativa para proteção adicional."
+        : 'Caso precise redefinir sua senha, utilize a opção "Esqueci minha senha" na tela de login.'
+    }
+- Sempre que precisar de apoio operacional, nossa equipe está à disposição pelo Microsoft Teams da Equipe de Gestão NNÓS ou por este e-mail.
+
+${
+  ehAgencia
+    ? "Desejamos um excelente trabalho e agradecemos pela parceria contínua!"
+    : "Seja muito bem-vindo(a) à nossa nova plataforma oficial de gestão!"
+}
+
+${ehAgencia ? "Atenciosamente," : "Um abraço,"}
+Leonardo Campos & Equipe de Gestão NNÓS
+NNÓS Consultoria e Treinamento`;
 
     const blocoApontamentosTexto = `--------------------------------------------------
 📝 COMO ENVIAR SEUS APONTAMENTOS DE MELHORIA:
@@ -399,6 +566,104 @@ ${
 ${ehAgencia ? "Atenciosamente," : "Um abraço,"}
 Leonardo Campos & Equipe de Gestão NNÓS
 NNÓS Consultoria e Treinamento`;
+
+    if (ehBoasVindas) {
+      if (ehAgencia) {
+        return `Assunto: ${assuntoTexto}
+
+Olá, Fátima e Equipe, tudo bem?
+
+Seja muito bem-vinda ao módulo oficial de Viagens & Logística da plataforma corporativa NNÓS Gestão Financeira & Projetos!
+
+A partir de agora, todas as solicitações de passagens aéreas, hospedagens, locações, aprovações de líderes, gestão de créditos e envio de vouchers aos viajantes passam a ser operadas de forma centralizada e oficial através do nosso portal.
+
+Abaixo estão suas credenciais definitivas de acesso e o resumo das funcionalidades disponíveis para a rotina diária da agência:
+
+--------------------------------------------------
+🎯 PRINCIPAIS RECURSOS DISPONÍVEIS PARA A AGÊNCIA FÁTIMA:
+--------------------------------------------------
+1. Esteira de Solicitações & Cotações (/viagens): Recebimento imediato das demandas de viagem com origem, destino, datas de ida/volta, preferências e anexo dos PDFs comparativos para aprovação do Líder.
+2. Logística · Controle de Créditos (/viagens): Gestão completa de créditos de companhias aéreas e hotéis disponíveis para reaproveitamento dentro do prazo de validade (1 ano).
+3. Políticas de Viagem Oficiais: Consulta rápida aos PDFs de políticas (NNÓS Consultoria, CNH Training, Iveco Group e Reembolso Vexpenses).
+4. Emissão & Disparo Automático de Vouchers: Ao anexar os bilhetes e vouchers emitidos, o sistema dispara automaticamente o kit completo de viagem por e-mail ao consultor viajante.
+
+--------------------------------------------------
+🔑 SEUS DADOS OFICIAIS DE ACESSO:
+--------------------------------------------------
+- Link Oficial de Acesso (Tela de Login): ${linkAcesso}
+- Seu Usuário / Login: ${user.login || "agencia.fatima"}
+- E-mail Cadastrado: ${user.email}
+- Senha Inicial: ${senhaLegivel}
+* Nota: Ao efetuar o login com suas credenciais, seu acesso abrirá diretamente no módulo de Viagens & Logística (/viagens).
+
+${blocoDuvidasTexto}
+
+${blocoSegurancaBoasVindasTexto}`;
+      }
+
+      if (ehConsultor) {
+        return `Assunto: ${assuntoTexto}
+
+Olá, ${user.nome}, tudo bem?
+
+É uma satisfação dar as boas-vindas oficiais a você no Portal do Consultor da plataforma NNÓS Gestão Financeira & Projetos!
+
+Seu acesso definitivo já está liberado! Este ambiente foi desenvolvido exclusivamente para centralizar e facilitar toda a sua rotina operacional e financeira com a NNÓS: acompanhamento da sua agenda de treinamentos, bloqueio de datas, consulta de passagens e vouchers de viagem, assinatura digital de Boletins de Medição (BMs) e gestão dos seus recebimentos.
+
+Confira abaixo o que você já pode utilizar no seu Portal e os seus dados oficiais de acesso:
+
+--------------------------------------------------
+🎯 O QUE VOCÊ JÁ PODE UTILIZAR NO SEU PORTAL DO CONSULTOR:
+--------------------------------------------------
+1. Minha Agenda & Disponibilidade (/consultor/agenda): Consulte suas turmas confirmadas, locais, datas, carga horária e registre bloqueios de agenda quando tiver indisponibilidade.
+2. Minhas Viagens & Vouchers (/consultor/viagens): Visualize e baixe suas passagens aéreas, vouchers de hotel, locação de veículo e consulte as Políticas de Viagem e Prestação de Contas (CNH, Iveco, NNÓS e Vexpenses).
+3. Meus Boletins de Medição (BMs) (/consultor/bms): Confira as horas e atividades apuradas no mês, acompanhe a assinatura digital via Zoho Sign e envie sua Nota Fiscal correspondente.
+4. Meus Pagamentos & Repasses (/consultor/pagamentos): Acompanhe o calendário de liquidação das suas Notas Fiscais, reembolsos de despesas (RDVs) e histórico financeiro completo.
+
+--------------------------------------------------
+🔑 SEUS DADOS OFICIAIS DE ACESSO:
+--------------------------------------------------
+- Link Oficial de Acesso (Tela de Login): ${linkAcesso}
+- Seu Usuário / Login: ${user.login}
+- E-mail Cadastrado: ${user.email}
+- Senha Inicial: ${senhaLegivel}
+* Nota: Ao efetuar o login com suas credenciais, seu acesso abrirá diretamente no seu Portal do Consultor (/consultor).
+
+${blocoDuvidasTexto}
+
+${blocoSegurancaBoasVindasTexto}`;
+      }
+
+      return `Assunto: ${assuntoTexto}
+
+Olá, ${user.nome}, tudo bem?
+
+É uma satisfação dar as boas-vindas oficiais a você na plataforma corporativa NNÓS Gestão Financeira & Projetos!
+
+Seu acesso definitivo em produção já está ativo! A plataforma integra em um único ambiente o planejamento operacional de turmas, o fluxo de cotação e aprovação de viagens, a emissão e assinatura digital de Boletins de Medição (BMs) via Zoho Sign, o faturamento e a Central Executiva de Relatórios.
+
+Confira abaixo os principais módulos liberados para o seu perfil e as suas credenciais oficiais de acesso:
+
+--------------------------------------------------
+🎯 PRINCIPAIS MÓDULOS DISPONÍVEIS NO SEU PERFIL:
+--------------------------------------------------
+1. Projetos & Atividades (/projetos): Planejamento e gestão de turmas, alocação de consultores/instrutores, cálculo automático de tabelas contratuais e solicitação integrada de logística.
+2. Viagens & Logística (/viagens): Acompanhamento da esteira de cotações, aprovação ou devolutiva de propostas em PDF enviadas pela Agência Fátima e controle de créditos.
+3. BM - Boletim de Medição (/medicao): Apuração mensal de entregas, emissão de BMs, disparo de assinatura eletrônica via Zoho Sign e homologação financeira.
+4. Central Executiva de Relatórios (/relatorios): Acompanhamento Semanal, DRE Gerencial, Matriz Financeira, Painel por Líder e indicadores de rentabilidade em tempo real.
+
+--------------------------------------------------
+🔑 SEUS DADOS OFICIAIS DE ACESSO:
+--------------------------------------------------
+- Link Oficial de Acesso (Tela de Login): ${linkAcesso}
+- Seu Usuário / Login: ${user.login}
+- E-mail Cadastrado: ${user.email}
+- Senha Inicial: ${senhaLegivel}
+
+${blocoDuvidasTexto}
+
+${blocoSegurancaBoasVindasTexto}`;
+    }
 
     if (ehAgencia) {
       return `Assunto: ${assuntoTexto}
@@ -425,7 +690,7 @@ Como parceiros estratégicos da nossa operação logística, convidamos vocês p
 - Link Oficial de Acesso (Tela de Login): ${linkAcesso}
 - Seu Usuário / Login: ${user.login || "agencia.fatima"}
 - E-mail Cadastrado: ${user.email}
-- Senha Inicial: ${user.senha || "viagem2026"}
+- Senha Inicial: ${senhaLegivel}
 * Nota: Ao efetuar o login com suas credenciais, seu acesso abrirá diretamente no módulo de Viagens & Logística (/viagens).
 
 ${blocoDuvidasTexto}
@@ -458,7 +723,7 @@ Estamos na reta final para a liberação em produção e a sua validação prát
 - Link Oficial de Acesso (Tela de Login): ${linkAcesso}
 - Seu Usuário / Login: ${user.login}
 - E-mail Cadastrado: ${user.email}
-- Senha Inicial: ${user.senha || "nnos2026"}
+- Senha Inicial: ${senhaLegivel}
 * Nota: Ao efetuar o login com suas credenciais, seu acesso abrirá diretamente no seu Portal do Consultor (/consultor).
 
 ${blocoDuvidasTexto}
@@ -490,7 +755,7 @@ Estamos na reta final para a liberação em produção e o seu olhar operacional
 - Link Oficial de Acesso (Tela de Login): ${linkAcesso}
 - Seu Usuário / Login: ${user.login}
 - E-mail Cadastrado: ${user.email}
-- Senha Inicial: ${user.senha || "nnos2026"}
+- Senha Inicial: ${senhaLegivel}
 
 ${blocoDuvidasTexto}
 
@@ -499,6 +764,109 @@ ${blocoApontamentosTexto}`;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "20px", width: "100%", paddingBottom: "70px" }}>
+      {/* =================================================================== */}
+      {/* 0. SELETOR DE MODO: BOAS-VINDAS OFICIAL (PRODUÇÃO) vs. HOMOLOGAÇÃO  */}
+      {/* =================================================================== */}
+      <section
+        style={{
+          backgroundColor: "var(--surface-container-lowest, #ffffff)",
+          borderRadius: "16px",
+          border: "1px solid var(--border, #e2e8f0)",
+          padding: "14px 18px",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: "12px",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <span className="material-symbols-outlined" style={{ fontSize: "22px", color: "#0284c7" }}>
+            campaign
+          </span>
+          <div>
+            <div style={{ fontSize: "14px", fontWeight: 800, color: "#0f172a" }}>
+              Central de Convites, Boas-Vindas &amp; Homologação
+            </div>
+            <div style={{ fontSize: "12px", color: "#64748b" }}>
+              Escolha o modelo de e-mail e controle que deseja operar para os usuários da plataforma:
+            </div>
+          </div>
+        </div>
+
+        <div
+          style={{
+            display: "inline-flex",
+            backgroundColor: "#f1f5f9",
+            padding: "4px",
+            borderRadius: "12px",
+            border: "1px solid #e2e8f0",
+            gap: "4px",
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => {
+              setModoConvite("BOAS_VINDAS");
+              setFiltroStatus("TODOS");
+              setSelecionados([]);
+              setPaginaAtual(1);
+            }}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: "8px 16px",
+              borderRadius: "9px",
+              border: "none",
+              fontSize: "12.5px",
+              fontWeight: 800,
+              cursor: "pointer",
+              backgroundColor: modoConvite === "BOAS_VINDAS" ? "#0f2a4a" : "transparent",
+              color: modoConvite === "BOAS_VINDAS" ? "#ffffff" : "#475569",
+              boxShadow: modoConvite === "BOAS_VINDAS" ? "0 2px 6px rgba(15,42,74,0.22)" : "none",
+              transition: "all 0.15s ease",
+            }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: "17px", color: modoConvite === "BOAS_VINDAS" ? "#38bdf8" : "#64748b" }}>
+              verified_user
+            </span>
+            <span>Boas-Vindas Oficial (Uso Definitivo)</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setModoConvite("HOMOLOGACAO");
+              setFiltroStatus("TODOS");
+              setSelecionados([]);
+              setPaginaAtual(1);
+            }}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: "8px 16px",
+              borderRadius: "9px",
+              border: "none",
+              fontSize: "12.5px",
+              fontWeight: 800,
+              cursor: "pointer",
+              backgroundColor: modoConvite === "HOMOLOGACAO" ? "#0f2a4a" : "transparent",
+              color: modoConvite === "HOMOLOGACAO" ? "#ffffff" : "#475569",
+              boxShadow: modoConvite === "HOMOLOGACAO" ? "0 2px 6px rgba(15,42,74,0.22)" : "none",
+              transition: "all 0.15s ease",
+            }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: "17px", color: modoConvite === "HOMOLOGACAO" ? "#fbbf24" : "#64748b" }}>
+              science
+            </span>
+            <span>Convite de Homologação (Testes)</span>
+          </button>
+        </div>
+      </section>
+
       {/* =================================================================== */}
       {/* 1. CARDS DE MÉTRICAS KPI (ESTILOS PUROS EM LINHA)                   */}
       {/* =================================================================== */}
@@ -606,7 +974,7 @@ ${blocoApontamentosTexto}`;
         >
           <div>
             <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#94a3b8" }}>
-              Convites Disparados
+              {modoConvite === "BOAS_VINDAS" ? "Boas-Vindas Enviado" : "Convites Disparados"}
             </span>
             <div style={{ fontSize: "28px", fontWeight: 800, color: "#334155", marginTop: "4px" }}>
               {contadores.enviados}
@@ -631,7 +999,7 @@ ${blocoApontamentosTexto}`;
           </div>
         </div>
 
-        {/* Metric 4: Homologados */}
+        {/* Metric 4: Acesso Ativo / Homologados */}
         <div
           style={{
             backgroundColor: "var(--surface-container-lowest, #ffffff)",
@@ -646,13 +1014,13 @@ ${blocoApontamentosTexto}`;
         >
           <div>
             <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#059669" }}>
-              Homologados
+              {modoConvite === "BOAS_VINDAS" ? "Acesso Ativo (Em Uso)" : "Homologados"}
             </span>
             <div style={{ fontSize: "28px", fontWeight: 800, color: "#059669", marginTop: "4px" }}>
               {contadores.homologados}
             </div>
             <span style={{ fontSize: "12px", color: "#64748b", marginTop: "2px", display: "inline-block" }}>
-              Validação de perfil concluída
+              {modoConvite === "BOAS_VINDAS" ? "Usuários já operando na plataforma" : "Validação de perfil concluída"}
             </span>
           </div>
           <div
@@ -673,13 +1041,16 @@ ${blocoApontamentosTexto}`;
       </section>
 
       {/* =================================================================== */}
-      {/* 2. BANNER DE HOMOLOGAÇÃO ATIVA                                      */}
+      {/* 2. BANNER DE OPERAÇÃO ATIVA                                         */}
       {/* =================================================================== */}
       <section
         style={{
-          background: "linear-gradient(to right, #eff6ff 0%, #f0f9ff 50%, #ffffff 100%)",
+          background:
+            modoConvite === "BOAS_VINDAS"
+              ? "linear-gradient(to right, #ecfdf5 0%, #f0f9ff 50%, #ffffff 100%)"
+              : "linear-gradient(to right, #eff6ff 0%, #f0f9ff 50%, #ffffff 100%)",
           borderRadius: "16px",
-          border: "1px solid #bfdbfe",
+          border: modoConvite === "BOAS_VINDAS" ? "1px solid #a7f3d0" : "1px solid #bfdbfe",
           padding: "18px 22px",
           boxShadow: "0 1px 3px rgba(0,0,0,0.03)",
           display: "flex",
@@ -695,21 +1066,28 @@ ${blocoApontamentosTexto}`;
               width: "42px",
               height: "42px",
               borderRadius: "12px",
-              backgroundColor: "#2563eb",
+              backgroundColor: modoConvite === "BOAS_VINDAS" ? "#059669" : "#2563eb",
               color: "#ffffff",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               flexShrink: 0,
-              boxShadow: "0 4px 12px rgba(37,99,235,0.25)",
+              boxShadow:
+                modoConvite === "BOAS_VINDAS"
+                  ? "0 4px 12px rgba(5,150,105,0.25)"
+                  : "0 4px 12px rgba(37,99,235,0.25)",
             }}
           >
-            <span className="material-symbols-outlined" style={{ fontSize: "22px" }}>rocket_launch</span>
+            <span className="material-symbols-outlined" style={{ fontSize: "22px" }}>
+              {modoConvite === "BOAS_VINDAS" ? "verified_user" : "rocket_launch"}
+            </span>
           </div>
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
               <h4 style={{ margin: 0, fontSize: "14px", fontWeight: 800, color: "#0f172a" }}>
-                Fase de Homologação Ativa • Exercício 2026
+                {modoConvite === "BOAS_VINDAS"
+                  ? "E-mail Oficial de Boas-Vindas & Liberação Definitiva de Acesso"
+                  : "Fase de Homologação Ativa • Exercício 2026"}
               </h4>
               <span
                 style={{
@@ -717,13 +1095,13 @@ ${blocoApontamentosTexto}`;
                   fontWeight: 800,
                   textTransform: "uppercase",
                   letterSpacing: "0.05em",
-                  backgroundColor: "#dbeafe",
-                  color: "#1e40af",
+                  backgroundColor: modoConvite === "BOAS_VINDAS" ? "#d1fae5" : "#dbeafe",
+                  color: modoConvite === "BOAS_VINDAS" ? "#065f46" : "#1e40af",
                   padding: "2px 8px",
                   borderRadius: "6px",
                 }}
               >
-                Homologação Oficial
+                {modoConvite === "BOAS_VINDAS" ? "Produção Oficial" : "Homologação Oficial"}
               </span>
             </div>
             <p style={{ margin: "4px 0 0 0", fontSize: "12px", color: "#475569", lineHeight: 1.5 }}>
@@ -737,8 +1115,16 @@ ${blocoApontamentosTexto}`;
                 {URL_OFICIAL_LOGIN}
               </a>{" "}
               <span style={{ margin: "0 8px", color: "#cbd5e1" }}>|</span>{" "}
-              Canal de suporte e apontamentos:{" "}
-              <strong style={{ color: "#1e293b" }}>Microsoft Teams da Equipe de Gestão NNÓS</strong>
+              {modoConvite === "BOAS_VINDAS" ? (
+                <>
+                  Envia credenciais oficiais de produção personalizadas por perfil com logomarca NNÓS embutida.
+                </>
+              ) : (
+                <>
+                  Canal de suporte e apontamentos:{" "}
+                  <strong style={{ color: "#1e293b" }}>Microsoft Teams da Equipe de Gestão NNÓS</strong>
+                </>
+              )}
             </p>
           </div>
         </div>
@@ -841,9 +1227,13 @@ ${blocoApontamentosTexto}`;
               setFiltroStatus(String(val));
               setPaginaAtual(1);
             }}
-            options={OPCOES_FILTRO_STATUS}
+            options={
+              modoConvite === "BOAS_VINDAS"
+                ? OPCOES_FILTRO_STATUS_BOAS_VINDAS
+                : OPCOES_FILTRO_STATUS_HOMOLOGACAO
+            }
             icon="filter_list"
-            minWidth={240}
+            minWidth={250}
             searchable={false}
           />
 
@@ -938,8 +1328,12 @@ ${blocoApontamentosTexto}`;
                 </th>
                 <th style={{ padding: "14px 16px" }}>Usuário / Identificação</th>
                 <th style={{ padding: "14px 16px" }}>Perfil Vinculado</th>
-                <th style={{ padding: "14px 16px" }}>Status de Homologação</th>
-                <th style={{ padding: "14px 16px" }}>Envio do Convite</th>
+                <th style={{ padding: "14px 16px" }}>
+                  {modoConvite === "BOAS_VINDAS" ? "Status do Acesso Oficial" : "Status de Homologação"}
+                </th>
+                <th style={{ padding: "14px 16px" }}>
+                  {modoConvite === "BOAS_VINDAS" ? "Disparo de Boas-Vindas / Último Login" : "Envio do Convite"}
+                </th>
                 <th style={{ padding: "14px 20px", textAlign: "right" }}>Ações</th>
               </tr>
             </thead>
@@ -969,8 +1363,17 @@ ${blocoApontamentosTexto}`;
                   const homoInfo = homologacoes[u.id] || {
                     status: "PENDENTE",
                     conviteEnviadoEm: null,
+                    boasVindasStatus: "PENDENTE",
+                    boasVindasEnviadoEm: null,
                     apontamentos: "",
                   };
+                  const statusBoasVindas = obterStatusBoasVindasEfetivo(u);
+                  const statusExibido =
+                    modoConvite === "BOAS_VINDAS" ? statusBoasVindas : homoInfo.status;
+                  const dataEnvioExibida =
+                    modoConvite === "BOAS_VINDAS"
+                      ? homoInfo.boasVindasEnviadoEm
+                      : homoInfo.conviteEnviadoEm;
 
                   const ehPrioritario = u.perfilId === "LIDER" || u.perfilId === "AGENCIA";
                   const avatarColor = obterCorAvatar(u.perfilId, u.nome);
@@ -1072,9 +1475,9 @@ ${blocoApontamentosTexto}`;
                         </span>
                       </td>
 
-                      {/* Status de Homologação */}
+                      {/* Status de Acesso / Homologação */}
                       <td style={{ padding: "14px 16px" }}>
-                        {homoInfo.status === "HOMOLOGADO" && (
+                        {(statusExibido === "HOMOLOGADO" || statusExibido === "ACESSO_ATIVO") && (
                           <span
                             style={{
                               display: "inline-flex",
@@ -1090,10 +1493,10 @@ ${blocoApontamentosTexto}`;
                             }}
                           >
                             <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#10b981" }} />
-                            <span>Homologado</span>
+                            <span>{statusExibido === "ACESSO_ATIVO" ? "Acesso Ativo (Em Uso)" : "Homologado"}</span>
                           </span>
                         )}
-                        {homoInfo.status === "CONVITE_ENVIADO" && (
+                        {(statusExibido === "CONVITE_ENVIADO" || statusExibido === "BOAS_VINDAS_ENVIADO") && (
                           <span
                             style={{
                               display: "inline-flex",
@@ -1109,10 +1512,12 @@ ${blocoApontamentosTexto}`;
                             }}
                           >
                             <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#3b82f6" }} />
-                            <span>Convite Enviado</span>
+                            <span>
+                              {statusExibido === "BOAS_VINDAS_ENVIADO" ? "Boas-Vindas Enviado" : "Convite Enviado"}
+                            </span>
                           </span>
                         )}
-                        {homoInfo.status === "EM_VALIDACAO" && (
+                        {statusExibido === "EM_VALIDACAO" && (
                           <span
                             style={{
                               display: "inline-flex",
@@ -1131,7 +1536,7 @@ ${blocoApontamentosTexto}`;
                             <span>Em Validação</span>
                           </span>
                         )}
-                        {homoInfo.status === "PENDENTE" && (
+                        {statusExibido === "PENDENTE" && (
                           <span
                             style={{
                               display: "inline-flex",
@@ -1147,19 +1552,37 @@ ${blocoApontamentosTexto}`;
                             }}
                           >
                             <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#f59e0b" }} />
-                            <span>Pendente de Envio</span>
+                            <span>
+                              {modoConvite === "BOAS_VINDAS" ? "Pendente de Boas-Vindas" : "Pendente de Envio"}
+                            </span>
                           </span>
                         )}
                       </td>
 
-                      {/* Envio do Convite */}
+                      {/* Envio do Convite / Último Login */}
                       <td style={{ padding: "14px 16px", color: "#64748b", fontSize: "11.5px" }}>
-                        {homoInfo.conviteEnviadoEm ? (
-                          <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "#1d4ed8", fontWeight: 600 }}>
-                            <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "#2563eb" }}>
-                              check_circle
+                        {dataEnvioExibida ? (
+                          <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "#1d4ed8", fontWeight: 600 }}>
+                              <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "#2563eb" }}>
+                                check_circle
+                              </span>
+                              <span>Enviado: {dataEnvioExibida}</span>
+                            </div>
+                            {modoConvite === "BOAS_VINDAS" && u.ultimoAcesso && (
+                              <span style={{ fontSize: "10.5px", color: "#059669", fontWeight: 600 }}>
+                                Último login: {formatarDataHoraBR(u.ultimoAcesso)}
+                              </span>
+                            )}
+                          </div>
+                        ) : modoConvite === "BOAS_VINDAS" && u.ultimoAcesso ? (
+                          <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                            <span style={{ fontSize: "11px", color: "#059669", fontWeight: 700 }}>
+                              Último login: {formatarDataHoraBR(u.ultimoAcesso)}
                             </span>
-                            <span>{homoInfo.conviteEnviadoEm}</span>
+                            <span style={{ fontSize: "10.5px", color: "#94a3b8" }}>
+                              Boas-vindas ainda não disparado
+                            </span>
                           </div>
                         ) : (
                           <span style={{ display: "inline-flex", alignItems: "center", gap: "5px", color: "#94a3b8" }}>
@@ -1201,7 +1624,7 @@ ${blocoApontamentosTexto}`;
                             <span>Ver E-mail</span>
                           </button>
 
-                          {/* Botão Disparar -> Navy #0f2a4a com ícone send */}
+                          {/* Botão Disparar -> Navy #0f2a4a ou Verde #059669 com ícone send */}
                           <button
                             type="button"
                             onClick={() => handleRegistrarDisparo(u)}
@@ -1211,7 +1634,7 @@ ${blocoApontamentosTexto}`;
                               gap: "5px",
                               padding: "6px 12px",
                               borderRadius: "8px",
-                              backgroundColor: "#0f2a4a",
+                              backgroundColor: modoConvite === "BOAS_VINDAS" ? "#059669" : "#0f2a4a",
                               color: "#ffffff",
                               fontSize: "12px",
                               fontWeight: 700,
@@ -1221,10 +1644,20 @@ ${blocoApontamentosTexto}`;
                               transition: "all 0.15s ease",
                               whiteSpace: "nowrap",
                             }}
-                            title="Registrar envio do convite no log de homologação"
+                            title={
+                              modoConvite === "BOAS_VINDAS"
+                                ? "Disparar E-mail Oficial de Boas-Vindas & Liberação de Acesso"
+                                : "Registrar envio do convite no log de homologação"
+                            }
                           >
                             <span className="material-symbols-outlined" style={{ fontSize: "15px" }}>send</span>
-                            <span>Disparar</span>
+                            <span>
+                              {modoConvite === "BOAS_VINDAS"
+                                ? dataEnvioExibida
+                                  ? "Reenviar Boas-Vindas"
+                                  : "Enviar Boas-Vindas"
+                                : "Disparar"}
+                            </span>
                           </button>
 
                           {/* Copiar Link de Login Individual */}
@@ -1260,15 +1693,25 @@ ${blocoApontamentosTexto}`;
                           <button
                             type="button"
                             onClick={() => {
-                              const proximo =
-                                homoInfo.status === "PENDENTE"
-                                  ? "CONVITE_ENVIADO"
-                                  : homoInfo.status === "CONVITE_ENVIADO"
-                                  ? "EM_VALIDACAO"
-                                  : homoInfo.status === "EM_VALIDACAO"
-                                  ? "HOMOLOGADO"
-                                  : "PENDENTE";
-                              handleAtualizarStatus(u, proximo as any);
+                              if (modoConvite === "BOAS_VINDAS") {
+                                const proximo =
+                                  statusExibido === "PENDENTE"
+                                    ? "BOAS_VINDAS_ENVIADO"
+                                    : statusExibido === "BOAS_VINDAS_ENVIADO"
+                                    ? "ACESSO_ATIVO"
+                                    : "PENDENTE";
+                                handleAtualizarStatus(u, proximo);
+                              } else {
+                                const proximo =
+                                  homoInfo.status === "PENDENTE"
+                                    ? "CONVITE_ENVIADO"
+                                    : homoInfo.status === "CONVITE_ENVIADO"
+                                    ? "EM_VALIDACAO"
+                                    : homoInfo.status === "EM_VALIDACAO"
+                                    ? "HOMOLOGADO"
+                                    : "PENDENTE";
+                                handleAtualizarStatus(u, proximo);
+                              }
                             }}
                             style={{
                               padding: "6px",
@@ -1466,7 +1909,11 @@ ${blocoApontamentosTexto}`;
                       flexWrap: "wrap",
                     }}
                   >
-                    <span>E-mail Oficial de Homologação</span>
+                    <span>
+                      {modoConvite === "BOAS_VINDAS"
+                        ? "E-mail Oficial de Boas-Vindas (Acesso Definitivo)"
+                        : "E-mail Oficial de Homologação"}
+                    </span>
                     <span style={{ color: "#94a3b8", fontWeight: 300 }}>•</span>
                     <span>{usuarioSelecionado.nome}</span>
                   </h1>
@@ -1549,7 +1996,7 @@ ${blocoApontamentosTexto}`;
                 <div style={{ paddingBottom: "14px", borderBottom: "1px solid #f1f5f9", display: "flex", alignItems: "baseline", gap: "10px" }}>
                   <span style={{ fontWeight: 800, color: "#0f172a", flexShrink: 0 }}>Assunto:</span>
                   <span style={{ fontWeight: 700, color: "#0c4a6e" }}>
-                    {obterAssuntoConvite(usuarioSelecionado)}
+                    {obterAssuntoConvite(usuarioSelecionado, modoConvite)}
                   </span>
                 </div>
 
@@ -1560,7 +2007,45 @@ ${blocoApontamentosTexto}`;
                       ? "Olá, Fátima e Equipe, tudo bem?"
                       : `Olá, ${usuarioSelecionado.nome}, tudo bem?`}
                   </p>
-                  {ehPerfilAgencia(usuarioSelecionado) ? (
+                  {modoConvite === "BOAS_VINDAS" ? (
+                    ehPerfilAgencia(usuarioSelecionado) ? (
+                      <>
+                        <p style={{ margin: 0 }}>
+                          Seja muito bem-vinda ao módulo oficial de <strong style={{ color: "#0f172a" }}>Viagens &amp; Logística</strong> da plataforma corporativa <strong style={{ color: "#0f172a" }}>NNÓS Gestão Financeira &amp; Projetos</strong>!
+                        </p>
+                        <p style={{ margin: 0 }}>
+                          A partir de agora, todas as solicitações de passagens aéreas, hospedagens, locações, aprovações de líderes, gestão de créditos e envio de vouchers aos viajantes passam a ser operadas de forma centralizada e oficial através do nosso portal.
+                        </p>
+                        <p style={{ margin: 0 }}>
+                          Abaixo estão suas credenciais definitivas de acesso e o resumo das funcionalidades disponíveis para a rotina diária da agência:
+                        </p>
+                      </>
+                    ) : ehPerfilConsultor(usuarioSelecionado) ? (
+                      <>
+                        <p style={{ margin: 0 }}>
+                          É uma satisfação dar as boas-vindas oficiais a você no <strong style={{ color: "#0f172a" }}>Portal do Consultor</strong> da plataforma <strong style={{ color: "#0f172a" }}>NNÓS Gestão Financeira &amp; Projetos</strong>!
+                        </p>
+                        <p style={{ margin: 0 }}>
+                          Seu acesso definitivo já está liberado! Este ambiente foi desenvolvido exclusivamente para centralizar e facilitar toda a sua rotina operacional e financeira com a NNÓS: acompanhamento da sua agenda de treinamentos, bloqueio de datas, consulta de passagens e vouchers de viagem, assinatura digital de Boletins de Medição (BMs) e gestão dos seus recebimentos.
+                        </p>
+                        <p style={{ margin: 0 }}>
+                          Confira abaixo o que você já pode utilizar no seu Portal e os seus dados oficiais de acesso:
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <p style={{ margin: 0 }}>
+                          É uma satisfação dar as boas-vindas oficiais a você na plataforma corporativa <strong style={{ color: "#0f172a" }}>NNÓS Gestão Financeira &amp; Projetos</strong>!
+                        </p>
+                        <p style={{ margin: 0 }}>
+                          Seu acesso definitivo em produção já está ativo! A plataforma integra em um único ambiente o planejamento operacional de turmas, o fluxo de cotação e aprovação de viagens, a emissão e assinatura digital de Boletins de Medição (BMs) via Zoho Sign, o faturamento e a Central Executiva de Relatórios.
+                        </p>
+                        <p style={{ margin: 0 }}>
+                          Confira abaixo os principais módulos liberados para o seu perfil e as suas credenciais oficiais de acesso:
+                        </p>
+                      </>
+                    )
+                  ) : ehPerfilAgencia(usuarioSelecionado) ? (
                     <>
                       <p style={{ margin: 0 }}>
                         Gostaríamos de dar as boas-vindas ao novo módulo de <strong style={{ color: "#0f172a" }}>Viagens &amp; Logística</strong> do sistema corporativo da NNÓS Consultoria!
@@ -1599,7 +2084,7 @@ ${blocoApontamentosTexto}`;
                   )}
                 </div>
 
-                {/* Seção 1: Escopo de Validação Estruturado */}
+                {/* Seção 1: Escopo de Módulos / Validação Estruturado */}
                 <div
                   style={{
                     backgroundColor: "#f8fafc",
@@ -1626,7 +2111,13 @@ ${blocoApontamentosTexto}`;
                   >
                     <span>🎯</span>{" "}
                     <span>
-                      {ehPerfilAgencia(usuarioSelecionado)
+                      {modoConvite === "BOAS_VINDAS"
+                        ? ehPerfilAgencia(usuarioSelecionado)
+                          ? "PRINCIPAIS RECURSOS DISPONÍVEIS PARA A AGÊNCIA FÁTIMA:"
+                          : ehPerfilConsultor(usuarioSelecionado)
+                          ? "O QUE VOCÊ JÁ PODE UTILIZAR NO SEU PORTAL DO CONSULTOR:"
+                          : "PRINCIPAIS MÓDULOS DISPONÍVEIS NO SEU PERFIL:"
+                        : ehPerfilAgencia(usuarioSelecionado)
                         ? "FOCO PRINCIPAL DA VALIDAÇÃO PELA AGÊNCIA FÁTIMA:"
                         : ehPerfilConsultor(usuarioSelecionado)
                         ? "O QUE PRECISAMOS QUE VOCÊ TESTE E VALIDE (PORTAL DO CONSULTOR):"
@@ -1793,7 +2284,7 @@ ${blocoApontamentosTexto}`;
                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                       <span style={{ color: "#475569" }}>• Senha Inicial:</span>
                       <span style={{ fontWeight: 800, color: "#0f172a", backgroundColor: "#ffffff", padding: "2px 8px", borderRadius: "6px", border: "1px solid #fde68a", fontFamily: "monospace", fontSize: "12px" }}>
-                        {usuarioSelecionado.senha || (ehPerfilAgencia(usuarioSelecionado) ? "viagem2026" : "nnos2026")}
+                        {obterSenhaLegivel(usuarioSelecionado)}
                       </span>
                     </div>
                     {ehPerfilAgencia(usuarioSelecionado) ? (
@@ -1852,37 +2343,73 @@ ${blocoApontamentosTexto}`;
                   </div>
                 </div>
 
-                {/* Seção 4: Canal de Apontamentos & Assinatura */}
-                <div style={{ paddingTop: "10px", borderTop: "1px solid #f1f5f9", fontSize: "12.5px", color: "#475569", display: "flex", flexDirection: "column", gap: "10px" }}>
-                  <h3 style={{ margin: 0, fontSize: "12px", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 800, color: "#0f172a" }}>
-                    📝 COMO ENVIAR SEUS APONTAMENTOS DE MELHORIA:
-                  </h3>
-                  <p style={{ margin: 0 }}>
-                    Pedimos que envie seus feedbacks, processos divergentes ou sugestões diretamente pelo canal de{" "}
-                    <strong style={{ color: "#0f172a" }}>Microsoft Teams da Equipe de Gestão NNÓS</strong> ou respondendo a este e-mail indicando:
-                  </p>
-                  <ol style={{ margin: 0, paddingLeft: "20px", display: "flex", flexDirection: "column", gap: "4px", color: "#64748b" }}>
-                    <li>Em qual tela você estava navegando;</li>
-                    <li>O que ocorreu de diferente do seu processo real;</li>
-                    <li>Sugestão de melhoria ou print da tela.</li>
-                  </ol>
-                  <p style={{ margin: 0, color: "#334155" }}>
-                    {ehPerfilAgencia(usuarioSelecionado)
-                      ? "Muito obrigado pela parceria contínua!"
-                      : "Contamos muito com sua colaboração para colocarmos no ar o melhor sistema de gestão que a NNÓS já teve!"}
-                  </p>
-                  <div style={{ paddingTop: "6px" }}>
-                    <p style={{ margin: 0, fontWeight: 700, color: "#1e293b" }}>
-                      {ehPerfilAgencia(usuarioSelecionado) ? "Atenciosamente," : "Um abraço,"}
+                {/* Seção 4: Segurança / Apontamentos & Assinatura */}
+                {modoConvite === "BOAS_VINDAS" ? (
+                  <div style={{ paddingTop: "10px", borderTop: "1px solid #f1f5f9", fontSize: "12.5px", color: "#475569", display: "flex", flexDirection: "column", gap: "10px" }}>
+                    <h3 style={{ margin: 0, fontSize: "12px", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 800, color: "#0f172a" }}>
+                      🔒 SEGURANÇA DA CONTA &amp; BOAS PRÁTICAS DE ACESSO:
+                    </h3>
+                    <ul style={{ margin: 0, paddingLeft: "20px", display: "flex", flexDirection: "column", gap: "4px", color: "#64748b" }}>
+                      <li>Suas credenciais são pessoais e intransferíveis, garantindo a rastreabilidade das aprovações e operações no sistema.</li>
+                      <li>
+                        {usuarioSelecionado.mfaAtivo
+                          ? "Sua conta possui Autenticação em 2 Fatores (Google Authenticator - 2FA) ativa para proteção adicional."
+                          : 'Recomendamos manter seus dados de acesso em local seguro. Caso precise redefinir sua senha, utilize a opção "Esqueci minha senha" na tela de login.'}
+                      </li>
+                      <li>
+                        Sempre que precisar de apoio operacional, nossa equipe está à disposição pelo{" "}
+                        <strong style={{ color: "#0f172a" }}>Microsoft Teams da Equipe de Gestão NNÓS</strong> ou por este e-mail.
+                      </li>
+                    </ul>
+                    <p style={{ margin: 0, color: "#334155" }}>
+                      {ehPerfilAgencia(usuarioSelecionado)
+                        ? "Desejamos um excelente trabalho e agradecemos pela parceria contínua!"
+                        : "Seja muito bem-vindo(a) à nossa nova plataforma oficial de gestão!"}
                     </p>
-                    <p style={{ margin: "2px 0 0 0", fontWeight: 800, color: "#0f172a" }}>
-                      Leonardo Campos &amp; Equipe de Gestão NNÓS
-                    </p>
-                    <p style={{ margin: "1px 0 0 0", color: "#94a3b8", fontSize: "11.5px" }}>
-                      NNÓS Consultoria e Treinamento
-                    </p>
+                    <div style={{ paddingTop: "6px" }}>
+                      <p style={{ margin: 0, fontWeight: 700, color: "#1e293b" }}>
+                        {ehPerfilAgencia(usuarioSelecionado) ? "Atenciosamente," : "Um abraço,"}
+                      </p>
+                      <p style={{ margin: "2px 0 0 0", fontWeight: 800, color: "#0f172a" }}>
+                        Leonardo Campos &amp; Equipe de Gestão NNÓS
+                      </p>
+                      <p style={{ margin: "1px 0 0 0", color: "#94a3b8", fontSize: "11.5px" }}>
+                        NNÓS Consultoria e Treinamento
+                      </p>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div style={{ paddingTop: "10px", borderTop: "1px solid #f1f5f9", fontSize: "12.5px", color: "#475569", display: "flex", flexDirection: "column", gap: "10px" }}>
+                    <h3 style={{ margin: 0, fontSize: "12px", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 800, color: "#0f172a" }}>
+                      📝 COMO ENVIAR SEUS APONTAMENTOS DE MELHORIA:
+                    </h3>
+                    <p style={{ margin: 0 }}>
+                      Pedimos que envie seus feedbacks, processos divergentes ou sugestões diretamente pelo canal de{" "}
+                      <strong style={{ color: "#0f172a" }}>Microsoft Teams da Equipe de Gestão NNÓS</strong> ou respondendo a este e-mail indicando:
+                    </p>
+                    <ol style={{ margin: 0, paddingLeft: "20px", display: "flex", flexDirection: "column", gap: "4px", color: "#64748b" }}>
+                      <li>Em qual tela você estava navegando;</li>
+                      <li>O que ocorreu de diferente do seu processo real;</li>
+                      <li>Sugestão de melhoria ou print da tela.</li>
+                    </ol>
+                    <p style={{ margin: 0, color: "#334155" }}>
+                      {ehPerfilAgencia(usuarioSelecionado)
+                        ? "Muito obrigado pela parceria contínua!"
+                        : "Contamos muito com sua colaboração para colocarmos no ar o melhor sistema de gestão que a NNÓS já teve!"}
+                    </p>
+                    <div style={{ paddingTop: "6px" }}>
+                      <p style={{ margin: 0, fontWeight: 700, color: "#1e293b" }}>
+                        {ehPerfilAgencia(usuarioSelecionado) ? "Atenciosamente," : "Um abraço,"}
+                      </p>
+                      <p style={{ margin: "2px 0 0 0", fontWeight: 800, color: "#0f172a" }}>
+                        Leonardo Campos &amp; Equipe de Gestão NNÓS
+                      </p>
+                      <p style={{ margin: "1px 0 0 0", color: "#94a3b8", fontSize: "11.5px" }}>
+                        NNÓS Consultoria e Treinamento
+                      </p>
+                    </div>
+                  </div>
+                )}
               </article>
             </div>
 
@@ -1927,8 +2454,8 @@ ${blocoApontamentosTexto}`;
 
                 <a
                   href={`mailto:${usuarioSelecionado.email}?subject=${encodeURIComponent(
-                    obterAssuntoConvite(usuarioSelecionado)
-                  )}&body=${encodeURIComponent(gerarTextoEmailPuro(usuarioSelecionado))}`}
+                    obterAssuntoConvite(usuarioSelecionado, modoConvite)
+                  )}&body=${encodeURIComponent(gerarTextoEmailPuro(usuarioSelecionado, modoConvite))}`}
                   style={{
                     display: "inline-flex",
                     alignItems: "center",
@@ -1971,8 +2498,12 @@ ${blocoApontamentosTexto}`;
                     boxShadow: "0 2px 8px rgba(5,150,105,0.25)",
                   }}
                 >
-                  <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>check_circle</span>
-                  <span>Registrar Envio &amp; Log</span>
+                  <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>send</span>
+                  <span>
+                    {modoConvite === "BOAS_VINDAS"
+                      ? "Disparar Boas-Vindas Oficial & Registrar"
+                      : "Disparar Convite & Registrar Log"}
+                  </span>
                 </button>
               </div>
             </footer>

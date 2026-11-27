@@ -44,6 +44,8 @@ export default function GestaoUsuariosELogs({ modo, perfis, onToast }: Props) {
 
   // Modal de Edição / Criação de Usuário
   const [modalUsuarioAberto, setModalUsuarioAberto] = useState(false);
+  const [enviarBoasVindasAoSalvar, setEnviarBoasVindasAoSalvar] = useState(true);
+  const [disparandoBoasVindasId, setDisparandoBoasVindasId] = useState<string | null>(null);
   const [formUser, setFormUser] = useState<any>({
     id: "",
     login: "",
@@ -108,6 +110,7 @@ export default function GestaoUsuariosELogs({ modo, perfis, onToast }: Props) {
   // ───────────────────────────────────────────────────────────────────────────
   const abrirModalNovoUsuario = () => {
     setMostrarSenhaModal(false);
+    setEnviarBoasVindasAoSalvar(true);
     setFormUser({
       id: "",
       login: "",
@@ -127,6 +130,7 @@ export default function GestaoUsuariosELogs({ modo, perfis, onToast }: Props) {
 
   const abrirModalEditarUsuario = (u: any) => {
     setMostrarSenhaModal(false);
+    setEnviarBoasVindasAoSalvar(false);
     setFormUser({
       id: u.id,
       login: u.login,
@@ -178,6 +182,88 @@ export default function GestaoUsuariosELogs({ modo, perfis, onToast }: Props) {
     reader.readAsDataURL(file);
   };
 
+  const handleDispararBoasVindasRapido = async (u: any, senhaEmClaro?: string) => {
+    if (!u.email) {
+      onToast(`Cadastre um e-mail para ${u.nome} antes de enviar o convite de Boas-Vindas.`);
+      return;
+    }
+    setDisparandoBoasVindasId(u.id || u.login);
+    try {
+      const ehAgencia =
+        u.perfilId === "AGENCIA" ||
+        String(u.email || "").toLowerCase().includes("fcconsultoriadeviagens");
+      const senhaParaEmail =
+        senhaEmClaro && !senhaEmClaro.startsWith("scrypt$")
+          ? senhaEmClaro
+          : !String(u.senha || "").startsWith("scrypt$") && u.senha
+          ? u.senha
+          : ehAgencia
+          ? "viagem2026"
+          : "nnos2026";
+
+      const res = await fetch("/api/admin/homologacao/enviar-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          usuarioNome: u.nome,
+          usuarioEmail: u.email,
+          usuarioLogin: u.login,
+          usuarioCargo: u.cargo,
+          usuarioSenha: senhaParaEmail,
+          perfilId: u.perfilId,
+          perfilNome: mapaPerfis[u.perfilId]?.nome || u.perfilId,
+          tipoConvite: "BOAS_VINDAS",
+          mfaAtivo: Boolean(u.mfaAtivo),
+        }),
+      });
+      const data = await res.json();
+
+      // Atualiza controle de convites no localStorage e no Supabase
+      try {
+        const agoraStr = formatarDataHoraBR(new Date().toISOString());
+        const salvo = JSON.parse(localStorage.getItem("nnos_homologacao_controles_v1") || "{}");
+        if (u.id) {
+          salvo[u.id] = {
+            ...(salvo[u.id] || { status: "PENDENTE", conviteEnviadoEm: null, apontamentos: "" }),
+            boasVindasStatus: "BOAS_VINDAS_ENVIADO",
+            boasVindasEnviadoEm: agoraStr,
+          };
+          localStorage.setItem("nnos_homologacao_controles_v1", JSON.stringify(salvo));
+          await fetch("/api/admin/homologacao/enviar-email", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ acao: "SALVAR_CONTROLES", controles: salvo }),
+          });
+        }
+      } catch {}
+
+      await fetch("/api/admin/logs-acesso", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          usuarioLogin: u.login,
+          usuarioNome: u.nome,
+          usuarioEmail: u.email,
+          perfilId: u.perfilId,
+          evento: "CONVITE_BOAS_VINDAS_OFICIAL",
+          metodo: "Gestão de Senhas & Usuários (Disparo Direto)",
+          status: "SUCESSO",
+          detalhes: `E-mail Oficial de Boas-Vindas e Credenciais enviado para ${u.email}.`,
+        }),
+      });
+
+      if (data?.sucesso) {
+        onToast(`✉️ E-mail Oficial de Boas-Vindas enviado para ${u.nome} (${u.email})!`);
+      } else {
+        onToast(`⚠️ Aviso no envio para ${u.email}: ${data?.mensagem || data?.erro || "Verifique o provedor"}`);
+      }
+    } catch (err: any) {
+      onToast(`Erro ao disparar Boas-Vindas: ${err.message}`);
+    } finally {
+      setDisparandoBoasVindasId(null);
+    }
+  };
+
   const handleSalvarUsuario = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formUser.nome.trim() || !formUser.login.trim()) {
@@ -186,6 +272,7 @@ export default function GestaoUsuariosELogs({ modo, perfis, onToast }: Props) {
     }
 
     try {
+      const senhaDigitada = formUser.senha ? String(formUser.senha).trim() : "";
       const res = await fetch("/api/admin/usuarios", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -210,7 +297,22 @@ export default function GestaoUsuariosELogs({ modo, perfis, onToast }: Props) {
         }
 
         setModalUsuarioAberto(false);
-        onToast(formUser.id ? `Usuário ${formUser.nome} atualizado com sucesso!` : `Usuário ${formUser.nome} criado com sucesso!`);
+        const usuarioSalvo =
+          data.usuario ||
+          (Array.isArray(data.usuarios)
+            ? data.usuarios.find((x: any) => x.login === formUser.login)
+            : null) ||
+          formUser;
+
+        if (enviarBoasVindasAoSalvar && usuarioSalvo?.email) {
+          await handleDispararBoasVindasRapido(usuarioSalvo, senhaDigitada);
+        } else {
+          onToast(
+            formUser.id
+              ? `Usuário ${formUser.nome} atualizado com sucesso!`
+              : `Usuário ${formUser.nome} criado com sucesso!`
+          );
+        }
         carregarDados();
       }
     } catch {
@@ -667,6 +769,33 @@ export default function GestaoUsuariosELogs({ modo, perfis, onToast }: Props) {
                       <div style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
                         <button
                           type="button"
+                          onClick={() => handleDispararBoasVindasRapido(u)}
+                          disabled={disparandoBoasVindasId === (u.id || u.login)}
+                          style={{
+                            padding: "5px 10px",
+                            borderRadius: "7px",
+                            border: "1px solid #a7f3d0",
+                            backgroundColor: "#ecfdf5",
+                            color: "#047857",
+                            fontSize: "11.5px",
+                            fontWeight: 700,
+                            cursor: disparandoBoasVindasId === (u.id || u.login) ? "wait" : "pointer",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "4px",
+                          }}
+                          title="Enviar E-mail Oficial de Boas-Vindas com as credenciais de acesso para este usuário"
+                        >
+                          <span className="material-symbols-outlined" style={{ fontSize: "15px" }}>
+                            forward_to_inbox
+                          </span>
+                          <span>
+                            {disparandoBoasVindasId === (u.id || u.login) ? "Enviando..." : "Boas-Vindas"}
+                          </span>
+                        </button>
+
+                        <button
+                          type="button"
                           onClick={() => abrirModalEditarUsuario(u)}
                           style={{
                             padding: "5px 10px",
@@ -1026,6 +1155,29 @@ export default function GestaoUsuariosELogs({ modo, perfis, onToast }: Props) {
                   />
                   <span style={{ fontSize: "12.5px", fontWeight: 700, color: "var(--primary)" }}>
                     Habilitar Autenticação em 2 Fatores (MFA — Google Authenticator)
+                  </span>
+                </label>
+
+                <label
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px",
+                    padding: "10px 14px",
+                    borderRadius: "10px",
+                    backgroundColor: "#ecfdf5",
+                    border: "1px solid #a7f3d0",
+                    cursor: "pointer",
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={enviarBoasVindasAoSalvar}
+                    onChange={(e) => setEnviarBoasVindasAoSalvar(e.target.checked)}
+                    style={{ width: "16px", height: "16px", accentColor: "#059669" }}
+                  />
+                  <span style={{ fontSize: "12.5px", fontWeight: 700, color: "#065f46" }}>
+                    ✉️ Disparar E-mail Oficial de Boas-Vindas com as credenciais ao salvar
                   </span>
                 </label>
 

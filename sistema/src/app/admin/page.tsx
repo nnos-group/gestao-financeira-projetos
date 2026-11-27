@@ -810,14 +810,14 @@ export default function AdminPage() {
                   {
                     id: "HOMOLOGACAO",
                     numero: "6",
-                    titulo: "6. Homologação",
+                    titulo: "6. Convites & Boas-Vindas",
                     icone: "mark_email_read",
                     iconBg: "#87ddff",
                     iconColor: "#00627b",
-                    badge: "PRIORITÁRIO",
+                    badge: "ONBOARDING",
                     badgeBg: "#006781",
                     badgeColor: "#ffffff",
-                    subtitulo: "Convites & Assinatura Digital",
+                    subtitulo: "Boas-Vindas Oficial & Homologação",
                   },
                 ].map((aba) => {
                   const isAtiva = abaAtiva === aba.id;
