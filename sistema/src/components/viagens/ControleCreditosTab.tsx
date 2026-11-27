@@ -841,7 +841,7 @@ export default function ControleCreditosTab({
             { value: "EXPIRADO", label: "Expirados / Indisponíveis (> 1 ano)" },
             { value: "NÃO", label: "Não Utilizados (Disponíveis + Expirados)" },
             { value: "SIM", label: "Já Utilizados / Concluídos (SIM)" },
-            { value: "TODOS", label: "Crédito Utilizado: Todos" },
+            { value: "TODOS", label: "Todos" },
           ]}
           icon="filter_alt"
           minWidth="245px"

@@ -348,6 +348,40 @@ export async function POST(request: Request) {
     const body = await request.json();
     const historico = await obterHistoricoRelatorios();
 
+    // Modo exclusivo de teste de envio de e-mail para um destinatário específico (ex.: leonardo.campos@nnos.com.br)
+    if (body.acao === "testar_email_individual") {
+      const relId = String(body.relatorioId || historico[0]?.id || "");
+      const idxRel = historico.findIndex((r) => r.id === relId);
+      const relAlvo = idxRel >= 0 ? historico[idxRel] : historico[0];
+      const relAnt = idxRel >= 0 && idxRel + 1 < historico.length ? historico[idxRel + 1] : historico[1] || null;
+
+      if (!relAlvo) {
+        return NextResponse.json({ error: "Nenhum relatório encontrado para gerar o e-mail de teste." }, { status: 404 });
+      }
+
+      const emailAlvo = String(body.emailDestinatario || "leonardo.campos@nnos.com.br").trim();
+      const nomeAlvo = String(body.nomeDestinatario || "Leonardo Campos").trim();
+      const loginAlvo = String(body.loginDestinatario || "leonardo.campos").trim();
+      const dataBR = formatarDataBR(relAlvo.dataReferencia);
+      const assunto = `📊 [TESTE] Acompanhamento Semanal NNÓS (${dataBR} • ${relAlvo.mesReferencia}) | Resumo Executivo`;
+      const html = construirHtmlEmailExecutivo(relAlvo, relAnt, nomeAlvo, loginAlvo);
+
+      const resultado = await dispararEmail({
+        para: emailAlvo,
+        assunto,
+        html,
+      });
+
+      return NextResponse.json({
+        success: true,
+        testeIndividual: true,
+        destinatario: emailAlvo,
+        assunto,
+        htmlPreview: html,
+        resultado,
+      });
+    }
+
     const dataReferencia = String(body.dataReferencia || new Date().toISOString().slice(0, 10)).trim();
     const dt = parseDataISO(dataReferencia);
     const mesReferencia = String(body.mesReferencia || MESES_NOMES[dt.getMonth()] || "NOVEMBRO").trim().toUpperCase();
@@ -486,12 +520,17 @@ export async function POST(request: Request) {
       console.warn("Aviso ao salvar histórico no Supabase:", e);
     }
 
-    // Identificar o relatório anterior ao recém-salvo para compor as variações no resumo executivo do e-mail
     const idxNovo = atualizado.findIndex((r) => r.id === novoRelatorio.id);
     const relAnterior = idxNovo >= 0 && idxNovo + 1 < atualizado.length ? atualizado[idxNovo + 1] : null;
+    const htmlPreview = construirHtmlEmailExecutivo(
+      novoRelatorio,
+      relAnterior,
+      "Leonardo Campos",
+      "leonardo.campos"
+    );
 
     // Disparo automático de e-mail executivo para a Diretoria Executiva e Admin
-    const resultadosEmail: { destinatario: string; sucesso: boolean; modo?: string }[] = [];
+    const resultadosEmail: { destinatario: string; sucesso: boolean; modo?: string; mensagem?: string }[] = [];
     try {
       const todosUsuarios: any[] = await lerUsuariosAsync();
       const destinatariosDiretoria = todosUsuarios.filter(
@@ -515,6 +554,7 @@ export async function POST(request: Request) {
           destinatario: dest.email,
           sucesso: resEmail.sucesso,
           modo: resEmail.modo,
+          mensagem: resEmail.mensagem,
         });
       }
     } catch (e) {
@@ -526,6 +566,7 @@ export async function POST(request: Request) {
       relatorio: novoRelatorio,
       historico: atualizado,
       emailsDisparados: resultadosEmail,
+      htmlPreview,
     });
   } catch (err: any) {
     return NextResponse.json({ error: err.message || "Erro ao salvar relatório semanal" }, { status: 500 });
