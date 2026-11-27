@@ -107,6 +107,12 @@ export interface ViagemSolicitacao {
   aprovadoEm?: string;
   justificativasLider?: Record<string, string>;
 
+  // Devolutiva do Líder para a Agência (solicitação de correção de cotação)
+  devolvidoParaAgencia?: boolean;
+  motivoDevolutivaAgencia?: string;
+  devolvidoPor?: string;
+  devolvidoEm?: string;
+
   // Vouchers e e-mail
   vouchersEnviadosEm?: string;
   destinatariosEnvio?: string[];

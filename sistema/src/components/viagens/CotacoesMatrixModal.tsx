@@ -170,6 +170,10 @@ export default function CotacoesMatrixModal({
   const [showEmailPreviewModal, setShowEmailPreviewModal] = useState(false);
   const [emailPreviewData, setEmailPreviewData] = useState<any>(null);
 
+  // Modal de Devolutiva do Líder para a Agência (Solicitação de Correção antes da aprovação)
+  const [showDevolutivaModal, setShowDevolutivaModal] = useState(false);
+  const [motivoDevolutivaInput, setMotivoDevolutivaInput] = useState("");
+
   const brl = (v: number) =>
     (v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
@@ -585,6 +589,57 @@ export default function CotacoesMatrixModal({
     }
   };
 
+  // Ação 2.1: Líder de Projeto abre o popup de devolutiva para a Agência (pré-preenchendo observações já digitadas)
+  const abrirPopupDevolutivaAgencia = () => {
+    const observacoesPreenchidas = categoriasState
+      .map((cat) => {
+        const txt = (justificativasLider[cat.categoria] || "").trim();
+        return txt ? `${cat.nomeExibicao}: ${txt}` : "";
+      })
+      .filter(Boolean)
+      .join("\n\n");
+
+    setMotivoDevolutivaInput((prev) => prev.trim() || observacoesPreenchidas || "");
+    setShowDevolutivaModal(true);
+  };
+
+  // Ação 2.2: Líder confirma a devolutiva para a Agência com a justificativa de correção
+  const handleConfirmarDevolutivaAgencia = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const motivo = motivoDevolutivaInput.trim();
+    if (!motivo) {
+      showToast("⚠️ Informe a justificativa da devolução para orientar a correção pela Agência.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await fetch("/api/viagens/aprovar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          acao: "DEVOLVER_COTACAO",
+          solicitacaoId: sol.id,
+          motivoDevolutiva: motivo,
+          justificativas: justificativasLider,
+          aprovadorNome: obterDadosLiderViagem(sol).nome || "Líder de Projeto",
+        }),
+      });
+      const data = await lerRespostaSegura(res);
+      if (!res.ok || !data.ok) throw new Error(data.error || "Falha ao devolver cotação para a agência");
+
+      setSol(data.solicitacao);
+      setShowDevolutivaModal(false);
+      showToast("🔄 Cotação devolvida para a Agência com a justificativa de correção!");
+      onAtualizar(data.solicitacao);
+      onClose();
+    } catch (err: any) {
+      showToast(`Erro ao devolver cotação: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Ação 3: Agência registra compras, fornecedor, localizador e valor final pago
   const handleRegistrarComprasAgencia = async () => {
     setLoading(true);
@@ -858,6 +913,53 @@ export default function CotacoesMatrixModal({
               </button>
             </div>
           </div>
+
+          {/* Banner de Devolutiva do Líder para a Agência (Solicitação de Correção) */}
+          {sol.devolvidoParaAgencia && sol.motivoDevolutivaAgencia && (
+            <div
+              style={{
+                backgroundColor: "#fff7ed",
+                borderBottom: "1px solid #fdba74",
+                padding: "12px 24px",
+                display: "flex",
+                alignItems: "flex-start",
+                justifyContent: "space-between",
+                gap: "12px",
+                color: "#9a3412",
+                flexWrap: "wrap",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", flex: 1, minWidth: "280px" }}>
+                <span className="material-symbols-outlined" style={{ fontSize: "22px", color: "#ea580c", marginTop: "2px" }}>
+                  assignment_return
+                </span>
+                <div style={{ fontSize: "13px" }}>
+                  <div style={{ fontWeight: 800, color: "#9a3412" }}>
+                    Devolutiva do Líder para Correção da Agência
+                    {sol.devolvidoPor ? ` (${sol.devolvidoPor}` : ""}
+                    {sol.devolvidoEm ? ` • ${formatarDataHoraBR(sol.devolvidoEm)})` : sol.devolvidoPor ? ")" : ""}:
+                  </div>
+                  <div style={{ marginTop: "4px", fontWeight: 600, color: "#7c2d12", whiteSpace: "pre-line", lineHeight: 1.45 }}>
+                    {sol.motivoDevolutivaAgencia}
+                  </div>
+                </div>
+              </div>
+              <span
+                style={{
+                  fontSize: "11.5px",
+                  fontWeight: 800,
+                  color: "#c2410c",
+                  backgroundColor: "#ffedd5",
+                  border: "1px solid #fed7aa",
+                  padding: "4px 10px",
+                  borderRadius: "999px",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Aguardando nova cotação da Agência
+              </span>
+            </div>
+          )}
 
           {/* Banner de Reaprovação Obrigatória se valor > aprovado */}
           {sol.requerReaprovacao && (
@@ -1920,30 +2022,56 @@ export default function CotacoesMatrixModal({
                 </>
               )}
 
-              {/* Botão do Perfil LÍDER DE PROJETO (Aprovação e envio para compra) */}
+              {/* Botões do Perfil LÍDER DE PROJETO (Devolutiva para Correção ou Aprovação para Compra) */}
               {perfilAtivo === "LIDER" && (sol.status === "AGUARDANDO_APROVACAO" || sol.status === "AGUARDANDO_REAPROVACAO" || sol.requerReaprovacao) && (
-                <button
-                  type="button"
-                  disabled={loading}
-                  onClick={handleAprovarLider}
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    padding: "9px 22px",
-                    borderRadius: "8px",
-                    fontSize: "13px",
-                    fontWeight: 700,
-                    color: "#ffffff",
-                    backgroundColor: "var(--primary, #0f2a4a)",
-                    border: "none",
-                    cursor: "pointer",
-                    boxShadow: "0 2px 6px rgba(15, 42, 74, 0.25)",
-                  }}
-                >
-                  <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>thumb_up</span>
-                  {sol.requerReaprovacao ? `Aprovar Novo Orçamento (${brl(sol.totalContratado)})` : "Aprovar Escolhas & Autorizar Compra"}
-                </button>
+                <>
+                  <button
+                    type="button"
+                    disabled={loading}
+                    onClick={abrirPopupDevolutivaAgencia}
+                    title="Devolver cotação para a Agência solicitando correção (origem, destino, datas, horários ou opções)"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "7px",
+                      padding: "9px 18px",
+                      borderRadius: "8px",
+                      fontSize: "13px",
+                      fontWeight: 700,
+                      color: "#c2410c",
+                      backgroundColor: "#fff7ed",
+                      border: "1.5px solid #fb923c",
+                      cursor: "pointer",
+                      boxShadow: "0 1px 3px rgba(234, 88, 12, 0.12)",
+                    }}
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>assignment_return</span>
+                    <span>Devolver p/ Agência (Solicitar Correção)</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={loading}
+                    onClick={handleAprovarLider}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      padding: "9px 22px",
+                      borderRadius: "8px",
+                      fontSize: "13px",
+                      fontWeight: 700,
+                      color: "#ffffff",
+                      backgroundColor: "var(--primary, #0f2a4a)",
+                      border: "none",
+                      cursor: "pointer",
+                      boxShadow: "0 2px 6px rgba(15, 42, 74, 0.25)",
+                    }}
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>thumb_up</span>
+                    {sol.requerReaprovacao ? `Aprovar Novo Orçamento (${brl(sol.totalContratado)})` : "Aprovar Escolhas & Autorizar Compra"}
+                  </button>
+                </>
               )}
 
               {/* Botões do Perfil FINANCEIRO */}
@@ -2048,6 +2176,156 @@ export default function CotacoesMatrixModal({
           documento={docVisualizando}
           onClose={() => setDocVisualizando(null)}
         />
+      )}
+
+      {/* Modal de Devolutiva para a Agência com Justificativa do Líder */}
+      {showDevolutivaModal && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            backgroundColor: "rgba(15, 23, 42, 0.72)",
+            backdropFilter: "blur(4px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1200,
+            padding: "16px",
+          }}
+          onClick={() => !loading && setShowDevolutivaModal(false)}
+        >
+          <div
+            style={{
+              width: "100%",
+              maxWidth: "560px",
+              backgroundColor: "var(--surface, #ffffff)",
+              borderRadius: "16px",
+              border: "1px solid var(--border, #e2e8f0)",
+              boxShadow: "0 24px 50px rgba(0, 0, 0, 0.3)",
+              overflow: "hidden",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              style={{
+                padding: "16px 22px",
+                background: "linear-gradient(135deg, #7c2d12 0%, #c2410c 100%)",
+                color: "#ffffff",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <span className="material-symbols-outlined" style={{ fontSize: "22px", color: "#fed7aa" }}>
+                  assignment_return
+                </span>
+                <div>
+                  <div style={{ fontSize: "15.5px", fontWeight: 800, color: "#ffffff" }}>
+                    Devolver Cotação para a Agência
+                  </div>
+                  <div style={{ fontSize: "11.5px", color: "#ffedd5", fontWeight: 500 }}>
+                    {sol.projeto} • {sol.consultor} ({formatarPeriodoBR(sol.dataInicial, sol.dataFinal)})
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowDevolutivaModal(false)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "#ffffff",
+                  cursor: "pointer",
+                  display: "flex",
+                }}
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+
+            <form onSubmit={handleConfirmarDevolutivaAgencia} style={{ padding: "20px 22px", display: "flex", flexDirection: "column", gap: "14px" }}>
+              <p style={{ margin: 0, fontSize: "13px", color: "var(--on-surface-variant, #475569)", lineHeight: 1.5 }}>
+                Descreva abaixo o que precisa ser corrigido pela <strong>Agência {sol.agenciaNome || "FÁTIMA"}</strong> (ex.: aeroporto de origem/destino incorreto, alteração de data de ida/volta, horário de voo ou nova opção de hotel). A solicitação voltará para a etapa de cotação da agência e um e-mail será disparado automaticamente.
+              </p>
+
+              <div>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: "12px",
+                    fontWeight: 800,
+                    color: "#9a3412",
+                    marginBottom: "6px",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Justificativa de Devolução / Correções Solicitadas *
+                </label>
+                <textarea
+                  rows={5}
+                  required
+                  autoFocus
+                  value={motivoDevolutivaInput}
+                  onChange={(e) => setMotivoDevolutivaInput(e.target.value)}
+                  placeholder="Ex: Nenhuma das opções atende. Local de origem correto é Guarulhos ou Campinas (na cotação está Belo Horizonte) e a ida precisa ser no dia 14/12..."
+                  style={{
+                    width: "100%",
+                    padding: "10px 12px",
+                    fontSize: "13px",
+                    borderRadius: "10px",
+                    border: "1.5px solid #fb923c",
+                    backgroundColor: "var(--surface-container-lowest, #ffffff)",
+                    color: "var(--on-surface, #0f172a)",
+                    resize: "vertical",
+                    lineHeight: 1.5,
+                  }}
+                />
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", paddingTop: "4px" }}>
+                <button
+                  type="button"
+                  disabled={loading}
+                  onClick={() => setShowDevolutivaModal(false)}
+                  style={{
+                    padding: "8px 16px",
+                    borderRadius: "8px",
+                    fontSize: "13px",
+                    fontWeight: 600,
+                    color: "var(--on-surface)",
+                    backgroundColor: "var(--surface)",
+                    border: "1px solid var(--border)",
+                    cursor: "pointer",
+                  }}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    padding: "9px 20px",
+                    borderRadius: "8px",
+                    fontSize: "13px",
+                    fontWeight: 800,
+                    color: "#ffffff",
+                    backgroundColor: "#ea580c",
+                    border: "none",
+                    cursor: loading ? "wait" : "pointer",
+                    boxShadow: "0 2px 6px rgba(234, 88, 12, 0.3)",
+                  }}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: "17px" }}>send</span>
+                  <span>{loading ? "Devolvendo..." : "Confirmar Devolutiva para Agência"}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
 
       {/* Modal de Pré-visualização do Formato do E-mail do Viajante (Print 1 & code) */}

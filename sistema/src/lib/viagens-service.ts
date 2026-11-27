@@ -695,6 +695,8 @@ export async function salvarCotacoesAgencia(
 
   if (enviarParaAprovacao) {
     sol.status = "AGUARDANDO_APROVACAO";
+    sol.devolvidoParaAgencia = false;
+    sol.motivoDevolutivaAgencia = undefined;
     sol.auditoria.push({
       id: `aud-${Date.now()}`,
       dataHora: agora,
@@ -807,6 +809,8 @@ export async function aprovarLogisticaLider(
   sol.diferencaValor = Math.max(0, Math.round((sol.totalContratado - sol.totalAprovado) * 100) / 100);
   sol.requerReaprovacao = false;
   sol.motivoReaprovacao = undefined;
+  sol.devolvidoParaAgencia = false;
+  sol.motivoDevolutivaAgencia = undefined;
   sol.aprovadoPor = aprovadorNome;
   sol.aprovadoEm = agora;
 
@@ -852,6 +856,52 @@ export async function aprovarLogisticaLider(
       console.warn("Aviso ao disparar e-mail de cotação aprovada para agência:", e)
     );
   }
+
+  return sol;
+}
+
+/**
+ * Líder de Projeto devolve a cotação para a Agência solicitando correção / revisão antes da aprovação
+ */
+export async function devolverCotacaoParaAgencia(
+  solicitacaoId: string,
+  motivoDevolutiva: string,
+  liderNome: string = "Líder de Projeto",
+  justificativasPorCategoria?: Record<string, string>
+): Promise<ViagemSolicitacao> {
+  const { sol, lista } = await obterSolicitacaoGarantida(solicitacaoId);
+
+  const agora = new Date().toISOString();
+  const motivoLimpo = (motivoDevolutiva || "").trim();
+
+  if (justificativasPorCategoria && Object.keys(justificativasPorCategoria).length > 0) {
+    sol.justificativasLider = { ...(sol.justificativasLider || {}), ...justificativasPorCategoria };
+  }
+
+  sol.status = "EM_COTACAO";
+  sol.requerReaprovacao = false;
+  sol.motivoReaprovacao = undefined;
+  sol.devolvidoParaAgencia = true;
+  sol.motivoDevolutivaAgencia = motivoLimpo;
+  sol.devolvidoPor = liderNome;
+  sol.devolvidoEm = agora;
+
+  sol.auditoria.push({
+    id: `aud-${Date.now()}`,
+    dataHora: agora,
+    perfilUsuario: "LIDER",
+    usuarioNome: liderNome,
+    acao: "COTACAO_DEVOLVIDA_PARA_AGENCIA",
+    detalhes: `Cotação devolvida pelo Líder para correção da Agência. Justificativa: ${motivoLimpo}`,
+  });
+
+  sol.atualizadoEm = agora;
+  salvarSolicitacoesArquivo(lista);
+  await salvarSolicitacaoWorkflowCloud(sol);
+
+  await dispararNotificacaoDevolutivaCotacaoAgencia(sol, liderNome, motivoLimpo).catch((e) =>
+    console.warn("Aviso ao disparar e-mail de devolutiva de cotação para agência:", e)
+  );
 
   return sol;
 }
@@ -1892,5 +1942,109 @@ export async function dispararNotificacaoCotacaoAprovadaAgencia(sol: ViagemSolic
     });
   } catch (err) {
     console.warn("Aviso ao disparar e-mail de aprovação para agência:", err);
+  }
+}
+
+/**
+ * Notificação 4: Dispara e-mail para a Agência quando o Líder devolve a cotação solicitando correção
+ */
+export async function dispararNotificacaoDevolutivaCotacaoAgencia(
+  sol: ViagemSolicitacao,
+  liderNome: string,
+  motivoDevolutiva: string
+) {
+  try {
+    const lider = obterDadosLiderViagem(sol);
+    const periodoFmt = formatarPeriodoBR(sol.dataInicial, sol.dataFinal);
+    const assunto = `🔄 [DEVOLUTIVA DE COTAÇÃO] Correção Solicitada pelo Líder • ${sol.projeto} - ${sol.atividade}`;
+
+    const apontamentosCategorias = Object.entries(sol.justificativasLider || {})
+      .filter(([, txt]) => String(txt || "").trim().length > 0)
+      .map(([catKey, txt]) => {
+        const catObj = (sol.categorias || []).find((c) => c.categoria === catKey);
+        const nomeCat = catObj?.nomeExibicao || catKey;
+        return `
+          <tr>
+            <td style="color: #9a3412; width: 150px; font-weight: 700; vertical-align: top;">${nomeCat}:</td>
+            <td style="font-weight: 600; color: #0f172a; white-space: pre-line;">${txt}</td>
+          </tr>`;
+      })
+      .join("");
+
+    const html = `
+      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 650px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; overflow: hidden; color: #1e293b;">
+        <div style="background: linear-gradient(135deg, #7c2d12 0%, #c2410c 100%); padding: 22px 26px; color: #ffffff;">
+          <h2 style="margin: 0; font-size: 19px; font-weight: 800; letter-spacing: 0.5px;">NNÓS VIAGENS &amp; LOGÍSTICA</h2>
+          <p style="margin: 4px 0 0; font-size: 13px; color: #fed7aa;">Devolutiva de Cotação · Solicitação de Ajuste pelo Líder de Projeto</p>
+        </div>
+        <div style="padding: 24px;">
+          <h3 style="color: #9a3412; font-size: 16px; margin-top: 0; font-weight: 700;">Olá, Fátima e Equipe de Viagens!</h3>
+          <p style="font-size: 13.5px; line-height: 1.6; color: #334155;">
+            O Líder de Projeto <strong>${liderNome || lider.nome}</strong> analisou as opções de cotação enviadas para a viagem abaixo e solicitou uma <strong>correção / revisão</strong> antes de prosseguir com a aprovação:
+          </p>
+
+          <div style="background-color: #fff7ed; border: 1.5px solid #fdba74; border-radius: 12px; padding: 18px; margin: 20px 0;">
+            <h4 style="margin: 0 0 10px; font-size: 12px; text-transform: uppercase; color: #9a3412; letter-spacing: 0.5px; font-weight: 800;">
+              ⚠️ JUSTIFICATIVA DA DEVOLUÇÃO / CORREÇÃO SOLICITADA:
+            </h4>
+            <div style="font-size: 13.5px; font-weight: 700; color: #7c2d12; line-height: 1.6; white-space: pre-line;">
+              ${motivoDevolutiva}
+            </div>
+            ${apontamentosCategorias ? `
+            <table style="width: 100%; font-size: 12.5px; border-collapse: collapse; line-height: 1.6; margin-top: 12px; padding-top: 12px; border-top: 1px dashed #fdba74;">
+              ${apontamentosCategorias}
+            </table>` : ""}
+          </div>
+
+          <div style="background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px; padding: 18px; margin: 20px 0;">
+            <h4 style="margin: 0 0 12px; font-size: 12px; text-transform: uppercase; color: #0369a1; letter-spacing: 0.5px; font-weight: 800;">
+              📋 DADOS DA VIAGEM:
+            </h4>
+            <table style="width: 100%; font-size: 13px; border-collapse: collapse; line-height: 1.7;">
+              <tr>
+                <td style="color: #64748b; width: 150px; font-weight: 600;">Projeto / Atividade:</td>
+                <td style="font-weight: 700; color: #0f172a;">${sol.projeto} - ${sol.atividade}</td>
+              </tr>
+              <tr>
+                <td style="color: #64748b; font-weight: 600;">Líder de Projeto:</td>
+                <td style="font-weight: 700; color: #0f172a;">${lider.nome} (${lider.email})</td>
+              </tr>
+              <tr>
+                <td style="color: #64748b; font-weight: 600;">Viajante:</td>
+                <td style="font-weight: 700; color: #0369a1;">${sol.consultor}</td>
+              </tr>
+              <tr>
+                <td style="color: #64748b; font-weight: 600;">Destino:</td>
+                <td style="font-weight: 700; color: #0f172a;">${sol.destino}</td>
+              </tr>
+              <tr>
+                <td style="color: #64748b; font-weight: 600;">Período Original:</td>
+                <td style="font-weight: 700; color: #0f172a;">${periodoFmt}</td>
+              </tr>
+            </table>
+          </div>
+
+          <div style="text-align: center; margin: 26px 0;">
+            <a href="${URL_SISTEMA_VIAGENS}" target="_blank" style="display: inline-block; background-color: #ea580c; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-size: 13.5px; font-weight: 700; box-shadow: 0 2px 6px rgba(234, 88, 12, 0.35);">
+              Acessar Sistema &amp; Atualizar Cotação
+            </a>
+          </div>
+
+          <p style="margin: 0; font-size: 12px; color: #94a3b8; border-top: 1px solid #f1f5f9; padding-top: 14px;">
+            Notificação automática disparada pelo Sistema NNÓS Gestão Financeira &amp; Projetos.
+          </p>
+        </div>
+      </div>
+    `;
+
+    await dispararEmail({
+      para: EMAIL_AGENCIA_OFICIAL,
+      cc: [lider.email],
+      assunto,
+      html,
+      texto: `Devolutiva de cotação enviada por ${liderNome || lider.nome} para ${sol.consultor} (${sol.projeto}). Motivo: ${motivoDevolutiva}. Acesse: ${URL_SISTEMA_VIAGENS}`,
+    });
+  } catch (err) {
+    console.warn("Aviso ao disparar e-mail de devolutiva para agência:", err);
   }
 }

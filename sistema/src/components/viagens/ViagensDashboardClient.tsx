@@ -207,6 +207,14 @@ export default function ViagensDashboardClient({
         icone: "restaurant",
       };
     }
+    if (s.devolvidoParaAgencia && (s.status === "EM_COTACAO" || s.status === "AGUARDANDO_COTACAO")) {
+      return {
+        label: "Devolvido p/ Agência (Corrigir)",
+        color: "#c2410c",
+        bg: "#ffedd5",
+        icone: "assignment_return",
+      };
+    }
     switch (s.status) {
       case "AGUARDANDO_COTACAO":
         return { label: "Aguardando Cotação", color: "#d97706", bg: "#fef3c7", icone: "pending" };
