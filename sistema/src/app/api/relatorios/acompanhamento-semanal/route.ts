@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import { supabaseAdmin } from "@/lib/supabase-server";
-import { dispararEmail } from "@/lib/email-service";
+import { dispararEmail, EmailAttachment } from "@/lib/email-service";
 import { lerUsuariosAsync } from "@/lib/usuarios-service";
 import { formatarDataBR, formatarDataHoraBR } from "@/lib/date-utils";
 import historicoBase from "@/lib/acompanhamento-semanal-base.json";
@@ -202,13 +202,75 @@ async function calcularDadosBaseEmTempoReal(dataReferenciaISO: string) {
   };
 }
 
-function construirHtmlEmailExecutivo(rel: any, relAnterior: any | null, destinatarioNome: string, destinatarioLogin: string) {
+interface LogosEmailSource {
+  nnosSrc: string;
+  sicoobSrc: string;
+  claraSrc: string;
+  itauSrc: string;
+  anexosCid: EmailAttachment[];
+}
+
+function carregarLogosOriginaisEmail(modoPreview: boolean): LogosEmailSource {
+  const urlBase = process.env.NEXT_PUBLIC_APP_URL || "https://gestao.nnos.com.br";
+  const publicDir = path.join(process.cwd(), "public");
+
+  const DEFINICOES = [
+    { chave: "nnos", arquivo: "logo-horizontal-branca.png", cid: "logo-nnos-branca" },
+    { chave: "sicoob", arquivo: "logo-sicoob.png", cid: "logo-sicoob" },
+    { chave: "clara", arquivo: "logo-clara.png", cid: "logo-clara" },
+    { chave: "itau", arquivo: "logo-itau.png", cid: "logo-itau" },
+  ] as const;
+
+  const srcs: Record<string, string> = {};
+  const anexosCid: EmailAttachment[] = [];
+
+  for (const def of DEFINICOES) {
+    const filePath = path.join(publicDir, def.arquivo);
+    try {
+      if (fs.existsSync(filePath)) {
+        const buf = fs.readFileSync(filePath);
+        const base64 = buf.toString("base64");
+        if (modoPreview) {
+          srcs[def.chave] = `data:image/png;base64,${base64}`;
+        } else {
+          srcs[def.chave] = `cid:${def.cid}`;
+          anexosCid.push({
+            filename: def.arquivo,
+            content: buf,
+            contentType: "image/png",
+            cid: def.cid,
+            disposition: "inline",
+          });
+        }
+        continue;
+      }
+    } catch {}
+    srcs[def.chave] = `${urlBase}/${def.arquivo}`;
+  }
+
+  return {
+    nnosSrc: srcs.nnos,
+    sicoobSrc: srcs.sicoob,
+    claraSrc: srcs.clara,
+    itauSrc: srcs.itau,
+    anexosCid,
+  };
+}
+
+function construirHtmlEmailExecutivo(
+  rel: any,
+  relAnterior: any | null,
+  destinatarioNome: string,
+  destinatarioLogin: string,
+  modoPreview = false
+) {
   const dataBR = formatarDataBR(rel.dataReferencia);
   const dataHoraGeracaoBR = formatarDataHoraBR(rel.criadoEm || new Date().toISOString());
   const urlBase = process.env.NEXT_PUBLIC_APP_URL || "https://gestao.nnos.com.br";
   const urlRelatorio = `${urlBase}/relatorios/acompanhamento-semanal`;
   const urlLogin = `${urlBase}/login?redirect=${encodeURIComponent("/relatorios/acompanhamento-semanal")}`;
-  const urlLogoBranca = `${urlBase}/logo-horizontal-branca.png`;
+  const logos = carregarLogosOriginaisEmail(modoPreview);
+  const fontStack = `'Plus Jakarta Sans','Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif`;
 
   const calcVarBadge = (atual: number, ant?: number | null, inverter = false, pill = false) => {
     if (!ant || ant === 0) return "";
@@ -221,7 +283,7 @@ function construirHtmlEmailExecutivo(rel: any, relAnterior: any | null, destinat
     const borda = bom ? "#a7f3d0" : "#fecdd3";
     const seta = subiu ? "▲" : "▼";
     const radius = pill ? "999px" : "6px";
-    return `<span style="display:inline-block;padding:3px 10px;border-radius:${radius};font-size:11px;font-weight:700;background-color:${bg};color:${cor};border:1px solid ${borda};white-space:nowrap;">${seta} ${pct}% vs. anterior</span>`;
+    return `<span style="display:inline-block;padding:3px 10px;border-radius:${radius};font-family:${fontStack};font-size:11px;font-weight:700;background-color:${bg};color:${cor};border:1px solid ${borda};white-space:nowrap;">${seta} ${pct}% vs. anterior</span>`;
   };
 
   const sicoobCaixa = Number(rel.posicaoFinanceira?.sicoob?.caixa) || 0;
@@ -230,15 +292,29 @@ function construirHtmlEmailExecutivo(rel: any, relAnterior: any | null, destinat
 
   const idSeguranca = `NNOS-FIN-${rel.anoReferencia || 2026}${String(rel.dataReferencia || "").slice(5, 7) || "11"}-${String(Math.abs(Math.round(Number(rel.posicaoFinanceira?.total) || 884))).slice(-3).padStart(3, "0")}`;
 
-  return `
-  <div style="background-color:#eef4f8;padding:24px 12px;font-family:'Plus Jakarta Sans','Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#334155;">
+  const html = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+    body, div, table, td, th, p, span, a, strong {
+      font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+  </style>
+</head>
+<body style="margin:0;padding:0;background-color:#eef4f8;font-family:${fontStack};color:#334155;">
+  <div style="background-color:#eef4f8;padding:24px 12px;font-family:${fontStack};color:#334155;">
     <div style="max-width:760px;margin:0 auto;background-color:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #e2e8f0;box-shadow:0 12px 32px rgba(15,42,74,0.08);">
       <div style="padding:24px 28px;background-color:#ffffff;">
 
-        <!-- Corporate Branded Banner (Background sólido #005a87 + fallback gradient para máxima legibilidade em Gmail/Outlook) -->
-        <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background-color:#005a87;background-image:linear-gradient(90deg,#00527c 0%,#005a87 55%,#013f61 100%);border-radius:12px;margin-bottom:22px;border:1px solid #004366;">
+        <!-- Corporate Branded Banner -->
+        <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background-color:#005a87;background-image:linear-gradient(90deg,#00527c 0%,#005a87 55%,#013f61 100%);border-radius:12px;margin-bottom:22px;border:1px solid #004366;font-family:${fontStack};">
           <tr>
-            <td style="padding:20px 22px;color:#ffffff;">
+            <td style="padding:20px 24px;color:#ffffff;">
               <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
                 <tr>
                   <td style="vertical-align:middle;">
@@ -247,19 +323,19 @@ function construirHtmlEmailExecutivo(rel: any, relAnterior: any | null, destinat
                         <td style="width:46px;height:46px;background-color:#0b6e99;border:1px solid #38bdf8;border-radius:10px;text-align:center;vertical-align:middle;font-size:22px;color:#e0f2fe;">
                           📅
                         </td>
-                        <td style="padding-left:14px;vertical-align:middle;">
+                        <td style="padding-left:14px;vertical-align:middle;font-family:${fontStack};">
                           <div style="font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#bae6fd;line-height:1.2;">
                             ${dataBR}
                           </div>
-                          <div style="font-size:21px;font-weight:800;color:#ffffff;letter-spacing:-0.01em;line-height:1.25;margin-top:2px;">
+                          <div style="font-size:20px;font-weight:800;color:#ffffff;letter-spacing:-0.015em;line-height:1.25;margin-top:2px;white-space:nowrap;">
                             ACOMPANHAMENTO SEMANAL <span style="font-weight:400;color:#7dd3fc;margin:0 4px;">|</span> ${rel.mesReferencia}
                           </div>
                         </td>
                       </tr>
                     </table>
                   </td>
-                  <td align="right" style="vertical-align:middle;border-left:1px solid rgba(255,255,255,0.22);padding-left:18px;width:170px;">
-                    <img src="${urlLogoBranca}" alt="NNÓS" width="135" style="display:block;max-width:135px;height:auto;border:0;color:#ffffff;font-size:20px;font-weight:800;" />
+                  <td align="right" style="vertical-align:middle;border-left:1px solid rgba(255,255,255,0.22);padding-left:18px;width:165px;">
+                    <img src="${logos.nnosSrc}" alt="NNÓS" width="138" style="display:block;width:138px;max-width:138px;height:auto;border:0;outline:none;text-decoration:none;color:#ffffff;font-family:${fontStack};font-size:20px;font-weight:800;" />
                   </td>
                 </tr>
               </table>
@@ -268,26 +344,26 @@ function construirHtmlEmailExecutivo(rel: any, relAnterior: any | null, destinat
         </table>
 
         <!-- Dispatch Metadata & Intro -->
-        <div style="margin-bottom:22px;padding-bottom:16px;border-bottom:1px solid #f1f5f9;">
+        <div style="margin-bottom:22px;padding-bottom:16px;border-bottom:1px solid #f1f5f9;font-family:${fontStack};">
           <div style="font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.07em;color:#0369a1;">
             DIRETORIA EXECUTIVA <span style="color:#cbd5e1;margin:0 6px;">•</span> BOLETIM FINANCEIRO
           </div>
-          <div style="font-size:12px;color:#475569;margin-top:4px;">
-            Posição fechada em <strong style="color:#1e293b;">${dataBR}</strong> • Publicado por <strong style="color:#1e293b;">${rel.criadoPor || "Leonardo Campos"}</strong>
+          <div style="font-size:12px;color:#475569;margin-top:4px;font-weight:500;">
+            Posição fechada em <strong style="color:#1e293b;font-weight:700;">${dataBR}</strong> • Publicado por <strong style="color:#1e293b;font-weight:600;">${rel.criadoPor || "Leonardo Campos"}</strong>
           </div>
-          <div style="margin-top:16px;font-size:14px;line-height:1.65;color:#334155;">
-            <p style="margin:0 0 8px 0;">Olá, <strong style="color:#0f172a;">${destinatarioNome}</strong>,</p>
+          <div style="margin-top:16px;font-size:14px;line-height:1.65;color:#334155;font-weight:400;">
+            <p style="margin:0 0 8px 0;">Olá, <strong style="color:#0f172a;font-weight:700;">${destinatarioNome}</strong>,</p>
             <p style="margin:0;">
-              O novo relatório de <strong style="color:#0f172a;">Acompanhamento Semanal (${dataBR})</strong> referente ao mês de <strong style="color:#0f172a;">${rel.mesReferencia}</strong> já está disponível para consulta na Central de Relatórios do Portal Corporativo NNÓS. Confira abaixo o resumo executivo dos principais indicadores financeiros e operacionais:
+              O novo relatório de <strong style="color:#0f172a;font-weight:700;">Acompanhamento Semanal (${dataBR})</strong> referente ao mês de <strong style="color:#0f172a;font-weight:700;">${rel.mesReferencia}</strong> já está disponível para consulta na Central de Relatórios do Portal Corporativo NNÓS. Confira abaixo o resumo executivo dos principais indicadores financeiros e operacionais:
             </p>
           </div>
         </div>
 
         <!-- Bloco 1: Posição Financeira Consolidada -->
-        <div style="background-color:#ffffff;border:1px solid #e0f2fe;border-radius:12px;padding:18px 20px;margin-bottom:18px;">
-          <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin-bottom:10px;">
+        <div style="background-color:#ffffff;border:1px solid #e0f2fe;border-radius:12px;padding:18px 20px;margin-bottom:18px;font-family:${fontStack};">
+          <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin-bottom:8px;">
             <tr>
-              <td style="font-size:13px;font-weight:800;color:#075985;text-transform:uppercase;letter-spacing:0.04em;">
+              <td style="font-family:${fontStack};font-size:13px;font-weight:800;color:#075985;text-transform:uppercase;letter-spacing:0.04em;">
                 1. POSIÇÃO FINANCEIRA CONSOLIDADA (CAIXA + APLICAÇÕES)
               </td>
               <td align="right">
@@ -296,47 +372,53 @@ function construirHtmlEmailExecutivo(rel: any, relAnterior: any | null, destinat
             </tr>
           </table>
 
-          <div style="font-size:32px;font-weight:800;color:#005a87;letter-spacing:-0.02em;margin-bottom:14px;">
+          <div style="font-family:${fontStack};font-size:32px;font-weight:800;color:#005a87;letter-spacing:-0.025em;margin-bottom:14px;">
             R$ ${fmtMoeda(rel.posicaoFinanceira?.total)}
           </div>
 
           <div style="border:1px solid #f1f5f9;border-radius:10px;overflow:hidden;background-color:#fbfdfd;">
-            <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;font-size:13px;">
+            <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;font-family:${fontStack};font-size:13px;">
               <thead>
-                <tr style="background-color:#f8fafc;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:11px;font-weight:700;text-transform:uppercase;">
-                  <th align="left" style="padding:10px 12px;">Instituição</th>
-                  <th align="right" style="padding:10px 12px;">Caixa</th>
-                  <th align="right" style="padding:10px 12px;">Aplicação</th>
-                  <th align="right" style="padding:10px 12px;">Rentabilidade</th>
+                <tr style="background-color:#f8fafc;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.03em;">
+                  <th align="left" style="padding:10px 14px;font-family:${fontStack};">Instituição</th>
+                  <th align="right" style="padding:10px 14px;font-family:${fontStack};">Caixa</th>
+                  <th align="right" style="padding:10px 14px;font-family:${fontStack};">Aplicação</th>
+                  <th align="right" style="padding:10px 14px;font-family:${fontStack};">Rentabilidade</th>
                 </tr>
               </thead>
               <tbody>
                 <tr style="border-bottom:1px solid #f1f5f9;">
-                  <td style="padding:10px 12px;font-weight:800;color:#1e293b;">
-                    <span style="display:inline-block;width:18px;height:18px;line-height:18px;text-align:center;border-radius:4px;background-color:#00363a;color:#00ae9d;font-size:10px;margin-right:6px;vertical-align:middle;">◆</span>
-                    <span style="vertical-align:middle;">SICOOB</span>
+                  <td style="padding:11px 14px;vertical-align:middle;">
+                    <img src="${logos.sicoobSrc}" alt="SICOOB" height="22" style="display:block;height:22px;width:auto;max-width:110px;border:0;outline:none;font-family:${fontStack};font-size:12px;font-weight:800;color:#00363a;" />
                   </td>
-                  <td align="right" style="padding:10px 12px;font-weight:600;color:${sicoobCaixa < 0 ? "#e11d48" : "#334155"};">${fmtMoeda(sicoobCaixa)}</td>
-                  <td align="right" style="padding:10px 12px;font-weight:600;color:#334155;">${fmtMoeda(rel.posicaoFinanceira?.sicoob?.aplicacao)}</td>
-                  <td align="right" style="padding:10px 12px;font-weight:700;color:#059669;background-color:#f0fdf4;">${rel.posicaoFinanceira?.sicoob?.rentabilidade || "+0,00%"}</td>
+                  <td align="right" style="padding:11px 14px;font-family:${fontStack};font-weight:600;color:${sicoobCaixa < 0 ? "#e11d48" : "#334155"};">${fmtMoeda(sicoobCaixa)}</td>
+                  <td align="right" style="padding:11px 14px;font-family:${fontStack};font-weight:600;color:#334155;">${fmtMoeda(rel.posicaoFinanceira?.sicoob?.aplicacao)}</td>
+                  <td align="right" style="padding:11px 14px;font-family:${fontStack};font-weight:700;color:#059669;background-color:#f0fdf4;">${rel.posicaoFinanceira?.sicoob?.rentabilidade || "+0,00%"}</td>
                 </tr>
                 <tr style="border-bottom:1px solid #f1f5f9;">
-                  <td style="padding:10px 12px;font-weight:800;color:#1e293b;">
-                    <span style="display:inline-block;width:18px;height:18px;line-height:18px;text-align:center;border-radius:999px;background-color:#0f172a;color:#ffffff;font-size:10px;margin-right:6px;vertical-align:middle;">✦</span>
-                    <span style="vertical-align:middle;">CLARA</span>
+                  <td style="padding:11px 14px;vertical-align:middle;">
+                    <img src="${logos.claraSrc}" alt="CLARA" height="20" style="display:block;height:20px;width:auto;max-width:105px;border:0;outline:none;font-family:${fontStack};font-size:12px;font-weight:800;color:#0f172a;" />
                   </td>
-                  <td align="right" style="padding:10px 12px;font-weight:600;color:${claraCaixa < 0 ? "#e11d48" : "#334155"};">${fmtMoeda(claraCaixa)}</td>
-                  <td align="right" style="padding:10px 12px;font-weight:600;color:#334155;">${fmtMoeda(rel.posicaoFinanceira?.clara?.aplicacao)}</td>
-                  <td align="right" style="padding:10px 12px;font-weight:700;color:#059669;background-color:#f0fdf4;">${rel.posicaoFinanceira?.clara?.rentabilidade || "+0,00%"}</td>
+                  <td align="right" style="padding:11px 14px;font-family:${fontStack};font-weight:600;color:${claraCaixa < 0 ? "#e11d48" : "#334155"};">${fmtMoeda(claraCaixa)}</td>
+                  <td align="right" style="padding:11px 14px;font-family:${fontStack};font-weight:600;color:#334155;">${fmtMoeda(rel.posicaoFinanceira?.clara?.aplicacao)}</td>
+                  <td align="right" style="padding:11px 14px;font-family:${fontStack};font-weight:700;color:#059669;background-color:#f0fdf4;">${rel.posicaoFinanceira?.clara?.rentabilidade || "+0,00%"}</td>
                 </tr>
                 <tr>
-                  <td style="padding:10px 12px;font-weight:800;color:#1e293b;">
-                    <span style="display:inline-block;padding:1px 4px;border-radius:4px;background-color:#ec7000;color:#ffffff;font-size:9px;font-weight:800;margin-right:6px;vertical-align:middle;">itaú</span>
-                    <span style="vertical-align:middle;">ITAÚ</span>
+                  <td style="padding:11px 14px;vertical-align:middle;">
+                    <table cellpadding="0" cellspacing="0" role="presentation">
+                      <tr>
+                        <td style="vertical-align:middle;">
+                          <img src="${logos.itauSrc}" alt="Itaú" width="24" height="24" style="display:block;width:24px;height:24px;border-radius:4px;border:0;outline:none;" />
+                        </td>
+                        <td style="padding-left:8px;vertical-align:middle;font-family:${fontStack};font-size:13px;font-weight:800;color:#1e293b;">
+                          ITAÚ
+                        </td>
+                      </tr>
+                    </table>
                   </td>
-                  <td align="right" style="padding:10px 12px;font-weight:600;color:${itauCaixa < 0 ? "#e11d48" : "#334155"};">${fmtMoeda(itauCaixa)}</td>
-                  <td align="right" style="padding:10px 12px;font-weight:600;color:#334155;">${fmtMoeda(rel.posicaoFinanceira?.itau?.aplicacao)}</td>
-                  <td align="right" style="padding:10px 12px;font-weight:700;color:#059669;background-color:#f0fdf4;">${rel.posicaoFinanceira?.itau?.rentabilidade || "+0,00%"}</td>
+                  <td align="right" style="padding:11px 14px;font-family:${fontStack};font-weight:600;color:${itauCaixa < 0 ? "#e11d48" : "#334155"};">${fmtMoeda(itauCaixa)}</td>
+                  <td align="right" style="padding:11px 14px;font-family:${fontStack};font-weight:600;color:#334155;">${fmtMoeda(rel.posicaoFinanceira?.itau?.aplicacao)}</td>
+                  <td align="right" style="padding:11px 14px;font-family:${fontStack};font-weight:700;color:#059669;background-color:#f0fdf4;">${rel.posicaoFinanceira?.itau?.rentabilidade || "+0,00%"}</td>
                 </tr>
               </tbody>
             </table>
@@ -344,7 +426,7 @@ function construirHtmlEmailExecutivo(rel: any, relAnterior: any | null, destinat
         </div>
 
         <!-- Bloco 2: Fluxo do Período: Contas a Pagar & Contas a Receber -->
-        <div style="background-color:#ffffff;border:1px solid #e0f2fe;border-radius:12px;padding:18px 20px;margin-bottom:18px;">
+        <div style="background-color:#ffffff;border:1px solid #e0f2fe;border-radius:12px;padding:18px 20px;margin-bottom:18px;font-family:${fontStack};">
           <div style="font-size:13px;font-weight:800;color:#075985;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:12px;">
             2. FLUXO DO PERÍODO: CONTAS A PAGAR &amp; CONTAS A RECEBER
           </div>
@@ -352,10 +434,10 @@ function construirHtmlEmailExecutivo(rel: any, relAnterior: any | null, destinat
           <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
             <tr>
               <!-- Sub-Card: Contas a Pagar -->
-              <td width="49%" valign="top" style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;">
+              <td width="49%" valign="top" style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;font-family:${fontStack};">
                 <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin-bottom:8px;">
                   <tr>
-                    <td style="font-size:12.5px;font-weight:700;color:#1e293b;">
+                    <td style="font-family:${fontStack};font-size:12.5px;font-weight:700;color:#1e293b;">
                       <span style="display:inline-block;width:8px;height:8px;border-radius:999px;background-color:#f43f5e;margin-right:5px;vertical-align:middle;"></span>
                       Contas a Pagar (Total)
                     </td>
@@ -364,27 +446,27 @@ function construirHtmlEmailExecutivo(rel: any, relAnterior: any | null, destinat
                     </td>
                   </tr>
                 </table>
-                <div style="font-size:20px;font-weight:800;color:#0f172a;margin-bottom:10px;">
+                <div style="font-family:${fontStack};font-size:20px;font-weight:800;color:#0f172a;letter-spacing:-0.015em;margin-bottom:10px;">
                   R$ ${fmtMoeda(rel.contasAPagar?.totalPeriodo)}
                 </div>
-                <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-top:1px solid #e2e8f0;padding-top:8px;font-size:12px;">
+                <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-top:1px solid #e2e8f0;padding-top:8px;font-family:${fontStack};font-size:12px;">
                   <tr>
                     <td width="50%" style="padding:4px 0;">
-                      <div style="font-size:11px;color:#64748b;">Vencidos:</div>
+                      <div style="font-size:11px;color:#64748b;font-weight:500;">Vencidos:</div>
                       <div style="font-weight:700;color:#334155;">R$ ${fmtMoeda(rel.contasAPagar?.vencidos)}</div>
                     </td>
                     <td width="50%" style="padding:4px 0;">
-                      <div style="font-size:11px;color:#64748b;">Vencem Hoje:</div>
+                      <div style="font-size:11px;color:#64748b;font-weight:500;">Vencem Hoje:</div>
                       <div style="font-weight:700;color:#e11d48;">R$ ${fmtMoeda(rel.contasAPagar?.vencemHoje)}</div>
                     </td>
                   </tr>
                   <tr>
                     <td width="50%" style="padding:4px 0;">
-                      <div style="font-size:11px;color:#64748b;">A Vencer:</div>
+                      <div style="font-size:11px;color:#64748b;font-weight:500;">A Vencer:</div>
                       <div style="font-weight:700;color:#334155;">R$ ${fmtMoeda(rel.contasAPagar?.aVencer)}</div>
                     </td>
                     <td width="50%" style="padding:4px 0;">
-                      <div style="font-size:11px;color:#64748b;">Pagos:</div>
+                      <div style="font-size:11px;color:#64748b;font-weight:500;">Pagos:</div>
                       <div style="font-weight:700;color:#047857;">R$ ${fmtMoeda(rel.contasAPagar?.pagos)}</div>
                     </td>
                   </tr>
@@ -394,10 +476,10 @@ function construirHtmlEmailExecutivo(rel: any, relAnterior: any | null, destinat
               <td width="2%">&nbsp;</td>
 
               <!-- Sub-Card: Contas a Receber -->
-              <td width="49%" valign="top" style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;">
+              <td width="49%" valign="top" style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;font-family:${fontStack};">
                 <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin-bottom:8px;">
                   <tr>
-                    <td style="font-size:12.5px;font-weight:700;color:#1e293b;">
+                    <td style="font-family:${fontStack};font-size:12.5px;font-weight:700;color:#1e293b;">
                       <span style="display:inline-block;width:8px;height:8px;border-radius:999px;background-color:#10b981;margin-right:5px;vertical-align:middle;"></span>
                       Contas a Receber (Total)
                     </td>
@@ -406,27 +488,27 @@ function construirHtmlEmailExecutivo(rel: any, relAnterior: any | null, destinat
                     </td>
                   </tr>
                 </table>
-                <div style="font-size:20px;font-weight:800;color:#0f172a;margin-bottom:10px;">
+                <div style="font-family:${fontStack};font-size:20px;font-weight:800;color:#0f172a;letter-spacing:-0.015em;margin-bottom:10px;">
                   R$ ${fmtMoeda(rel.contasAReceber?.totalPeriodo)}
                 </div>
-                <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-top:1px solid #e2e8f0;padding-top:8px;font-size:12px;">
+                <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-top:1px solid #e2e8f0;padding-top:8px;font-family:${fontStack};font-size:12px;">
                   <tr>
                     <td width="50%" style="padding:4px 0;">
-                      <div style="font-size:11px;color:#64748b;">Vencidos:</div>
+                      <div style="font-size:11px;color:#64748b;font-weight:500;">Vencidos:</div>
                       <div style="font-weight:700;color:#e11d48;">R$ ${fmtMoeda(rel.contasAReceber?.vencidos)}</div>
                     </td>
                     <td width="50%" style="padding:4px 0;">
-                      <div style="font-size:11px;color:#64748b;">Vencem Hoje:</div>
+                      <div style="font-size:11px;color:#64748b;font-weight:500;">Vencem Hoje:</div>
                       <div style="font-weight:700;color:#334155;">R$ ${fmtMoeda(rel.contasAReceber?.vencemHoje)}</div>
                     </td>
                   </tr>
                   <tr>
                     <td width="50%" style="padding:4px 0;">
-                      <div style="font-size:11px;color:#64748b;">A Vencer:</div>
+                      <div style="font-size:11px;color:#64748b;font-weight:500;">A Vencer:</div>
                       <div style="font-weight:700;color:#334155;">R$ ${fmtMoeda(rel.contasAReceber?.aVencer)}</div>
                     </td>
                     <td width="50%" style="padding:4px 0;">
-                      <div style="font-size:11px;color:#64748b;">Pagos:</div>
+                      <div style="font-size:11px;color:#64748b;font-weight:500;">Pagos:</div>
                       <div style="font-weight:700;color:#047857;">R$ ${fmtMoeda(rel.contasAReceber?.pagos)}</div>
                     </td>
                   </tr>
@@ -437,13 +519,13 @@ function construirHtmlEmailExecutivo(rel: any, relAnterior: any | null, destinat
         </div>
 
         <!-- Bloco 3: Recebíveis & Faturamento de Projetos -->
-        <div style="background-color:#ffffff;border:1px solid #e0f2fe;border-radius:12px;padding:18px 20px;margin-bottom:22px;">
+        <div style="background-color:#ffffff;border:1px solid #e0f2fe;border-radius:12px;padding:18px 20px;margin-bottom:22px;font-family:${fontStack};">
           <div style="font-size:13px;font-weight:800;color:#075985;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:12px;">
             3. RECEBÍVEIS &amp; FATURAMENTO DE PROJETOS (${rel.mesReferencia})
           </div>
 
           <div style="background-color:#f0f9ff;border:1px solid #e0f2fe;border-radius:10px;padding:12px 14px;font-size:13px;color:#334155;">
-            <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+            <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="font-family:${fontStack};">
               <tr>
                 <td style="padding:6px 0;">
                   • <strong style="color:#0f172a;">Total a Receber:</strong> R$ ${fmtMoeda(rel.totalAReceber)}
@@ -478,7 +560,7 @@ function construirHtmlEmailExecutivo(rel: any, relAnterior: any | null, destinat
         </div>
 
         <!-- Bloco de Autenticação e Acesso Seguro ao Portal NNÓS -->
-        <div style="background-color:#f0f9ff;border:1px solid #bae6fd;border-radius:12px;padding:22px 20px;text-align:center;">
+        <div style="background-color:#f0f9ff;border:1px solid #bae6fd;border-radius:12px;padding:22px 20px;text-align:center;font-family:${fontStack};">
           <div style="font-size:13px;font-weight:800;color:#075985;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px;">
             🔒 ACESSO SEGURO AO PAINEL EXECUTIVO
           </div>
@@ -486,20 +568,20 @@ function construirHtmlEmailExecutivo(rel: any, relAnterior: any | null, destinat
             Para visualizar o painel gráfico completo, consultar o histórico comparativo ou baixar a versão em alta definição (<strong>.PNG</strong>), acesse o sistema utilizando seu <strong style="color:#0f172a;">usuário (${destinatarioLogin})</strong> e <strong style="color:#0f172a;">senha corporativa</strong>:
           </p>
           <div style="margin:14px 0;">
-            <a href="${urlLogin}" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:13px 26px;background-color:#005a87;color:#ffffff;font-size:13.5px;font-weight:700;text-decoration:none;border-radius:8px;">
+            <a href="${urlLogin}" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:13px 26px;background-color:#005a87;color:#ffffff;font-family:${fontStack};font-size:13.5px;font-weight:700;text-decoration:none;border-radius:8px;">
               Acessar Acompanhamento Semanal no Portal &nbsp;→
             </a>
           </div>
           <p style="margin:12px 0 0 0;font-size:11.5px;color:#475569;">
             Link direto após login:
-            <a href="${urlRelatorio}" target="_blank" rel="noopener noreferrer" style="color:#0369a1;text-decoration:underline;font-family:monospace;">
+            <a href="${urlRelatorio}" target="_blank" rel="noopener noreferrer" style="color:#0369a1;text-decoration:underline;font-family:Consolas,'Courier New',monospace;">
               ${urlRelatorio}
             </a>
           </p>
         </div>
 
         <!-- Rodapé Corporativo -->
-        <div style="margin-top:26px;padding-top:18px;border-top:1px solid #f1f5f9;text-align:center;color:#475569;">
+        <div style="margin-top:26px;padding-top:18px;border-top:1px solid #f1f5f9;text-align:center;color:#475569;font-family:${fontStack};">
           <div style="font-size:12px;font-weight:600;color:#475569;margin-bottom:4px;">
             NNÓS Gestão Empresarial • Transformando Estratégias em Realidade
           </div>
@@ -513,7 +595,11 @@ function construirHtmlEmailExecutivo(rel: any, relAnterior: any | null, destinat
 
       </div>
     </div>
-  </div>`;
+  </div>
+</body>
+</html>`;
+
+  return { html, anexosCid: logos.anexosCid };
 }
 
 export async function GET(request: Request) {
@@ -562,12 +648,14 @@ export async function POST(request: Request) {
       const loginAlvo = String(body.loginDestinatario || "leonardo.campos").trim();
       const dataBR = formatarDataBR(relAlvo.dataReferencia);
       const assunto = `📊 [TESTE] Acompanhamento Semanal NNÓS (${dataBR} • ${relAlvo.mesReferencia}) | Resumo Executivo`;
-      const html = construirHtmlEmailExecutivo(relAlvo, relAnt, nomeAlvo, loginAlvo);
+      const { html, anexosCid } = construirHtmlEmailExecutivo(relAlvo, relAnt, nomeAlvo, loginAlvo, false);
+      const { html: htmlPreview } = construirHtmlEmailExecutivo(relAlvo, relAnt, nomeAlvo, loginAlvo, true);
 
       const resultado = await dispararEmail({
         para: emailAlvo,
         assunto,
         html,
+        anexos: anexosCid,
       });
 
       return NextResponse.json({
@@ -575,7 +663,7 @@ export async function POST(request: Request) {
         testeIndividual: true,
         destinatario: emailAlvo,
         assunto,
-        htmlPreview: html,
+        htmlPreview,
         resultado,
       });
     }
@@ -720,11 +808,12 @@ export async function POST(request: Request) {
 
     const idxNovo = atualizado.findIndex((r) => r.id === novoRelatorio.id);
     const relAnterior = idxNovo >= 0 && idxNovo + 1 < atualizado.length ? atualizado[idxNovo + 1] : null;
-    const htmlPreview = construirHtmlEmailExecutivo(
+    const { html: htmlPreview } = construirHtmlEmailExecutivo(
       novoRelatorio,
       relAnterior,
       "Leonardo Campos",
-      "leonardo.campos"
+      "leonardo.campos",
+      true
     );
 
     // Disparo automático de e-mail executivo para a Diretoria Executiva e Admin
@@ -742,11 +831,18 @@ export async function POST(request: Request) {
       const assunto = `📊 Acompanhamento Semanal NNÓS (${dataBR} • ${novoRelatorio.mesReferencia}) | Resumo Executivo`;
 
       for (const dest of destinatariosDiretoria) {
-        const html = construirHtmlEmailExecutivo(novoRelatorio, relAnterior, dest.nome, dest.login);
+        const { html, anexosCid } = construirHtmlEmailExecutivo(
+          novoRelatorio,
+          relAnterior,
+          dest.nome,
+          dest.login,
+          false
+        );
         const resEmail = await dispararEmail({
           para: dest.email,
           assunto,
           html,
+          anexos: anexosCid,
         });
         resultadosEmail.push({
           destinatario: dest.email,

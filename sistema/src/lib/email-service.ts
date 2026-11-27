@@ -5,6 +5,9 @@ export interface EmailAttachment {
   content?: string | Buffer; // Base64 ou buffer
   path?: string;
   contentType?: string;
+  cid?: string; // Content-ID para imagens inline (ex: cid:logo-nnos)
+  contentId?: string;
+  disposition?: "inline" | "attachment";
 }
 
 export interface EnviarEmailOptions {
@@ -40,16 +43,18 @@ function aplicarFonteEmailPadrao(html: string): string {
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" />
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
     body, div, table, td, th, p, span:not([style*="monospace"]), a, li, strong, em, h1, h2, h3, h4 {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     }
     code, pre {
       font-family: Consolas, 'Courier New', monospace;
     }
   </style>
 </head>
-<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #ffffff;">
+<body style="margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #ffffff;">
   ${html}
 </body>
 </html>`;
@@ -83,13 +88,17 @@ export async function dispararEmail(options: EnviarEmailOptions): Promise<Enviar
           contentBase64 = anx.content.toString("base64");
         }
 
+        const cidVal = anx.cid || anx.contentId;
         return {
           filename: anx.filename,
           content: contentBase64,
+          ...(anx.contentType ? { content_type: anx.contentType } : {}),
+          ...(cidVal ? { content_id: cidVal } : {}),
         };
       });
 
       let remetenteResend = process.env.RESEND_FROM || "Gestão Financeira NNÓS <financeiro@mail.nnos.com.br>";
+      const dominioRemetenteVerificado = !remetenteResend.toLowerCase().includes("resend.dev");
 
       let res = await fetch("https://api.resend.com/emails", {
         method: "POST",
@@ -99,7 +108,7 @@ export async function dispararEmail(options: EnviarEmailOptions): Promise<Enviar
         },
         body: JSON.stringify({
           from: remetenteResend,
-          reply_to: "financeiro@nnos.com.br",
+          ...(dominioRemetenteVerificado ? { reply_to: "financeiro@nnos.com.br" } : {}),
           to: [options.para],
           cc: options.cc,
           subject: options.assunto,
@@ -182,6 +191,7 @@ export async function dispararEmail(options: EnviarEmailOptions): Promise<Enviar
       });
 
       const attachmentsPayload = (options.anexos || []).map((anx) => {
+        const cidVal = anx.cid || anx.contentId;
         if (typeof anx.content === "string" && anx.content.startsWith("data:")) {
           const [prefix, base64] = anx.content.split(",");
           const mime = prefix.split(":")[1]?.split(";")[0] || "application/octet-stream";
@@ -189,6 +199,7 @@ export async function dispararEmail(options: EnviarEmailOptions): Promise<Enviar
             filename: anx.filename,
             content: Buffer.from(base64, "base64"),
             contentType: mime,
+            ...(cidVal ? { cid: cidVal, contentDisposition: "inline" as const } : {}),
           };
         }
         return {
@@ -196,6 +207,7 @@ export async function dispararEmail(options: EnviarEmailOptions): Promise<Enviar
           content: anx.content,
           path: anx.path,
           contentType: anx.contentType,
+          ...(cidVal ? { cid: cidVal, contentDisposition: "inline" as const } : {}),
         };
       });
 
