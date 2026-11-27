@@ -13,8 +13,77 @@ import { dispararEmail } from "./email-service";
 import { formatarDataBR, formatarPeriodoBR } from "./date-utils";
 import { POLITICAS_VIAGEM } from "./politicas-viagem";
 import { obterDadosLiderViagem } from "./lider-utils";
+import consultoresBase from "./consultores-base.json";
 
 const DATA_FILE = path.join(process.cwd(), "src/lib/viagens-solicitacoes-base.json");
+
+function normalizarTexto(s?: string | null): string {
+  return String(s || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toUpperCase();
+}
+
+/**
+ * Resolve a Origem real da viagem priorizando:
+ * 1. A origem explícita informada na atividade/payload;
+ * 2. A tag `[AÉREO] Origem: ...` dentro de `observacoesSolicitante` / `observacao_agencia`;
+ * 3. O `aeroporto_preferencial` ou `cidade_base` do consultor em `consultores-base.json`;
+ * 4. Fallback padrão: `"Belo Horizonte - MG"`.
+ */
+export function resolverOrigemViagem(params: {
+  origemExplicita?: string | null;
+  observacoes?: string | null;
+  consultorNome?: string | null;
+  origemAtual?: string | null;
+}): string {
+  const { origemExplicita, observacoes, consultorNome, origemAtual } = params;
+
+  if (origemExplicita && origemExplicita.trim() && origemExplicita.trim() !== "N/A") {
+    return origemExplicita.trim();
+  }
+
+  if (observacoes && typeof observacoes === "string") {
+    const aereoMatch = observacoes.match(/\[A[EÉ]REO\]\s*(.*?)(?=\n|\[|$)/i);
+    if (aereoMatch) {
+      const origM = aereoMatch[1].match(/Origem:\s*([^->|]+)/i);
+      if (origM && origM[1].trim() && origM[1].trim() !== "N/A") {
+        return origM[1].trim();
+      }
+    }
+  }
+
+  if (consultorNome && consultorNome.trim()) {
+    const alvo = normalizarTexto(consultorNome);
+    const listaCons = Array.isArray(consultoresBase) ? (consultoresBase as any[]) : [];
+    const encontrado = listaCons.find((c) => {
+      const n1 = normalizarTexto(c.nome);
+      const n2 = normalizarTexto(c.nome_completo);
+      return (n1 && (n1 === alvo || alvo.includes(n1) || n1.includes(alvo))) ||
+             (n2 && (n2 === alvo || alvo.includes(n2) || n2.includes(alvo)));
+    });
+    const origCons = encontrado?.origem || encontrado?.aeroporto_preferencial || encontrado?.cidade_base;
+    if (origCons && String(origCons).trim()) {
+      return String(origCons).trim();
+    }
+  }
+
+  if (origemAtual && origemAtual.trim() && origemAtual.trim() !== "Belo Horizonte - MG") {
+    return origemAtual.trim();
+  }
+
+  return "Belo Horizonte - MG";
+}
+
+/**
+ * Converte quaisquer datas ISO (YYYY-MM-DD) presentes dentro de uma string de observações
+ * para o formato brasileiro obrigatório (DD/MM/AAAA) - Regra 1 do AGENTS.md.
+ */
+export function sanitizarDatasObservacaoBR(texto?: string | null): string {
+  if (!texto) return "";
+  return texto.replace(/\b(\d{4})-(\d{2})-(\d{2})\b/g, "$3/$2/$1");
+}
 
 function getSupabase() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -349,6 +418,11 @@ export async function sincronizarSolicitacoesIniciais(
         projeto: l.projetos?.nome || "PROJETO NNÓS",
       });
 
+      const origemResolvida = resolverOrigemViagem({
+        observacoes: obsAgencia,
+        consultorNome: l.consultores?.nome,
+      });
+
       const novaSolicitacao: ViagemSolicitacao = {
         id: `sol-${l.id}`,
         lancamentoId: l.id,
@@ -359,7 +433,7 @@ export async function sincronizarSolicitacoesIniciais(
         perfilConsultor: l.perfil || "SÊNIOR",
         liderNome: dadosLider.nome,
         liderEmail: dadosLider.email,
-        origem: "Belo Horizonte - MG",
+        origem: origemResolvida,
         destino: l.local || "Destino a definir",
         dataInicial: l.data_inicial || "",
         dataFinal: l.data_final || "",
@@ -372,7 +446,7 @@ export async function sincronizarSolicitacoesIniciais(
           carro: !apenasAlimentacao && custoCarro > 0,
           seguro: !apenasAlimentacao && custoSeguro > 0,
         },
-        observacoesSolicitante: obsAgencia,
+        observacoesSolicitante: sanitizarDatasObservacaoBR(obsAgencia),
         categorias,
         totalCotado: custoTotalContratado,
         totalAprovado: custoTotalContratado,
@@ -424,8 +498,19 @@ export async function sincronizarSolicitacoesIniciais(
         mudouItem = true;
       }
 
-      if (obsAgencia && solExistente.observacoesSolicitante !== obsAgencia) {
-        solExistente.observacoesSolicitante = obsAgencia;
+      const obsSanitizada = sanitizarDatasObservacaoBR(obsAgencia);
+      if (obsSanitizada && solExistente.observacoesSolicitante !== obsSanitizada) {
+        solExistente.observacoesSolicitante = obsSanitizada;
+        mudouItem = true;
+      }
+
+      const origemSincronizada = resolverOrigemViagem({
+        observacoes: solExistente.observacoesSolicitante,
+        consultorNome: solExistente.consultor,
+        origemAtual: solExistente.origem,
+      });
+      if (origemSincronizada && solExistente.origem !== origemSincronizada) {
+        solExistente.origem = origemSincronizada;
         mudouItem = true;
       }
 
@@ -514,12 +599,22 @@ export async function sincronizarSolicitacoesIniciais(
  */
 export async function garantirSolicitacaoAtividade(lancamentoId: string, dadosAtividade: any): Promise<ViagemSolicitacao> {
   const lista = carregarSolicitacoesArquivo();
-  let sol = lista.find((s) => s.lancamentoId === lancamentoId);
+  const cloudSol = await carregarSolicitacaoUnicaCloud(lancamentoId);
+  let sol = lista.find((s) => s.lancamentoId === lancamentoId) || cloudSol || undefined;
   const eraNova = !sol;
 
   const agora = new Date().toISOString();
 
   const isCancelado = dadosAtividade.status && String(dadosAtividade.status).toUpperCase().includes("CANCEL");
+  const obsFormatada = sanitizarDatasObservacaoBR(dadosAtividade.observacoes ?? sol?.observacoesSolicitante ?? "");
+  const origemResolvida = resolverOrigemViagem({
+    origemExplicita: dadosAtividade.origem,
+    observacoes: obsFormatada,
+    consultorNome: dadosAtividade.consultor || sol?.consultor,
+    origemAtual: sol?.origem,
+  });
+
+  let alterouOrientacoesAgencia = false;
 
   if (!sol) {
     const id = `sol-${lancamentoId}`;
@@ -531,7 +626,7 @@ export async function garantirSolicitacaoAtividade(lancamentoId: string, dadosAt
       atividade: dadosAtividade.atividade || "Atividade Operacional",
       consultor: dadosAtividade.consultor || "Consultor a definir",
       perfilConsultor: dadosAtividade.perfil || "SÊNIOR",
-      origem: dadosAtividade.origem || "Belo Horizonte - MG",
+      origem: origemResolvida,
       destino: dadosAtividade.local || "Destino a definir",
       dataInicial: dadosAtividade.dataInicial || "",
       dataFinal: dadosAtividade.dataFinal || "",
@@ -540,15 +635,15 @@ export async function garantirSolicitacaoAtividade(lancamentoId: string, dadosAt
       necessidades: {
         aereo: !isCancelado,
         hotel: !isCancelado,
-        carro: false,
-        seguro: false,
+        carro: obsFormatada.toUpperCase().includes("[VEÍCULO ALUGADO]"),
+        seguro: obsFormatada.toUpperCase().includes("[SEGURO VIAGEM]"),
       },
-      observacoesSolicitante: dadosAtividade.observacoes || "",
+      observacoesSolicitante: obsFormatada,
       categorias: [
         { categoria: "AEREO", nomeExibicao: "Passagem Aérea", icone: "flight", necessaria: !isCancelado, alternativas: [] },
         { categoria: "HOTEL", nomeExibicao: "Hotel / Estadia", icone: "hotel", necessaria: !isCancelado, alternativas: [] },
-        { categoria: "CARRO", nomeExibicao: "Carro / Translado", icone: "directions_car", necessaria: false, alternativas: [] },
-        { categoria: "SEGURO", nomeExibicao: "Seguro / Outros", icone: "verified_user", necessaria: false, alternativas: [] },
+        { categoria: "CARRO", nomeExibicao: "Carro / Translado", icone: "directions_car", necessaria: obsFormatada.toUpperCase().includes("[VEÍCULO ALUGADO]"), alternativas: [] },
+        { categoria: "SEGURO", nomeExibicao: "Seguro / Outros", icone: "verified_user", necessaria: obsFormatada.toUpperCase().includes("[SEGURO VIAGEM]"), alternativas: [] },
       ],
       totalCotado: 0,
       totalAprovado: 0,
@@ -574,25 +669,49 @@ export async function garantirSolicitacaoAtividade(lancamentoId: string, dadosAt
     };
     lista.unshift(sol);
   } else {
-    // Atualiza metadados sem duplicar
+    // Atualiza metadados e orientações para agência sem duplicar
+    const obsAnterior = sol.observacoesSolicitante || "";
+    const origemAnterior = sol.origem || "";
     if (dadosAtividade.projeto) sol.projeto = dadosAtividade.projeto;
     if (dadosAtividade.atividade) sol.atividade = dadosAtividade.atividade;
     if (dadosAtividade.consultor) sol.consultor = dadosAtividade.consultor;
+    if (dadosAtividade.perfil) sol.perfilConsultor = dadosAtividade.perfil;
     if (dadosAtividade.local) sol.destino = dadosAtividade.local;
     if (dadosAtividade.dataInicial) sol.dataInicial = dadosAtividade.dataInicial;
     if (dadosAtividade.dataFinal) sol.dataFinal = dadosAtividade.dataFinal;
+    if (dadosAtividade.agencia) sol.agenciaNome = dadosAtividade.agencia;
+    if (origemResolvida) sol.origem = origemResolvida;
+    if (dadosAtividade.observacoes !== undefined) {
+      sol.observacoesSolicitante = obsFormatada;
+    }
+    if (sol.observacoesSolicitante !== obsAnterior || sol.origem !== origemAnterior) {
+      alterouOrientacoesAgencia = true;
+    }
     if (isCancelado) {
       sol.status = "CONCLUIDO";
       sol.necessidades = { aereo: false, hotel: false, carro: false, seguro: false };
       sol.categorias.forEach((c) => (c.necessaria = false));
     }
     sol.atualizadoEm = agora;
+
+    const idxLista = lista.findIndex((s) => s.lancamentoId === lancamentoId || s.id === sol!.id);
+    if (idxLista >= 0) {
+      lista[idxLista] = sol;
+    } else {
+      lista.unshift(sol);
+    }
   }
 
   salvarSolicitacoesArquivo(lista);
+  await salvarSolicitacaoWorkflowCloud(sol);
 
   // Dispara notificação por e-mail para a Agência quando uma nova atividade com logística é criada
-  if (eraNova && !isCancelado && dadosAtividade.precisaLogistica !== false) {
+  // ou quando as orientações logísticas (Origem/Ida/Volta/Hotel) são atualizadas enquanto aguarda cotação
+  if (
+    !isCancelado &&
+    dadosAtividade.precisaLogistica !== false &&
+    (eraNova || (alterouOrientacoesAgencia && sol.status === "AGUARDANDO_COTACAO"))
+  ) {
     dispararNotificacaoNovaCotacaoAgencia(sol).catch((e) =>
       console.warn("Aviso ao disparar e-mail de nova cotação:", e)
     );
@@ -1652,12 +1771,57 @@ const EMAIL_AGENCIA_OFICIAL = "fcconsultoriadeviagens@gmail.com";
 const URL_SISTEMA_VIAGENS = "https://gestao.nnos.com.br/viagens";
 
 /**
+ * Formata as observações estruturadas ([PASSAGEIRO], [AÉREO], [HOTEL], [VEÍCULO ALUGADO])
+ * em linhas claras e legíveis para os e-mails enviados à Agência, garantindo datas em DD/MM/AAAA
+ * e substituindo eventuais placeholders "N/A" pelos valores reais da solicitação.
+ */
+function renderizarObservacoesEstruturadasEmail(sol: ViagemSolicitacao, origemResolvida: string): string {
+  const obsRaw = sanitizarDatasObservacaoBR(sol.observacoesSolicitante || "");
+  if (!obsRaw.trim()) return "";
+
+  const dataIdaPadrao = formatarDataBR(sol.dataInicial);
+  const dataVoltaPadrao = formatarDataBR(sol.dataFinal);
+  const destinoPadrao = sol.destino || "A definir";
+
+  // Substitui "Destino: N/A", "Ida: N/A", "Volta: N/A" caso o registro antigo tenha sido salvo sem fallback
+  const obsCorrigida = obsRaw
+    .replace(/Origem:\s*N\/A/gi, `Origem: ${origemResolvida}`)
+    .replace(/Destino:\s*N\/A/gi, `Destino: ${destinoPadrao}`)
+    .replace(/Ida:\s*N\/A/gi, `Ida: ${dataIdaPadrao}`)
+    .replace(/Volta:\s*N\/A/gi, `Volta: ${dataVoltaPadrao}`)
+    .replace(/Região:\s*N\/A/gi, `Região: ${destinoPadrao}`)
+    .replace(/Check-in:\s*N\/A/gi, `Check-in: ${dataIdaPadrao}`)
+    .replace(/Check-out:\s*N\/A/gi, `Check-out: ${dataVoltaPadrao}`);
+
+  const linhas = obsCorrigida
+    .split(/\n|(?=\[(?:PASSAGEIRO|ACOMPANHANTE|A[EÉ]REO|HOTEL|VE[IÍ]CULO|SEGURO))/i)
+    .map((l) => l.trim())
+    .filter(Boolean);
+
+  return linhas
+    .map((linha) => {
+      const m = linha.match(/^(\[[^\]]+\])\s*(.*)$/);
+      if (m) {
+        return `<div style="margin-bottom: 4px;"><strong style="color: #0369a1;">${m[1]}</strong> ${m[2]}</div>`;
+      }
+      return `<div style="margin-bottom: 4px;">${linha}</div>`;
+    })
+    .join("");
+}
+
+/**
  * Notificação 1: Dispara e-mail para a Agência quando uma nova atividade com logística é registrada
  */
 export async function dispararNotificacaoNovaCotacaoAgencia(sol: ViagemSolicitacao) {
   try {
     const lider = obterDadosLiderViagem(sol);
     const periodoFmt = formatarPeriodoBR(sol.dataInicial, sol.dataFinal);
+    const origemReal = resolverOrigemViagem({
+      observacoes: sol.observacoesSolicitante,
+      consultorNome: sol.consultor,
+      origemAtual: sol.origem,
+    });
+    const obsHtml = renderizarObservacoesEstruturadasEmail(sol, origemReal);
     const assunto = `✈️ [NOVA COTAÇÃO] Solicitação de Viagem & Logística • ${sol.projeto} - ${sol.atividade}`;
 
     const html = `
@@ -1695,7 +1859,7 @@ export async function dispararNotificacaoNovaCotacaoAgencia(sol: ViagemSolicitac
               </tr>
               <tr>
                 <td style="color: #64748b; font-weight: 600;">Origem &rarr; Destino:</td>
-                <td style="font-weight: 700; color: #0f172a;">${sol.origem || "Belo Horizonte - MG"} &rarr; ${sol.destino}</td>
+                <td style="font-weight: 700; color: #0f172a;">${origemReal} &rarr; ${sol.destino}</td>
               </tr>
               <tr>
                 <td style="color: #64748b; font-weight: 600;">Período:</td>
@@ -1709,10 +1873,10 @@ export async function dispararNotificacaoNovaCotacaoAgencia(sol: ViagemSolicitac
                   ${sol.necessidades?.carro ? "🚗 Carro/Translado " : ""}
                 </td>
               </tr>
-              ${sol.observacoesSolicitante ? `
+              ${obsHtml ? `
               <tr>
-                <td style="color: #64748b; font-weight: 600;">Observações:</td>
-                <td style="color: #334155; font-style: italic;">${sol.observacoesSolicitante}</td>
+                <td style="color: #64748b; font-weight: 600; vertical-align: top;">Orientações:</td>
+                <td style="color: #334155; font-size: 12.5px; line-height: 1.55;">${obsHtml}</td>
               </tr>` : ""}
             </table>
           </div>
@@ -1956,6 +2120,12 @@ export async function dispararNotificacaoDevolutivaCotacaoAgencia(
   try {
     const lider = obterDadosLiderViagem(sol);
     const periodoFmt = formatarPeriodoBR(sol.dataInicial, sol.dataFinal);
+    const origemReal = resolverOrigemViagem({
+      observacoes: sol.observacoesSolicitante,
+      consultorNome: sol.consultor,
+      origemAtual: sol.origem,
+    });
+    const obsHtml = renderizarObservacoesEstruturadasEmail(sol, origemReal);
     const assunto = `🔄 [DEVOLUTIVA DE COTAÇÃO] Correção Solicitada pelo Líder • ${sol.projeto} - ${sol.atividade}`;
 
     const apontamentosCategorias = Object.entries(sol.justificativasLider || {})
@@ -2014,13 +2184,18 @@ export async function dispararNotificacaoDevolutivaCotacaoAgencia(
                 <td style="font-weight: 700; color: #0369a1;">${sol.consultor}</td>
               </tr>
               <tr>
-                <td style="color: #64748b; font-weight: 600;">Destino:</td>
-                <td style="font-weight: 700; color: #0f172a;">${sol.destino}</td>
+                <td style="color: #64748b; font-weight: 600;">Origem &rarr; Destino:</td>
+                <td style="font-weight: 700; color: #0f172a;">${origemReal} &rarr; ${sol.destino}</td>
               </tr>
               <tr>
                 <td style="color: #64748b; font-weight: 600;">Período Original:</td>
                 <td style="font-weight: 700; color: #0f172a;">${periodoFmt}</td>
               </tr>
+              ${obsHtml ? `
+              <tr>
+                <td style="color: #64748b; font-weight: 600; vertical-align: top;">Orientações:</td>
+                <td style="color: #334155; font-size: 12.5px; line-height: 1.55;">${obsHtml}</td>
+              </tr>` : ""}
             </table>
           </div>
 

@@ -236,5 +236,19 @@
     "status": "ATIVO",
     "criadoEm": "2026-11-12T13:55:00-03:00",
     "ultimoAcesso": "2026-11-13T15:38:00.811Z"
+  },
+  {
+    "id": "usr-gabriele-silva",
+    "login": "gabriele.silva",
+    "nome": "Gabriele Furtado Silva",
+    "email": "Gabrielefurtado5@gmail.com",
+    "cargo": "Consultora & Instrutora • Assistente de Projetos",
+    "perfilId": "CONSULTOR",
+    "liderVinculado": "GABRIELE SILVA",
+    "senha": "scrypt$b0d7bb62e81e9d108bc78751fb39a63e$43a4e6492f7e4baecda566b8c1bed37b94e18211405ad0d194bcdab748035b322fa9094fd8c24a6edb1c854717b77ac112a80ff93c8975a4c598250782021776",
+    "mfaAtivo": false,
+    "mfaSecret": "JBSWY3DPEHPK3PXP",
+    "status": "ATIVO",
+    "criadoEm": "2026-11-27T11:35:00-03:00"
   }
 ]

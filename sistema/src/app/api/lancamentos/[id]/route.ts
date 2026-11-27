@@ -196,11 +196,15 @@ export async function PATCH(
           atividade: data.atividade,
           consultor: data.consultores?.nome,
           perfil: data.perfil,
+          origem: body.origem,
           local: data.local,
           dataInicial: data.data_inicial,
           dataFinal: data.data_final,
           horas: data.horas,
           agencia: body.agencia || (Array.isArray(data.viagens) ? data.viagens[0]?.agencia : data.viagens?.agencia) || "FÁTIMA",
+          observacoes: body.observacao_agencia !== undefined
+            ? body.observacao_agencia
+            : (Array.isArray(data.viagens) ? data.viagens[0]?.observacao_agencia : data.viagens?.observacao_agencia),
         });
       } catch (errLog) {
         console.warn("Aviso ao sincronizar esteira de logística no PATCH:", errLog);

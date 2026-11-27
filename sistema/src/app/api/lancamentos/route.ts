@@ -180,6 +180,7 @@ export async function POST(request: Request) {
           atividade: body.atividade,
           consultor: body.consultor_nome,
           perfil: body.perfil,
+          origem: body.origem,
           local: body.local,
           dataInicial: body.data_inicial,
           dataFinal: body.data_final,

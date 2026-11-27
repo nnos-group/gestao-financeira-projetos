@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import * as XLSX from "xlsx";
 import DocumentPreviewModal from "./viagens/DocumentPreviewModal";
 import { ViagemSolicitacao, AnexoDocumento } from "@/lib/viagens-types";
-import { calcularPrazoPrestacaoContas, formatarPeriodoBR } from "@/lib/date-utils";
+import { calcularPrazoPrestacaoContas, formatarDataBR, formatarPeriodoBR } from "@/lib/date-utils";
 import { calcularValoresAtividade, verificarEhSocio, verificarEhComissao } from "@/lib/tabela-precos-calculator";
 import { AgendaBloqueio, verificarConflitoBloqueio } from "@/lib/agenda-bloqueios";
 import { usePerfilAcesso } from "@/contexts/PerfilAcessoContext";
@@ -172,9 +172,19 @@ function compararProjetos(a: LancamentoItem, b: LancamentoItem): number {
   return (a.atividade || "").localeCompare(b.atividade || "", "pt-BR");
 }
 
+function normalizarDataInputISO(val?: string | null): string {
+  if (!val) return "";
+  const s = val.trim();
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+  const m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (m) return `${m[3]}-${m[2]}-${m[1]}`;
+  return s;
+}
+
 function parseLogisticaObservacao(obs: string | null | undefined, defaults: {
   passageiroNome?: string;
   passageiroDoc?: string;
+  aereoOrigem?: string;
   destino?: string;
   dataInicial?: string;
   dataFinal?: string;
@@ -186,16 +196,16 @@ function parseLogisticaObservacao(obs: string | null | undefined, defaults: {
     acompanhanteNome: "",
     acompanhanteDoc: "",
     obsGeral: "",
-    aereoOrigem: "",
+    aereoOrigem: defaults.aereoOrigem || "",
     aereoDestino: defaults.destino || "",
-    aereoDataIda: defaults.dataInicial || "",
+    aereoDataIda: normalizarDataInputISO(defaults.dataInicial),
     aereoPrefIda: "Manhã",
-    aereoDataVolta: defaults.dataFinal || "",
+    aereoDataVolta: normalizarDataInputISO(defaults.dataFinal),
     aereoPrefVolta: "Noite",
     aereoObs: "",
     hotelRegiao: defaults.destino || "",
-    hotelCheckin: defaults.dataInicial || "",
-    hotelCheckout: defaults.dataFinal || "",
+    hotelCheckin: normalizarDataInputISO(defaults.dataInicial),
+    hotelCheckout: normalizarDataInputISO(defaults.dataFinal),
     hotelObs: "",
     veiculoLocacao: "Não" as "Sim" | "Não",
     veiculoRetiradaLocal: "",
@@ -249,13 +259,17 @@ function parseLogisticaObservacao(obs: string | null | undefined, defaults: {
     if (destM && destM[1].trim() !== "N/A") res.aereoDestino = destM[1].trim();
     const idaM = aeStr.match(/Ida:\s*([^\s(]+)(?:\s*\(([^)]+)\))?/i);
     if (idaM && idaM[1].trim() !== "N/A") {
-      res.aereoDataIda = idaM[1].trim();
+      res.aereoDataIda = normalizarDataInputISO(idaM[1].trim());
       if (idaM[2]) res.aereoPrefIda = idaM[2].trim();
+    } else if (idaM && idaM[2]) {
+      res.aereoPrefIda = idaM[2].trim();
     }
     const voltaM = aeStr.match(/Volta:\s*([^\s(]+)(?:\s*\(([^)]+)\))?/i);
     if (voltaM && voltaM[1].trim() !== "N/A") {
-      res.aereoDataVolta = voltaM[1].trim();
+      res.aereoDataVolta = normalizarDataInputISO(voltaM[1].trim());
       if (voltaM[2]) res.aereoPrefVolta = voltaM[2].trim();
+    } else if (voltaM && voltaM[2]) {
+      res.aereoPrefVolta = voltaM[2].trim();
     }
     const aeObsM = aeStr.match(/OBS:\s*([^|]+)/i);
     if (aeObsM && aeObsM[1].trim() !== "Nenhuma") res.aereoObs = aeObsM[1].trim();
@@ -268,9 +282,9 @@ function parseLogisticaObservacao(obs: string | null | undefined, defaults: {
     const regM = htStr.match(/Região:\s*([^|]+)/i);
     if (regM && regM[1].trim() !== "N/A") res.hotelRegiao = regM[1].trim();
     const cinM = htStr.match(/Check-in:\s*([^|]+)/i);
-    if (cinM && cinM[1].trim() !== "N/A") res.hotelCheckin = cinM[1].trim();
+    if (cinM && cinM[1].trim() !== "N/A") res.hotelCheckin = normalizarDataInputISO(cinM[1].trim());
     const coutM = htStr.match(/Check-out:\s*([^|]+)/i);
-    if (coutM && coutM[1].trim() !== "N/A") res.hotelCheckout = coutM[1].trim();
+    if (coutM && coutM[1].trim() !== "N/A") res.hotelCheckout = normalizarDataInputISO(coutM[1].trim());
     const htObsM = htStr.match(/OBS:\s*([^|]+)/i);
     if (htObsM && htObsM[1].trim() !== "Nenhuma") res.hotelObs = htObsM[1].trim();
   }
@@ -283,9 +297,9 @@ function parseLogisticaObservacao(obs: string | null | undefined, defaults: {
     const locM = vStr.match(/Local Retirada:\s*([^|]+)/i);
     if (locM && locM[1].trim() !== "N/A") res.veiculoRetiradaLocal = locM[1].trim();
     const retM = vStr.match(/Retirada:\s*([^|]+)/i);
-    if (retM && retM[1].trim() !== "N/A") res.veiculoDataRetirada = retM[1].trim();
+    if (retM && retM[1].trim() !== "N/A") res.veiculoDataRetirada = normalizarDataInputISO(retM[1].trim());
     const devM = vStr.match(/Devolução:\s*([^|]+)/i);
-    if (devM && devM[1].trim() !== "N/A") res.veiculoDataDevolucao = devM[1].trim();
+    if (devM && devM[1].trim() !== "N/A") res.veiculoDataDevolucao = normalizarDataInputISO(devM[1].trim());
     const catM = vStr.match(/Categoria:\s*([^|]+)/i);
     if (catM && catM[1].trim() !== "N/A") res.veiculoCategoria = catM[1].trim();
     const vObsM = vStr.match(/OBS:\s*([^|]+)/i);
@@ -547,8 +561,16 @@ export default function FloatingCardsList({
       setModalObservacaoAgencia(v?.observacao_agencia || "");
       setConfirmandoExclusaoId(null);
 
+      const cons = consultoresLista.find(
+        (c) => c.id === modalItem.consultor_id || (modalItem.consultores?.nome && c.nome.toUpperCase() === modalItem.consultores.nome.toUpperCase())
+      );
+      const origDefaultCons = cons?.origem || cons?.aeroporto_preferencial || cons?.cidade_base || "";
+      const docDefaultCons = cons?.documento || cons?.cpf || cons?.rg || "";
+
       const parsed = parseLogisticaObservacao(v?.observacao_agencia, {
-        passageiroNome: modalItem.consultores?.nome,
+        passageiroNome: cons?.nome_completo || modalItem.consultores?.nome,
+        passageiroDoc: docDefaultCons,
+        aereoOrigem: origDefaultCons,
         destino: modalItem.local || "",
         dataInicial: modalItem.data_inicial || "",
         dataFinal: modalItem.data_final || "",
@@ -586,9 +608,6 @@ export default function FloatingCardsList({
       setModalProjetoBusca("");
       setModalDropdownProjetoAberto(false);
 
-      const cons = consultoresLista.find(
-        (c) => c.id === modalItem.consultor_id || (modalItem.consultores?.nome && c.nome.toUpperCase() === modalItem.consultores.nome.toUpperCase())
-      );
       setModalConsultorSelecionadoId(cons?.id || modalItem.consultor_id || "");
       setModalConsultorBusca("");
       setModalDropdownConsultorAberto(false);
@@ -1064,29 +1083,43 @@ export default function FloatingCardsList({
     }
 
     let observacaoAgenciaModal: string | null = null;
+    const localFinalModal = (modalLocalTexto || (formData.get("local") as string) || "").trim();
+    const origAereoFinalModal =
+      modalLogAereoOrigem ||
+      modalConsultorSelecionado?.origem ||
+      modalConsultorSelecionado?.aeroporto_preferencial ||
+      modalConsultorSelecionado?.cidade_base ||
+      "";
     if (modalDemandaLogistica) {
+      const destAereoFinal = modalLogAereoDestino || localFinalModal;
+      const idaAereoFinal = modalLogAereoDataIda || dataInicialModal || "";
+      const voltaAereoFinal = modalLogAereoDataVolta || dataFinalModal || "";
+      const regiaoHotelFinal = modalLogHotelRegiao || localFinalModal;
+      const checkinHotelFinal = modalLogHotelCheckin || idaAereoFinal || dataInicialModal || "";
+      const checkoutHotelFinal = modalLogHotelCheckout || voltaAereoFinal || dataFinalModal || "";
+
       const blocos: string[] = [];
       blocos.push(
-        `[PASSAGEIRO] Nome: ${modalLogPassageiroNome || "Não informado"} | Documento: ${modalLogPassageiroDoc || "N/A"} | Viagem: ${modalLogTipoViagem} | OBS: ${modalLogObsGeral || "Nenhuma"}`
+        `[PASSAGEIRO] Nome: ${modalLogPassageiroNome || modalConsultorSelecionado?.nome_completo || modalConsultorSelecionado?.nome || "Não informado"} | Documento: ${modalLogPassageiroDoc || modalConsultorSelecionado?.cpf || modalConsultorSelecionado?.documento || "N/A"} | Viagem: ${modalLogTipoViagem} | OBS: ${modalLogObsGeral || "Nenhuma"}`
       );
       if (modalLogTipoViagem === "Acompanhado" && (modalLogAcompanhanteNome || modalLogAcompanhanteDoc)) {
         blocos.push(
           `[ACOMPANHANTE] Nome: ${modalLogAcompanhanteNome || "Não informado"} | Documento: ${modalLogAcompanhanteDoc || "N/A"}`
         );
       }
-      if (modalLogAereoOrigem || modalLogAereoDestino || modalLogAereoDataIda) {
+      if (origAereoFinalModal || destAereoFinal || idaAereoFinal) {
         blocos.push(
-          `[AÉREO] Origem: ${modalLogAereoOrigem || "N/A"} -> Destino: ${modalLogAereoDestino || "N/A"} | Ida: ${modalLogAereoDataIda || "N/A"} (${modalLogAereoPrefIda}) | Volta: ${modalLogAereoDataVolta || "N/A"} (${modalLogAereoPrefVolta}) | OBS: ${modalLogAereoObs || "Nenhuma"}`
+          `[AÉREO] Origem: ${origAereoFinalModal || "N/A"} -> Destino: ${destAereoFinal || "N/A"} | Ida: ${idaAereoFinal ? formatarDataBR(idaAereoFinal) : "N/A"} (${modalLogAereoPrefIda}) | Volta: ${voltaAereoFinal ? formatarDataBR(voltaAereoFinal) : "N/A"} (${modalLogAereoPrefVolta}) | OBS: ${modalLogAereoObs || "Nenhuma"}`
         );
       }
-      if (modalLogHotelRegiao || modalLogHotelCheckin) {
+      if (regiaoHotelFinal || checkinHotelFinal) {
         blocos.push(
-          `[HOTEL] Região: ${modalLogHotelRegiao || "N/A"} | Check-in: ${modalLogHotelCheckin || "N/A"} | Check-out: ${modalLogHotelCheckout || "N/A"} | OBS: ${modalLogHotelObs || "Nenhuma"}`
+          `[HOTEL] Região: ${regiaoHotelFinal || "N/A"} | Check-in: ${checkinHotelFinal ? formatarDataBR(checkinHotelFinal) : "N/A"} | Check-out: ${checkoutHotelFinal ? formatarDataBR(checkoutHotelFinal) : "N/A"} | OBS: ${modalLogHotelObs || "Nenhuma"}`
         );
       }
       if (modalLogVeiculoLocacao === "Sim") {
         blocos.push(
-          `[VEÍCULO ALUGADO] Local Retirada: ${modalLogVeiculoRetiradaLocal || "N/A"} | Retirada: ${modalLogVeiculoDataRetirada || "N/A"} | Devolução: ${modalLogVeiculoDataDevolucao || "N/A"} | Categoria: ${modalLogVeiculoCategoria} | OBS: ${modalLogVeiculoObs || "Nenhuma"}`
+          `[VEÍCULO ALUGADO] Local Retirada: ${modalLogVeiculoRetiradaLocal || localFinalModal || "N/A"} | Retirada: ${modalLogVeiculoDataRetirada ? formatarDataBR(modalLogVeiculoDataRetirada) : "N/A"} | Devolução: ${modalLogVeiculoDataDevolucao ? formatarDataBR(modalLogVeiculoDataDevolucao) : "N/A"} | Categoria: ${modalLogVeiculoCategoria} | OBS: ${modalLogVeiculoObs || "Nenhuma"}`
         );
       }
       observacaoAgenciaModal = blocos.join("\n");
@@ -1104,7 +1137,8 @@ export default function FloatingCardsList({
       competencia: compModalCalculada,
       atividade: modalAtividadeTexto || (formData.get("atividade") as string) || null,
       modalidade: (formData.get("modalidade") as "PRESENCIAL" | "VIRTUAL") || null,
-      local: modalLocalTexto || (formData.get("local") as string) || null,
+      local: localFinalModal || null,
+      origem: origAereoFinalModal || null,
       regiao: (formData.get("regiao") as "BRA" | "LATAM") || "BRA",
       data_inicial: dataInicialModal,
       data_final: dataFinalModal,
@@ -1296,29 +1330,43 @@ export default function FloatingCardsList({
 
     // Constrói a observação da agência estruturada com os campos de logística
     let observacaoAgencia = "";
+    const localFinalNovo = (localTexto.trim() || (formData.get("local") as string) || "").trim();
+    const origAereoFinalNovo =
+      logAereoOrigem ||
+      consultorSelecionado?.origem ||
+      consultorSelecionado?.aeroporto_preferencial ||
+      consultorSelecionado?.cidade_base ||
+      "";
     if (demandaLogistica) {
+      const destAereoFinal = logAereoDestino || localFinalNovo;
+      const idaAereoFinal = logAereoDataIda || dataInicialStr || "";
+      const voltaAereoFinal = logAereoDataVolta || dataFinalStr || "";
+      const regiaoHotelFinal = logHotelRegiao || localFinalNovo;
+      const checkinHotelFinal = logHotelCheckin || idaAereoFinal || dataInicialStr || "";
+      const checkoutHotelFinal = logHotelCheckout || voltaAereoFinal || dataFinalStr || "";
+
       const blocos: string[] = [];
       blocos.push(
-        `[PASSAGEIRO] Nome: ${logPassageiroNome || "Não informado"} | Documento: ${logPassageiroDoc || "N/A"} | Viagem: ${logTipoViagem} | OBS: ${logObsGeral || "Nenhuma"}`
+        `[PASSAGEIRO] Nome: ${logPassageiroNome || consultorSelecionado?.nome_completo || consultorSelecionado?.nome || "Não informado"} | Documento: ${logPassageiroDoc || consultorSelecionado?.cpf || consultorSelecionado?.documento || "N/A"} | Viagem: ${logTipoViagem} | OBS: ${logObsGeral || "Nenhuma"}`
       );
       if (logTipoViagem === "Acompanhado" && (logAcompanhanteNome || logAcompanhanteDoc)) {
         blocos.push(
           `[ACOMPANHANTE] Nome: ${logAcompanhanteNome || "Não informado"} | Documento: ${logAcompanhanteDoc || "N/A"}`
         );
       }
-      if (logAereoOrigem || logAereoDestino || logAereoDataIda) {
+      if (origAereoFinalNovo || destAereoFinal || idaAereoFinal) {
         blocos.push(
-          `[AÉREO] Origem: ${logAereoOrigem || "N/A"} -> Destino: ${logAereoDestino || "N/A"} | Ida: ${logAereoDataIda || "N/A"} (${logAereoPrefIda}) | Volta: ${logAereoDataVolta || "N/A"} (${logAereoPrefVolta}) | OBS: ${logAereoObs || "Nenhuma"}`
+          `[AÉREO] Origem: ${origAereoFinalNovo || "N/A"} -> Destino: ${destAereoFinal || "N/A"} | Ida: ${idaAereoFinal ? formatarDataBR(idaAereoFinal) : "N/A"} (${logAereoPrefIda}) | Volta: ${voltaAereoFinal ? formatarDataBR(voltaAereoFinal) : "N/A"} (${logAereoPrefVolta}) | OBS: ${logAereoObs || "Nenhuma"}`
         );
       }
-      if (logHotelRegiao || logHotelCheckin) {
+      if (regiaoHotelFinal || checkinHotelFinal) {
         blocos.push(
-          `[HOTEL] Região: ${logHotelRegiao || "N/A"} | Check-in: ${logHotelCheckin || "N/A"} | Check-out: ${logHotelCheckout || "N/A"} | OBS: ${logHotelObs || "Nenhuma"}`
+          `[HOTEL] Região: ${regiaoHotelFinal || "N/A"} | Check-in: ${checkinHotelFinal ? formatarDataBR(checkinHotelFinal) : "N/A"} | Check-out: ${checkoutHotelFinal ? formatarDataBR(checkoutHotelFinal) : "N/A"} | OBS: ${logHotelObs || "Nenhuma"}`
         );
       }
       if (logVeiculoLocacao === "Sim") {
         blocos.push(
-          `[VEÍCULO ALUGADO] Local Retirada: ${logVeiculoRetiradaLocal || "N/A"} | Retirada: ${logVeiculoDataRetirada || "N/A"} | Devolução: ${logVeiculoDataDevolucao || "N/A"} | Categoria: ${logVeiculoCategoria} | OBS: ${logVeiculoObs || "Nenhuma"}`
+          `[VEÍCULO ALUGADO] Local Retirada: ${logVeiculoRetiradaLocal || localFinalNovo || "N/A"} | Retirada: ${logVeiculoDataRetirada ? formatarDataBR(logVeiculoDataRetirada) : "N/A"} | Devolução: ${logVeiculoDataDevolucao ? formatarDataBR(logVeiculoDataDevolucao) : "N/A"} | Categoria: ${logVeiculoCategoria} | OBS: ${logVeiculoObs || "Nenhuma"}`
         );
       }
       if (logSeguroViagem === "Sim") {
@@ -1333,11 +1381,12 @@ export default function FloatingCardsList({
       projeto_id: projId,
       projeto_nome: projetoSelecionado?.nome,
       consultor_id: consultorSelecionadoId || (formData.get("consultor_id") as string) || null,
-      consultor_nome: logPassageiroNome,
+      consultor_nome: logPassageiroNome || consultorSelecionado?.nome_completo || consultorSelecionado?.nome,
       competencia: compCalculada,
       atividade: atividadeTexto.trim() || (formData.get("atividade") as string) || null,
       modalidade: (formData.get("modalidade") as "PRESENCIAL" | "VIRTUAL") || "PRESENCIAL",
-      local: localTexto.trim() || (formData.get("local") as string) || null,
+      local: localFinalNovo || null,
+      origem: origAereoFinalNovo || null,
       regiao: (formData.get("regiao") as "BRA" | "LATAM") || "BRA",
       data_inicial: dataInicialStr,
       data_final: dataFinalStr,
@@ -3826,7 +3875,12 @@ export default function FloatingCardsList({
                       autoComplete="off"
                       list="sugestoes-locais"
                       value={localTexto}
-                      onChange={(e) => setLocalTexto(e.target.value)}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setLocalTexto(v);
+                        if (!logAereoDestino || logAereoDestino === localTexto) setLogAereoDestino(v);
+                        if (!logHotelRegiao || logHotelRegiao === localTexto) setLogHotelRegiao(v);
+                      }}
                     />
                     <datalist id="sugestoes-locais">
                       <option value="SOROCABA-SP" />
@@ -3853,7 +3907,12 @@ export default function FloatingCardsList({
                       name="data_inicial"
                       required
                       defaultValue={dadosDuplicacao?.data_inicial || ""}
-                      onChange={(e) => setNovaDataInicial(e.target.value)}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setNovaDataInicial(v);
+                        if (!logAereoDataIda || logAereoDataIda === novaDataInicial) setLogAereoDataIda(v);
+                        if (!logHotelCheckin || logHotelCheckin === novaDataInicial) setLogHotelCheckin(v);
+                      }}
                     />
                   </div>
                   <div className="form-field">
@@ -3863,7 +3922,12 @@ export default function FloatingCardsList({
                       name="data_final"
                       required
                       defaultValue={dadosDuplicacao?.data_final || ""}
-                      onChange={(e) => setNovaDataFinal(e.target.value)}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setNovaDataFinal(v);
+                        if (!logAereoDataVolta || logAereoDataVolta === novaDataFinal) setLogAereoDataVolta(v);
+                        if (!logHotelCheckout || logHotelCheckout === novaDataFinal) setLogHotelCheckout(v);
+                      }}
                     />
                   </div>
                   <div className="form-field">
@@ -4086,7 +4150,17 @@ export default function FloatingCardsList({
                       onChange={(e) => {
                         const val = e.target.value === "true";
                         setDemandaLogistica(val);
-                        if (!val) setAgenciaSelecionada("");
+                        if (!val) {
+                          setAgenciaSelecionada("");
+                        } else {
+                          if (!agenciaSelecionada) setAgenciaSelecionada("FÁTIMA");
+                          if (!logAereoDestino && localTexto) setLogAereoDestino(localTexto);
+                          if (!logAereoDataIda && novaDataInicial) setLogAereoDataIda(novaDataInicial);
+                          if (!logAereoDataVolta && novaDataFinal) setLogAereoDataVolta(novaDataFinal);
+                          if (!logHotelRegiao && localTexto) setLogHotelRegiao(localTexto);
+                          if (!logHotelCheckin && novaDataInicial) setLogHotelCheckin(novaDataInicial);
+                          if (!logHotelCheckout && novaDataFinal) setLogHotelCheckout(novaDataFinal);
+                        }
                       }}
                     >
                       <option value="false">Não</option>
